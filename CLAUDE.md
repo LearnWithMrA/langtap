@@ -419,11 +419,14 @@ architecture questions only.
 
 ### At the end of every session
 
-1. Confirm all changes made during the session.
-2. Confirm tests pass (or state which tests need to be run manually).
-3. Generate a CHANGELOG.md entry in the format below.
-4. State clearly what the next task is (the owner will confirm at the start of the
-   next session).
+1. Run `npm run check` in full before generating the changelog entry. If it
+   fails, fix all errors before closing the session. Never generate a changelog
+   entry for a session that leaves the codebase in a failing state.
+2. Confirm all changes made during the session.
+3. Confirm tests pass (or state which tests need to be run manually).
+4. Generate a CHANGELOG.md entry in the format below.
+5. State clearly what the next task is (the owner will confirm at the start of
+   the next session).
 
 ### CHANGELOG.md entry format
 

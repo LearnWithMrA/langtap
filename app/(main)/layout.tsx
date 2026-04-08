@@ -5,6 +5,8 @@
 // Depends on: components/layout/top-bar.tsx, components/layout/bottom-nav.tsx
 // ------------------------------------------------------------
 
-export default function MainLayout({ children }: { children: React.ReactNode }): JSX.Element {
+import type { ReactNode } from 'react'
+
+export default function MainLayout({ children }: { children: ReactNode }): ReactNode {
   return <>{children}</>
 }

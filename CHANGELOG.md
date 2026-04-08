@@ -30,6 +30,33 @@ Format per entry:
 
 ---
 
+## [2026-04-08] - Session 6
+
+**Sprint:** Sprint 1 - Foundation and Project Setup
+**Task completed:** Fix ESLint return type errors blocking Vercel build
+**Status:** Done
+
+### Changes made
+- `app/error.tsx`: Added `: null` return type. Renamed `reset` to `_reset` to fix unused-vars error.
+- `app/page.tsx`, `app/not-found.tsx`, `app/loading.tsx`: Added `: null` return type.
+- `app/layout.tsx`: Added `: JSX.Element` return type to RootLayout.
+- `app/(auth)/layout.tsx`, `app/(onboarding)/layout.tsx`, `app/(main)/layout.tsx`: Added `: JSX.Element` return type.
+- `app/(auth)/*.tsx`, `app/(onboarding)/*.tsx`, `app/(main)/*.tsx` (14 pages): Added `: null` return type.
+- `components/**/*.tsx` (24 files): Added `: null` return type to all placeholder components.
+
+### Tests
+- npm run lint: Pass (zero errors, zero warnings)
+
+### Notes
+- Root cause: placeholder files were created in Session 1 before ESLint existed. ESLint was added in Session 3 but `npm run check` was not run in full against all files before pushing to GitHub.
+- Fix: CLAUDE.md updated to require `npm run check` before every changelog entry. Run `npm run build` locally before pushing to GitHub.
+- Return type `null` used for placeholder components. Layout components returning JSX fragments annotated as `JSX.Element`.
+
+### Next task
+Vercel deployment (confirming build passes after this fix)
+
+---
+
 ## [2026-04-07] - Session 5
 
 **Sprint:** Sprint 1 - Foundation and Project Setup

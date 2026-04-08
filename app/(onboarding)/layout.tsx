@@ -4,6 +4,8 @@
 //          Placeholder - to be implemented in Sprint 3.
 // ------------------------------------------------------------
 
-export default function OnboardingLayout({ children }: { children: React.ReactNode }): JSX.Element {
+import type { ReactNode } from 'react'
+
+export default function OnboardingLayout({ children }: { children: ReactNode }): ReactNode {
   return <>{children}</>
 }
