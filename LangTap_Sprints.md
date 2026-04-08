@@ -38,35 +38,35 @@ Rules:
 ## Sprint 1 - Foundation and Project Setup
 
 **Goal:** Everything needed before writing a single line of app code.
-**Status:** Active
+**Status:** Complete
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
 | Confirm and document final tech stack | **Small** | **Done** | Next.js 15, React 19, TypeScript, Tailwind CSS, Zustand, Supabase, Stripe, Vercel, Vitest. Documented in Planning doc Section 7. |
-| Create project folder structure | **Medium** | **To Do** | Follow the structure defined in docs/ARCHITECTURE.md once that doc exists. Scaffold empty folders and placeholder index files only. No logic yet. |
-| Initialise Next.js project with TypeScript | **Medium** | **To Do** | Use `create-next-app` with TypeScript and Tailwind flags. Confirm Expo Router equivalent - Next.js App Router (file-based routing). |
-| Set up ESLint and Prettier | **Small** | **To Do** | Flat config ESLint 9. Prettier for formatting. Add pre-commit hook via lint-staged. |
-| Set up Vitest for testing | **Small** | **To Do** | Install and configure Vitest with React Testing Library. Add a single passing smoke test to confirm setup. |
-| Create Supabase project | **Small** | **To Do** | Create project in Supabase cloud. Save anon key and project URL to .env.local. Never commit secrets. |
-| Set up Vercel project and link to repo | **Small** | **To Do** | Connect GitHub repo to Vercel. Confirm preview deployments work on push. |
-| Write CLAUDE.md | **Medium** | **To Do** | Full AI rules, safeguards, naming conventions, what not to do, and session protocol. Based on Planning doc Section 8. |
-| Write docs/ARCHITECTURE.md | **Medium** | **To Do** | Project structure, file conventions, decoupling rules, module boundaries. |
-| Write docs/FRONTEND.md | **Medium** | **To Do** | UI components, layout rules, Tailwind conventions, responsive behaviour, heatmap system. |
-| Write docs/BACKEND.md | **Medium** | **To Do** | Supabase schema plan, API design, data flow, real-time strategy. |
-| Write docs/AUTH.md | **Small** | **To Do** | Auth flow, guest mode, onboarding steps, account rules. |
-| Write docs/SECURITY.md | **Small** | **To Do** | RLS policies, key handling, what is never exposed to the client, data protection rules. |
-| Write docs/GAME_DESIGN.md | **Large** | **To Do** | Mastery system, unlocking logic, word counter system, input modes, feedback on errors, distance/progress mechanic. This is the most detailed sub-doc. |
-| Write docs/CONTENT.md | **Medium** | **To Do** | Kana sets (seion, dakuon, yoon), word bank structure, JLPT levels, mnemonic sources, audio asset inventory. |
-| Write docs/DEVOPS.md | **Small** | **To Do** | Vercel config, environment variables, CI setup, deployment process. |
-| Create CHANGELOG.md | **Small** | **To Do** | Empty file with header. First entry added at end of this sprint. |
-| Audit Kanji Alive dataset coverage against N5 word bank | **Small** | **To Do** | Cross-reference which N5 words have audio in the Kanji Alive dataset. Document any gaps. Decision on gaps is made at the Sprint 10 audio integration task. |
+| Create project folder structure | **Medium** | **Done** | All folders and placeholder files created per docs/ARCHITECTURE.md. Session 1. |
+| Initialise Next.js project with TypeScript | **Medium** | **Done** | Next.js 15.5.14, React 19.1.0, Tailwind v4, App Router, strict TypeScript, @/* path alias. Session 2. |
+| Set up ESLint and Prettier | **Small** | **Done** | ESLint 9 flat config, Prettier, format:check script, lint script changed to `eslint .` (next lint deprecated in 15.5.14). Session 3. |
+| Set up Vitest for testing | **Small** | **Done** | Vitest 3, React Testing Library, jsdom, coverage-v8. Per-file `// @vitest-environment jsdom` annotations for component tests. Session 4. |
+| Create Supabase project | **Small** | **Done** | Production project created. Local Supabase running via `supabase start --exclude storage-api,logflare`. All five tables migrated with RLS + FORCE RLS. Session 5. |
+| Set up Vercel project and link to repo | **Small** | **In Progress** | Connect GitHub repo to Vercel. Add production Supabase keys as environment variables. |
+| Write CLAUDE.md | **Medium** | **Done** | Completed in planning phase. v1.2. |
+| Write docs/ARCHITECTURE.md | **Medium** | **Done** | Completed in planning phase. |
+| Write docs/FRONTEND.md | **Medium** | **Done** | Completed in planning phase. |
+| Write docs/BACKEND.md | **Medium** | **Done** | Completed in planning phase. Updated post-migration to reflect leaderboard no-client-writes policy. |
+| Write docs/AUTH.md | **Small** | **Done** | Completed in planning phase. |
+| Write docs/SECURITY.md | **Small** | **Done** | Completed in planning phase. |
+| Write docs/GAME_DESIGN.md | **Large** | **Done** | Completed in planning phase. |
+| Write docs/CONTENT.md | **Medium** | **Done** | Completed in planning phase. |
+| Write docs/DEVOPS.md | **Small** | **Done** | Completed in planning phase. Updated with correct supabase start command and Vitest environment annotation note. |
+| Create CHANGELOG.md | **Small** | **Done** | Created and maintained in this planning conversation. |
+| Audit Kanji Alive dataset coverage against N5 word bank | **Small** | **Done** | Pure kana words have no Kanji Alive coverage. Resolved: VOICEVOX pre-generation used instead for all words. Kanji Alive no longer needed for Phase 1. See CONTENT.md Section 2.2. |
 
 ---
 
 ## Sprint 2 - Design System and Landing Page
 
 **Goal:** Establish the visual language of the app and build the public-facing landing page.
-**Status:** Pending
+**Status:** Active
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
@@ -209,7 +209,7 @@ No UI yet. This is pure logic.
 | Task | Size | Status | Notes |
 |---|---|---|---|
 | Integrate lo-fi background audio | **Small** | **To Do** | Connect audio player component to the settings toggle. Persist preference. Default on. |
-| Audit and fill kana audio gaps | **Medium** | **To Do** | Based on the Sprint 1 audit. Source or generate any missing character audio files. Update CONTENT.md with final inventory. |
+| Generate and integrate word audio via VOICEVOX | **Medium** | **To Do** | Open VOICEVOX on Mac. Run scripts/generate-audio.ts to call local VOICEVOX API for every word in the N5 word bank. Save MP3s to public/audio/words/. Commit to repo. Confirm chosen voice character licence permits use in a free app. Add attribution to credits screen. See CONTENT.md Section 2.2. |
 | Build guest-to-account conversion flow | **Medium** | **To Do** | Guest user clicks "Save Progress" or similar CTA. Prompted to create an account. Local progress migrated to Supabase on account creation. |
 | Accessibility audit | **Medium** | **To Do** | Every interactive element: ARIA labels, keyboard navigation, focus states, touch targets minimum 44x44pt. |
 | Cross-browser and cross-device testing | **Medium** | **To Do** | Chrome, Safari, Firefox. Desktop, tablet, mobile. iOS and Android swipe keyboard behaviour. |

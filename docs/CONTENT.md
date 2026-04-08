@@ -60,25 +60,42 @@ A community-maintained open Anki deck with JLPT-levelled CSV files is also a
 useful cross-reference for validating coverage:
 URL: https://github.com/jamsinclair/open-anki-jlpt-decks
 
-### 2.2 Word Audio: Kanji Alive Dataset
+### 2.2 Word Audio: VOICEVOX (Pre-generated)
 
-Audio files of the pronunciations of 6-12 common compound words for each of the
-1,235 supported kanji, spoken by male and female native Japanese speakers.
-Available in Opus, AAC, Ogg, and MP3 formats (32kHz mono). 10,187 audio files.
+Audio files are generated locally using VOICEVOX on the developer's Mac and
+committed to the repository as static files. The app serves them directly.
+VOICEVOX never runs in production. No API calls at runtime. No cost per user.
 
-URL: https://github.com/kanjialive/kanji-data-media
-Licence: Creative Commons Attribution 4.0 International (CC BY 4.0).
-Attribution required. Text to be confirmed and added to the credits screen and
-to Section 8 of this document before the first audio sprint.
+VOICEVOX: https://voicevox.hiroshiba.jp
+Licence: Free and open source. Each voice character has its own terms of use.
+LangTap is currently free, so attribution-required characters are acceptable.
 
-**Why word audio and not individual character audio:**
-LangTap does not teach characters in isolation. It teaches them through words.
-When a user answers incorrectly on a character, they hear the full word containing
-that character, not the isolated phoneme. Hearing "aka" when prompted with "あ" is
-more useful than hearing "a" on its own: it provides phonetic context, demonstrates
-how the character sounds in natural speech, and reinforces the word as a unit.
-This also eliminates the need for a separate kana character audio source entirely.
-Word audio covers every character that appears in the word bank.
+**How it works:**
+1. Open VOICEVOX on the developer's Mac (runs local server on port 50021).
+2. Run the build script: `scripts/generate-audio.ts`.
+3. Script calls the local VOICEVOX API for every word in the word bank.
+4. Audio files saved to `public/audio/words/` as MP3.
+5. Commit the audio files to the repo.
+6. Deployed app serves them as static files.
+
+**Voice character selection (Sprint 10):**
+Pick one consistent voice for all words. Choose a character whose terms permit
+use in a free application with attribution. Attribution goes on the credits
+screen. Confirm the specific character's terms before generating audio.
+
+**Why this approach over Google TTS or Kanji Alive:**
+- VOICEVOX voices are specifically designed for Japanese and sound more natural
+  than WaveNet for the language.
+- Pre-generation means zero runtime cost and zero latency on playback.
+- Audio files are committed to the repo so the app has no external dependency.
+- Kanji Alive only covers words attached to a kanji. Pure kana words get full
+  coverage with VOICEVOX.
+
+**Coverage gap resolution:**
+The pure kana word gap identified in the Kanji Alive audit is fully solved.
+VOICEVOX generates audio for any Japanese text including pure kana words.
+
+**When this runs:** Sprint 10 - Audio Integration.
 
 ### 2.3 Lo-Fi Background Music: Free Music Archive
 

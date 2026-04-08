@@ -30,6 +30,56 @@ Format per entry:
 
 ---
 
+## [2026-04-08] - Session 8
+
+**Sprint:** Sprint 1 - Foundation and Project Setup
+**Task completed:** Audit Kanji Alive dataset coverage against N5 word bank
+**Status:** Done
+
+### Changes made
+- `docs/CONTENT.md`: Added coverage gap findings and Sprint 10 decision to Section 2.2.
+
+### Tests
+None. Research task.
+
+### Notes
+- Kanji Alive audio is organised by kanji, not by word. 1,235 kanji supported, 10,187 audio files.
+- Pure kana N5 words (これ, それ, あれ, どれ, etc.) have no Kanji Alive coverage.
+- Words containing a supported kanji are likely covered.
+- Decision: word bank build script must flag pure-kana vs kanji-containing words. Pure-kana words get no audio in v1 or source from alternative. Audio is optional per word.
+- This is not a blocker for any Sprint 1-9 task.
+
+### Next task
+Sprint 1 complete. Begin Sprint 2 - Design System and Landing Page.
+
+---
+
+## [2026-04-08] - Session 7
+
+**Sprint:** Sprint 1 - Foundation and Project Setup
+**Task completed:** Set up Vercel project and confirm deployment
+**Status:** Done
+
+### Changes made
+- `app/layout.tsx`, `app/(auth)/layout.tsx`, `app/(main)/layout.tsx`, `app/(onboarding)/layout.tsx`: Replaced `JSX.Element` return type with `ReactNode`. Added `import type { ReactNode } from 'react'` to each. JSX.Element requires the global JSX namespace which is unavailable in strict Next.js 15 / React 19 setups. ReactNode is the correct type for layout components.
+- Vercel project created and linked to GitHub repo (LearnWithMrA/langtap).
+- Production environment variables set in Vercel: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_SITE_URL.
+
+### Tests
+- Vercel build: Pass
+- All checks passing: format, lint, type-check, test
+
+### Notes
+- Deployment URL: langtap.vercel.app
+- Every push to main now triggers an automatic production deployment.
+- Every branch push and pull request gets a preview deployment automatically.
+- npm warn deprecated warnings from whatwg-encoding and glob are from transitive dependencies and can be ignored.
+
+### Next task
+Audit Kanji Alive dataset coverage against N5 word bank (Sprint 1, final task)
+
+---
+
 ## [2026-04-08] - Session 6
 
 **Sprint:** Sprint 1 - Foundation and Project Setup
