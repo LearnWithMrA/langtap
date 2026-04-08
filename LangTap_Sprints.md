@@ -1,0 +1,301 @@
+# LangTap - Sprint Board
+
+Version 1.0 | April 2026
+Status: Active
+
+Reference: LangTap_Planning.md is the source of truth for all feature detail.
+When a task conflicts with the planning document, the planning document wins.
+Update this sprint board at the end of every session.
+
+---
+
+## How to Use This Document
+
+Sprints are flexible in length. A sprint ends when all its tasks are marked Done,
+not on a fixed date. Only one sprint is active at a time.
+
+Tasks are sized as follows:
+
+| Size | Meaning |
+|---|---|
+| **Small** | Quick and contained. One short session. |
+| **Medium** | Standard effort. One focused session. |
+| **Large** | Complex. May span multiple sessions. |
+| **Epic** | High risk or very broad. Must be broken into smaller tasks before starting. |
+
+Rules:
+- Never start an Epic directly. Break it into Smalls, Mediums, and Larges first.
+- Only one sprint is active at a time.
+- A sprint is complete when all tasks are marked Done.
+- Backlog tasks are not assigned to a sprint until that sprint is being planned.
+- Update this document at the end of every session.
+- The AI must not delete any file, record, or code. Flag deletions to the owner.
+- Before starting any Large or Epic task, the AI must state the estimated token cost
+  and wait for approval.
+
+---
+
+## Sprint 1 - Foundation and Project Setup
+
+**Goal:** Everything needed before writing a single line of app code.
+**Status:** Active
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Confirm and document final tech stack | **Small** | **Done** | Next.js 15, React 19, TypeScript, Tailwind CSS, Zustand, Supabase, Stripe, Vercel, Vitest. Documented in Planning doc Section 7. |
+| Create project folder structure | **Medium** | **To Do** | Follow the structure defined in docs/ARCHITECTURE.md once that doc exists. Scaffold empty folders and placeholder index files only. No logic yet. |
+| Initialise Next.js project with TypeScript | **Medium** | **To Do** | Use `create-next-app` with TypeScript and Tailwind flags. Confirm Expo Router equivalent - Next.js App Router (file-based routing). |
+| Set up ESLint and Prettier | **Small** | **To Do** | Flat config ESLint 9. Prettier for formatting. Add pre-commit hook via lint-staged. |
+| Set up Vitest for testing | **Small** | **To Do** | Install and configure Vitest with React Testing Library. Add a single passing smoke test to confirm setup. |
+| Create Supabase project | **Small** | **To Do** | Create project in Supabase cloud. Save anon key and project URL to .env.local. Never commit secrets. |
+| Set up Vercel project and link to repo | **Small** | **To Do** | Connect GitHub repo to Vercel. Confirm preview deployments work on push. |
+| Write CLAUDE.md | **Medium** | **To Do** | Full AI rules, safeguards, naming conventions, what not to do, and session protocol. Based on Planning doc Section 8. |
+| Write docs/ARCHITECTURE.md | **Medium** | **To Do** | Project structure, file conventions, decoupling rules, module boundaries. |
+| Write docs/FRONTEND.md | **Medium** | **To Do** | UI components, layout rules, Tailwind conventions, responsive behaviour, heatmap system. |
+| Write docs/BACKEND.md | **Medium** | **To Do** | Supabase schema plan, API design, data flow, real-time strategy. |
+| Write docs/AUTH.md | **Small** | **To Do** | Auth flow, guest mode, onboarding steps, account rules. |
+| Write docs/SECURITY.md | **Small** | **To Do** | RLS policies, key handling, what is never exposed to the client, data protection rules. |
+| Write docs/GAME_DESIGN.md | **Large** | **To Do** | Mastery system, unlocking logic, word counter system, input modes, feedback on errors, distance/progress mechanic. This is the most detailed sub-doc. |
+| Write docs/CONTENT.md | **Medium** | **To Do** | Kana sets (seion, dakuon, yoon), word bank structure, JLPT levels, mnemonic sources, audio asset inventory. |
+| Write docs/DEVOPS.md | **Small** | **To Do** | Vercel config, environment variables, CI setup, deployment process. |
+| Create CHANGELOG.md | **Small** | **To Do** | Empty file with header. First entry added at end of this sprint. |
+| Audit Kanji Alive dataset coverage against N5 word bank | **Small** | **To Do** | Cross-reference which N5 words have audio in the Kanji Alive dataset. Document any gaps. Decision on gaps is made at the Sprint 10 audio integration task. |
+
+---
+
+## Sprint 2 - Design System and Landing Page
+
+**Goal:** Establish the visual language of the app and build the public-facing landing page.
+**Status:** Pending
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Define colour tokens | **Small** | **To Do** | Pastel palette: greens, sage, mint, warm cream, blush. Define as Tailwind CSS custom tokens. Document in FRONTEND.md. |
+| Define typography scale | **Small** | **To Do** | Select and licence a Japanese-friendly font (confirm Zen Maru Gothic availability). Define size scale and line heights. |
+| Define spacing and layout tokens | **Small** | **To Do** | Standard spacing scale. Max content width for desktop. Mobile breakpoints. |
+| Build reusable base components | **Medium** | **To Do** | Button, Input, Badge, Card, ProgressBar, Modal (confirm), BottomNav, TopBar. Each as an isolated, tested component. |
+| Build heatmap colour utility | **Small** | **To Do** | A pure function that takes a mastery score and returns the correct pastel heatmap colour. No UI - logic only. Tested. |
+| Build landing page | **Medium** | **To Do** | Cycling animation, tagline, sign up / log in CTAs, guest mode entry. Mobile and desktop layouts. |
+| Source and integrate cycling animation | **Medium** | **To Do** | Find or generate open-licence SVG/CSS animation of a girl cycling. Create AI generation prompt if needed. Integrate as a looping component. Animation speed controlled by a prop. |
+| Source lo-fi audio tracks | **Small** | **To Do** | Curate 3-5 tracks from Free Music Archive. Confirm CC BY or CC0 licence on each. Add attribution to CONTENT.md. |
+| Build audio player component | **Small** | **To Do** | Looping background audio player. Play/pause. No visible UI controls beyond a mute icon. Respects the settings toggle. |
+
+---
+
+## Sprint 3 - Authentication and Onboarding
+
+**Goal:** Users can sign up, log in, and complete the four-step onboarding flow.
+**Status:** Pending
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Set up Supabase Auth (email and password) | **Medium** | **To Do** | Configure email/password auth in Supabase. RLS enabled on all tables from the start. |
+| Build sign-up screen | **Medium** | **To Do** | Username field, email, password. Password strength indicator. Anonymity reminder. No real name prompt. |
+| Build log-in screen | **Small** | **To Do** | Email and password. Forgot password link (Supabase magic link flow). |
+| Build guest mode | **Small** | **To Do** | Allow entry without account. Store progress in localStorage. Show persistent banner on every screen. |
+| Build onboarding step 1 - JLPT self-assessment | **Medium** | **To Do** | Show N5-N1 levels with descriptions. User selects one. Save to user profile in Supabase. |
+| Build onboarding step 2 - early character unlock | **Large** | **To Do** | Show full kana chart. User taps characters they know. Unlock those characters immediately. Skip button visible. Confirmation before applying. |
+| Build onboarding step 3 - notification preferences | **Small** | **To Do** | Minimal screen in Phase 1. Toggle placeholder only. Save preference to user profile. |
+| Build onboarding step 4 - input mode selection | **Small** | **To Do** | Choose Tap, Type, or Swipe. Save to user profile. Show mode icon preview. |
+| Build user profile record in Supabase | **Medium** | **To Do** | Schema: user_id, username, jlpt_level, input_mode, notification_prefs, created_at. RLS: user can only read and write their own row. |
+| Write auth tests | **Medium** | **To Do** | Sign up, log in, guest mode, onboarding flow. Happy path, loading, and error states for each screen. |
+
+---
+
+## Sprint 4 - Core Game Engine
+
+**Goal:** The mastery system, word counter, and character selection logic are built and tested.
+No UI yet. This is pure logic.
+**Status:** Pending
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Build character mastery store (Zustand) | **Medium** | **To Do** | State: all kana characters, each with a mastery score. Actions: increment on correct, read score, reset. Persisted to Supabase for logged-in users, localStorage for guests. |
+| Build character unlock logic | **Medium** | **To Do** | Characters start locked. Unlock condition: 5 correct answers. Manual unlock from Dojo. Bulk unlock with confirmation. Logic only - no UI. |
+| Build word counter store | **Medium** | **To Do** | Each word has a hidden counter capped at 5. Increment on show. Reset when all words for a character hit 5. Logic only. |
+| Build character selection algorithm | **Large** | **To Do** | Weighted random selection based on mastery score. Lower score = higher frequency. Only unlocked characters and words with no locked characters are eligible. Prefer words with lower counters. Tested with a range of mastery distributions. |
+| Build unlocking progression sequence | **Medium** | **To Do** | Seion: first 10 hiragana, then first 10 katakana, alternating. Then dakuon. Then yoon. Logic that determines which characters are currently in the active unlocking set. |
+| Build distance/progress mechanic | **Small** | **To Do** | A counter that accumulates metres (or feet based on locale) per correct answer. Rate tied to answer speed. Pure function - no UI. |
+| Build session score tracker | **Small** | **To Do** | Tracks correct answers, wrong answers, and distance for the current session. Resets on new session. |
+| Write game engine tests | **Large** | **To Do** | Full test coverage for: mastery scoring, word counter, selection algorithm, unlock sequence, distance counter. Edge cases: all characters at max mastery, all words at counter 5, single character unlocked. |
+
+---
+
+## Sprint 5 - Practice Screen (Type Mode)
+
+**Goal:** A working practice screen in Type mode. The core game loop is playable.
+**Status:** Pending
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Build practice screen layout | **Medium** | **To Do** | Character display area, input field, distance counter, cycling animation integrated. Mobile-aware: space reserved for native keyboard. |
+| Integrate character selection into practice screen | **Medium** | **To Do** | Connect the game engine to the UI. Display the selected character. Accept keyboard input. |
+| Build correct answer feedback | **Small** | **To Do** | Visual: brief highlight or animation. Distance counter increments. Cycling animation speeds up momentarily. Move to next character. |
+| Build wrong answer feedback | **Medium** | **To Do** | Correct character highlighted orange on input. Short mnemonic shown below (if enabled). English meaning stays hidden. No score change. Brief pause then continue. |
+| Build English meaning reveal | **Small** | **To Do** | Show English meaning only after correct answer is given. Hidden at all other times. |
+| Integrate kana character audio | **Medium** | **To Do** | Play the character's audio on display (or on correct answer - decision to be made at this sprint). Use Wikimedia Commons audio files. |
+| Build top bar and input mode switcher | **Small** | **To Do** | Logo left. Input mode icon right. Tapping the icon opens mode switcher. Switching mode saves to profile. |
+| Build bottom navigation bar | **Small** | **To Do** | Profile, Dojo, Library (locked placeholder), Settings. Active state indicator. |
+| Write practice screen tests | **Medium** | **To Do** | Happy path, loading state, error state, wrong answer flow, correct answer flow. |
+
+---
+
+## Sprint 6 - Tap Mode and Swipe Mode
+
+**Goal:** All three input modes are functional.
+**Status:** Pending
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Build Tap mode input component | **Medium** | **To Do** | On-screen kana character buttons. Tapping a button submits that character. Grid layout. Works on all screen sizes. |
+| Integrate Tap mode into practice screen | **Small** | **To Do** | Connect Tap input to the same game engine used by Type mode. |
+| Build Swipe mode input component | **Medium** | **To Do** | Detects native mobile swipe keyboard input. Accepts input from the device keyboard the same way Type mode does but optimised for mobile layout. |
+| Integrate Swipe mode into practice screen | **Small** | **To Do** | Same game engine connection as Type and Tap. |
+| Test all three modes end to end | **Medium** | **To Do** | Each mode: correct answer, wrong answer, mode switching mid-session, mobile and desktop. |
+
+---
+
+## Sprint 7 - Dojo Screen
+
+**Goal:** The Dojo screen is complete with character progress, collapsible groups, and unlock controls.
+**Status:** Pending
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Build Dojo screen layout | **Medium** | **To Do** | Heading: Kana. Subheadings: Seion, Dakuon, Yoon. Each group collapsible via arrow toggle. |
+| Build character progress bar component | **Small** | **To Do** | Shows mastery score as a filled bar. Heatmap colouring from the colour utility built in Sprint 2. |
+| Build individual character unlock interaction | **Small** | **To Do** | Clicking a locked character shows an unlock prompt. Confirmation required. Cannot be undone. |
+| Build unlock all interaction | **Small** | **To Do** | Clicking a progress bar shows an "Unlock All" option. Two-step confirmation. Cannot be undone. |
+| Connect Dojo to mastery store | **Small** | **To Do** | Read mastery scores from Zustand store. Dojo reflects live state. |
+| Write Dojo screen tests | **Small** | **To Do** | Collapse/expand, locked state, unlock flow, progress bar rendering. |
+
+---
+
+## Sprint 8 - Profile and Settings Screens
+
+**Goal:** Profile and Settings screens are complete and connected to user state.
+**Status:** Pending
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Build Profile screen | **Medium** | **To Do** | Username display, JLPT level selector, font selector, font size selector, lo-fi audio toggle, reset progress button. |
+| Build reset progress flow | **Small** | **To Do** | Two-step confirmation. Clear warning that this cannot be undone. Resets all mastery, counters, and unlocks. |
+| Build Settings screen | **Medium** | **To Do** | Input mode selector, mode-specific sub-settings (Type/Swipe: romaji-to-kana or kana-to-romaji), mnemonic toggle. |
+| Connect Profile and Settings to Supabase | **Medium** | **To Do** | All preferences saved to the user profile record. Loaded on app start. Guest users: saved to localStorage. |
+| Write Profile and Settings tests | **Small** | **To Do** | Each setting saved and loaded correctly. Reset flow. Guest vs logged-in behaviour. |
+
+---
+
+## Sprint 9 - Leaderboards
+
+**Goal:** Global leaderboards are live for all three input modes and the overall board.
+**Status:** Pending
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Design leaderboard Supabase schema | **Medium** | **To Do** | Table: leaderboard_entries. Fields: user_id, username, input_mode, total_score, updated_at. RLS: anyone can read, only owner can write their own row. |
+| Build leaderboard score sync | **Medium** | **To Do** | On session end, push the updated total mastery score to the leaderboard table. Debounced - not on every keypress. |
+| Build leaderboard screen | **Medium** | **To Do** | Four tabs: Tap, Type, Swipe, Overall. Each shows ranked list with username, input mode indicator, and score. Highlight the current user's row. |
+| Build leaderboard rank calculation | **Small** | **To Do** | Rank by total_score descending. Ties resolved by updated_at ascending (earlier score wins on tie). |
+| Write leaderboard tests | **Small** | **To Do** | Correct ranking order, current user highlight, empty state, loading state. |
+
+---
+
+## Sprint 10 - Audio, Polish, and Guest-to-Account Flow
+
+**Goal:** All audio is integrated, UI is polished, and guests can convert to a full account.
+**Status:** Pending
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Integrate lo-fi background audio | **Small** | **To Do** | Connect audio player component to the settings toggle. Persist preference. Default on. |
+| Audit and fill kana audio gaps | **Medium** | **To Do** | Based on the Sprint 1 audit. Source or generate any missing character audio files. Update CONTENT.md with final inventory. |
+| Build guest-to-account conversion flow | **Medium** | **To Do** | Guest user clicks "Save Progress" or similar CTA. Prompted to create an account. Local progress migrated to Supabase on account creation. |
+| Accessibility audit | **Medium** | **To Do** | Every interactive element: ARIA labels, keyboard navigation, focus states, touch targets minimum 44x44pt. |
+| Cross-browser and cross-device testing | **Medium** | **To Do** | Chrome, Safari, Firefox. Desktop, tablet, mobile. iOS and Android swipe keyboard behaviour. |
+| Performance audit | **Small** | **To Do** | Lighthouse score. Identify and fix any slow loads. Confirm animation does not cause jank. |
+| Error boundary implementation | **Small** | **To Do** | Global error boundary. All screens handle error state with a human-readable message and a recovery action. |
+
+---
+
+## Sprint 11 - Stripe Infrastructure and Pre-Launch
+
+**Goal:** Payments infrastructure is in place but not active. App is ready for soft launch.
+**Status:** Pending
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Set up Stripe account and products | **Medium** | **To Do** | Create Stripe account. Define membership product (details TBD in Phase 2). Wire Stripe into the app but do not activate any paywall. |
+| Build credits / attribution screen | **Small** | **To Do** | List all audio attributions (Wikimedia Commons, Kanji Alive), font licences, and any other third-party credits. |
+| Write privacy policy and terms of service | **Medium** | **To Do** | Plain language. Cover data storage (Supabase), leaderboard visibility of username, and guest mode data loss warning. |
+| Final end-to-end test pass | **Large** | **To Do** | Full user journey: guest entry, sign up, onboarding, practice in all three modes, Dojo, Profile, Settings, Leaderboard. |
+| Soft launch on Vercel | **Small** | **To Do** | Share URL with a small group of testers. Monitor for errors. |
+
+---
+
+## Phase 2 Backlog - Kana with Kotoba
+
+Not assigned to a sprint. Pulled in once Phase 1 is complete and stable.
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Design word mastery schema in Supabase | **Medium** | **To Do** | Separate from character mastery. Table: word_mastery. Fields: user_id, word_id, score, counter, updated_at. |
+| Build word mastery store (Zustand) | **Medium** | **To Do** | Same logic as character mastery but for words. Frequency-weighted selection. Counter cap at 5. |
+| Build Library screen | **Large** | **To Do** | JLPT N5-N1 word banks. Organised by level and set. Heatmap colouring per word. Remove "Under Construction" placeholder. |
+| Build Kotoba Mode game loop | **Large** | **To Do** | Show English word. User types kana. Correct: word mastery increments. Wrong: silent, try again. |
+| Integrate Kanji Alive word audio | **Medium** | **To Do** | Use CC BY 4.0 dataset. Play word audio on display or on correct answer. Add attribution to credits screen. |
+| Build Kotoba leaderboards | **Medium** | **To Do** | Kana Kotoba board. Separate from the main Kana boards. Same ranking logic. |
+| Gate Kotoba Mode behind full Kana mastery | **Small** | **To Do** | Check mastery threshold before allowing access. Show friendly message if not yet unlocked. |
+| Activate Stripe membership | **Epic** | **To Do** | Break into smaller tasks at the time. Define pricing model first. |
+
+---
+
+## Phase 3 Backlog - Kanji
+
+Not assigned to a sprint. Pulled in once Phase 2 is complete and stable.
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Design kanji content structure | **Medium** | **To Do** | JLPT N5-N1, grouped into sets. Mirror kanadojo.com organisation. Document in CONTENT.md. |
+| Build kanji mastery store | **Medium** | **To Do** | Same logic as kana mastery. Separate store. |
+| Build kanji visual sub-mode | **Large** | **To Do** | Show kanji, user types reading in kana. Correct answer unlocks character. Same mastery loop. |
+| Build kanji audio sub-mode | **Large** | **To Do** | Play audio. User types reading. Then selects correct kanji (Tap: button grid, Type/Swipe: IME auto-handles). |
+| Integrate Kanji Alive kanji audio | **Medium** | **To Do** | 10,187 audio files. Map to kanji characters. Add attribution. |
+| Build kanji leaderboards | **Medium** | **To Do** | Separate from kana and kotoba boards. |
+| Gate Kanji Mode behind full Kana mastery | **Small** | **To Do** | Same gate logic as Kotoba Mode. |
+| Handle romaji input in Kanji Mode | **Small** | **To Do** | Detect romaji input. Award zero points. Show kind message explaining why. |
+
+---
+
+## Phase 4 Backlog - Kanji with Kotoba
+
+Not assigned to a sprint. Pulled in once Phase 3 is complete and stable.
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Extend Kotoba Mode to include kanji readings | **Large** | **To Do** | Show English word. User types kanji reading (via kana). |
+| Build Kanji Kotoba leaderboards | **Medium** | **To Do** | Separate board. |
+| Full library with all JLPT levels (kanji) | **Medium** | **To Do** | Extend Library screen to include kanji word bank. |
+
+---
+
+## Future Backlog - Platform Improvements
+
+Ideas and improvements not tied to a phase. Pulled in when the time is right.
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Google Sign-In | **Medium** | **To Do** | Add as a second auth option. Supabase OAuth. |
+| Apple Sign-In | **Medium** | **To Do** | Add as a third auth option. Required for any future iOS wrapper. |
+| Font size linked to mastery | **Medium** | **To Do** | Starts at 30pt. Decreases by 2pt per correct answer. Minimum size TBD (suggested 12pt). Toggle in Profile. |
+| Additional language support | **Epic** | **To Do** | Architecture should support this from Phase 1. Korean and Mandarin are the most likely additions. Break into tasks when scoping begins. |
+| Animation asset upgrade | **Small** | **To Do** | Commission or generate a higher-quality cycling character animation if the initial asset needs replacing. |
+| Mnemonic content expansion | **Medium** | **To Do** | Review and expand the mnemonic library. Ensure all seion, dakuon, and yoon characters have a mnemonic. |
+
+---
+
+## Version History
+
+| Version | Date | Notes |
+|---|---|---|
+| 1.0 | April 2026 | Initial sprint board. Sprint 1 active. Sprints 2-11 pending. Phase 2-4 backlogs drafted. |

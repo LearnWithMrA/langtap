@@ -1,0 +1,8 @@
+/*
+ * File: app/globals.css
+ * Purpose: Global styles. Tailwind CSS v4 entry point.
+ *          Custom theme tokens are defined here via @theme blocks
+ *          when the design system is established in Sprint 2.
+ */
+
+@import "tailwindcss";
