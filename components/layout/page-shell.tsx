@@ -9,6 +9,6 @@
 //             hooks/useSettings.ts
 // ------------------------------------------------------------
 
-export function PageShell() {
+export function PageShell(): null {
   return null
 }

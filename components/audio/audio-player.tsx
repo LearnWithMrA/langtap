@@ -6,6 +6,6 @@
 // Depends on: hooks/useAudio.ts, hooks/useSettings.ts
 // ------------------------------------------------------------
 
-export function AudioPlayer() {
+export function AudioPlayer(): null {
   return null
 }

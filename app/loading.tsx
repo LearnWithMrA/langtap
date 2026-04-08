@@ -4,6 +4,6 @@
 //          Placeholder - to be implemented in Sprint 2.
 // ------------------------------------------------------------
 
-export default function GlobalLoading() {
+export default function GlobalLoading(): null {
   return null
 }

@@ -7,6 +7,6 @@
 // Depends on: (animation asset to be sourced in Sprint 2)
 // ------------------------------------------------------------
 
-export function CyclingCharacter() {
+export function CyclingCharacter(): null {
   return null
 }

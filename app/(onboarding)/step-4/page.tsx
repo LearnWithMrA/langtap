@@ -5,6 +5,6 @@
 // Depends on: components/ui/, services/profile.service.ts
 // ------------------------------------------------------------
 
-export default function OnboardingStep4Page() {
+export default function OnboardingStep4Page(): null {
   return null
 }

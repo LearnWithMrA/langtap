@@ -5,6 +5,6 @@
 // Depends on: services/profile.service.ts, hooks/useAuth.ts
 // ------------------------------------------------------------
 
-export default function ProfilePage() {
+export default function ProfilePage(): null {
   return null
 }

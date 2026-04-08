@@ -5,6 +5,6 @@
 // Depends on: theme/typography.ts
 // ------------------------------------------------------------
 
-export function WordDisplay() {
+export function WordDisplay(): null {
   return null
 }

@@ -6,6 +6,6 @@
 // Depends on: theme/colors.ts
 // ------------------------------------------------------------
 
-export function Card() {
+export function Card(): null {
   return null
 }

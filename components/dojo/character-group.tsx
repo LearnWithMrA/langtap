@@ -6,6 +6,6 @@
 // Depends on: components/dojo/character-tile.tsx
 // ------------------------------------------------------------
 
-export function CharacterGroup() {
+export function CharacterGroup(): null {
   return null
 }

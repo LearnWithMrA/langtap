@@ -6,6 +6,6 @@
 // Depends on: theme/colors.ts
 // ------------------------------------------------------------
 
-export function Input() {
+export function Input(): null {
   return null
 }

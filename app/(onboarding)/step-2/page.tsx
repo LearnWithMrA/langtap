@@ -6,6 +6,6 @@
 // Depends on: components/ui/, data/kana/characters.ts, services/unlock.service.ts
 // ------------------------------------------------------------
 
-export default function OnboardingStep2Page() {
+export default function OnboardingStep2Page(): null {
   return null
 }

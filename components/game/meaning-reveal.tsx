@@ -6,6 +6,6 @@
 // Depends on: theme/typography.ts
 // ------------------------------------------------------------
 
-export function MeaningReveal() {
+export function MeaningReveal(): null {
   return null
 }

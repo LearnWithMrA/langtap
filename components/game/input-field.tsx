@@ -5,6 +5,6 @@
 // Depends on: components/ui/input.tsx, hooks/useSession.ts
 // ------------------------------------------------------------
 
-export function InputField() {
+export function InputField(): null {
   return null
 }

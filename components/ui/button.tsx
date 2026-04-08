@@ -6,6 +6,6 @@
 // Depends on: theme/colors.ts
 // ------------------------------------------------------------
 
-export function Button() {
+export function Button(): null {
   return null
 }

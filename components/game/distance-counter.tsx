@@ -6,6 +6,6 @@
 // Depends on: stores/session.store.ts, engine/distance.ts
 // ------------------------------------------------------------
 
-export function DistanceCounter() {
+export function DistanceCounter(): null {
   return null
 }

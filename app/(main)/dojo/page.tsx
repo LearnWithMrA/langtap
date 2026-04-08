@@ -5,6 +5,6 @@
 // Depends on: components/dojo/, hooks/useMastery.ts
 // ------------------------------------------------------------
 
-export default function DojoPage() {
+export default function DojoPage(): null {
   return null
 }

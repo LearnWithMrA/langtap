@@ -6,6 +6,6 @@
 // Depends on: theme/colors.ts, components/game/mode-switcher.tsx
 // ------------------------------------------------------------
 
-export function TopBar() {
+export function TopBar(): null {
   return null
 }

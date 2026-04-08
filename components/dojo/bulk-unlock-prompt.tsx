@@ -6,6 +6,6 @@
 // Depends on: components/ui/modal.tsx, components/ui/button.tsx
 // ------------------------------------------------------------
 
-export function BulkUnlockPrompt() {
+export function BulkUnlockPrompt(): null {
   return null
 }

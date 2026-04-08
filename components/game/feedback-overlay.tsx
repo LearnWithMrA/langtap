@@ -6,6 +6,6 @@
 // Depends on: data/kana/mnemonics.ts, hooks/useSettings.ts
 // ------------------------------------------------------------
 
-export function FeedbackOverlay() {
+export function FeedbackOverlay(): null {
   return null
 }

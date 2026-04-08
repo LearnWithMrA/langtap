@@ -5,6 +5,6 @@
 // Depends on: services/leaderboard.service.ts, hooks/useAuth.ts
 // ------------------------------------------------------------
 
-export default function LeaderboardPage() {
+export default function LeaderboardPage(): null {
   return null
 }

@@ -4,6 +4,6 @@
 //          Placeholder - to be implemented before launch.
 // ------------------------------------------------------------
 
-export default function NotFound() {
+export default function NotFound(): null {
   return null
 }

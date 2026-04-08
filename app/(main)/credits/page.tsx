@@ -5,6 +5,6 @@
 //          Placeholder - to be implemented in Sprint 11.
 // ------------------------------------------------------------
 
-export default function CreditsPage() {
+export default function CreditsPage(): null {
   return null
 }

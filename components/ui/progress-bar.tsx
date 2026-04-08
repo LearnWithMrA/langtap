@@ -6,6 +6,6 @@
 // Depends on: engine/mastery.ts (for heatmap class)
 // ------------------------------------------------------------
 
-export function ProgressBar() {
+export function ProgressBar(): null {
   return null
 }

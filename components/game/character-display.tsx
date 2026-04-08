@@ -6,6 +6,6 @@
 // Depends on: theme/typography.ts
 // ------------------------------------------------------------
 
-export function CharacterDisplay() {
+export function CharacterDisplay(): null {
   return null
 }

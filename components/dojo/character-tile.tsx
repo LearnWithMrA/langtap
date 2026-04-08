@@ -6,6 +6,6 @@
 // Depends on: components/ui/progress-bar.tsx, engine/mastery.ts
 // ------------------------------------------------------------
 
-export function CharacterTile() {
+export function CharacterTile(): null {
   return null
 }

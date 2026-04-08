@@ -5,6 +5,6 @@
 //          Placeholder - to be implemented in Sprint 5 (stub only).
 // ------------------------------------------------------------
 
-export default function LibraryPage() {
+export default function LibraryPage(): null {
   return null
 }

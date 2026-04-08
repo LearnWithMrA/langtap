@@ -6,6 +6,6 @@
 // Depends on: theme/colors.ts, components/ui/button.tsx
 // ------------------------------------------------------------
 
-export function Modal() {
+export function Modal(): null {
   return null
 }

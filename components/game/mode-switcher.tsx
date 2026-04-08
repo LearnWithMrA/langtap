@@ -6,6 +6,6 @@
 // Depends on: stores/settings.store.ts, hooks/useSettings.ts
 // ------------------------------------------------------------
 
-export function ModeSwitcher() {
+export function ModeSwitcher(): null {
   return null
 }

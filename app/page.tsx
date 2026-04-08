@@ -5,6 +5,6 @@
 // Depends on: components/animation/cycling-character.tsx
 // ------------------------------------------------------------
 
-export default function LandingPage() {
+export default function LandingPage(): null {
   return null
 }

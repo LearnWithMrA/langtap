@@ -6,6 +6,6 @@
 // Depends on: theme/colors.ts, hooks/useSettings.ts
 // ------------------------------------------------------------
 
-export function BottomNav() {
+export function BottomNav(): null {
   return null
 }

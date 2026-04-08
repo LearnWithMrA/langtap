@@ -5,6 +5,6 @@
 // Depends on: stores/settings.store.ts, hooks/useSettings.ts
 // ------------------------------------------------------------
 
-export default function SettingsPage() {
+export default function SettingsPage(): null {
   return null
 }

@@ -6,6 +6,6 @@
 // Depends on: hooks/useMastery.ts, data/kana/characters.ts
 // ------------------------------------------------------------
 
-export function TapGrid() {
+export function TapGrid(): null {
   return null
 }

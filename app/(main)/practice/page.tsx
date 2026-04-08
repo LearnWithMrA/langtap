@@ -5,6 +5,6 @@
 // Depends on: components/game/, hooks/useSession.ts, hooks/useMastery.ts
 // ------------------------------------------------------------
 
-export default function PracticePage() {
+export default function PracticePage(): null {
   return null
 }

@@ -6,6 +6,6 @@
 // Depends on: components/ui/modal.tsx, components/ui/button.tsx
 // ------------------------------------------------------------
 
-export function UnlockPrompt() {
+export function UnlockPrompt(): null {
   return null
 }

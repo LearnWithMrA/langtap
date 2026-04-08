@@ -5,6 +5,6 @@
 //          Placeholder - to be implemented in Sprint 3.
 // ------------------------------------------------------------
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default function AuthLayout({ children }: { children: React.ReactNode }): JSX.Element {
   return <>{children}</>
 }

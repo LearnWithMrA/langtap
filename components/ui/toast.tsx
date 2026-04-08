@@ -6,6 +6,6 @@
 // Depends on: theme/colors.ts
 // ------------------------------------------------------------
 
-export function Toast() {
+export function Toast(): null {
   return null
 }

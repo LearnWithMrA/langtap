@@ -5,6 +5,6 @@
 // Depends on: theme/colors.ts
 // ------------------------------------------------------------
 
-export function Badge() {
+export function Badge(): null {
   return null
 }

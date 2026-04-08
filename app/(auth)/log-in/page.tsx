@@ -5,6 +5,6 @@
 // Depends on: components/ui/, services/auth.service.ts
 // ------------------------------------------------------------
 
-export default function LogInPage() {
+export default function LogInPage(): null {
   return null
 }
