@@ -30,6 +30,48 @@ Format per entry:
 
 ---
 
+## [2026-04-09] - Session 15
+
+**Sprint:** Sprint 2 - Design System and Landing Page
+**Task completed:** Build landing page
+**Status:** Done
+
+### Changes made
+- `app/page.tsx`: Replaced placeholder with full landing page. Server component. LangTap heading, tagline, cycling animation placeholder (aria-hidden, noted for later sprint), beginner note with Tofugu link, LandingCta client island, log-in link. Layout: min-h-screen bg-surface, max-w-md centred content, gap-8 vertical rhythm.
+- `components/ui/landing-cta.tsx`: New client component. Two CTA buttons using useRouter + Button primitive. "Create an account" routes to /sign-up (primary), "Play as guest" routes to /practice (secondary). Both have aria-label attributes.
+- `.prettierignore`: Added `.claude/` to prevent settings.local.json blocking npm run check.
+
+### Tests
+- All 120 existing tests passed. No new tests required (static UI with no logic).
+
+### Notes
+- useRouter + onClick chosen over Link wrapping Button to avoid invalid anchor-inside-button HTML pattern.
+- Cycling character placeholder reserves vertical rhythm. Real component replaces it in a later sprint.
+
+### Next task
+Source and integrate cycling animation (Sprint 2)
+
+---
+
+## [2026-04-09] - Session 14
+
+**Sprint:** Sprint 2 - Design System and Landing Page
+**Task completed:** Build heatmap colour utility
+**Status:** Done
+
+### Changes made
+- `types/kana.types.ts`: Added `MasteryScore` type alias (number, integer >= 0). First real content in this file.
+- `engine/mastery.ts`: Implemented `getMasteryHeatClass(score)` returning bg-heat-0 through bg-heat-5 per FRONTEND.md Section 2.3. Implemented `getMasteryWeight(score)` returning 1 / (score + 1) per GAME_DESIGN.md Section 2.4. Both pure functions with no side effects.
+- `engine/__tests__/mastery.test.ts`: Replaced describe.todo with 18 tests covering all 6 heat band boundaries (exact lower and upper boundary values), all weight examples from the spec, and invariant checks.
+
+### Tests
+- engine/__tests__/mastery.test.ts: 18 passed, 0 failed.
+
+### Next task
+Build landing page (Sprint 2)
+
+---
+
 ## [2026-04-08] - Session 13
 
 **Sprint:** Sprint 2 - Design System and Landing Page
