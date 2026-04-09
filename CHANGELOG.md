@@ -30,6 +30,134 @@ Format per entry:
 
 ---
 
+## [2026-04-08] - Session 13
+
+**Sprint:** Sprint 2 - Design System and Landing Page
+**Task completed:** Fix Vitest environment - switch to happy-dom
+**Status:** Done
+
+### Changes made
+- `vitest.config.ts`: Switched default environment from `node` to `happy-dom`. Added `pool: 'forks'` to prevent zombie worker processes on test timeout.
+- `package.json`: Added `happy-dom` as a dev dependency.
+
+### Tests
+- Full test suite: 102 tests passed, 0 failed. 7 component test files passing, 8 engine placeholder files skipped (no tests written yet).
+
+### Notes
+- jsdom 26.x hangs indefinitely in vitest worker threads under Node.js v24.14.1. happy-dom does not have this issue.
+- `pool: 'forks'` ensures clean process termination if a test hangs. Prevents zombie vitest node processes accumulating and consuming CPU.
+- Cold start cost ~24s on first run. Subsequent runs ~2s.
+
+### Next task
+Build heatmap colour utility (Sprint 2)
+
+---
+
+## [2026-04-08] - Session 12
+
+**Sprint:** Sprint 2 - Design System and Landing Page
+**Task completed:** Build reusable base components
+**Status:** Done
+
+### Changes made
+- `components/ui/button.tsx`: Implemented. 4 variants, 3 sizes, loading state, disabled state, ARIA attributes, 44pt touch target.
+- `components/ui/input.tsx`: Implemented. value/onChange, label association, disabled state, error state with aria-invalid and aria-describedby.
+- `components/ui/card.tsx`: Implemented. Surface-raised wrapper with border and padding.
+- `components/ui/badge.tsx`: Implemented. 4 colour variants, ARIA role.
+- `components/ui/progress-bar.tsx`: Implemented. Score clamping, heatClass validation with regex and fallback, locked state, ARIA progressbar attributes.
+- `components/ui/modal.tsx`: Implemented. Focus trap, Escape key, scroll lock, backdrop click, restore focus, two-step flow, role="dialog" aria-modal.
+- `components/ui/toast.tsx`: Implemented. aria-live="polite", role="alert" for errors, max 3 visible, auto-dismiss 4000ms, pause on hover, duplicate deduplication.
+- `components/ui/__tests__/` (7 files): Full test matrix covering render, disabled/locked, error state, keyboard nav, ARIA roles and labels.
+- `eslint.config.mjs`: Added `next-env.d.ts` to ignore list (pre-existing auto-generated file causing lint errors).
+
+### Tests
+- lint: Pass
+- type-check: Pass
+- format:check: Pass
+- Component tests: 102 passing (after happy-dom switch in Session 13)
+
+### Notes
+- Codex review caught 6 issues before coding began: missing prop contracts, modal a11y gaps, toast lifecycle undefined, ProgressBar input hardening, test matrix too shallow, existing placeholder files. All addressed in updated plan before implementation.
+- jsdom/Node 24 incompatibility discovered during test run. Resolved by switching to happy-dom.
+
+### Next task
+Build heatmap colour utility (Sprint 2)
+
+---
+
+## [2026-04-08] - Session 11
+
+**Sprint:** Sprint 2 - Design System and Landing Page
+**Task completed:** Define typography scale
+**Status:** Done
+
+### Changes made
+- `app/globals.css`: Added second `@theme` block with font family, size scale (xs through 5xl), weights (light through black), and line heights (tight through relaxed). Added base body styles applying font, size, line height, and colour tokens.
+- `app/layout.tsx`: Loaded Zen Maru Gothic via next/font/google (weights 300/400/500/700/900). Exposed as `--font-zen-maru` CSS variable on `<html>`. Changed `lang="en"` to `lang="ja"`.
+- `theme/typography.ts`: Replaced placeholder with FONT_FAMILY, FONT_SIZE, FONT_WEIGHT, LINE_HEIGHT constants and mastery-linked font sizing constants (MASTERY_FONT_START_PX, MASTERY_FONT_STEP_PX, MASTERY_FONT_MIN_PX).
+
+### Tests
+- npm run lint: Pass
+- npm run format:check: Pass
+- npm run type-check: Pass
+
+### Notes
+- Zen Maru Gothic chosen over Noto Sans JP for warmer, rounder character suited to the calm but inviting design intent.
+- next/font/google does not accept 'japanese' as a subset type. Japanese characters included by default.
+
+### Next task
+Define spacing and layout tokens (Sprint 2)
+
+---
+
+## [2026-04-08] - Session 10
+
+**Sprint:** Sprint 2 - Design System and Landing Page
+**Task completed:** Define colour tokens
+**Status:** Done
+
+### Changes made
+- `app/globals.css`: Added full `@theme` block with the complete LangTap pastel palette. 7 sage greens (sage-50 through sage-600), 6 warm neutrals (cream, warm-100 through warm-800), 3 mint accents, 2 blush accents, 2 feedback colours (wrong/correct), 6 heatmap colours (heat-0 through heat-5), 6 semantic surface and text tokens (surface, surface-raised, border, text-primary, text-secondary, text-muted). All values match FRONTEND.md Section 2.1 exactly.
+
+### Tests
+- format:check: Pass
+- lint: Pass
+- type-check: Pass
+- vitest: Pass (all placeholders skip cleanly)
+
+### Next task
+Define typography scale (Sprint 2)
+
+---
+
+## [2026-04-08] - Session 9
+
+**Sprint:** Sprint 1 - Foundation and Project Setup
+**Task completed:** Fix Vercel build type-check failure (JSX.Element return types)
+**Status:** Done
+
+### Changes made
+- `app/layout.tsx`: Added `import type { ReactNode } from 'react'`. Changed return type from `JSX.Element` to `ReactNode`. Changed `React.ReactNode` prop type to `ReactNode`.
+- `app/(auth)/layout.tsx`: Same treatment as above.
+- `app/(main)/layout.tsx`: Same treatment as above.
+- `app/(onboarding)/layout.tsx`: Same treatment as above.
+- `eslint.config.mjs`: Added `next-env.d.ts` to the ignores list. This file is auto-generated by Next.js and explicitly marked as not to be edited. The `@typescript-eslint/triple-slash-reference` rule was firing on it as a pre-existing error uncovered during the post-fix check run.
+
+### Tests
+- tsc --noEmit: Pass (exit 0)
+- eslint .: Pass (exit 0)
+- prettier --check: Pass (no formatting issues)
+- Vercel build: Pass
+
+### Notes
+- `JSX.Element` requires the global JSX namespace provided by older `@types/react` configs. Not available in Next.js 15 / React 19 strict setups. `ReactNode` is the correct return type for layout components.
+- The `next-env.d.ts` ESLint error predated this session. Fixed as part of the `npm run check` cleanup requirement.
+
+### Next task
+Sprint 2 - Design System and Landing Page (first task to be confirmed at start of next session)
+
+---
+
 ## [2026-04-08] - Session 8
 
 **Sprint:** Sprint 1 - Foundation and Project Setup

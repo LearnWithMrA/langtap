@@ -1,8 +1,112 @@
 /*
  * File: app/globals.css
  * Purpose: Global styles. Tailwind CSS v4 entry point.
- *          Custom theme tokens are defined here via @theme blocks
- *          when the design system is established in Sprint 2.
+ *          Custom theme tokens for the LangTap design system.
+ *          All colour, typography, and spacing tokens live here.
+ * Depends on: none
  */
 
 @import 'tailwindcss';
+
+/* -- Colour tokens ------------------------------------------------- */
+
+@theme {
+  /* Base palette - zen greens */
+  --color-sage-50: #f4f7f2;
+  --color-sage-100: #e6ede3;
+  --color-sage-200: #ccdcc6;
+  --color-sage-300: #a8c4a0;
+  --color-sage-400: #7da873;
+  --color-sage-500: #5a8a50;
+  --color-sage-600: #456e3d;
+
+  /* Warm neutrals */
+  --color-cream: #faf8f4;
+  --color-warm-100: #f5f0e8;
+  --color-warm-200: #e8ddd0;
+  --color-warm-400: #b8a898;
+  --color-warm-600: #7a6a5a;
+  --color-warm-800: #3d3028;
+
+  /* Mint accent */
+  --color-mint-100: #e8f5f0;
+  --color-mint-300: #90d4bc;
+  --color-mint-500: #3db891;
+
+  /* Blush accent */
+  --color-blush-100: #faeef0;
+  --color-blush-300: #f0a8b4;
+
+  /* Feedback colours */
+  --color-feedback-wrong: #f59e60;
+  --color-feedback-correct: #7da873;
+
+  /* Heatmap colours (mastery progress) */
+  --color-heat-0: #e6ede3;
+  --color-heat-1: #ccdcc6;
+  --color-heat-2: #a8c4a0;
+  --color-heat-3: #7da873;
+  --color-heat-4: #5a8a50;
+  --color-heat-5: #456e3d;
+
+  /* Surface and text */
+  --color-surface: var(--color-cream);
+  --color-surface-raised: #ffffff;
+  --color-border: var(--color-warm-200);
+  --color-text-primary: var(--color-warm-800);
+  --color-text-secondary: var(--color-warm-600);
+  --color-text-muted: var(--color-warm-400);
+}
+
+/* -- Typography tokens --------------------------------------------- */
+
+@theme {
+  /* Font family */
+  --font-family-sans: var(--font-zen-maru), ui-sans-serif, system-ui, sans-serif;
+
+  /* Font size scale */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+  --font-size-5xl: 3rem;
+
+  /* Font weights */
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+  --font-weight-black: 900;
+
+  /* Line heights */
+  --line-height-tight: 1.2;
+  --line-height-snug: 1.4;
+  --line-height-normal: 1.6;
+  --line-height-relaxed: 1.8;
+}
+
+/* -- Spacing and layout tokens ------------------------------------- */
+
+@theme {
+  /* Custom breakpoint: xs (480px) - large phones.
+     md (768px) and lg (1024px) are Tailwind defaults and need no override. */
+  --breakpoint-xs: 480px;
+
+  /* Max content widths */
+  --width-content-narrow: 28rem; /* 448px - practice screen, Dojo (max-w-md) */
+  --width-content-wide: 42rem; /* 672px - leaderboard, profile (max-w-2xl) */
+}
+
+/* -- Base styles --------------------------------------------------- */
+
+body {
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+}

@@ -1,10 +1,10 @@
 // ─────────────────────────────────────────────
 // File: vitest.config.ts
 // Purpose: Vitest 3 configuration for LangTap.
-//          Default environment is Node (engine/service/store tests).
-//          Component and hook test files declare their own environment
-//          with a docblock: // @vitest-environment jsdom
-// Depends on: vitest, @vitejs/plugin-react, jsdom
+//          Default environment is happy-dom (covers component and hook tests).
+//          Engine/service/store tests run in happy-dom too (no DOM APIs used).
+//          pool: 'forks' prevents zombie worker processes.
+// Depends on: vitest, @vitejs/plugin-react, happy-dom
 // ─────────────────────────────────────────────
 
 import { defineConfig } from 'vitest/config'
@@ -27,10 +27,14 @@ export default defineConfig({
     globals: true,
 
     // ── Environment ───────────────────────────────────────────
-    // Node for engine, service, and store tests (pure logic, no DOM).
-    // Component and hook tests add // @vitest-environment jsdom
-    // at the top of each file to opt in to the DOM environment.
-    environment: 'node',
+    // happy-dom for all tests. Faster than jsdom, sufficient for
+    // component, hook, and pure-logic tests.
+    environment: 'happy-dom',
+
+    // ── Pool ──────────────────────────────────────────────────
+    // forks pool avoids zombie worker processes that can occur
+    // with the default threads pool under certain Node versions.
+    pool: 'forks',
 
     // ── Setup files ───────────────────────────────────────────
     // Extends expect with @testing-library/jest-dom matchers

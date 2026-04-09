@@ -133,11 +133,7 @@ Open http://localhost:3000.
 The Supabase CLI runs a full local Supabase stack in Docker. This gives a
 completely isolated local database with the same schema as production.
 
-> **Vitest environment note:** Component and hook test files must include
-> `// @vitest-environment jsdom` as the first line to run in the browser
-> environment. Engine test files run in Node by default (no annotation needed).
-> Do not use `environmentMatchGlobs` or `test.projects` in vitest.config.ts -
-> both caused runner issues. Per-file annotations are the correct approach.
+> **Vitest environment note:** The default test environment is `happy-dom` (switched from jsdom in Sprint 2 due to jsdom 26.x hanging indefinitely in vitest worker threads under Node.js v24). Engine test files run in happy-dom by default. Component and hook test files should also use happy-dom. The `pool: 'forks'` config option is set to prevent zombie worker processes if a test hangs. Do not switch back to jsdom or threadpool without testing on Node 24 first.
 
 Useful commands:
 
