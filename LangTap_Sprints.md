@@ -63,22 +63,59 @@ Rules:
 
 ---
 
-## Sprint 2 - Design System and Landing Page
+## Sprint 2 - Design System and Landing Page ✅ COMPLETE
 
-**Goal:** Establish the visual language of the app and build the public-facing landing page.
+**Goal:** Design tokens, base components, and a live landing page on Vercel.
+
+| Task | Size | Status |
+|------|------|--------|
+| Colour tokens | Small | ✅ Done |
+| Typography scale | Small | ✅ Done |
+| Spacing and layout tokens | Small | ✅ Done |
+| Base components (button, input, card, badge, progress-bar, modal, toast) | Large | ✅ Done |
+| Heatmap colour utility | Small | ✅ Done |
+| Build landing page | Medium | ✅ Done |
+| Fix Vercel build (NODE_ENV=production interference) | Hotfix | ✅ Done |
+
+**Notes:**
+- 120 tests passing (18 engine + 102 component)
+- Live at langtap.vercel.app
+- Cycling animation and lo-fi audio deferred to a later sprint (non-blocking)
+
+---
+
+## Sprint 2B - UX/UI Design and Screen Specification
+
+**Goal:** Define the full user experience before any further functional development.
+Every screen is specced, visually designed, and approved before Sprint 3 resumes.
+This sprint produces the design source of truth that all future sprints build from.
+Full specs live in UX_DESIGN.md. This board tracks status only.
 **Status:** Active
+
+Sprint 3 (auth implementation) is on hold until this sprint is complete.
+Specs are written in UX_DESIGN.md. Gemini handles visual mockups and asset production.
+Claude Code does not touch implementation until designs are approved.
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Define colour tokens | **Small** | **To Do** | Pastel palette: greens, sage, mint, warm cream, blush. Define as Tailwind CSS custom tokens. Document in FRONTEND.md. |
-| Define typography scale | **Small** | **To Do** | Select and licence a Japanese-friendly font (confirm Zen Maru Gothic availability). Define size scale and line heights. |
-| Define spacing and layout tokens | **Small** | **To Do** | Standard spacing scale. Max content width for desktop. Mobile breakpoints. |
-| Build reusable base components | **Medium** | **To Do** | Button, Input, Badge, Card, ProgressBar, Modal (confirm), BottomNav, TopBar. Each as an isolated, tested component. |
-| Build heatmap colour utility | **Small** | **To Do** | A pure function that takes a mastery score and returns the correct pastel heatmap colour. No UI - logic only. Tested. |
-| Build landing page | **Medium** | **To Do** | Cycling animation, tagline, sign up / log in CTAs, guest mode entry. Mobile and desktop layouts. |
-| Source and integrate cycling animation | **Medium** | **To Do** | Find or generate open-licence SVG/CSS animation of a girl cycling. Create AI generation prompt if needed. Integrate as a looping component. Animation speed controlled by a prop. |
-| Source lo-fi audio tracks | **Small** | **To Do** | Curate 3-5 tracks from Free Music Archive. Confirm CC BY or CC0 licence on each. Add attribution to CONTENT.md. |
-| Build audio player component | **Small** | **To Do** | Looping background audio player. Play/pause. No visible UI controls beyond a mute icon. Respects the settings toggle. |
+| Write landing page spec | Medium | Done | See UX_DESIGN.md Section 3. Parallax landscape, nav, hero, footer. |
+| Write game home screen spec | Small | Done | See UX_DESIGN.md Section 6. Mode selection, floating buttons, distance counter. |
+| Write practice screen spec (all three input modes) | Medium | Done | See UX_DESIGN.md Section 7. Type, Tap, Swipe. Full states and interactions. |
+| Write Dojo screen spec - Kana | Medium | Done | See UX_DESIGN.md Section 8. Heatmap grid, unlock interactions. |
+| Write Dojo screen spec - Kanji and Kotoba | Medium | Done | See UX_DESIGN.md Section 9. JLPT level browsing, unit and level sets. |
+| Write auth screens spec | Small | Done | See UX_DESIGN.md Section 4. Sign-up, log-in. Blue gradient background. |
+| Write onboarding flow spec | Medium | Done | See UX_DESIGN.md Section 5. Four steps. |
+| Write Profile screen spec | Small | Done | See UX_DESIGN.md Section 10. |
+| Write Settings screen spec | Small | Done | See UX_DESIGN.md Section 11. |
+| Write Leaderboard screen spec | Small | Done | See UX_DESIGN.md Section 12. |
+| Document global visual identity and asset list | Small | Done | See UX_DESIGN.md Sections 1, 2, 13. Logo, key button style, sounds, mascot, parallax, four scene themes. |
+| Gemini asset production - SVG assets | Medium | Done | All 16 SVGs created in public/images/. Mascot with CSS keyframe animation, clouds, hills, kanji icons, logos, mode icons, nav icons, lock icon. |
+| Gemini asset production - sound assets | Small | To Do | Three WAV files listed in UX_DESIGN.md Section 13.2. |
+| Gemini asset production - sample data | Small | To Do | Sample game state, leaderboard, word bank. See UX_DESIGN.md Section 13.3. |
+| Gemini visual design pass - landing page | Medium | To Do | Full page mockup. Approve before implementation. |
+| Gemini visual design pass - practice screen | Medium | To Do | All three modes. Approve before implementation. |
+| Gemini visual design pass - remaining screens | Large | To Do | All other screens. Iterate until approved. Update status table in UX_DESIGN.md Section 14. |
+| Consolidate approved designs into FRONTEND.md and UX_DESIGN.md | Medium | To Do | Update both docs with any new layout or visual decisions from the design pass. |
 
 ---
 

@@ -101,6 +101,64 @@
   --width-content-wide: 42rem; /* 672px - leaderboard, profile (max-w-2xl) */
 }
 
+/* -- Scene theme tokens --------------------------------------------- */
+
+/* Landing and game screen colours (Section 2.3, FRONTEND.md) */
+
+@theme {
+  --color-sky-mid: #c9e8f5;
+  --color-sky-horizon: #e8f4fb;
+  --color-grass-bright: #8bc34a;
+  --color-navy-deep: #1a3a5c;
+}
+
+.theme-day {
+  --scene-sky-top: #c9e8f5;
+  --scene-sky-bottom: #e8f4fb;
+  --scene-ground: #8bc34a;
+  --scene-cloud: #ffffff;
+  --scene-hill-far: #7aa68f;
+  --scene-hill-mid: #699680;
+  --scene-hill: #5a9e3a;
+}
+
+.theme-sunrise {
+  --scene-sky-top: #fde9c9;
+  --scene-sky-bottom: #fcc97a;
+  --scene-ground: #7ab648;
+  --scene-cloud: #fde0c0;
+  --scene-hill-far: #6e9e6a;
+  --scene-hill-mid: #5a8e4e;
+  --scene-hill: #4a8a2e;
+}
+
+.theme-sunset {
+  --scene-sky-top: #f4a261;
+  --scene-sky-bottom: #264653;
+  --scene-ground: #4a7c59;
+  --scene-cloud: #c9b8d8;
+  --scene-hill-far: #4a7068;
+  --scene-hill-mid: #3a6455;
+  --scene-hill: #2d5a42;
+}
+
+.theme-night {
+  --scene-sky-top: #0d1b2a;
+  --scene-sky-bottom: #1b2a3b;
+  --scene-ground: #2d4a3e;
+  --scene-cloud: #8899aa;
+  --scene-hill-far: #2a4a40;
+  --scene-hill-mid: #223d34;
+  --scene-hill: #1a3028;
+}
+
+/* -- Cloud drift animation ----------------------------------------- */
+
+@keyframes cloud-drift {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
 /* -- Base styles --------------------------------------------------- */
 
 body {

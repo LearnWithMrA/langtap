@@ -127,16 +127,27 @@ export async function middleware(request: NextRequest) {
   // getSession() only reads from the cookie and can be spoofed.
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Redirect unauthenticated users away from protected routes
-  const isProtectedRoute = request.nextUrl.pathname.startsWith('/practice') ||
-    request.nextUrl.pathname.startsWith('/dojo') ||
-    request.nextUrl.pathname.startsWith('/leaderboard') ||
-    request.nextUrl.pathname.startsWith('/profile') ||
-    request.nextUrl.pathname.startsWith('/settings')
+  const { pathname } = request.nextUrl
 
-  if (!user && isProtectedRoute) {
+  // Auth-only routes: require a full account. Guests are redirected.
+  // Source of truth for route access rules: Section 4 of this document.
+  // Do not add /practice, /dojo, /settings here - guests can access those.
+  const AUTHED_ONLY_ROUTES = ['/leaderboard', '/profile', '/onboarding']
+  const isAuthedOnly = AUTHED_ONLY_ROUTES.some((r) => pathname.startsWith(r))
+
+  if (!user && isAuthedOnly) {
     const url = request.nextUrl.clone()
     url.pathname = '/log-in'
+    return NextResponse.redirect(url)
+  }
+
+  // Auth pages: redirect already-authenticated users to practice.
+  const AUTH_PAGES = ['/sign-up', '/log-in']
+  const isAuthPage = AUTH_PAGES.some((r) => pathname.startsWith(r))
+
+  if (user && isAuthPage) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/practice'
     return NextResponse.redirect(url)
   }
 
@@ -145,8 +156,11 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Run on all routes except static files and Next.js internals
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Run on all paths except Next.js internals, API routes, the auth
+    // callback (must not be intercepted during PKCE exchange), and static
+    // assets. Keeping this narrow avoids unnecessary getUser() network
+    // calls on every asset request.
+    '/((?!_next/static|_next/image|favicon.ico|api/|auth/callback|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2?)$).*)',
   ],
 }
 ```

@@ -1,11 +1,10 @@
-// ------------------------------------------------------------
+// ─────────────────────────────────────────────
 // File: services/supabase.ts
-// Purpose: Supabase browser client. Initialised once. Imported by all
-//          other service files that need client-side Supabase access.
-//          Uses the anon key only. Service role key is never used here.
-//          See also: services/supabase-server.ts for SSR contexts.
-//          Placeholder - to be implemented in Sprint 3.
-// Depends on: nothing (environment variables only)
-// ------------------------------------------------------------
+// Purpose: Re-exports the browser Supabase client for backwards
+//          compatibility with the folder structure in ARCHITECTURE.md.
+//          The canonical implementation is services/supabase-browser.ts.
+//          Server-side contexts use services/supabase-server.ts.
+// Depends on: services/supabase-browser.ts
+// ─────────────────────────────────────────────
 
-export {}
+export { createBrowserSupabaseClient } from '@/services/supabase-browser'

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="48" height="56">
+  <!-- Keyboard key shape -->
+  <rect x="2" y="6" width="44" height="48" rx="10" ry="10" fill="#ccdcc6"/>
+  <rect x="2" y="2" width="44" height="48" rx="10" ry="10" fill="#e6ede3"/>
+  <!-- L -->
+  <text x="24" y="28" text-anchor="middle" font-family="'Zen Maru Gothic', sans-serif" font-weight="700" font-size="16" fill="#3d3028">L</text>
+  <!-- T -->
+  <text x="24" y="46" text-anchor="middle" font-family="'Zen Maru Gothic', sans-serif" font-weight="700" font-size="16" fill="#3d3028">T</text>
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
+  <!-- Stylised 木 (tree) in charcoal brush stroke style -->
+  <line x1="20" y1="6" x2="20" y2="36" stroke="#3d3028" stroke-width="3" stroke-linecap="round"/>
+  <line x1="8" y1="18" x2="20" y2="12" stroke="#3d3028" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="32" y1="18" x2="20" y2="12" stroke="#3d3028" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="10" y1="36" x2="20" y2="26" stroke="#3d3028" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="30" y1="36" x2="20" y2="26" stroke="#3d3028" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

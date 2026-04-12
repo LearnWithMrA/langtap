@@ -106,9 +106,57 @@ variables in `app/globals.css` using the `@theme` directive.
 - Correct answer confirm: `text-feedback-correct`.
 - Borders: `border-border`.
 
-### 2.3 Heatmap Colouring
+### 2.3 Scene Theme Tokens
 
-The heatmap is used in the Dojo screen and (Phase 2) the Library screen to show
+The parallax landscape has four selectable themes. Each theme defines a set of
+CSS custom properties applied to the root scene container. All scene layers
+(sky, hills, ground, clouds) read from these properties.
+
+Themes are defined in `theme/scene-themes.ts` and applied as a class on the
+scene root element: `theme-day`, `theme-sunrise`, `theme-sunset`, `theme-night`.
+
+```css
+/* app/globals.css - scene theme definitions */
+
+.theme-day {
+  --scene-sky-top:    #c9e8f5;
+  --scene-sky-bottom: #e8f4fb;
+  --scene-ground:     #8bc34a;
+  --scene-cloud:      #ffffff;
+  --scene-hill:       #5a9e3a;
+}
+
+.theme-sunrise {
+  --scene-sky-top:    #fde9c9;
+  --scene-sky-bottom: #fcc97a;
+  --scene-ground:     #7ab648;
+  --scene-cloud:      #fde0c0;
+  --scene-hill:       #4a8a2e;
+}
+
+.theme-sunset {
+  --scene-sky-top:    #f4a261;
+  --scene-sky-bottom: #264653;
+  --scene-ground:     #4a7c59;
+  --scene-cloud:      #c9b8d8;
+  --scene-hill:       #2d5a42;
+}
+
+.theme-night {
+  --scene-sky-top:    #0d1b2a;
+  --scene-sky-bottom: #1b2a3b;
+  --scene-ground:     #2d4a3e;
+  --scene-cloud:      #8899aa;
+  --scene-hill:       #1a3028;
+}
+```
+
+Switching themes applies a 500ms cross-fade transition on the scene container only.
+UI chrome (top bar, game window, tap grid) does not change colour with the theme.
+The active theme is stored in `settings.store.ts` and persists across sessions.
+Default: `theme-day`.
+
+### 2.4 Heatmap Colouring
 mastery progress per character or word. The colour is determined by the mastery
 score and must always come from the heatmap token set.
 

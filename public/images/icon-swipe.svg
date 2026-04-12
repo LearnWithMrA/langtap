@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#3d3028" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Finger with swipe motion -->
+  <circle cx="8" cy="10" r="2.5" fill="#3d3028" stroke="none"/>
+  <path d="M10 10 Q14 6 20 8"/>
+  <!-- Arrow tip -->
+  <path d="M17 5 L20 8 L17 11"/>
+</svg>

@@ -505,6 +505,29 @@ Required attributions at Phase 1 launch:
 
 ---
 
+## 12. Pricing Tiers
+
+Pricing is displayed on the landing page and enforced by the game engine in Phase 2
+when Stripe is activated. In Phase 1 the tiers are displayed but not enforced.
+
+| Tier | Price | Daily distance limit | Notes |
+|---|---|---|---|
+| Free | $0 / month | 50m per day | Default for all new accounts |
+| Regular | $3 / month | 300m per day | Stripe subscription, Phase 2 |
+| Unlimited | $5 / month | No limit | Stripe subscription, Phase 2 |
+
+Daily distance resets at midnight in the user's local timezone.
+The limit applies to cumulative session distance across all game modes combined.
+When the limit is reached, the practice screen shows a friendly message and a
+CTA to upgrade. It does not block the app entirely - the user can still visit
+the Dojo, Leaderboard, and Profile.
+
+In Phase 1 no limits are enforced. All users have unlimited access for the
+duration of the beta period. The pricing cards on the landing page show
+"Coming soon" on paid tiers.
+
+---
+
 *This document is the authoritative reference for all content data.*
 *If a data file conflicts with this document, the document wins.*
 *Update this document before adding or changing any content assets.*

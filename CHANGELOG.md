@@ -30,6 +30,271 @@ Format per entry:
 
 ---
 
+## [2026-04-12] - Session 23
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Landing page visual polish (multiple fixes)
+**Status:** Done
+
+### Changes made
+- `components/layout/landing-scene.tsx`: Raised hero content from vertical centre to pt-[35vh] (just below clouds). Added concave SVG curve at bottom of hero section for smooth ground-to-white transition. Removed empty promo space section from landing-client.tsx.
+- `components/layout/landscape-background.tsx`: Removed opacity attributes (0.5, 0.7, 0.8) from all hill and bush layers so they render fully opaque.
+- `components/layout/landing-nav.tsx`: Added font-bold to About/Pricing/Leaderboard nav links to match Log In and Sign Up button weight.
+- `components/ui/pricing-card.tsx`: Added flex-1 spacer so CTA buttons align at the bottom of all three cards regardless of content height. Removed gold ring-2 border from Unlimited card that was leaking around the card edge. Added consistent badge/spacer height across all cards.
+- `components/layout/landing-client.tsx`: Removed empty promo space section (h-60 div) below leaderboard.
+
+### Tests
+- Full suite: 181 tests passed, 0 failed.
+
+### Next task
+Continue Sprint 2B or begin Sprint 3 (auth screens).
+
+### Notes
+- The concave curve uses a quadratic bezier (Q720 60) filled with var(--scene-ground) so it adapts to all four scene themes.
+
+---
+
+## [2026-04-12] - Session 22
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Landing page visual fixes: clouds, nav text, scroll-driven animation
+**Status:** Done
+
+### Changes made
+- `public/images/cloud-large.svg`: Changed fill from currentColor to #ffffff (white).
+- `public/images/cloud-small.svg`: Changed fill from currentColor to #ffffff (white).
+- `components/layout/landing-nav.tsx`: Darkened nav links from text-text-secondary to text-warm-800 for readability against the sky.
+- `components/animation/cycling-character.tsx`: Added 'stopped' speed level (multiplier 0) so the character can be fully stationary on load.
+- `components/layout/landing-scene.tsx`: Replaced continuous cloud-drift CSS animation with scroll-driven parallax using useScroll + useTransform from motion/react. Clouds translate left as user scrolls (200px over 1000px scroll). Cloud container moved to top-16 so clouds sit below the nav bar. LandscapeBackground set to speed=0 (fully static). Cycling character starts as 'stopped' and switches to 'idle' only when scrollY > 0. Extracted CloudSet helper to reduce duplication.
+- `components/layout/landing-client.tsx`: Removed hero subheading and "Create a free account" link (previous task, included in this session).
+
+### Tests
+- Full suite: 181 tests passed, 0 failed.
+
+### Next task
+Continue Sprint 2B or begin Sprint 3 (auth screens).
+
+### Notes
+- The cloud-drift @keyframes in globals.css is now unused by the landing page. It can be removed if no other component needs it, but leaving it does no harm.
+
+---
+
+## [2026-04-12] - Session 21
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Landing page polish and sound integration
+**Status:** Done
+
+### Changes made
+- `components/ui/key-button.tsx`: Updated sound file path from key-click.wav/key-click-soft.wav to Keyboard Click.mp3. Soft variant differentiated by lower volume (0.3 vs 0.5).
+- `hooks/useEasterEgg.ts`: Updated sound file path from easter-egg-click.wav to Keyboard Click.mp3 at volume 0.7.
+- `components/layout/landing-footer.tsx`: Updated sound file path from key-click-soft.wav to Keyboard Click.mp3 at volume 0.3.
+- `components/layout/landing-client.tsx`: Removed subheading ("Build real Japanese typing speed...") and "Create a free account" link from the hero section.
+- `app/layout.tsx`: Added suppressHydrationWarning to body tag.
+- `next.config.ts`: Added outputFileTracingRoot to silence workspace root warning caused by stray package-lock.json in home directory.
+
+### Tests
+- Full suite: 181 tests passed, 0 failed.
+
+### Next task
+Build sign-up screen (app/(auth)/sign-up/page.tsx) or continue Sprint 2B (sample data, Gemini visual design passes).
+
+### Notes
+- kanadojo.com sound files are GPL-3.0 (sourced from Monkeytype). Not usable without releasing LangTap under GPL. A single Keyboard Click.mp3 was sourced externally and added to public/sounds/ by the owner.
+- All three sound contexts (key click, soft click, easter egg) now use the same MP3 file differentiated by volume level.
+- Two files still flagged for manual deletion from Session 20: public/images/mascot-cycling.svg and public/images/hill.svg.
+
+---
+
+## [2026-04-12] - Session 20
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Replace cycling character and landscape with Gemini-generated motion/react components
+**Status:** Done
+
+### Changes made
+- `components/animation/cycling-character.tsx`: Full rewrite. Replaced flat CSS keyframe SVG with motion/react path-based animation. 5-frame pedal cycle for legs, shoe and crank arm tracking, 16-spoke wheel rotation, scarf flutter. Character now has torso with jacket, helmet/cap, eye, arms with hands, detailed bicycle frame (chain, fenders, chainring, seat, handlebars). Speed prop preserved as 'idle'|'slow'|'medium'|'fast', mapped to numeric multipliers (0.3, 0.5, 1, 2).
+- `components/layout/landscape-background.tsx`: New component. Animated multi-layer landscape: sky gradient, three hill layers (back light at 0.5 opacity, back dark at 0.7 opacity, mid hills with bush clusters), ground strip with brightness filter for lighter band. Ground details (grass tufts, rocks, speed lines) scroll via motion/react tied to speed prop. All colours read from scene theme CSS custom properties (--scene-sky-top, --scene-sky-bottom, --scene-hill, --scene-ground). Ground details use rgba overlays for theme-agnostic accents.
+- `components/layout/landing-scene.tsx`: Updated to compose LandscapeBackground + CyclingCharacter. Removed old inline hill and ground SVGs. Clouds and kanji icons retained.
+- `package.json`: Added `motion` dependency (motion/react for animation).
+
+### Tests
+- Full suite: 181 tests passed, 0 failed. No test changes needed.
+
+### Next task
+Build sign-up screen (app/(auth)/sign-up/page.tsx) or continue Sprint 2B (sound assets, sample data, Gemini visual design passes).
+
+### Notes
+- Two files flagged for manual deletion (replaced by components, no longer referenced): `public/images/mascot-cycling.svg` and `public/images/hill.svg`.
+- The `motion` package was installed per explicit instruction. It is the successor to framer-motion and provides the `motion/react` import used by both new components.
+- The landscape ground details use rgba() overlays (black at 15% for grass, white at 40% for rocks) rather than hardcoded greens, so they work across all four scene themes without needing per-theme accent colours.
+
+---
+
+## [2026-04-12] - Session 19
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** SVG asset production + Landing page build
+**Status:** Done
+
+### Changes made
+- `public/images/mascot-cycling.svg`: Created bold flat-colour stick figure on bicycle. Chineasy style: thick black limbs, solid blush-pink circle head (#f0a8b4), flat black bicycle. CSS keyframe animations on legs and wheels controlled by --pedal-duration CSS variable.
+- `public/images/cloud-large.svg`: Soft fluffy cloud shape, uses currentColor for theme compatibility.
+- `public/images/cloud-small.svg`: Smaller cloud variant.
+- `public/images/hill.svg`: Rounded green hill silhouette.
+- `public/images/icon-tree.svg`: Stylised 木 in charcoal brush stroke.
+- `public/images/icon-grove.svg`: Stylised 林 in charcoal brush stroke.
+- `public/images/icon-forest.svg`: Stylised 森 in charcoal brush stroke.
+- `public/images/logo-full.svg`: LangTap in keyboard key shape.
+- `public/images/logo-lt.svg`: LT stacked in keyboard key shape.
+- `public/images/icon-keyboard.svg`: Type mode icon.
+- `public/images/icon-tap.svg`: Tap mode icon with ripple rings.
+- `public/images/icon-swipe.svg`: Swipe gesture icon with arrow.
+- `public/images/icon-home.svg`: House silhouette nav icon.
+- `public/images/icon-settings.svg`: Gear icon.
+- `public/images/icon-profile.svg`: Profile avatar placeholder.
+- `public/images/icon-lock.svg`: Padlock icon for locked character state.
+- `components/animation/cycling-character.tsx`: Full implementation replacing placeholder. Inline SVG with CSS keyframe animation. Speed prop (idle/slow/medium/fast) maps to --pedal-duration CSS variable (4s/2.5s/1.5s/0.8s). aria-hidden, responsive sizing.
+- `app/globals.css`: Added scene theme CSS custom properties (theme-day, theme-sunrise, theme-sunset, theme-night) and cloud-drift keyframe animation. Added sky-mid, sky-horizon, grass-bright, navy-deep colour tokens.
+- `components/ui/key-button.tsx`: New keyboard-key-style button with 3D press-down active state, hover brightness, and key-click sound. Renders as button or anchor based on href prop.
+- `components/layout/landing-nav.tsx`: Sticky nav with scroll-based transparency transition. Full logo desktop, LT mobile. Hamburger menu with full-screen overlay on mobile. Key-style Log In (navy-deep) and Sign Up (mint-500) buttons.
+- `components/layout/landing-scene.tsx`: Parallax landscape scene with sky gradient, drifting clouds (seamless CSS loop), hills with kanji icons, ground strip, and cycling mascot. Supports four scene themes via CSS custom properties.
+- `components/layout/landing-footer.tsx`: Footer with About/Contact/FAQ links, legal links, social icons (Twitter/X, Instagram, YouTube, TikTok). Social icons play key-click-soft sound.
+- `components/layout/landing-client.tsx`: Client wrapper composing nav, scene, hero copy, "How it works" section, pricing section, leaderboard preview, promo space, and footer.
+- `components/ui/pricing-card.tsx`: Three pricing tier cards (Free, Regular, Unlimited) per CONTENT.md Section 12. Paid tiers show "Coming soon" badge with disabled CTAs.
+- `hooks/useEasterEgg.ts`: Global keydown listener tracking last 7 characters. Fires on "langtap" sequence. Ignores input/textarea/contenteditable. Plays easter-egg-click.wav. 4-second active state.
+- `app/page.tsx`: Rewritten to render LandingClient as the sole client island.
+
+### Tests
+- `hooks/__tests__/useEasterEgg.test.ts`: 11 tests passed (sequence detection, partial match, input exclusion, buffer reset, non-printable key handling)
+- `components/ui/__tests__/pricing-card.test.tsx`: 6 tests passed (three tiers render, prices, distances, Coming soon badges, CTA enabled/disabled states)
+- `components/ui/__tests__/key-button.test.tsx`: 11 tests passed (render, click, disabled, href, sound variants, aria-label, className)
+- Full suite: 181 tests passed, 0 failed
+
+### Next task
+Build sign-up screen (app/(auth)/sign-up/page.tsx) or continue Sprint 2B asset production (sound assets, sample data, Gemini visual design passes).
+
+### Notes
+- Sound files (key-click.wav, key-click-soft.wav, easter-egg-click.wav) are not yet created. Components reference the paths but fail silently when files are missing. These are Sprint 2B Gemini tasks.
+- Cloud SVGs use currentColor so they can be themed by setting the parent's color CSS property. In the current implementation the scene theme sets --scene-cloud but the clouds are loaded as images, so currentColor may not propagate from the parent div. This is a known limitation: when the cloud SVGs are loaded via next/image they render as standalone documents. A future refinement could inline them or use CSS background-image instead.
+- The landing page is now a client component. The previous server-component-with-client-island pattern was replaced because the page requires scroll detection, easter egg, and sound playback throughout.
+
+---
+  [2026-04-09] - Session[18]                                                                                                                                            
+                                                                                                                                                                          
+  Sprint: Sprint 3 - Auth and Onboarding                                                                                                                                  
+  Task completed: Build the auth service                                                                                                                                  
+  Status: Done                                                                                                                                                            
+                                                                                                                                                                          
+  Changes made                                                                                                                                                            
+                                                            
+  - services/auth.service.ts: Implemented full auth service replacing export {} placeholder. Two-phase sign-up (signUp auth + profile username write with retry). signIn, 
+  getUser, sendPasswordReset. SignUpResult type with profileWritten: boolean signal. Input normalization (email trim+lowercase, username trim, password unchanged).
+  validateSignUpInputs and validateEmail run before any Supabase call. mapAuthError with priority: error.code (stable) then error.status then error.message fallback.     
+  updateUsernameWithRetry with 3 attempts and 200ms delay; row-not-found (trigger race) treated as retryable; non-retryable Postgres codes (42501, 42703, 42P01) bail
+  immediately. Null user guard after both signUp and signIn calls. sendPasswordReset validates email format before calling Supabase. Note: PostgrestError exposes only
+  code (Postgres error code), not HTTP status - updated isNonRetryable to reflect this.
+  - services/__tests__/auth.service.test.ts: 33 tests covering all validation rules, email normalization, all error mapping paths (code, status, message fallback),
+  two-phase profile write (immediate success, retry success, all retries exhausted, non-retryable RLS, transient retry), signIn happy path and error paths, getUser with  
+  and without session, sendPasswordReset with validation and error mapping.
+  - types/user.types.ts: Added JlptLevel and InputMode types (used by auth service and profile service).                                                                  
+                                                                                                                                                                          
+  Tests
+                                                                                                                                                                          
+  - services/__tests__/auth.service.test.ts: 33 passed      
+
+  Next task
+
+  Build the sign-up page (app/(auth)/sign-up/page.tsx) - Sprint 3.                                                                                                        
+   
+  Notes                                                                                                                                                                   
+                                                            
+  - PostgrestError (from @supabase/postgrest-js) only has code, details, hint, name - no status field. The HTTP-status-based non-retryable check from the staff review    
+  plan was adjusted to code-only classification for the profile update path. Auth errors from supabase.auth.* do have status.
+  - JSDoc on SignUpResult explicitly documents the profileWritten: false caller contract: user IS authenticated, auth flow must continue, username repair should be       
+  offered on first profile visit.  
+
+---
+  [2026-04-10] - Session 17                                                                                                                                               
+                                                                                                                                                                          
+  Sprint: Sprint 3 - Auth and Supabase                                                                                                                                    
+  Task completed: Set up Supabase Auth clients and middleware                                                                                                             
+  Status: Done                                                                                                                                                            
+                                                                                                                                                                          
+  Changes made                                                                                                                                                            
+                                                            
+  - services/supabase-browser.ts: New. Browser Supabase client factory using createBrowserClient from @supabase/ssr. Anon key only. Call inside components/hooks, not at  
+  module level.
+  - services/supabase-server.ts: New. Async server Supabase client factory using createServerClient with next/headers cookie store. Created inside the function body per  
+  SECURITY.md Section 6.2 (session leakage mitigation). The setAll try/catch handles the read-only cookie context in Server Components - middleware handles the actual    
+  cookie write.
+  - services/supabase.ts: Changed from placeholder export {} to a re-export of createBrowserSupabaseClient from supabase-browser.ts. Preserves the file referenced in     
+  ARCHITECTURE.md while keeping supabase-browser.ts as the canonical implementation.                                                                                      
+  - middleware.ts: New, at project root. Refreshes the session token on every matched request using getUser() (network-verified, not spoofable). Protects /leaderboard,
+  /profile, /onboarding from unauthenticated access. Redirects already-authenticated users away from /sign-up and /log-in. Matcher excludes api/, auth/callback, _next/*, 
+  and static assets to avoid unnecessary token refresh calls.
+  - app/auth/callback/route.ts: New. GET handler at /auth/callback. Exchanges the PKCE code for a session and redirects to next param (default /practice). Sanitizes next 
+  to prevent open redirects: only relative paths starting with / (not //) are accepted. On failure, redirects to /log-in?error=auth_callback_failed.                      
+  - app/api/auth/sign-out/route.ts: New. POST handler. Signs the user out server-side via Supabase (clears the HTTP-only cookie), then redirects with a 303 See Other to
+  the origin root. Origin derived from request.url, not NEXT_PUBLIC_SITE_URL, to avoid env dependency across environments.                                                
+  - docs/AUTH.md: Fixed Section 3 middleware code sample to match Section 4 route protection rules. Corrected isProtectedRoute to only cover /leaderboard, /profile,
+  /onboarding (not /practice, /dojo, /settings which are guest-accessible). Added AUTH_PAGES redirect for already-authenticated users. Updated matcher to exclude api/ and
+   auth/callback. Section 4 is the authoritative source for route access rules.
+                                                                                                                                                                          
+  Staff review findings addressed                           
+
+  - Finding 1 (spec drift): AUTH.md Section 3 updated.                                                                                                                    
+  - Finding 2 (open redirect): next param sanitized in auth callback.
+  - Finding 3 (matcher too broad): api/ and auth/callback excluded from matcher.                                                                                          
+  - Finding 4 (303 redirect): Sign-out uses { status: 303 }.                                                                                                              
+  - Finding 5 (NEXT_PUBLIC_SITE_URL fragility): Both route handlers derive origin from request.url.                                                                       
+  - Findings 6, 7, 8: Deferred with // TODO comments in the relevant files.                                                                                               
+                                                                                                                                                                          
+  Tests                                                                                                                                                                   
+                                                                                                                                                                          
+  - 120 existing tests passed. No new tests required for this task (no pure logic added - infrastructure wiring only).                                                    
+  
+  Deferred items (from staff review)                                                                                                                                      
+                                                            
+  - Finding 7 (onboarding gate): Server-side check that redirects authenticated users without a completed profile to /onboarding/step-1. Blocked until the profile service
+   (services/profile.service.ts) exists. A // TODO comment is in middleware.ts.
+  - Finding 8 (CSRF): CSRF token protection for the sign-out endpoint. @supabase/ssr sets SameSite cookies which provide baseline protection. Separate task.              
+                                                                                                                                                                          
+  Setup required (owner)
+                                                                                                                                                                          
+  - Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local and in Vercel environment variables.                                                     
+  - Register /auth/callback as an allowed redirect URL in the Supabase dashboard (Authentication > URL Configuration).
+                                                                                                                                                                          
+  Next task                                                 
+                                                                                                                                                                          
+  To be confirmed at start of next session.  
+---
+## [2026-04-09] - Session 16
+
+**Sprint:** Sprint 2 - Design System and Landing Page (hotfix)
+**Task completed:** Fix Vercel build failure - React.act not available in production builds
+**Status:** Done
+
+### Changes made
+- `package.json`: Changed test script from `vitest run` to `NODE_ENV=test vitest run`, and test:watch from `vitest` to `NODE_ENV=test vitest`. Forces the test environment regardless of what the parent process has set.
+- `package.json`: `@testing-library/react` remains pinned at 16.3.2 (correct, but not the root cause).
+- `package-lock.json`: Regenerated from scratch. New lock file uses npm v11 format.
+
+### Tests
+- 120 tests passed with NODE_ENV=test explicitly set.
+
+### Root cause
+Vercel sets `NODE_ENV=production` before running `npm run build`. The prebuild script runs `npm run check`, which includes `npm run test`. Vitest only sets `NODE_ENV=test` if the variable is not already set. React's production bundle does not export `act`. `@testing-library/react` gets `act = undefined` and throws "React.act is not a function" on every component test. The version pin was never the cause.
+
+### Notes
+- `NODE_ENV=test` syntax works on Linux (Vercel) and macOS. Windows would require cross-env.
+- Consider moving tests out of prebuild into a dedicated GitHub Actions step in a future sprint. Tests in prebuild slow every deploy and can fail for test infrastructure reasons unrelated to app correctness.
+
+### Next task
+Continue Sprint 2
+
+---
+
 ## [2026-04-09] - Session 15
 
 **Sprint:** Sprint 2 - Design System and Landing Page

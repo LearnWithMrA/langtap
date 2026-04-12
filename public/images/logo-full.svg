@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 56" width="180" height="56">
+  <!-- Keyboard key shape -->
+  <rect x="4" y="2" width="172" height="44" rx="12" ry="12" fill="#e6ede3"/>
+  <rect x="4" y="6" width="172" height="44" rx="12" ry="12" fill="#ccdcc6"/>
+  <rect x="4" y="2" width="172" height="44" rx="12" ry="12" fill="#e6ede3"/>
+  <!-- LangTap text -->
+  <text x="90" y="32" text-anchor="middle" font-family="'Zen Maru Gothic', sans-serif" font-weight="700" font-size="24" fill="#3d3028">LangTap</text>
+</svg>
