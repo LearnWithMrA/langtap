@@ -1,20 +1,24 @@
 // ------------------------------------------------------------
 // File: components/animation/cycling-character.tsx
-// Purpose: Animated cycling mascot using motion/react for smooth
-//          path-based leg animation, wheel rotation, and scarf
-//          flutter. Speed prop maps to a numeric multiplier:
-//          idle=0.3, slow=0.5, medium=1, fast=2.
-//          Decorative only. aria-hidden="true".
-// Depends on: motion/react
+// Purpose: Animated cycling mascot with two implementations:
+//          1. CyclingCharacter (default) - sprite-sheet frame
+//             animation using 14 PNG frames and setInterval.
+//          2. CyclingCharacterSVG - original motion/react SVG
+//             animation (retained for reference).
+//          Speed prop controls frame rate (PNG) or animation
+//          multiplier (SVG). Decorative only. aria-hidden="true".
+// Depends on: motion/react (SVG version), public/images/cyclist/
 // ------------------------------------------------------------
 
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
 import { motion } from 'motion/react'
 
 // -- Types --------------------------------------------------
 
-type SpeedLevel = 'stopped' | 'idle' | 'slow' | 'medium' | 'fast'
+type SpeedLevel = 'idle' | 'slow' | 'medium' | 'fast'
 
 type CyclingCharacterProps = {
   speed: SpeedLevel
@@ -22,7 +26,74 @@ type CyclingCharacterProps = {
 
 // -- Constants ----------------------------------------------
 
-const SPEED_MULTIPLIER: Record<SpeedLevel, number> = {
+const FRAME_COUNT = 14
+
+const FRAME_INTERVAL_MS: Record<SpeedLevel, number> = {
+  idle: 107,
+  slow: 80,
+  medium: 53,
+  fast: 27,
+}
+
+const FRAME_PATHS: string[] = Array.from(
+  { length: FRAME_COUNT },
+  (_, i) => `/images/cyclist/${String(i + 1).padStart(2, '0')}.png`
+)
+
+// -- PNG sprite-sheet animation -----------------------------
+
+export function CyclingCharacter({ speed }: CyclingCharacterProps): React.ReactElement {
+  const [frameIndex, setFrameIndex] = useState(0)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    const ms = FRAME_INTERVAL_MS[speed]
+
+    if (intervalRef.current !== null) {
+      clearInterval(intervalRef.current)
+    }
+
+    intervalRef.current = setInterval(() => {
+      setFrameIndex((prev) => (prev + 1) % FRAME_COUNT)
+    }, ms)
+
+    return (): void => {
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current)
+      }
+    }
+  }, [speed])
+
+  return (
+    <div aria-hidden="true" className="pointer-events-none select-none">
+      <Image
+        src={FRAME_PATHS[frameIndex]}
+        alt=""
+        width={400}
+        height={380}
+        className="h-auto w-56 md:w-72 lg:w-[21.5rem]"
+        priority
+        unoptimized
+      />
+    </div>
+  )
+}
+
+// ============================================================
+// SVG version (original implementation, retained for reference)
+// ============================================================
+
+// -- SVG Types ----------------------------------------------
+
+type SVGSpeedLevel = 'stopped' | 'idle' | 'slow' | 'medium' | 'fast'
+
+type CyclingCharacterSVGProps = {
+  speed: SVGSpeedLevel
+}
+
+// -- SVG Constants ------------------------------------------
+
+const SPEED_MULTIPLIER: Record<SVGSpeedLevel, number> = {
   stopped: 0,
   idle: 0.3,
   slow: 0.5,
@@ -80,7 +151,7 @@ const SCARF_MOVING = [
   'M 190 60 Q 140 50 90 70 Q 110 75 140 72 Q 100 85 85 95 Q 130 85 190 68',
 ]
 
-// -- Helpers ------------------------------------------------
+// -- SVG Helpers --------------------------------------------
 
 // Renders a single bicycle wheel with animated spoke rotation
 function Wheel({ cx, cy, wheelDuration, stopped }: {
@@ -122,9 +193,9 @@ function Wheel({ cx, cy, wheelDuration, stopped }: {
   )
 }
 
-// -- Main export --------------------------------------------
+// -- SVG Main export ----------------------------------------
 
-export function CyclingCharacter({ speed }: CyclingCharacterProps): React.ReactElement {
+export function CyclingCharacterSVG({ speed }: CyclingCharacterSVGProps): React.ReactElement {
   const multiplier = SPEED_MULTIPLIER[speed]
   const stopped = multiplier === 0
   const wheelDuration = stopped ? 999999 : 1 / multiplier

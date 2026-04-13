@@ -30,6 +30,29 @@ Format per entry:
 
 ---
 
+## [2026-04-13] - Session 24
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Replace CyclingCharacter SVG with PNG sprite-sheet frame animation
+**Status:** Done
+
+### Changes made
+- `components/animation/cycling-character.tsx`: Replaced the primary `CyclingCharacter` export with a PNG sprite-sheet animation that cycles through 14 frames (`public/images/cyclist/01.png` through `14.png`) using `setInterval` in a `useEffect`. Speed prop maps to frame intervals: idle=80ms, slow=60ms, medium=40ms, fast=20ms. Renamed the original SVG implementation to `CyclingCharacterSVG` (retained as a named export). Uses `next/image` with `unoptimized` flag for rapidly swapping frames.
+
+### Tests
+- TypeScript compiles with no errors
+- Manual preview at localhost:3000 required
+
+### Next task
+TBD by owner
+
+### Notes
+- Frame files are named `01.png` through `14.png` (not `frame-01.png` as originally specified). Used actual filenames.
+- The `'stopped'` speed level is only available on `CyclingCharacterSVG`, not the new PNG version, since the PNG animation always cycles.
+- The SVG version is retained as `CyclingCharacterSVG` if needed in future.
+
+---
+
 ## [2026-04-12] - Session 23
 
 **Sprint:** Sprint 2B - UX/UI Design and Screen Specification
