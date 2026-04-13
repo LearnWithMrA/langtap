@@ -2,10 +2,11 @@
 // File: components/layout/landing-nav.tsx
 // Purpose: Sticky top navigation for the landing page.
 //          Transparent at top, frosted white after 80px scroll.
-//          Logo rendered as inline keyboard key with base plate.
-//          Full logo and text links on desktop, LT logo with
-//          hamburger menu on mobile. Key-style nav buttons.
-// Depends on: components/ui/key-button.tsx
+//          Full SVG logo on desktop, compact LT logo on mobile.
+//          Key-style nav buttons for auth links.
+// Depends on: components/ui/key-button.tsx,
+//             components/ui/logo-full.tsx,
+//             components/ui/logo-lt.tsx
 // ------------------------------------------------------------
 
 'use client'
@@ -13,6 +14,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { ReactNode } from 'react'
 import { KeyButton } from '@/components/ui/key-button'
+import { LogoFull } from '@/components/ui/logo-full'
+import { LogoLt } from '@/components/ui/logo-lt'
 
 // -- Constants ----------------------------------------------
 
@@ -23,56 +26,13 @@ const NAV_LINKS = [
   { label: 'Leaderboard', href: '#leaderboard' },
 ] as const
 
-// -- Logo components ----------------------------------------
+// -- Logo helpers -------------------------------------------
 
 // Plays key click on logo press
 function playLogoClick(): void {
   const audio = new Audio('/sounds/Keyboard%20Click.mp3')
   audio.volume = 0.6
   audio.play().catch(() => {})
-}
-
-// Mechanical keyboard key with 3D depth. Inspired by the Ctrl key reference:
-// recessed base well, raised white keycap with bevelled edges, strong shadow.
-function LogoKey({ compact }: { compact: boolean }): ReactNode {
-  return (
-    <button
-      type="button"
-      onClick={playLogoClick}
-      className={[
-        'group relative inline-flex items-center justify-center cursor-pointer',
-        'active:translate-y-[2px] transition-transform duration-75',
-      ].join(' ')}
-      aria-label="LangTap home"
-    >
-      {/* Recessed base well */}
-      <div
-        className={[
-          'absolute inset-0 rounded-xl',
-          'bg-gradient-to-b from-warm-200 to-warm-400',
-        ].join(' ')}
-        style={{ top: '2px', bottom: '-4px' }}
-      />
-      {/* Key cap */}
-      <div
-        className={[
-          'relative rounded-xl',
-          'bg-gradient-to-b from-white via-white to-sage-100',
-          'shadow-[0_4px_0_0_#555555,inset_0_1px_0_0_rgba(255,255,255,0.9)]',
-          'border border-warm-200/60',
-          'group-active:shadow-[0_1px_0_0_#555555,inset_0_1px_0_0_rgba(255,255,255,0.9)]',
-          compact ? 'px-3 py-1.5' : 'px-4 py-2',
-        ].join(' ')}
-      >
-        <span className={[
-          'font-bold tracking-widest text-warm-800',
-          compact ? 'text-base' : 'text-lg',
-        ].join(' ')}>
-          {compact ? 'LT' : 'LangTap'}
-        </span>
-      </div>
-    </button>
-  )
 }
 
 // -- Component ----------------------------------------------
@@ -107,10 +67,15 @@ export function LandingNav(): ReactNode {
       >
         <div className="mx-auto flex h-full max-w-5xl items-center justify-between px-4">
           {/* Logo: full on desktop, LT on mobile */}
-          <div className="flex items-center">
-            <span className="hidden md:inline-flex"><LogoKey compact={false} /></span>
-            <span className="inline-flex md:hidden"><LogoKey compact /></span>
-          </div>
+          <button
+            type="button"
+            onClick={playLogoClick}
+            className="flex items-center cursor-pointer active:translate-y-[2px] transition-transform duration-75"
+            aria-label="LangTap home"
+          >
+            <LogoFull className="hidden md:block h-10 w-auto text-warm-800" />
+            <LogoLt className="block md:hidden h-10 w-auto text-warm-800" />
+          </button>
 
           {/* Desktop centre links */}
           <div className="hidden md:flex items-center gap-8">

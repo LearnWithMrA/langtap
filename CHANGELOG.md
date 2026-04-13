@@ -30,6 +30,53 @@ Format per entry:
 
 ---
 
+## [2026-04-13] - Session 26
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Fix landing hero layout squishing on viewport resize; scale up cyclist
+**Status:** Done
+
+### Changes made
+- [components/layout/landing-scene.tsx]: Changed section from min-h-screen to h-screen (fixed 100vh). Converted all positioning from percentage-based to viewport-relative units (vh/vw). Replaced fixed cloud sizes with vw-based widths + aspect-ratio. Removed scale-[1.3] transform from cyclist, replaced with viewport-relative positioning.
+- [components/layout/landscape-background.tsx]: Replaced fixed pixel SVG heights (400px, 250px) with vh-based container heights (35vh, 25vh) and height="100%". Converted ground, hill bottom offsets from percentages to vh units.
+- [components/animation/cycling-character.tsx]: Replaced fixed width classes with viewport-relative sizing (w-[55vw]/w-[40vw]/w-[33vw]) with min/max bounds. Cyclist is now ~80% larger than the original fixed size.
+
+### Tests
+- TypeScript compiles with no errors
+
+### Next task
+[To be confirmed by owner]
+
+### Notes
+- All scene layer positioning now uses vh/vw units so elements scale proportionally with the viewport rather than squishing.
+- Cyclist size was increased in two steps (40% then 30% on top) per owner direction.
+
+---
+
+## [2026-04-13] - Session 25
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Import logo SVGs as React components, integrate into landing nav
+**Status:** Done
+
+### Changes made
+- [components/ui/logo-full.tsx]: Created full "LangTap" logo as inline SVG React component. Removed Figma background rect and hardcoded fills. Replaced fill/stroke with currentColor. Trimmed viewBox to "160 143 3090 757". Added unique path IDs: logo-border, logo-L, logo-a1, logo-n, logo-g, logo-T, logo-a2, logo-p.
+- [components/ui/logo-lt.tsx]: Created compact "LT" key logo as inline SVG React component. Same cleanup: removed background rect, replaced hardcoded fills/strokes with currentColor.
+- [components/layout/landing-nav.tsx]: Replaced text-based LogoKey component with LogoFull (desktop) and LogoLt (mobile) SVG components. Both use text-warm-800 as default colour. Preserved click-to-play-sound behaviour on wrapping button.
+
+### Tests
+- TypeScript compiles with no errors
+
+### Next task
+[To be confirmed by owner]
+
+### Notes
+- The full logo SVG contains L and T letterforms inside the key border (part of the key icon) plus 7 standalone letter paths outside the key spelling "LangTap". The 7 standalone paths received the requested IDs.
+- Mask IDs are prefixed (logo- and lt-) to avoid collisions if both components render on the same page.
+- The old LogoKey component (mechanical keyboard key with 3D depth using divs and text) was fully replaced.
+
+---
+
 ## [2026-04-13] - Session 24
 
 **Sprint:** Sprint 2B - UX/UI Design and Screen Specification

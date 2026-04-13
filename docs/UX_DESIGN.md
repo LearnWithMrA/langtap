@@ -174,7 +174,7 @@ on the scene background only. Character tile colours and UI chrome do not change
 
 ## 3. Landing Page Spec
 
-**Status:** Done
+**Status:** In Progress
 **Route:** `/` (shown only to logged-out users)
 **Scrollable:** Yes
 **Layout:** Single continuous vertical page
@@ -904,7 +904,32 @@ The full leaderboard is only accessible after logging in.
 
 ---
 
-## 13. Asset Production Notes for Gemini
+## 13. Global Layout and Scaling Rules
+
+These rules apply to every screen that uses the scene background (landing page,
+game home, practice screen). Violating these rules is a bug, not a style choice.
+
+### 13.1 Scene Viewport Rules
+
+- The hero scene must always be exactly `100vh` tall at all viewport sizes. Never use a fixed pixel height.
+- All scene layers (sky, hills, ground strip, clouds) must use percentage-based or viewport-relative (`vw`, `vh`, `%`) positioning and sizing. No fixed pixel values for layout or positioning of scene elements.
+- The cyclist uses percentage-based `bottom` and `left` positioning relative to the scene container, not fixed pixels.
+- Hero copy and CTA buttons use percentage-based vertical positioning within the sky area so they stay centred in the available sky space at any viewport height.
+- Elements reposition gracefully as the viewport narrows. Nothing squishes, overlaps, or clips.
+- Every new scene-based screen must be tested at 360px, 768px, and 1440px widths before the task is marked Done.
+
+### 13.2 General Layout Rules
+
+- Top bar: sticky, 56px height. Logo left, mode/action icons right.
+- Bottom nav (in-app): 64px height, 4 tabs. Active tab uses sage-500.
+- Content max-width: `max-w-md` for practice and Dojo, `max-w-2xl` for reading-heavy screens.
+- Swipe mode: hide bottom nav and cyclist when native keyboard is open. Maximise space for the character prompt.
+- Micro-interactions: soft fade-ins and scale transitions, 150ms to 300ms. No harsh flashes or aggressive spring animations.
+- Touch targets: minimum 44x44pt on all interactive elements, no exceptions.
+
+---
+
+## 14. Asset Production Notes for Gemini
 
 This section documents every asset that needs to be created before implementation begins.
 Gemini is responsible for producing these assets. Claude Code does not create visual assets.
@@ -951,11 +976,11 @@ File naming: lowercase, hyphens, descriptive. No spaces.
 
 ---
 
-## 14. Screen Status Summary
+## 15. Screen Status Summary
 
 | Screen | Spec status | Gemini mockup | Approved |
 |---|---|---|---|
-| Landing page | Done | Built | Yes |
+| Landing page | In Progress | To Do | No |
 | Game home | To Do | To Do | No |
 | Practice - Type mode | To Do | To Do | No |
 | Practice - Tap mode | To Do | To Do | No |

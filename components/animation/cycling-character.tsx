@@ -71,7 +71,7 @@ export function CyclingCharacter({ speed }: CyclingCharacterProps): React.ReactE
         alt=""
         width={400}
         height={380}
-        className="h-auto w-56 md:w-72 lg:w-[21.5rem]"
+        className="h-auto w-[55vw] min-w-68 md:w-[40vw] md:min-w-[26rem] lg:w-[33vw] lg:max-w-[39rem]"
         priority
         unoptimized
       />

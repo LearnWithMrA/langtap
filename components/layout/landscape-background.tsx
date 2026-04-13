@@ -75,10 +75,10 @@ export function LandscapeBackground({ speed = 1 }: LandscapeBackgroundProps): Re
       />
 
       {/* Back hills (lightest, furthest) */}
-      <div className="absolute bottom-[20%] left-0 right-0">
+      <div className="absolute bottom-[20vh] left-0 right-0 h-[35vh]">
         <svg
           width="100%"
-          height="400"
+          height="100%"
           viewBox="0 0 1400 400"
           preserveAspectRatio="none"
           xmlns="http://www.w3.org/2000/svg"
@@ -95,10 +95,10 @@ export function LandscapeBackground({ speed = 1 }: LandscapeBackgroundProps): Re
       </div>
 
       {/* Mid hills with bushes (darkest, closest) */}
-      <div className="absolute bottom-[10%] left-0 right-0">
+      <div className="absolute bottom-[10vh] left-0 right-0 h-[25vh]">
         <svg
           width="100%"
-          height="250"
+          height="100%"
           viewBox="0 0 1400 250"
           preserveAspectRatio="none"
           xmlns="http://www.w3.org/2000/svg"
@@ -124,7 +124,7 @@ export function LandscapeBackground({ speed = 1 }: LandscapeBackgroundProps): Re
 
       {/* Foreground ground */}
       <div
-        className="absolute bottom-0 left-0 right-0 h-[25%]"
+        className="absolute bottom-0 left-0 right-0 h-[25vh]"
         style={{ backgroundColor: 'var(--scene-ground)' }}
       >
         {/* Lighter ground band */}
