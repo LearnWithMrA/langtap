@@ -14,7 +14,7 @@
 
 import type { ReactNode } from 'react'
 import Image from 'next/image'
-import { LandscapeBackground } from '@/components/layout/landscape-background'
+import { LandscapeBackgroundV2 as LandscapeBackground } from '@/components/layout/LandscapeBackgroundV2'
 import { CyclingCharacter } from '@/components/animation/cycling-character'
 
 // -- Types --------------------------------------------------
@@ -51,9 +51,9 @@ function CloudSet(): ReactNode {
 
 export function LandingScene({ children }: LandingSceneProps): ReactNode {
   return (
-    <section className="theme-day relative h-screen overflow-hidden">
+    <section className="theme-day relative h-screen overflow-visible">
       {/* Animated landscape (sky, hills, ground with continuous motion) */}
-      <LandscapeBackground speed={0.3} />
+      <LandscapeBackground speed={0.3} staticHills={false} />
 
       {/* Clouds layer: continuous drift, below nav (top-16) */}
       <div
@@ -69,26 +69,15 @@ export function LandingScene({ children }: LandingSceneProps): ReactNode {
         </div>
       </div>
 
-      {/* Kanji tree icons floating on the hills */}
-      <div className="absolute bottom-[28vh] left-0 right-0 pointer-events-none z-[2]" aria-hidden="true">
-        <div className="absolute bottom-0 left-[10%] opacity-40">
-          <Image src="/images/icon-tree.svg" alt="" width={28} height={28} />
-        </div>
-        <div className="absolute bottom-[1vh] left-[25%] opacity-30 hidden md:block">
-          <Image src="/images/icon-grove.svg" alt="" width={36} height={30} />
-        </div>
-        <div className="absolute bottom-0 right-[15%] opacity-35 hidden md:block">
-          <Image src="/images/icon-forest.svg" alt="" width={40} height={34} />
-        </div>
-      </div>
+
 
       {/* Mascot riding along the dark green mid-hill path */}
-      <div className="absolute bottom-[12vh] left-[3vw] md:left-[8vw] z-[3]" aria-hidden="true">
+      <div className="absolute bottom-[8%] left-[3%] md:left-[8%] z-[3]" aria-hidden="true">
         <CyclingCharacter speed="idle" />
       </div>
 
       {/* Content overlay (hero copy, etc.) - positioned in the sky above the hills */}
-      <div className="relative z-20 flex h-screen flex-col items-center px-4 pt-[22vh]">
+      <div className="relative z-20 flex h-screen flex-col items-center px-4 pt-[19vh]">
         {children}
       </div>
     </section>

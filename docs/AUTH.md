@@ -299,9 +299,11 @@ Tracked by `onboarding_complete: boolean` on the user's profile.
 ### Step 1 - JLPT Self-Assessment (`/onboarding/step-1`)
 
 - Show N5 through N1 with a short description of each level.
-- User selects one. This sets `jlpt_level` on their profile.
-- Continue button saves the selection and navigates to step 2.
-- Can be changed later in Profile settings.
+- User selects two levels: Kotoba JLPT level and Kanji JLPT level. Both default to N5.
+- Sets `kotoba_jlpt_level` and `kanji_jlpt_level` on their profile.
+- Message shown: "Words below your selected level will be marked as mastered. To reset, change your level in Profile settings."
+- Continue button saves both selections and navigates to step 2.
+- Both can be changed later in Profile settings.
 
 ### Step 2 - Early Character Unlock (`/onboarding/step-2`)
 

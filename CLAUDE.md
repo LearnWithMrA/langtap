@@ -367,7 +367,8 @@ tokens from the context window. Disable unused servers in project settings.
 4. State clearly: what sprint is active, what task is being worked on, and what
    files will be affected.
 5. If the task is Large or larger, state the token estimate and wait for approval.
-6. Run the pre-task checklist before writing any code:
+6. If the task is Large or Epic, prefix the message with `ultrathink`. For Small and Medium tasks, use the default thinking budget.
+7. Run the pre-task checklist before writing any code:
 
 **Pre-task checklist (inspired by production SaaS Claude Code configs):**
 - What is the blast radius of this change? Which files and systems does it touch?
@@ -515,6 +516,7 @@ A task is not done until all of the following are true:
 | Word audio | Kanji Alive dataset (CC BY 4.0) | April 2026 | 10,187 native speaker recordings, Phase 1 onwards |
 | Game engine | Pure functions in `engine/` | April 2026 | Fully testable in isolation, no UI coupling |
 | Token optimisation | Sonnet default, MAX_THINKING_TOKENS 10k, autocompact 50% | April 2026 | Community-proven settings from everything-claude-code |
+| Thinking budget | ultrathink triggered by planning chat on complex tasks, medium otherwise | April 2026 | Preserves token budget. ultrathink reserved for architecture decisions, algorithm design, and Large/Epic task planning. |
 | Pre-task checklist | Blast radius, existing patterns, security surface | April 2026 | Adopted from production Next.js/Supabase Claude Code configs |
 | Codex role | Manual reviewer at stage gates | April 2026 | Challenger and parallel thinker, not primary implementer. Manual copy-paste workflow, no plugin or API key needed. |
 

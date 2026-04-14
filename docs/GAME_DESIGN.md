@@ -133,11 +133,15 @@ The counter is never shown to the user.
 
 When selecting a word for a target character, apply priority in this order:
 
-1. Words that contain the target character AND have counter < 5.
-2. If all such words are at counter 5, reset all counters for that character's words,
-   then select from the full set.
-3. Within the eligible set, prefer words with lower counters (secondary weighting).
-4. Words containing locked characters must never be selected (see Section 4).
+1. Words that contain the target character, pass isWordEligible(), are at the
+   user's preferred JLPT level, and have counter < 5.
+2. If none remain at the preferred level, expand to words at all other JLPT levels
+   that contain the target character, pass isWordEligible(), and have counter < 5.
+3. If all words across all levels are at counter 5, reset all counters for that
+   character's words, then restart from step 1.
+4. Within the eligible set at any step, prefer words with lower counters (secondary
+   weighting).
+5. Words containing locked characters must never be selected (see Section 4).
 
 ---
 
@@ -257,8 +261,9 @@ is needed.
 
 - The full set of kana characters with their mastery scores
 - The set of currently unlocked characters
-- The word bank with word counters
-- The current JLPT level selected by the user (determines which word bank to use)
+- The full word bank across all JLPT levels, with word counters
+- The user's preferred JLPT level (from `kotoba_jlpt_level` on their profile) — used
+  as a starting preference for word selection, not as a hard filter
 
 ### 5.2 Steps
 
@@ -274,12 +279,14 @@ is needed.
 
 4. Select a word for that character:
    a. Filter words that contain the selected character AND pass isWordEligible().
-   b. Among those, prefer words with counter < 5.
-   c. If all words are at counter 5, reset counters for that character's words,
-      then select from the full set.
-   d. Among eligible words, apply secondary weighting by counter value:
+   b. Among those, prefer words at the user's preferred JLPT level with counter < 5.
+   c. If no eligible words remain at the preferred level (all at counter 5 or none
+      pass isWordEligible()), expand to words at all other JLPT levels with counter < 5.
+   d. If all words across all levels are at counter 5, reset all counters for that
+      character's words, then restart from step b.
+   e. Among eligible words, apply secondary weighting by counter value:
       lower counter = higher probability.
-   e. Draw one word.
+   f. Draw one word.
 
 5. Return:
    { character, word, reading, meaning }
@@ -292,7 +299,7 @@ is needed.
 | Only one character unlocked | That character is always selected. No weighting needed. |
 | No words available for a character | Skip that character. Select the next weighted draw. Log a warning. This should not happen if word bank is complete. |
 | All characters at very high mastery | Weighting still applies. Highest-score characters still appear, just rarely. |
-| User changes JLPT level mid-session | Reload the word bank. Reset word counters for the session only (not permanently). |
+| All words at counter 5 across all levels | Reset all counters for that character's words and restart selection from the preferred level. |
 
 ### 5.4 Purity Requirement
 
@@ -304,8 +311,9 @@ It takes inputs and returns a result. Tests must be able to call it directly.
 // engine/selection.ts
 selectNextPrompt(
   characters: CharacterWithMastery[],
-  wordBank: WordBankEntry[],
-  unlockedIds: Set<string>
+  wordBank: WordBankEntry[],        // full bank across all JLPT levels combined
+  unlockedIds: Set<string>,
+  preferredLevel: 'N5' | 'N4' | 'N3' | 'N2' | 'N1'  // from kanji_jlpt_level on profile
 ): PromptResult
 ```
 
@@ -528,6 +536,19 @@ In Kotoba Mode:
 - Kotoba Mode has its own leaderboard (Kana Kotoba board). Separate from main Kana boards.
 - Kotoba Mode is gated behind full Kana mastery (all characters unlocked and practised).
 
+**Kotoba JLPT level (`kotoba_jlpt_level`):**
+- The user selects a Kotoba JLPT level during onboarding (and can change it in Profile).
+- Word selection in Kotoba Mode is strictly filtered to the selected level and above.
+  Unlike Kana Mode, this is a hard filter, not a preference.
+- When the user sets or changes their Kotoba JLPT level, all words at levels below
+  the selected level are automatically set to mastered (score set to a high value).
+  This allows experienced users to skip vocabulary they already know.
+- The user is shown a clear message when setting this level:
+  "Words below this level will be marked as mastered. To reset, change your level
+  in Profile settings."
+- Changing the level to a lower value does not un-master previously mastered words.
+  Resetting progress from Profile is the only way to clear mastery scores.
+
 ---
 
 ## 12. Kanji Mode (Phase 3 - do not build in Phase 1 or 2)
@@ -543,6 +564,25 @@ In Kanji Mode:
 - Kanji follow JLPT N5-N1 levels, grouped in sets, same progression logic as kana.
 - Kanji mastery follows identical rules to kana mastery (score, weighting, threshold).
 - Kanji Mode is gated behind full Kana mastery.
+
+**Kanji JLPT level (`kanji_jlpt_level`):**
+- The user selects a Kanji JLPT level during onboarding (and can change it in Profile).
+- Word selection in Kanji Mode is strictly filtered to the selected level and above.
+  This is a hard filter, not a preference.
+- When the user sets or changes their Kanji JLPT level, all kanji at levels below
+  the selected level are automatically set to mastered (score set to a high value).
+  This allows experienced users to start at the right level without replaying content
+  they already know.
+- The user is shown a clear message when setting this level:
+  "Kanji below this level will be marked as mastered. To reset, change your level
+  in Profile settings."
+- Changing the level to a lower value does not un-master previously mastered kanji.
+  Resetting progress from Profile is the only way to clear mastery scores.
+
+**Kana Mode word preference:**
+- The Kana Mode word selection algorithm uses `kanji_jlpt_level` as the preferred
+  starting level when drawing words from the full bank. Words at the preferred level
+  are prioritised first before spilling to other levels.
 
 ---
 
@@ -585,9 +625,9 @@ Required test cases for the selection algorithm:
 - Single character unlocked: always returns that character.
 - All characters at score 0: uniform probability (statistical test with large N).
 - Mixed scores: lower-score characters selected more often (statistical test).
-- All words for a character at counter 5: counters reset, word is still selected.
+- All words for a character at counter 5 at preferred level: spills to other levels.
+- All words for a character at counter 5 across all levels: counters reset, word still selected.
 - Word containing locked character is never selected.
-- Changing JLPT level: only words from the new level's bank are eligible.
 
 Required test cases for the distance mechanic:
 - 1-second response: increment > base.

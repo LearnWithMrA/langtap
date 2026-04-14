@@ -78,8 +78,9 @@ The only scope for initial development.
 - User accounts (email and password, with Google and Apple sign-in as later additions)
 - Guest mode with local progress, with a persistent reminder that progress will be lost
   on tab close
-- Onboarding self-assessment: user selects their JLPT vocabulary level (N5-N1) on first
-  login to determine which words appear during practice
+- Onboarding self-assessment: user selects their Kotoba JLPT level and Kanji JLPT level
+  (N5-N1) on first login. The Kanji JLPT level determines the preferred starting level
+  for word selection in Kana Mode. Both levels can be changed later in Profile settings.
 - Early character unlock on sign-up: user can select characters they already know to
   unlock them immediately before the guided progression begins
 - Kana typing practice (hiragana and katakana together)
@@ -157,9 +158,12 @@ buttons are always the most prominent elements on the page.
 **Onboarding flow (first login only):**
 
 Step 1 - JLPT self-assessment. The user is shown the five vocabulary levels N5 through
-N1 with a brief description of each. They select the level that best represents their
-current vocabulary knowledge. This determines which words are drawn from the word
-bank during practice. The selection can be changed later in Profile settings.
+N1 with a brief description of each. They select two levels: their Kotoba JLPT level
+(which controls word selection in Kotoba Mode and sets lower-level words as mastered)
+and their Kanji JLPT level (which controls Kanji Mode and sets the preferred starting
+level for word selection in Kana Mode). Both default to N5 for new learners. A clear
+message is shown: "Words below your selected level will be marked as mastered. To reset,
+change your level in Profile settings." Both selections can be changed later in Profile.
 
 Step 2 - Early character unlock. The user is shown the full kana chart with all characters
 listed. Characters they already know can be individually tapped or clicked to unlock them
@@ -272,7 +276,12 @@ any time from the top-right icon during practice.
 
 - Username display
 - Language selection (Japanese only in Phase 1; architecture should support others later)
-- JLPT level selection (can be updated here after onboarding)
+- Kotoba JLPT level selection: sets the word level for Kotoba Mode. Words below the
+  selected level are marked as mastered. Changing to a lower level does not un-master
+  previously mastered words. A warning is shown: "To reset mastery, use Reset Progress."
+- Kanji JLPT level selection: sets the word level for Kanji Mode and the preferred
+  starting level for word selection in Kana Mode. Same mastery pre-set behaviour and
+  reset warning as Kotoba JLPT level.
 - Font selection (Japanese-friendly fonts only; see Section 6 for font guidance)
 - Font size selection (manual slider or preset sizes)
 - Font size linked to mastery (later feature - planned but not in Phase 1):
@@ -306,16 +315,14 @@ This means only one audio source is needed across the whole app.
 
 **Word pronunciation audio**
 
-Source: Kanji Alive audio dataset (GitHub: kanjialive/kanji-data-media)
-10,187 pre-recorded audio files covering pronunciations for 6-12 compound words
-per kanji, spoken by male and female native Japanese speakers.
-Available in Opus, AAC, Ogg, and MP3 formats (32kHz mono).
-Licence: Creative Commons Attribution 4.0 International (CC BY 4.0).
-Attribution required. Attribution text to be confirmed and placed in the app
-credits screen and in CONTENT.md.
-URL: https://github.com/kanjialive/kanji-data-media
-Note: Some kana-only N5 words may not have coverage in this dataset. Any gaps
-are documented during the audio sprint and handled per word.
+Source: VOICEVOX, generated locally on the developer's Mac and committed to the
+repo as static files. The app serves them directly with no runtime API calls and
+no cost per user. VOICEVOX covers all words including pure kana words, so there
+are no coverage gaps regardless of JLPT level.
+
+No external audio dataset is needed. Kanji Alive was evaluated and set aside;
+VOICEVOX provides full coverage with a simpler pipeline and no attribution
+complexity. See CONTENT.md Section 2.2 for full details.
 
 **Background lo-fi music**
 
@@ -440,9 +447,9 @@ Full rules live in CLAUDE.md. Summary here for reference:
 
 | Source | URL | Licence | Use |
 |---|---|---|---|
-| Wikimedia Commons - Wikibooks Japanese audio | https://commons.wikimedia.org/wiki/Category:Japanese_audio_files_from_Wikibooks | PD / CC BY-SA 3.0 | No longer used. Word-level audio only. |
-| Kanji Alive audio dataset | https://github.com/kanjialive/kanji-data-media | CC BY 4.0 | Word pronunciation audio (Phase 1 onwards) |
+| VOICEVOX | https://voicevox.hiroshiba.jp | Free and open source (per voice character terms) | Word pronunciation audio - all phases |
 | Free Music Archive | https://freemusicarchive.org | CC BY / CC0 | Lo-fi background music |
+| Kanji Alive audio dataset | https://github.com/kanjialive/kanji-data-media | CC BY 4.0 | Evaluated and not used. VOICEVOX provides full coverage. |
 
 ---
 

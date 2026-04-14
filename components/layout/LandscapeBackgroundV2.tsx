@@ -1,0 +1,252 @@
+// ------------------------------------------------------------
+// File: components/layout/LandscapeBackgroundV2.tsx
+// Purpose: Upgraded Studio Ghibli inspired parallax landscape
+//          background with custom vector shrubbery, rich dynamic
+//          hills, and an organic swooping ground bleed that
+//          seamlessly flows into the section beneath it.
+// Depends on: motion/react
+// ------------------------------------------------------------
+
+'use client'
+
+import type { ReactNode } from 'react'
+import { motion } from 'motion/react'
+
+// -- Types --------------------------------------------------
+
+type LandscapeBackgroundProps = {
+  speed?: number
+  staticHills?: boolean
+}
+
+// -- Helpers ------------------------------------------------
+
+function DistantTree({ cx, cy, scale = 1 }: { cx: number; cy: number; scale?: number }) {
+  return (
+    <g transform={`translate(${cx}, ${cy}) scale(${scale})`}>
+      {/* Tiny tree trunk */}
+      <rect x="-1" y="0" width="2" height="12" style={{ fill: 'var(--scene-hill)', filter: 'brightness(0.35)' }} />
+      {/* Cute fluffy canopy */}
+      <circle cx="0" cy="-6" r="10" style={{ fill: 'var(--scene-hill)', filter: 'brightness(0.8)' }} />
+      <circle cx="-5" cy="-2" r="7" style={{ fill: 'var(--scene-hill)', filter: 'brightness(0.9)' }} />
+      <circle cx="5" cy="0" r="6" style={{ fill: 'var(--scene-hill)', filter: 'brightness(0.7)' }} />
+    </g>
+  )
+}
+
+function Tree({ cx, cy, scale = 1 }: { cx: number; cy: number; scale?: number }) {
+  return (
+    <g transform={`translate(${cx}, ${cy}) scale(${scale})`}>
+      {/* Thicker tree trunk */}
+      <path d="M -1.5 0 L 1.5 0 L 1 15 L -1 15 Z" style={{ fill: 'var(--scene-hill)', filter: 'brightness(0.3)' }} />
+      {/* Cute puffy overlapping canopy */}
+      <circle cx="0" cy="-12" r="16" style={{ fill: 'var(--scene-hill)', filter: 'brightness(1.05)' }} />
+      <circle cx="-10" cy="-4" r="12" style={{ fill: 'var(--scene-hill)', filter: 'brightness(1.15)' }} />
+      <circle cx="10" cy="-6" r="10" style={{ fill: 'var(--scene-hill)', filter: 'brightness(0.95)' }} />
+    </g>
+  )
+}
+
+function BushCluster1({ x, y }: { x: number; y: number }) {
+  return (
+    <g transform={`translate(${x}, ${y})`} style={{ fill: 'var(--scene-hill)' }}>
+      <ellipse cx="0" cy="0" rx="30" ry="18" style={{ filter: 'brightness(1.15)' }} />
+      <ellipse cx="-15" cy="5" rx="20" ry="12" style={{ filter: 'brightness(1.05)' }} />
+      <ellipse cx="15" cy="2" rx="15" ry="10" style={{ filter: 'brightness(1.2)' }} />
+    </g>
+  )
+}
+
+function BigGrass({ x, y }: { x: number; y: number }) {
+  return (
+    <g transform={`translate(${x}, ${y})`}>
+      <path d="M 0 0 Q 15 -35 30 0 Q 15 -10 0 0 Z" style={{ fill: 'var(--scene-ground)', filter: 'brightness(0.95)' }} />
+      <path d="M 20 5 Q 35 -20 50 5 Q 35 -5 20 5 Z" style={{ fill: 'var(--scene-ground)', filter: 'brightness(0.85)' }} />
+      <path d="M -15 2 Q -5 -25 5 2 Q -5 -5 -15 2 Z" style={{ fill: 'var(--scene-ground)', filter: 'brightness(0.9)' }} />
+    </g>
+  )
+}
+
+// -- Parallax Layers ----------------------------------------
+
+function HillSetFar(): ReactNode {
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 1600 400" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" className="absolute bottom-0 w-full h-full">
+      {/* Variable, organic mountain ranges */}
+      <path d="M 0 140 C 200 140, 300 200, 450 160 C 600 120, 800 60, 950 110 C 1100 160, 1200 190, 1350 160 C 1500 130, 1500 140, 1600 140 L 1600 1200 L 0 1200 Z" style={{ fill: 'var(--scene-hill-far-pale)' }} />
+      <path d="M 0 180 C 150 180, 200 110, 350 140 C 500 170, 700 230, 850 180 C 1000 130, 1100 80, 1250 120 C 1400 160, 1500 180, 1600 180 L 1600 1200 L 0 1200 Z" style={{ fill: 'var(--scene-hill-far)' }} />
+    </svg>
+  )
+}
+
+function HillSetMidBack(): ReactNode {
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 1600 400" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" className="absolute bottom-0 w-full h-full">
+      <path d="M 0 220 C 200 220, 350 130, 500 170 C 650 210, 800 300, 1000 240 C 1200 180, 1350 140, 1450 190 C 1520 220, 1550 220, 1600 220 L 1600 1200 L 0 1200 Z" style={{ fill: 'var(--scene-hill-mid)' }} />
+      <svg x="0" y="0" width="100%" height="100%" viewBox="0 0 1600 400" preserveAspectRatio="xMinYMax slice">
+        {/* Securely grounded trees */}
+        <DistantTree cx={100} cy={225} scale={1.0} />
+        <DistantTree cx={180} cy={200} scale={0.8} />
+        <DistantTree cx={230} cy={185} scale={0.7} />
+        <DistantTree cx={380} cy={165} scale={0.8} />
+        <DistantTree cx={420} cy={175} scale={1.1} />
+        <DistantTree cx={550} cy={205} scale={0.9} />
+        <DistantTree cx={680} cy={250} scale={1.1} />
+        <DistantTree cx={720} cy={280} scale={0.9} />
+        <DistantTree cx={850} cy={290} scale={1.0} />
+        <DistantTree cx={950} cy={270} scale={0.8} />
+        <DistantTree cx={1100} cy={225} scale={0.85} />
+        <DistantTree cx={1150} cy={215} scale={1} />
+        <DistantTree cx={1280} cy={175} scale={0.9} />
+        <DistantTree cx={1420} cy={200} scale={0.7} />
+      </svg>
+    </svg>
+  )
+}
+
+function HillSetMidFront(): ReactNode {
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 1600 400" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" className="absolute bottom-0 w-full h-full">
+      <path d="M 0 260 C 200 260, 400 150, 650 200 C 900 250, 1050 330, 1250 260 C 1400 210, 1500 260, 1600 260 L 1600 1200 L 0 1200 Z" style={{ fill: 'var(--scene-hill-front)' }} />
+      <svg x="0" y="0" width="100%" height="100%" viewBox="0 0 1600 400" preserveAspectRatio="xMinYMax slice">
+        {/* Solidly grounded Bushes & Trees */}
+        <BushCluster1 x={300} y={230} />
+        <BushCluster1 x={600} y={225} />
+        <BushCluster1 x={780} y={260} />
+        <BushCluster1 x={1050} y={345} />
+        <BushCluster1 x={1150} y={315} />
+        <BushCluster1 x={1350} y={250} />
+        
+        <Tree cx={150} cy={280} scale={0.9} />
+        <Tree cx={240} cy={260} scale={1.1} />
+        <Tree cx={480} cy={200} scale={1.1} />
+        <Tree cx={540} cy={210} scale={0.85} />
+        <Tree cx={690} cy={235} scale={0.95} />
+        <Tree cx={850} cy={270} scale={1.2} />
+        <Tree cx={1250} cy={285} scale={1.1} />
+        <Tree cx={1450} cy={255} scale={1.0} />
+      </svg>
+    </svg>
+  )
+}
+
+function GroundLayer(): ReactNode {
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 1600 400" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" className="absolute bottom-0 w-full h-full">
+      {/* Meadow background */}
+      <path d="M 0 120 C 300 120, 500 80, 800 150 C 1100 220, 1400 120, 1600 120 L 1600 1200 L 0 1200 Z" style={{ fill: 'var(--scene-ground)', filter: 'brightness(1.05)' }} />
+
+      {/* 
+        Higher Dirt Path (Moved substantially up towards y=70 to y=240)
+      */}
+      <path d="M 0 70 Q 400 120, 800 60 T 1600 70 L 1600 240 Q 1200 280, 800 250 T 0 240 Z" style={{ fill: 'var(--scene-ground)', filter: 'sepia(0.6) hue-rotate(-25deg) saturate(0.9) brightness(0.85)' }} />
+
+      {/* Path pebbles scattered across the dirt track */}
+        <ellipse cx="120" cy="110" rx="10" ry="3.5" style={{ fill: 'var(--scene-ground)', filter: 'sepia(0.5) hue-rotate(-10deg) brightness(1.3)' }} />
+        <ellipse cx="180" cy="160" rx="5" ry="2" style={{ fill: 'var(--scene-ground)', filter: 'sepia(0.5) hue-rotate(-10deg) brightness(0.6)' }} />
+        <ellipse cx="450" cy="140" rx="8" ry="3" style={{ fill: 'var(--scene-ground)', filter: 'sepia(0.5) hue-rotate(-10deg) brightness(1.2)' }} />
+        <ellipse cx="550" cy="200" rx="14" ry="5" style={{ fill: 'var(--scene-ground)', filter: 'sepia(0.5) hue-rotate(-10deg) brightness(0.8)' }} />
+        <ellipse cx="850" cy="130" rx="12" ry="4" style={{ fill: 'var(--scene-ground)', filter: 'sepia(0.5) hue-rotate(-10deg) brightness(0.7)' }} />
+        <ellipse cx="1050" cy="150" rx="7" ry="2" style={{ fill: 'var(--scene-ground)', filter: 'sepia(0.5) hue-rotate(-10deg) brightness(1.3)' }} />
+        <ellipse cx="1300" cy="140" rx="9" ry="3" style={{ fill: 'var(--scene-ground)', filter: 'sepia(0.5) hue-rotate(-10deg) brightness(1.4)' }} />
+        <ellipse cx="1380" cy="190" rx="6" ry="2.5" style={{ fill: 'var(--scene-ground)', filter: 'sepia(0.5) hue-rotate(-10deg) brightness(0.6)' }} />
+
+        {/* Foreground Dark Grass Wave, extending massively down from y=240 */}
+        <path d="M 0 240 Q 400 280, 800 250 T 1600 240 L 1600 1200 L 0 1200 Z" style={{ fill: 'var(--scene-ground)', filter: 'brightness(0.85)' }} />
+
+                        {/* User provided custom Shrub vector Group.svg overlaid automatically (CLEANED OF JUNK!) */}
+        <svg x="-10" y="-140" width="1620" height="500" viewBox="0 0 4434 1203" preserveAspectRatio="none">
+          <path d="M193.283 939.893C183.235 939.957 170.853 940.444 165.731 940.995C160.577 941.546 133.479 941.514 105.441 940.898L54.4854 939.828L51.0171 926.115C42.7838 893.632 30.0774 853.595 26.1229 847.695C23.789 844.161 21.8766 839.104 21.8766 836.478C21.8766 833.82 16.5607 818.778 10.0454 803.087C3.53011 787.397 -0.910647 773.684 0.159025 772.614C3.36804 769.372 17.2738 787.462 37.0141 820.593C47.2894 837.84 56.8516 851.261 58.2454 850.386C59.6392 849.543 60.8062 836.9 60.871 822.279C61.0007 791.514 71.1787 728.169 77.1754 720.939C84.4038 712.219 87.0942 722.593 84.9548 750.797C83.172 774.041 86.8673 826.396 91.8915 849.057C94.2901 859.884 99.5412 851.585 99.6061 836.835C99.6709 823.9 114.29 764.153 120.902 749.857C123.495 744.248 125.602 738.316 125.602 736.695C125.602 735.074 127.904 730.924 130.691 727.456C136.299 720.518 136.202 723.047 129.103 776.277C124.403 811.484 123.625 904.362 128.033 904.297C129.362 904.265 136.785 886.824 144.5 865.493C152.214 844.194 164.013 818.324 170.755 808.015C182.976 789.342 198.859 772.258 201.549 774.948C202.295 775.726 198.113 787.332 192.181 800.753C182.911 821.793 164.435 885.333 164.532 895.901C164.532 897.846 168.454 892.886 173.219 884.879C193.608 850.613 252.05 787.624 263.493 787.624C270.365 787.624 269.651 789.245 254.773 807.983C247.383 817.287 238.404 831.486 234.871 839.493C231.305 847.5 225.568 857.712 222.1 862.186C215.52 870.647 206.638 889.742 206.638 895.48C206.638 897.295 211.662 892.205 217.789 884.198C223.882 876.158 234.482 867.016 241.289 863.807C248.064 860.63 257.658 855.216 262.585 851.747C267.545 848.311 273.12 845.977 275.065 846.625C278.371 847.727 271.272 857.939 244.984 889.709C238.469 897.619 228.258 912.143 222.294 921.965L211.5 939.795L193.283 939.893ZM2415.57 1202.58H1112C1459.09 1202.58 1743.08 1201.54 1743.08 1200.28C1743.08 1199.01 1737.66 1192.46 1731.08 1185.69C1719.96 1174.34 1719.61 1173.4 1726.38 1173.4C1740.94 1173.4 1765.6 1191.72 1761.03 1199.14C1759.87 1201.02 1761.07 1202.58 1763.72 1202.58C1767.22 1202.58 1768.16 1200.08 1767.03 1193.66C1764.4 1178.26 1762.01 1172.3 1750.76 1152.98C1744.76 1142.6 1739.83 1131.97 1739.83 1129.28C1739.83 1120.95 1756.2 1132.94 1769.01 1150.68C1775.23 1159.3 1780.87 1165.85 1781.49 1165.23C1782.13 1164.62 1779.44 1153.82 1775.59 1141.24C1771.7 1128.7 1768.97 1116.15 1769.56 1113.4C1771.5 1104.29 1783.4 1116.31 1793.51 1137.55C1798.63 1148.37 1803.79 1157.19 1804.99 1157.19C1806.15 1157.19 1810.92 1145.07 1815.52 1130.25C1822.52 1107.82 1826.87 1100.1 1841.52 1084.06C1851.18 1073.46 1860.06 1065.77 1861.29 1066.94C1862.52 1068.11 1858.92 1082.4 1853.32 1098.71C1847.74 1115.02 1843.62 1131.55 1844.18 1135.47C1845.08 1141.86 1845.93 1141.4 1852.44 1130.9C1860.93 1117.25 1891.73 1087.59 1894.52 1090.38C1895.55 1091.42 1892.38 1101.82 1887.42 1113.53C1882.46 1125.2 1879.09 1135.44 1879.9 1136.28C1880.74 1137.13 1888.58 1132.33 1897.34 1125.65C1916.1 1111.32 1959.93 1085.87 1965.86 1085.87C1974.03 1085.87 1969.62 1092.1 1949.72 1108.63C1925.44 1128.83 1899.86 1159.43 1896.69 1172.07L1894.39 1181.18L1910.3 1169.61C1940.87 1147.3 1981.03 1131.26 2006.21 1131.26C2021.87 1131.26 2021.94 1135.02 2006.44 1142.9C1986.25 1153.17 1965.96 1167.4 1949.72 1182.67C1933.57 1197.84 1931.08 1202.58 1939.18 1202.58C1941.87 1202.58 1943.69 1200.96 1943.23 1198.98C1942.46 1195.54 1954.48 1187.24 1979.7 1173.79C1985.92 1170.45 2007.09 1162.31 2026.7 1155.67C2058.53 1144.87 2066.15 1143.51 2097.69 1143.09C2122.52 1142.73 2133.44 1143.74 2134.38 1146.46C2135.16 1148.76 2130.04 1151.78 2121.71 1153.92C2103.59 1158.62 2043.2 1188.61 2036.07 1196.48C2030.69 1202.45 2038.99 1202.58 2415.57 1202.58ZM4433.46 1202.58H2800.56L2795.34 1195.28C2783.44 1178.69 2782.89 1176.64 2790.25 1176.64C2801.47 1176.64 2824.06 1194.12 2820.46 1199.98C2819.55 1201.41 2820.98 1202.58 2823.61 1202.58C2827.53 1202.58 2827.01 1198.79 2820.79 1181.67C2816.64 1170.16 2809.47 1154.34 2804.87 1146.53C2800.3 1138.71 2796.54 1130.54 2796.54 1128.37C2796.54 1121.08 2813.88 1134.5 2825.71 1150.94C2831.94 1159.62 2837.48 1165.49 2838 1164C2838.52 1162.51 2835.96 1150.55 2832.33 1137.42C2828.7 1124.29 2825.71 1112.42 2825.71 1111.03C2825.71 1104.25 2839.26 1118.32 2848.92 1135.05C2854.89 1145.42 2860.79 1153.89 2862.05 1153.92C2863.31 1153.95 2866 1147.76 2867.98 1140.17C2873.3 1120.11 2891.32 1089.41 2906.46 1074.75C2913.69 1067.72 2920.46 1062.82 2921.5 1063.89C2922.53 1064.93 2920.62 1071.41 2917.22 1078.25C2908.73 1095.47 2899.52 1126.56 2900.85 1133.56C2901.69 1137.94 2904.97 1135.41 2914.24 1123.15C2926.33 1107.17 2948.6 1087.75 2951.48 1090.64C2952.29 1091.45 2947.75 1103.09 2941.4 1116.48C2933.62 1132.85 2930.99 1141.57 2933.43 1143.06C2935.37 1144.29 2940.04 1141.57 2943.77 1137.06C2955.89 1122.31 3012.94 1085.87 3023.89 1085.87C3026.07 1085.87 3015.43 1097.9 3000.3 1112.62C2974.66 1137.48 2939.75 1181.57 2943.09 1184.88C2943.86 1185.69 2952.42 1180.37 2962.11 1173.11C2995.05 1148.34 3036.86 1131.16 3063.73 1131.36C3076.76 1131.48 3076.83 1131.55 3069.92 1137.03C3066.07 1140.11 3054.82 1147.6 3044.9 1153.72C3034.95 1159.85 3017.7 1173.3 3006.49 1183.65C2989.53 1199.37 2987.36 1202.48 2993.46 1202.51C2997.48 1202.55 3000.39 1200.86 2999.94 1198.72C2998.48 1191.75 3058.77 1161.28 3091.51 1152.39C3124.99 1143.35 3166.35 1138.71 3180.97 1142.41L3190.21 1144.71L3182.3 1150.68C3177.93 1153.98 3169.95 1157.55 3164.54 1158.62C3149.73 1161.54 3117.47 1178.56 3102.86 1191.13L3089.89 1202.32L4433.46 1202.58ZM480.96 1202.58H333.151L328.257 1190.88C316.328 1162.31 288.906 1134.95 260.089 1122.93C238.728 1114.01 250.268 1107.79 279.019 1112.75C310.915 1118.23 351.173 1143.71 369.779 1170.16C375.419 1178.17 375.452 1177.97 373.961 1155.57C372.21 1129.35 366.019 1113.78 343.07 1077.9C325.987 1051.22 324.205 1046.97 329.974 1046.97C349.942 1046.97 395.062 1099.91 404.3 1134.24C406.213 1141.37 409.163 1148.05 410.881 1149.12C412.566 1150.16 419.211 1142.83 425.597 1132.85C433.246 1120.88 443.133 1110.9 454.672 1103.54C482.192 1085.9 485.92 1088.5 466.374 1111.71C443.813 1138.45 427.088 1170.16 435.515 1170.16C436.617 1170.16 445.467 1162.87 455.223 1153.95C471.722 1138.88 478.918 1134.63 478.918 1139.95C478.918 1141.15 472.241 1152.01 464.04 1164.1C445.434 1191.59 447.995 1199.14 468.967 1178.49C485.336 1162.38 510.522 1150.71 528.998 1150.71C547.183 1150.71 545.205 1156.06 521.932 1169.67C509.874 1176.77 495.709 1187.05 490.458 1192.56L480.96 1202.58ZM3459.87 924.591L3454.87 936.748L3323.27 936.554L3310.31 922.776C3303.18 915.19 3289.33 902.028 3279.51 893.502L3261.69 878.006L3274.65 879.432C3289.69 881.053 3306.68 888.25 3318.9 898.138C3336.56 912.467 3334.84 902.158 3315.14 875.64C3304.15 860.824 3295.95 847.922 3296.92 846.949C3299.9 843.967 3326.61 861.278 3345.18 878.266C3354.94 887.148 3363.66 893.632 3364.63 892.691C3367.26 890.066 3361.13 868.67 3353.94 855.248C3346.38 841.244 3345.93 836.251 3352.22 836.251C3358.86 836.251 3373.48 855.151 3386.54 880.632L3397.83 902.709L3399.87 871.231C3401.62 844.421 3403.27 837.613 3410.95 825.456C3415.94 817.611 3422.85 809.409 3426.35 807.237C3432.28 803.509 3432.54 803.963 3430.56 814.077C3426.28 835.765 3424.96 896.096 3428.62 901.088C3431.73 905.335 3432.7 905.173 3436.07 899.824C3453.64 872.106 3461.45 862.834 3475.1 853.53C3490.59 842.962 3514.58 833.625 3517.86 836.9C3518.8 837.807 3510.95 847.501 3500.42 858.426C3482.78 876.774 3472.67 893.21 3459.87 924.591ZM1070.22 938.012C1067.4 939.115 1049.34 939.99 1030.09 939.99H995.083L991.615 931.075C989.703 926.18 986.007 914.704 983.414 905.562C980.821 896.42 976.283 884.295 973.333 878.59C964.452 861.44 969.865 859.43 980.205 876.029C985.521 884.555 990.837 890.487 992.069 889.255C993.301 888.056 994.305 880.34 994.338 872.171C994.338 854.665 999.783 833.01 1004.19 833.01C1005.91 833.01 1007.27 845.782 1007.27 861.991C1007.27 877.941 1008.63 891.816 1010.29 892.821C1011.94 893.859 1014.92 886.273 1016.9 875.996C1023.48 842.119 1026.27 842.151 1026.49 876.158C1026.65 896.938 1027.85 907.247 1030.03 905.918C1031.84 904.784 1037.58 895.48 1042.73 885.268C1047.89 875.024 1054.56 864.617 1057.58 862.154C1062.67 857.907 1062.67 858.425 1057.84 870.031C1054.98 876.839 1052.65 886.824 1052.65 892.173V901.898L1067.17 888.542C1075.15 881.183 1083.09 875.153 1084.84 875.153C1086.56 875.153 1085.2 881.345 1081.79 888.931C1074.92 904.297 1077.32 907.442 1089.73 899.305C1101.27 891.751 1100.11 897.587 1086.72 914.412C1080.49 922.225 1075.41 930.297 1075.37 932.339C1075.34 934.382 1073.04 936.943 1070.22 938.012ZM294.286 926.212C290.786 939.504 290.202 939.99 277.82 939.99C270.754 939.99 264.984 938.499 264.984 936.651C264.984 922.192 299.764 875.153 310.461 875.153C314.805 875.153 314.61 876.061 305.761 895.35C301.482 904.751 296.296 918.626 294.286 926.212ZM1114.4 924.915C1112.36 931.14 1108.57 937.98 1106.01 940.087C1098.74 946.149 1096.57 936.003 1102.63 924.267C1112.1 905.951 1120.49 906.437 1114.4 924.915Z" style={{ fill: 'var(--scene-ground)', filter: 'brightness(0.6) saturate(1.2)' }} />
+        </svg>
+
+        {/* Cuter white field flowers and sparkles on the dark grass */}
+        <g style={{ fill: 'var(--scene-cloud)', opacity: 0.8 }}>
+          <ellipse cx="80" cy="270" rx="6" ry="2.5" />
+          <ellipse cx="380" cy="310" rx="5" ry="2" />
+          <circle cx="395" cy="315" r="2" />
+          <ellipse cx="780" cy="290" rx="7" ry="3" />
+          <ellipse cx="1180" cy="330" rx="6" ry="2.5" />
+          <ellipse cx="1480" cy="290" rx="5" ry="2" />
+        </g>
+    </svg>
+  )
+}
+
+function GroundBlendEdge(): ReactNode {
+  return (
+    <div className="absolute top-[99%] left-0 right-0 h-[10%] md:h-[15%] z-[50] w-full pointer-events-none">
+      <svg width="100%" height="100%" viewBox="0 0 1600 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M 0 0 L 1600 0 L 1600 200 Q 800 0, 0 200 Z" style={{ fill: 'var(--scene-ground)', filter: 'brightness(0.85)' }} />
+      </svg>
+    </div>
+  )
+}
+
+// -- Main export --------------------------------------------
+
+export function LandscapeBackgroundV2({ speed = 1, staticHills = false }: LandscapeBackgroundProps): ReactNode {
+  const groundDuration = speed === 0 ? 999999 : 2.5 / speed
+  const midFrontDuration = groundDuration * 2.5
+  const midBackDuration = groundDuration * 5
+  const farHillDuration = groundDuration * 10
+
+  return (
+    <div className="absolute inset-0 overflow-visible" style={{ backgroundColor: 'var(--scene-sky-bottom)' }}>
+      {/* Sky Gradient */}
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, var(--scene-sky-top), var(--scene-sky-bottom))' }} />
+
+      {/* Far Hills (Slowest) */}
+      <div className="absolute bottom-[25%] left-0 right-0 h-[40%]">
+        {staticHills ? (
+          <div className="absolute inset-0">
+            <HillSetFar />
+          </div>
+        ) : (
+          <motion.div className="absolute inset-0 flex" animate={{ x: ['0%', '-50%'] }} transition={{ duration: farHillDuration, repeat: Infinity, ease: 'linear' }} style={{ width: '200%' }}>
+            <div className="w-1/2 h-full relative"><HillSetFar /></div>
+            <div className="w-1/2 h-full relative"><HillSetFar /></div>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Mid Back Hills */}
+      <div className="absolute bottom-[18%] left-0 right-0 h-[35%]">
+        {staticHills ? (
+          <div className="absolute inset-0">
+            <HillSetMidBack />
+          </div>
+        ) : (
+          <motion.div className="absolute inset-0 flex" animate={{ x: ['0%', '-50%'] }} transition={{ duration: midBackDuration, repeat: Infinity, ease: 'linear' }} style={{ width: '200%' }}>
+            <div className="w-1/2 h-full relative"><HillSetMidBack /></div>
+            <div className="w-1/2 h-full relative"><HillSetMidBack /></div>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Mid Front Hills */}
+      <div className="absolute bottom-[12%] left-0 right-0 h-[30%]">
+        {staticHills ? (
+          <div className="absolute inset-0">
+            <HillSetMidFront />
+          </div>
+        ) : (
+          <motion.div className="absolute inset-0 flex" animate={{ x: ['0%', '-50%'] }} transition={{ duration: midFrontDuration, repeat: Infinity, ease: 'linear' }} style={{ width: '200%' }}>
+            <div className="w-1/2 h-full relative"><HillSetMidFront /></div>
+            <div className="w-1/2 h-full relative"><HillSetMidFront /></div>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Ground Layer (Fastest, spans from bottom up to 25vh) */}
+      <div className="absolute bottom-0 left-0 right-0 h-[25%]" style={{ backgroundColor: 'var(--scene-ground)' }}>
+        <motion.div className="absolute inset-0 flex" animate={{ x: ['0%', '-50%'] }} transition={{ duration: groundDuration, repeat: Infinity, ease: 'linear' }} style={{ width: '200%' }}>
+          <div className="w-1/2 h-full relative"><GroundLayer /></div>
+          <div className="w-1/2 h-full relative"><GroundLayer /></div>
+        </motion.div>
+      </div>
+
+      {/* Massive downward green swoop extending over the #about section! */}
+      <GroundBlendEdge />
+    </div>
+  )
+}

@@ -73,7 +73,7 @@ export function LandingNav(): ReactNode {
             className="flex items-center cursor-pointer active:translate-y-[2px] transition-transform duration-75"
             aria-label="LangTap home"
           >
-            <LogoFull className="hidden md:block h-10 w-auto text-warm-800" />
+            <LogoFull className="hidden md:block h-9 w-auto text-warm-800" />
             <LogoLt className="block md:hidden h-10 w-auto text-warm-800" />
           </button>
 

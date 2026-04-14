@@ -117,8 +117,10 @@
   --scene-sky-bottom: #e8f4fb;
   --scene-ground: #8bc34a;
   --scene-cloud: #ffffff;
-  --scene-hill-far: #7aa68f;
-  --scene-hill-mid: #699680;
+  --scene-hill-far-pale: #c8f6b2;
+  --scene-hill-far: #9dd982;
+  --scene-hill-mid: #93ca79;
+  --scene-hill-front: #72b155;
   --scene-hill: #5a9e3a;
 }
 
@@ -127,8 +129,10 @@
   --scene-sky-bottom: #fcc97a;
   --scene-ground: #7ab648;
   --scene-cloud: #fde0c0;
-  --scene-hill-far: #6e9e6a;
-  --scene-hill-mid: #5a8e4e;
+  --scene-hill-far-pale: #aad697;
+  --scene-hill-far: #85bc6c;
+  --scene-hill-mid: #7caf65;
+  --scene-hill-front: #5f9a45;
   --scene-hill: #4a8a2e;
 }
 
@@ -137,8 +141,10 @@
   --scene-sky-bottom: #264653;
   --scene-ground: #4a7c59;
   --scene-cloud: #c9b8d8;
-  --scene-hill-far: #4a7068;
-  --scene-hill-mid: #3a6455;
+  --scene-hill-far-pale: #6f8d7d;
+  --scene-hill-far: #557c67;
+  --scene-hill-mid: #4f7360;
+  --scene-hill-front: #3c654f;
   --scene-hill: #2d5a42;
 }
 
@@ -147,8 +153,10 @@
   --scene-sky-bottom: #1b2a3b;
   --scene-ground: #2d4a3e;
   --scene-cloud: #8899aa;
-  --scene-hill-far: #2a4a40;
-  --scene-hill-mid: #223d34;
+  --scene-hill-far-pale: #3d4c47;
+  --scene-hill-far: #2f433c;
+  --scene-hill-mid: #2c3e37;
+  --scene-hill-front: #22362f;
   --scene-hill: #1a3028;
 }
 

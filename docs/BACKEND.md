@@ -34,7 +34,7 @@ Every table created in this project follows this rule without exception.
 
 | Table | Purpose |
 |---|---|
-| `profiles` | User preferences, JLPT level, input mode, settings |
+| `profiles` | User preferences, Kotoba JLPT level, Kanji JLPT level, input mode, settings |
 | `mastery` | Per-character mastery scores per user |
 | `word_counters` | Per-word show counters per user |
 | `leaderboard` | Cumulative mastery scores for global ranking |
@@ -50,8 +50,10 @@ Stores user preferences and settings. One row per user.
 create table public.profiles (
   id                    uuid primary key references auth.users(id) on delete cascade,
   username              text not null unique,
-  jlpt_level            text not null default 'N5'
-                          check (jlpt_level in ('N5','N4','N3','N2','N1')),
+  kotoba_jlpt_level     text not null default 'N5'
+                          check (kotoba_jlpt_level in ('N5','N4','N3','N2','N1')),
+  kanji_jlpt_level      text not null default 'N5'
+                          check (kanji_jlpt_level in ('N5','N4','N3','N2','N1')),
   input_mode            text not null default 'tap'
                           check (input_mode in ('tap','type','swipe')),
   notifications_enabled boolean not null default false,

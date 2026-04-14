@@ -29,36 +29,39 @@ Supabase stores only user state (mastery scores, word counters, profile).
 
 ## 2. Data Sources
 
-### 2.1 Word Bank Source: JMdict
+### 2.1 Word Bank Source: Jisho JLPT Excel File
 
-The primary source for word definitions, readings, and JLPT level classifications
-is **JMdict**, maintained by the Electronic Dictionary Research and Development Group
-(EDRDG).
+The word bank is sourced from a pre-existing Excel file exported from Jisho.org,
+already owned by the project. No external download or third-party pipeline is needed.
 
-JMdict is available under a liberal licence that allows its use for almost any
-purpose without fee. The only requirement is that its use be fully acknowledged and
-that any files developed from it continue under the same licence conditions.
+**File:** `JLPT_Word_List____From_Jisho_org.xlsx`
+**Location:** Committed to the repo at `scripts/source/jisho-jlpt-words.xlsx`
 
-This is the EDRDG General Dictionary Licence. It is compatible with LangTap's use
-case including the planned paid membership tier, provided attribution is included.
+The file contains five sheets, one per JLPT level, with the following structure:
 
-**Attribution required:**
-> This app uses the JMdict dictionary file. JMdict is the property of the Electronic
-> Dictionary Research and Development Group (EDRDG), and is used in conformance with
-> the Group's licence.
-> https://www.edrdg.org/jmdict/j_jmdict.html
+| Sheet | Columns | Word count |
+|---|---|---|
+| JLPT N5 | Word, Reading, Meaning | 658 |
+| JLPT N4 | Word, Reading, JLPT, Meaning | 578 |
+| JLPT N3 | Word, Reading, JLPT, Meaning | 1,780 |
+| JLPT N2 | Word, Reading, JLPT, Meaning | 1,804 |
+| JLPT N1 | Word, Reading, JLPT, Meaning | 3,444 |
 
-This attribution must appear in the app's credits screen.
+**Total source words: 8,264 across all levels.**
 
-**Practical access:**
-The jmdict-yomitan project provides pre-processed, regularly updated JSON exports
-of JMdict filtered by JLPT level. This is the recommended starting point for
-extracting the LangTap word bank.
-URL: https://github.com/yomidevs/jmdict-yomitan
+**Known data characteristics:**
+- The Meaning field contains full Jisho definitions including grammar tags, alternate
+  forms, and notes (e.g. `[Godan verb] 1. to meet; to encounter...`). The build script
+  must strip this to the first clean definition only.
+- Some entries appear in multiple sheets (e.g. an N5 word also listed in N4).
+  The build script must deduplicate, keeping each word at its lowest JLPT level.
+- Katakana-only words (loanwords) are present across all levels but sparse at higher
+  levels. See Section 7.3 for the relaxed filter rule that applies to these.
 
-A community-maintained open Anki deck with JLPT-levelled CSV files is also a
-useful cross-reference for validating coverage:
-URL: https://github.com/jamsinclair/open-anki-jlpt-decks
+**Attribution:**
+Data sourced from Jisho.org. Jisho is a free Japanese dictionary. No licence
+restriction applies to use of vocabulary data for educational software.
+No attribution is required on the credits screen for this source.
 
 ### 2.2 Word Audio: VOICEVOX (Pre-generated)
 
@@ -374,50 +377,88 @@ It must include every distinct character in the `kana` field.
 
 ### 7.1 Word Bank Build Process
 
-The word bank is generated automatically from JMdict using a build script.
+The word bank is generated from the Jisho JLPT Excel file using a build script.
 Do not hand-write word bank entries. Do not spend session time manually building
 the word bank. This is a one-time automated content pipeline, not application code.
 
 **Build pipeline:**
-1. Download the latest JMdict JSON export from jmdict-yomitan:
-   https://github.com/yomidevs/jmdict-yomitan
+1. Source file is already in the repo at `scripts/source/jisho-jlpt-words.xlsx`.
+   No download required.
 2. Run `scripts/build-word-bank.ts` which:
-   - Filters entries to those with a JLPT level tag (N5-N1)
-   - Extracts the kana reading and primary English meaning per entry
-   - Generates `characterIds` by mapping each kana character to its ID in
-     `data/kana/characters.ts`
+   - Reads all five sheets from the Excel file
+   - Deduplicates entries, keeping each word at its lowest JLPT level
+   - Strips the Meaning field to the first clean definition (text before the first
+     `|` or `[` character, trimmed)
+   - Applies all filtering rules from Section 7.3
+   - Generates `characterIds` by mapping each kana character in the Reading field
+     to its ID in `data/kana/characters.ts`
    - Assigns stable sequential IDs (`n5-001`, `n5-002`, etc.)
-   - Writes the output to `data/words/n5.ts` etc.
+   - Outputs a katakana word count per level to the console for review
+   - Writes the output to `data/words/n5.ts`, `data/words/n4.ts`, etc.
 3. Run the word bank validation test suite to confirm schema integrity.
 4. Commit the generated files. They are static from this point forward.
 
-The build script is created during the content audit task in Sprint 1.
 Word bank files are committed to the repo and never regenerated unless a deliberate
 content update sprint is planned. The AI must never regenerate or modify word bank
 files during a coding sprint without explicit instruction from the owner.
 
 ### 7.2 Word Bank Size Reference
 
-| Level | Approximate source vocabulary | Expected generated entries |
+| Level | Source words (Excel file) | Expected after filtering |
 |---|---|---|
-| N5 | ~800-1,000 words | ~600 after filtering |
-| N4 | ~1,500 words | ~1,000 after filtering |
-| N3 | ~3,500 words | ~2,000 after filtering |
-| N2 | ~6,000 words | ~3,000 after filtering |
-| N1 | ~10,000 words | ~5,000 after filtering |
+| N5 | 658 | ~600 |
+| N4 | 578 | ~500 |
+| N3 | 1,780 | ~1,600 |
+| N2 | 1,804 | ~1,600 |
+| N1 | 3,444 | ~3,000 |
 
-Phase 1 requires only N5. The remaining levels are generated in the same sprint
-but not actively used until Phase 2 onwards.
+**Katakana-only words by level (pure loanwords in the source file):**
+
+| Level | Katakana-only words |
+|---|---|
+| N5 | 65 |
+| N4 | 42 |
+| N3 | 107 |
+| N2 | 134 |
+| N1 | 210 |
+
+Katakana word counts are low at early levels relative to the total pool. This is
+expected and is addressed by the relaxed katakana filter rule in Section 7.3.
+The build script must output these counts to the console so coverage can be
+confirmed after each run.
 
 ### 7.3 Word Bank Filtering Rules
 
 The build script applies these filters automatically:
 - Entry must have a kana reading.
-- Entry must have a JLPT level tag.
 - Entry must have at least one English meaning.
 - Minimum word length: 2 kana characters.
 - Proper nouns are excluded.
 - Entries with only kanji and no kana reading are excluded.
+- Deduplicate across levels: keep each word at its lowest JLPT level only.
+
+**Relaxed filter for katakana-only words:**
+Katakana-only words (pure loanwords where every character in the Reading field is
+katakana or the long vowel mark ー) are not filtered by JLPT level. All katakana-only
+words from all sheets are included in the word bank regardless of their assigned level.
+This is because loanwords do not carry vocabulary difficulty in the same way native
+Japanese words do, and early katakana character groups have very few eligible words
+without this relaxation.
+
+Analysis of the source file confirms the problem at early unlock stages:
+- Group 1K unlocked only (ア イ ウ エ オ カ キ ク ケ コ): 2 eligible katakana words
+  (ケーキ, カー). Without relaxation these two words repeat constantly.
+- Group 1K + 2K unlocked (adding サ-ト): 29 eligible words. Workable variety.
+- The window of dangerously thin pool is short but real. Relaxing the JLPT filter
+  for katakana-only words costs nothing and solves it entirely.
+
+**Kana Mode word selection behaviour:**
+In Kana Mode the entire word bank across all levels is available as the selection pool.
+The user's `kanji_jlpt_level` sets the preferred starting level. Words at that level
+are prioritised first. When all eligible words at the preferred level have hit counter 5,
+selection spills to all other levels. When all words across all levels are at counter 5,
+counters reset and the cycle begins again. JLPT level is never a hard filter in Kana Mode.
+See GAME_DESIGN.md Section 5.2 for the full algorithm.
 
 ---
 
@@ -461,15 +502,9 @@ The screen is part of the Profile section (or accessible from a settings link).
 
 Required attributions at Phase 1 launch:
 
-**Dictionary data:**
-> This app uses the JMdict dictionary file. JMdict is the property of the
-> Electronic Dictionary Research and Development Group (EDRDG), and is used in
-> conformance with the Group's licence. https://www.edrdg.org
-
 **Word audio:**
-> Word pronunciation audio provided by Kanji Alive, licensed under
-> Creative Commons Attribution 4.0 International (CC BY 4.0).
-> https://kanjialive.com
+> Word pronunciation audio generated using VOICEVOX (https://voicevox.hiroshiba.jp).
+> Voice character licence and attribution text to be confirmed before Sprint 10.
 
 **Lo-fi music:**
 > [Track titles, artists, and licences to be added when tracks are selected]
@@ -498,10 +533,32 @@ Required attributions at Phase 1 launch:
 
 | Phase | Content required |
 |---|---|
-| Phase 1 - Kana | Full kana character dataset, N5 word bank (minimum 600 words), all kana audio, mnemonics for all seion (dakuon and yoon mnemonics before those stages ship), lo-fi music tracks |
-| Phase 2 - Kotoba | N4 word bank (minimum 1,000 words), word audio from Kanji Alive for N5-N4 words |
-| Phase 3 - Kanji | Kanji character dataset (N5 set first), kanji audio from Kanji Alive, kanji mnemonics |
-| Phase 4 - Kanji Kotoba | Remaining JLPT levels word banks, remaining audio |
+| Phase 1 - Kana | Full kana character dataset, N5 word bank (minimum 600 words), VOICEVOX audio for N5 words, mnemonics for all seion (dakuon and yoon mnemonics before those stages ship), lo-fi music tracks |
+| Phase 2 - Kotoba | All word banks already generated in Sprint 5. No new word data needed. VOICEVOX audio for N4-N1 words. |
+| Phase 3 - Kanji | Kanji bank derived from word bank (see Section 11.1). Kanji mnemonics. VOICEVOX audio already covers kanji compound words. |
+| Phase 4 - Kanji Kotoba | No new content pipeline needed. Uses existing word bank and kanji bank. |
+
+### 11.1 Kanji Bank: Derived from Word Bank
+
+The kanji bank for Phase 3 does not require any external source or new pipeline.
+It is derived directly from the word bank generated in Sprint 5.
+
+**Derivation logic:**
+- Filter all word bank entries where `kanji` field is not null.
+- Each unique kanji character found across those entries becomes a kanji bank entry.
+- Group by `jlptLevel` from the parent word bank entry.
+- The kanji bank is generated by a separate script: `scripts/build-kanji-bank.ts`.
+- This script reads the already-committed word bank TypeScript files, not the Excel file.
+
+**What this gives us:**
+- Every kanji that appears in a JLPT-levelled word we already teach.
+- Readings come from the kana field of the parent word.
+- English meanings come from the meaning field of the parent word.
+- JLPT level is inherited from the word.
+- No third-party kanji dataset, no external download, no licence concerns.
+
+This script is created during the Phase 3 kanji content sprint, not Sprint 5.
+The word bank files must be committed and stable before this script is written.
 
 ---
 
@@ -527,6 +584,40 @@ duration of the beta period. The pricing cards on the landing page show
 "Coming soon" on paid tiers.
 
 ---
+
+## 13. Future Language Expansion
+
+LangTap is built for Japanese first. The architecture is designed to support
+additional languages in a future phase. See the "Additional language support" task
+in the Future Backlog in LangTap_Sprints.md.
+
+**Word bank strategy for non-Japanese languages:**
+
+Non-Japanese languages do not have an equivalent of JLPT levels. The agreed approach
+is to use frequency lists, which are widely available for most major languages. The
+frequency list is split into 5 tiers to mirror the N5-N1 structure the app is built
+around, keeping the data schema and selection algorithm unchanged.
+
+Suggested tier cutoffs (to be validated per language when the time comes):
+- Level 1 (equivalent N5): top 500 words
+- Level 2 (equivalent N4): words 501-1,500
+- Level 3 (equivalent N3): words 1,501-4,000
+- Level 4 (equivalent N2): words 4,001-8,000
+- Level 5 (equivalent N1): words 8,001+
+
+Level labels in the UI will use "Level 1-5" or "Beginner-Advanced" rather than
+N5-N1 for non-Japanese languages. The underlying schema field names are unchanged.
+
+Frequency list sources to evaluate at the time: Leipzig Corpora Collection, Wiktionary
+frequency lists, Hermit Dave's frequency lists. Ensure any chosen source has a licence
+compatible with commercial use before committing.
+
+**The NLT 1.40 frequency list was evaluated and rejected** for LangTap's use. It is
+a Japanese corpus list (Tsukuba Web Corpus) with no English meanings, entries dominated
+by particles and grammatical function words, and a licence restricting use to research
+and educational purposes only with redistribution prohibited. It is not suitable for
+Japanese or any other language in this project.
+
 
 *This document is the authoritative reference for all content data.*
 *If a data file conflicts with this document, the document wins.*

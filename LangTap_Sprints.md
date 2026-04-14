@@ -98,7 +98,7 @@ Claude Code does not touch implementation until designs are approved.
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Write landing page spec | Medium | Done | See UX_DESIGN.md Section 3. Parallax landscape, nav, hero, footer. |
+| Write landing page spec | Medium | In Progress | See UX_DESIGN.md Section 3. Parallax landscape, nav, hero, footer. |
 | Write game home screen spec | Small | Done | See UX_DESIGN.md Section 6. Mode selection, floating buttons, distance counter. |
 | Write practice screen spec (all three input modes) | Medium | Done | See UX_DESIGN.md Section 7. Type, Tap, Swipe. Full states and interactions. |
 | Write Dojo screen spec - Kana | Medium | Done | See UX_DESIGN.md Section 8. Heatmap grid, unlock interactions. |
@@ -109,13 +109,14 @@ Claude Code does not touch implementation until designs are approved.
 | Write Settings screen spec | Small | Done | See UX_DESIGN.md Section 11. |
 | Write Leaderboard screen spec | Small | Done | See UX_DESIGN.md Section 12. |
 | Document global visual identity and asset list | Small | Done | See UX_DESIGN.md Sections 1, 2, 13. Logo, key button style, sounds, mascot, parallax, four scene themes. |
-| Gemini asset production - SVG assets | Medium | Done | All 16 SVGs created in public/images/. Mascot with CSS keyframe animation, clouds, hills, kanji icons, logos, mode icons, nav icons, lock icon. |
+| Gemini asset production - SVG assets | Medium | To Do | All SVGs listed in UX_DESIGN.md Section 13.1. Mascot, clouds, hills, icons, logos. Brief Gemini with spec from Section 2.6 and 2.7. |
 | Gemini asset production - sound assets | Small | To Do | Three WAV files listed in UX_DESIGN.md Section 13.2. |
-| Gemini asset production - sample data | Small | To Do | Sample game state, leaderboard, word bank. See UX_DESIGN.md Section 13.3. |
-| Gemini visual design pass - landing page | Medium | To Do | Full page mockup. Approve before implementation. |
-| Gemini visual design pass - practice screen | Medium | To Do | All three modes. Approve before implementation. |
-| Gemini visual design pass - remaining screens | Large | To Do | All other screens. Iterate until approved. Update status table in UX_DESIGN.md Section 14. |
-| Consolidate approved designs into FRONTEND.md and UX_DESIGN.md | Medium | To Do | Update both docs with any new layout or visual decisions from the design pass. |
+| Gemini UX fine-tuning pass | Medium | To Do | Share Claude mockups with Gemini for visual refinement feedback on SVG assets and illustration style only. Not for layout or interaction decisions. |
+| Build interactive mockup - landing page | Medium | To Do | Claude builds HTML mockup in chat. Review and approve before implementation. |
+| Build interactive mockup - practice screen (all modes) | Medium | To Do | Claude builds HTML mockup in chat. Review and approve before implementation. |
+| Build interactive mockups - remaining screens | Large | To Do | Game home, Dojo, auth, onboarding, profile, settings, leaderboard. |
+| Build sample data files | Small | To Do | Claude builds samples/ folder with mock game state, leaderboard, and N5 words. |
+| Consolidate approved designs into FRONTEND.md and UX_DESIGN.md | Medium | To Do | Update both docs with any decisions from the mockup review process. |
 
 ---
 
@@ -130,11 +131,11 @@ Claude Code does not touch implementation until designs are approved.
 | Build sign-up screen | **Medium** | **To Do** | Username field, email, password. Password strength indicator. Anonymity reminder. No real name prompt. |
 | Build log-in screen | **Small** | **To Do** | Email and password. Forgot password link (Supabase magic link flow). |
 | Build guest mode | **Small** | **To Do** | Allow entry without account. Store progress in localStorage. Show persistent banner on every screen. |
-| Build onboarding step 1 - JLPT self-assessment | **Medium** | **To Do** | Show N5-N1 levels with descriptions. User selects one. Save to user profile in Supabase. |
+| Build onboarding step 1 - JLPT self-assessment | **Medium** | **To Do** | Show N5-N1 levels with descriptions. User selects Kotoba JLPT level and Kanji JLPT level. Save both to user profile in Supabase. Show mastery pre-set warning message. |
 | Build onboarding step 2 - early character unlock | **Large** | **To Do** | Show full kana chart. User taps characters they know. Unlock those characters immediately. Skip button visible. Confirmation before applying. |
 | Build onboarding step 3 - notification preferences | **Small** | **To Do** | Minimal screen in Phase 1. Toggle placeholder only. Save preference to user profile. |
 | Build onboarding step 4 - input mode selection | **Small** | **To Do** | Choose Tap, Type, or Swipe. Save to user profile. Show mode icon preview. |
-| Build user profile record in Supabase | **Medium** | **To Do** | Schema: user_id, username, jlpt_level, input_mode, notification_prefs, created_at. RLS: user can only read and write their own row. |
+| Build user profile record in Supabase | **Medium** | **To Do** | Schema: user_id, username, kotoba_jlpt_level, kanji_jlpt_level, input_mode, notification_prefs, created_at. RLS: user can only read and write their own row. |
 | Write auth tests | **Medium** | **To Do** | Sign up, log in, guest mode, onboarding flow. Happy path, loading, and error states for each screen. |
 
 ---
@@ -158,10 +159,16 @@ No UI yet. This is pure logic.
 
 ---
 
-## Sprint 5 - Practice Screen (Type Mode)
+## Sprint 5 - Content Pipeline and Practice Screen (Type Mode)
 
-**Goal:** A working practice screen in Type mode. The core game loop is playable.
+**Goal:** Word bank and kana character data are generated and committed. A working practice screen in Type mode. The core game loop is playable.
 **Status:** Pending
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Build `data/kana/characters.ts` | **Medium** | **To Do** | Full kana character dataset. All hiragana, katakana, dakuon, yoon, sokuon, and long vowel mark. Schema per CONTENT.md Section 4. |
+| Build `scripts/build-word-bank.ts` | **Medium** | **To Do** | Reads `scripts/source/jisho-jlpt-words.xlsx`. Deduplicates across levels. Strips meanings to first clean definition. Applies all filters from CONTENT.md Section 7.3 including relaxed katakana rule. Generates `characterIds`. Outputs katakana word count per level to console. Writes `data/words/n5.ts` through `n1.ts`. |
+| Run build script and commit word bank files | **Small** | **To Do** | Run the script, confirm katakana counts in console output, validate output against schema, commit generated files. N5 minimum 600 words confirmed. |
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
@@ -215,7 +222,7 @@ No UI yet. This is pure logic.
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Build Profile screen | **Medium** | **To Do** | Username display, JLPT level selector, font selector, font size selector, lo-fi audio toggle, reset progress button. |
+| Build Profile screen | **Medium** | **To Do** | Username display, Kotoba JLPT level selector, Kanji JLPT level selector (both with mastery pre-set warning), font selector, font size selector, lo-fi audio toggle, reset progress button. |
 | Build reset progress flow | **Small** | **To Do** | Two-step confirmation. Clear warning that this cannot be undone. Resets all mastery, counters, and unlocks. |
 | Build Settings screen | **Medium** | **To Do** | Input mode selector, mode-specific sub-settings (Type/Swipe: romaji-to-kana or kana-to-romaji), mnemonic toggle. |
 | Connect Profile and Settings to Supabase | **Medium** | **To Do** | All preferences saved to the user profile record. Loaded on app start. Guest users: saved to localStorage. |
@@ -263,7 +270,7 @@ No UI yet. This is pure logic.
 | Task | Size | Status | Notes |
 |---|---|---|---|
 | Set up Stripe account and products | **Medium** | **To Do** | Create Stripe account. Define membership product (details TBD in Phase 2). Wire Stripe into the app but do not activate any paywall. |
-| Build credits / attribution screen | **Small** | **To Do** | List all audio attributions (Wikimedia Commons, Kanji Alive), font licences, and any other third-party credits. |
+| Build credits / attribution screen | **Small** | **To Do** | List VOICEVOX attribution, font licences, and any other third-party credits. |
 | Write privacy policy and terms of service | **Medium** | **To Do** | Plain language. Cover data storage (Supabase), leaderboard visibility of username, and guest mode data loss warning. |
 | Final end-to-end test pass | **Large** | **To Do** | Full user journey: guest entry, sign up, onboarding, practice in all three modes, Dojo, Profile, Settings, Leaderboard. |
 | Soft launch on Vercel | **Small** | **To Do** | Share URL with a small group of testers. Monitor for errors. |
@@ -280,7 +287,7 @@ Not assigned to a sprint. Pulled in once Phase 1 is complete and stable.
 | Build word mastery store (Zustand) | **Medium** | **To Do** | Same logic as character mastery but for words. Frequency-weighted selection. Counter cap at 5. |
 | Build Library screen | **Large** | **To Do** | JLPT N5-N1 word banks. Organised by level and set. Heatmap colouring per word. Remove "Under Construction" placeholder. |
 | Build Kotoba Mode game loop | **Large** | **To Do** | Show English word. User types kana. Correct: word mastery increments. Wrong: silent, try again. |
-| Integrate Kanji Alive word audio | **Medium** | **To Do** | Use CC BY 4.0 dataset. Play word audio on display or on correct answer. Add attribution to credits screen. |
+| Integrate Kanji Alive word audio | **Medium** | **To Do** | No longer needed. VOICEVOX covers all words including pure kana. Remove this task when Phase 2 sprint is planned. |
 | Build Kotoba leaderboards | **Medium** | **To Do** | Kana Kotoba board. Separate from the main Kana boards. Same ranking logic. |
 | Gate Kotoba Mode behind full Kana mastery | **Small** | **To Do** | Check mastery threshold before allowing access. Show friendly message if not yet unlocked. |
 | Activate Stripe membership | **Epic** | **To Do** | Break into smaller tasks at the time. Define pricing model first. |
@@ -293,11 +300,13 @@ Not assigned to a sprint. Pulled in once Phase 2 is complete and stable.
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Design kanji content structure | **Medium** | **To Do** | JLPT N5-N1, grouped into sets. Mirror kanadojo.com organisation. Document in CONTENT.md. |
+| Build `scripts/build-kanji-bank.ts` | **Medium** | **To Do** | Derives kanji bank from the committed word bank files. Filters entries where kanji field is not null. Groups by JLPT level. No external source needed. See CONTENT.md Section 11.1. |
+| Run kanji bank script and commit output | **Small** | **To Do** | Run script, validate output, commit to `data/kanji/`. |
+| Design kanji content structure | **Medium** | **To Do** | JLPT N5-N1, grouped into sets. Document in CONTENT.md. |
 | Build kanji mastery store | **Medium** | **To Do** | Same logic as kana mastery. Separate store. |
 | Build kanji visual sub-mode | **Large** | **To Do** | Show kanji, user types reading in kana. Correct answer unlocks character. Same mastery loop. |
 | Build kanji audio sub-mode | **Large** | **To Do** | Play audio. User types reading. Then selects correct kanji (Tap: button grid, Type/Swipe: IME auto-handles). |
-| Integrate Kanji Alive kanji audio | **Medium** | **To Do** | 10,187 audio files. Map to kanji characters. Add attribution. |
+| Generate kanji audio via VOICEVOX | **Medium** | **To Do** | Run VOICEVOX locally for all kanji bank entries. Same pipeline as word audio. No external audio source needed. |
 | Build kanji leaderboards | **Medium** | **To Do** | Separate from kana and kotoba boards. |
 | Gate Kanji Mode behind full Kana mastery | **Small** | **To Do** | Same gate logic as Kotoba Mode. |
 | Handle romaji input in Kanji Mode | **Small** | **To Do** | Detect romaji input. Award zero points. Show kind message explaining why. |
