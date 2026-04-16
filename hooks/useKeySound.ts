@@ -19,6 +19,8 @@ import { KEY_SOUND_MAP, SOUND_SPRITE_URL } from '@/data/audio/key-sound-map'
 let sharedContext: AudioContext | null = null
 let sharedBuffer: AudioBuffer | null = null
 let loadingPromise: Promise<void> | null = null
+let alternateIndex = 0
+const ALTERNATE_SOUNDS = ['e', 'o']
 
 async function ensureLoaded(): Promise<void> {
   if (sharedBuffer) return
@@ -58,8 +60,11 @@ export function useKeySound(): { playSound: (id: string) => void } {
     }
   }, [])
 
-  const playSound = useCallback((id: string): void => {
-    const slice = KEY_SOUND_MAP[id]
+  const playSound = useCallback((): void => {
+    // Alternate between two sounds on every call
+    const soundId = ALTERNATE_SOUNDS[alternateIndex % ALTERNATE_SOUNDS.length]
+    alternateIndex++
+    const slice = KEY_SOUND_MAP[soundId]
     if (!slice) return
 
     const ctx = sharedContext

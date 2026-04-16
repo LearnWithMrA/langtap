@@ -101,7 +101,7 @@ Gemini is used for image generation only when photographic or painted assets are
 |---|---|---|---|
 | Write landing page spec | Medium | In Progress | See UX_DESIGN.md Section 3. Parallax landscape, nav, hero, footer. |
 | Write game home screen spec | Small | Done | See UX_DESIGN.md Section 6. Spec written and screen built. |
-| Write practice screen spec (all three input modes) | Medium | To Do | See UX_DESIGN.md Section 7. Type, Tap, Swipe. Full states and interactions. |
+| Write practice screen spec (all three input modes) | Medium | Done | See UX_DESIGN.md Section 7. Spec written and screen built with all three modes, audio sprite sound system, IME handling, and direction alternation. |
 | Write Dojo screen spec - Kana | Medium | To Do | See UX_DESIGN.md Section 8. Heatmap grid, unlock interactions. |
 | Write Dojo screen spec - Kotoba | Medium | To Do | See UX_DESIGN.md Section 9. JLPT level browsing, unit and level sets. |
 | Write auth screens spec | Small | To Do | See UX_DESIGN.md Section 4. Sign-up, log-in. Blue gradient background. |

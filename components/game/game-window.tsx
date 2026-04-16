@@ -247,7 +247,9 @@ export function GameWindow({ mode, children }: GameWindowProps): ReactNode {
   const handleInputChange = useCallback((value: string): void => {
     if (wordDone) return
     // For kana input, compare as-is. For romaji input, lowercase.
-    const compare = isKanaToRomaji ? value.toLowerCase() : value
+    // Strip zero-width spaces inserted by InputField for IME separation
+    const cleaned = value.replace(/\u200B/g, '')
+    const compare = isKanaToRomaji ? cleaned.toLowerCase() : cleaned
 
     setInputValue(value)
 

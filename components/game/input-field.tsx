@@ -49,10 +49,30 @@ export function InputField({ value, onChange, feedbackState, disabled }: InputFi
       type="text"
       value={value}
       onChange={(e): void => {
-        const newVal = e.target.value
-        const lastChar = newVal.slice(-1).toLowerCase()
-        if (lastChar && newVal.length > value.length) {
-          playSound(lastChar)
+        let newVal = e.target.value
+
+        // On backspace: strip trailing zero-width spaces so one
+        // backspace deletes both the invisible space and the kana
+        if (newVal.length < value.length) {
+          newVal = newVal.replace(/\u200B+$/, '')
+          if (newVal.length === value.replace(/\u200B+$/, '').length) {
+            newVal = newVal.slice(0, -1)
+          }
+        }
+
+        const lastChar = newVal.replace(/\u200B/g, '').slice(-1)
+
+        // If last character is hiragana, append a zero-width space
+        // so the IME treats each kana as separate (no kanji suggestion)
+        if (lastChar) {
+          const isHiragana = lastChar.charCodeAt(0) >= 0x3040 && lastChar.charCodeAt(0) <= 0x309F
+          if (isHiragana && newVal.length > value.replace(/\u200B+$/, '').length) {
+            newVal = newVal.replace(/\u200B+$/, '') + '\u200B'
+          }
+        }
+
+        if (lastChar && newVal.replace(/\u200B/g, '').length > value.replace(/\u200B/g, '').length) {
+          playSound(lastChar.toLowerCase())
         }
         onChange(newVal)
       }}

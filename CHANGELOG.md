@@ -30,6 +30,73 @@ Format per entry:
 
 ---
 
+## [2026-04-16] - Session 33
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Build practice screen (all three input modes) + audio sprite sound system
+**Status:** Done
+
+### Changes made
+
+**Practice screen (12 files created/replaced):**
+- [engine/constants.ts]: Replaced placeholder. Game timing constants: FEEDBACK_FLASH_MS, WRONG_ANSWER_DELAY_MS, MEANING_DISPLAY_MS, MEANING_FADE_MS, TAP_REMINDER_THRESHOLD, UNLOCK_THRESHOLD, MAX_WORD_COUNTER.
+- [components/game/game-window.tsx]: New. Floating game card with mock game loop. Word displayed character-by-character with progressive colour feedback (green on correct, 3-stage orange on wrong). Per-character wrong state preserved across backspace. Direction alternates each word (kana-to-romaji / romaji-to-kana). Generation-guarded timer cleanup.
+- [components/game/character-display.tsx]: Replaced placeholder. Large kana character display.
+- [components/game/word-display.tsx]: Replaced placeholder. Word context display (unused in final design, word shown inline in game-window).
+- [components/game/input-field.tsx]: Replaced placeholder. Text input with green/orange border feedback, per-key audio sprite sounds, and zero-width space IME fix for Japanese keyboard input.
+- [components/game/tap-grid.tsx]: Replaced placeholder. 5-col grid of keyboard-key buttons. Shows romaji or kana depending on direction. Alternating tap sounds.
+- [components/game/feedback-overlay.tsx]: Replaced placeholder. Romaji/kana hint floating above current character after 3 wrong attempts.
+- [components/game/meaning-reveal.tsx]: Replaced placeholder. English meaning fade-in below word prompt.
+- [components/game/mode-switcher.tsx]: Replaced placeholder. Controlled popover component (not used in final layout, replaced by inline dropdown in practice-client).
+- [components/audio/audio-player.tsx]: Replaced placeholder. Compact lo-fi player (Phase 1 placeholder, non-functional).
+- [components/layout/practice-client.tsx]: New. Full scene composition: landscape, mascot, top bar, game window with mode dropdown and distance counter inside the card, audio player bottom-right.
+- [app/(main)/practice/page.tsx]: Replaced placeholder. Renders PracticeClient.
+
+**Audio sprite sound system (3 new files):**
+- [public/sounds/keys.ogg]: Copied from owner's Keyboard project. 1.9MB audio sprite with 50+ unique key samples.
+- [data/audio/key-sound-map.ts]: Slice mapping: 26 letters, 10 digits, space/enter/backspace, 16 UI action sounds mapped to function/modifier keys.
+- [hooks/useKeySound.ts]: Web Audio API hook with module-level singleton AudioContext. Lazy-loaded. All sounds currently alternate between two key samples ('e' and 'o') on every call.
+
+**Components updated for audio sprite:**
+- [components/game/tap-grid.tsx]: Replaced `new Audio()` with `useKeySound`.
+- [components/game/mode-button.tsx]: Replaced `new Audio()` with `useKeySound`.
+- [components/layout/app-top-bar.tsx]: Replaced `playKeySound()` with `useKeySound`.
+- [components/audio/audio-player.tsx]: Replaced `new Audio()` with `useKeySound`.
+- [components/layout/practice-client.tsx]: Mode dropdown uses `useKeySound`.
+
+**Game home screen refinements:**
+- [components/game/distance-counter.tsx]: Simplified to plain bold text (no dark capsule, no mode label). Shows "0m" not "00000m".
+- [components/layout/game-home-client.tsx]: Distance counter removed from home screen.
+- [components/layout/practice-client.tsx]: Distance counter and mode dropdown moved inside the game window card.
+
+**Icon and UI updates:**
+- [public/images/icon-settings.svg]: Replaced with proper gear icon (was sun/brightness).
+- [public/images/icon-home.svg, icon-profile.svg, icon-lock.svg]: Changed hardcoded strokes to currentColor.
+- [components/layout/app-top-bar.tsx]: All icons inline SVGs with currentColor. Added Leaderboard (trophy icon) as 4th nav item. Transparent background. Full logo on desktop, LT on mobile.
+- [components/animation/cycling-character.tsx]: Added 'stopped' to SpeedLevel for reduced-motion.
+
+**Documentation:**
+- [docs/UX_DESIGN.md]: Sections 6 and 7 fully rewritten to match implementation. Added direction alternation, IME zero-width space technique, per-character wrong state, no auto-clear policy, audio sprite system with legacy fallback.
+- [LangTap_Sprints.md]: Practice screen spec marked Done. JIS kana keyboard mapping added to Future Backlog.
+
+### Tests
+- TypeScript compiles with no errors
+- ESLint passes with no errors
+- Visual testing: Type, Tap, Swipe modes at mobile and desktop widths
+- Japanese IME tested: zero-width space prevents kanji suggestions
+
+### Next task
+[To be confirmed by owner]
+
+### Notes
+- Landing page components (landing-nav, landing-footer, key-button, useEasterEgg) still use the old single-file `Keyboard Click.mp3` sound. Migration to the sprite system is a future polish task.
+- The mock game loop uses 5 hardcoded words. Replaced by the real selection algorithm in Sprint 4-5.
+- ModeSwitcher component (popover icon) was built but not used in the final layout. The mode dropdown is rendered inline in practice-client instead.
+- JIS kana keyboard mapping added to Future Backlog as an alternative to IME-based kana input.
+- Mobile-first gap adjustments on the top bar deferred to a future polish pass.
+
+---
+
 ## [2026-04-16] - Session 32
 
 **Sprint:** Sprint 2B - UX/UI Design and Screen Specification

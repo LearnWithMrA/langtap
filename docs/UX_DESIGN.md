@@ -548,6 +548,16 @@ Visual style:
   Bold dark text (`text-sm font-bold text-warm-800`).
 - Top right: Distance counter showing `0m` (plain text, `text-base font-bold text-warm-800`).
 
+**Direction alternation:**
+The game alternates between two directions with each new word:
+- **Kana-to-romaji:** Word displays in kana. User types romaji (Type/Swipe) or taps
+  romaji buttons (Tap). Hint shows romaji on wrong.
+- **Romaji-to-kana:** Word displays in romaji. User types kana (Type/Swipe) or taps
+  kana buttons (Tap). Hint shows kana on wrong.
+
+The tap grid buttons flip accordingly: romaji buttons when reading kana, kana buttons
+when reading romaji. The direction flips automatically on each word advance.
+
 **Word prompt (centred, below top row):**
 The full word is displayed at `text-5xl md:text-6xl font-bold`. The user types
 through the word character by character. Each character in the word is a separate
@@ -587,10 +597,27 @@ the user types "i" (い turns green), then continues typing "nu" (full input is 
 ぬ turns green, meaning appears). The input field is not cleared between characters.
 
 Border flashes green on correct character completion, orange on wrong input.
-Wrong input resets the field to the last valid prefix.
+Wrong input is not auto-cleared. The player backspaces to correct their own
+input. This is intentional: it avoids fighting with the Japanese IME and gives
+the player direct control.
 
 Each typed letter plays its matching keyboard sound from the audio sprite
 (e.g. typing "a" plays the A key sample).
+
+**Japanese IME handling (zero-width space technique):**
+When the user types hiragana using a Japanese keyboard, the IME normally tries
+to compose multiple kana into kanji. To prevent this, the InputField inserts a
+zero-width space (`U+200B`) after each hiragana character. The IME sees each
+kana as a separate "word" and does not offer kanji suggestions.
+
+Implementation details:
+- On input change, if the last character is in the hiragana range (U+3040-U+309F),
+  append `\u200B` after it
+- On backspace, strip the trailing zero-width space and the kana together so one
+  backspace deletes one visible character
+- The game evaluation logic strips all `\u200B` characters before comparing input
+  against the expected answer
+- This is invisible to the user. They see normal hiragana in the field.
 
 ### 7.4 Tap Mode
 
@@ -659,17 +686,28 @@ lightweight fallback for pages that do not need the full sprite.
 
 ### 7.8 Wrong Answer Feedback
 
-Wrong answers use a **progressive 3-attempt system**:
+Wrong answers use a **progressive 3-attempt system** with per-character state:
 
 1. **First wrong:** Current character turns light orange (`#f5c490`).
-   Input resets to last valid prefix. User retries.
+   User backspaces to correct their input and retries.
 2. **Second wrong:** Character turns medium orange (`#f5ac6a`).
-   Input resets. User retries.
+   User backspaces and retries.
 3. **Third wrong:** Character turns full orange (`text-feedback-wrong`).
-   Romaji hint appears floating above the character.
+   Answer hint appears floating above the character.
    Hint and orange persist until the user types the correct answer.
 
-Wrong attempt count resets when the user gets the character right and advances.
+**No auto-clear.** Input is never automatically removed. The player backspaces
+to fix their own mistakes. This avoids fighting with the Japanese IME and
+gives the player direct control over the input field.
+
+**Per-character wrong state.** Wrong attempt counts are stored per character
+index in an array (`wrongAttemptsMap`), not as a single global counter.
+This means:
+- Backspacing to a previous character restores that character's original state
+- If character 3 had 2 wrong attempts, backspacing to character 2 and returning
+  to character 3 still shows 2 wrong attempts
+- Each character's wrong count is independent and persists for the word
+
 No sound effect for wrong answers. Calm and silent.
 
 ### 7.9 Correct Answer Feedback
@@ -677,7 +715,7 @@ No sound effect for wrong answers. Calm and silent.
 **Per-character (within a word):**
 Completed character turns green (`text-feedback-correct`). Next character
 becomes the active target. Input continues accumulating (Type/Swipe) or
-user taps the next romaji (Tap). Wrong attempt count resets.
+user taps the next romaji/kana (Tap).
 
 **Word complete (last character correct):**
 1. All characters turn green simultaneously
