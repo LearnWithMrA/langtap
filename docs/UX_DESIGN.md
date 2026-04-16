@@ -424,236 +424,276 @@ Default: Type is pre-selected.
 
 ## 6. Game Home Screen Spec
 
-**Status:** To Do
-**Route:** `/` (shown to logged-in users, or a dedicated `/home` route)
+**Status:** Done
+**Route:** `/home` (logged-in users only)
 **Scrollable:** No
 **Layout:** Full-screen landscape scene
 
-This is the mode selection screen for logged-in users. Not accessible to guests
-(guests go straight to the Kana practice screen).
+This is the mode selection hub for logged-in users. Guests are redirected
+to `/practice` (see Section 6.5).
 
 ### 6.1 Layout
 
-The full parallax landscape scene fills the screen (no scroll). Clouds drift
-continuously. The mascot cycles at idle speed on the ground strip.
+The full parallax landscape fills the viewport (`overflow: hidden`, no scroll).
+The user's selected scene theme class is applied to the scene root. Default: `theme-day`.
+Clouds drift continuously. The mascot cycles at idle speed on the ground strip.
 
-No top bar text navigation. The in-app top bar is used (see Section 6.2).
+No distance counter on this screen. The counter appears only on the practice screen.
 
 ### 6.2 In-App Top Bar (All Game Screens)
 
-This top bar replaces the marketing nav on all screens inside the app (post-login, onboarding, practice, dojo, leaderboard, profile, settings).
+This top bar replaces the marketing nav on all screens inside the app.
+Fully transparent (no background colour), matching the landing page nav style.
 
-Height: 56px, sticky.
-Background: `bg-white/70 backdrop-blur-sm`.
+Height: 56px (`h-14`), fixed, `z-50`.
 
-**Desktop layout:**
-- Left: Compressed LT logo (key style, plays easter egg on "langtap" typed)
-- Centre: Home (routes to game home), Dojo (routes to active mode's dojo)
-- Right: Settings gear icon, Profile avatar icon
+**Desktop layout (md and above):**
+- Left: Full LangTap logo (`LogoFull`). Plays key sound on click. Easter egg on "langtap" typed.
+- Centre: Text links: Home, Kana Dojo, Kotoba Dojo, Leaderboard
+  - Active link: `text-sage-500 font-bold`
+  - Inactive: `text-warm-800 font-medium hover:text-sage-400`
+  - All links have `hover:bg-white/10` translucent box on hover
+- Right: Settings (gear icon), Profile (avatar icon)
+  - `hover:text-sage-400 hover:bg-white/10`
 
-**Mobile layout:**
-- Left: Compressed LT logo
-- Centre: Home icon (house), Dojo icon (hiragana あ for Kana dojo, 言 for Kotoba dojo)
-- Right: Settings gear icon, Profile avatar icon
+**Mobile layout (below md):**
+- Left: Compressed LT logo (`LogoLt`)
+- Centre: Icons: Home (house), Kana Dojo (あ), Kotoba Dojo (言), Leaderboard (trophy)
+  - Active: `text-sage-500`, Inactive: `text-warm-800 hover:text-sage-400`
+  - All icons have `hover:bg-white/10` translucent box
+- Right: Settings gear, Profile avatar (same hover behaviour)
 
-All icons are 24x24, charcoal, minimum touch target 44x44. No labels on mobile.
+All icons are inline SVGs using `currentColor` for theme support.
+Minimum touch target 44x44pt. No labels on mobile.
 
 ### 6.3 Mode Selection Buttons
 
-Two large floating buttons positioned in the sky area, above the ground strip.
-Each button is in the keyboard key style but larger (approximately 120x80px on desktop).
+Two large keyboard-key-style buttons in the sky area. 180x100px at all breakpoints.
+Stacked vertically on mobile, side-by-side on desktop (`flex-col md:flex-row`).
 
-Positions (approximate, visual balance):
-- Left: Hiragana/Katakana - sage-500 background, white text "Kana"
-- Right: Kotoba - blush-300 background, warm-800 text "Kotoba" - locked until Kana mastery threshold met
+**Practice Kana button:**
+- `bg-sage-500`, white text "Practice Kana"
+- Shadow: `shadow-[0_6px_0_0_#456e3d]`
+- Hover: `brightness-110`. Active: translateY + shadow collapse.
+- Click: plays `ui-mode-kana` sound, navigates to `/practice?mode=kana`
 
-Locked state: greyed out, padlock icon overlay, tooltip on hover: "Complete Kana mode to unlock".
+**Practice Kotoba button (locked state):**
+- `bg-warm-200`, `text-warm-400`
+- Shadow: `shadow-[0_6px_0_0_#b8a898]`
+- Inline lock SVG (`strokeWidth={3}`, `currentColor`) positioned at bottom-quarter
+  of button via absolute positioning (does not affect text centering)
+- `aria-disabled="true"`, `cursor-not-allowed`
+- On click: shows tooltip "Complete Kana to unlock" (3s auto-dismiss)
 
-Clicking an unlocked mode navigates to its practice screen.
+**Practice Kotoba button (unlocked state):**
+- `bg-blush-300`, `text-warm-800`
+- Same interaction as Kana button, navigates to `/practice?mode=kotoba`
 
-### 6.4 Distance Counter
+### 6.4 Guest Behaviour
 
-Positioned top-right of the sky area, below the top bar, above the mode buttons.
-Analogue-style number counter display: "00000m" (or "00000ft" for US locale).
-Font: Zen Maru Gothic Mono or a monospace variant.
-The counter increments live during a session with an odometer roll animation.
-Each game mode has a separate counter. The counter shown reflects the active mode.
+Guests bypass this screen entirely. Middleware redirects `/home` to `/practice?mode=kana`.
+
+### 6.5 Accessibility
+
+- Mode buttons: `aria-label` describes mode and state
+- Top bar icons: each has `aria-label`
+- Mascot and clouds: `aria-hidden="true"`
+- `prefers-reduced-motion`: `speed="stopped"` passed to landscape and cyclist
 
 ---
 
 ## 7. Practice Screen Spec
 
-**Status:** To Do
+**Status:** Done
 **Route:** `/practice`
 **Scrollable:** No
 **Layout:** Full-screen landscape scene with game window overlay
 
 ### 7.1 Layout Zones
 
-The screen is divided into three vertical zones:
-
 ```
 +--------------------------------------------------+
-| In-App Top Bar (56px, sticky)                    |
+| In-App Top Bar (56px, fixed, transparent)        |
 +--------------------------------------------------+
 |  Sky / Landscape zone                            |
-|  [Distance counter - top right of sky]           |
-|  [Game window - centred, floating card]          |
+|  [Game window - centred floating card]           |
+|    [Mode dropdown - top left inside card]        |
+|    [Distance counter - top right inside card]    |
+|    [Word prompt - centred]                       |
+|    [Input area - below prompt]                   |
 |                                                  |
-|  [Mascot - bottom of landscape, rides left]      |
+|  [Mascot - bottom of landscape]                  |
 |  [Ground strip]                                  |
++--------------------------------------------------+
+|  [Audio player - bottom right]                   |
 +--------------------------------------------------+
 ```
 
-The game window is a rounded card floating in the landscape zone.
-It does not scroll or move. The mascot moves beneath it.
+The game window is a rounded card floating in the landscape zone at `top-[35%]`.
+The mascot moves beneath it. All three modes (Type, Tap, Swipe) share the same
+full landscape layout with top bar, mascot, and ground visible.
 
 ### 7.2 Game Window
 
 Visual style:
-- Background: warm paper yellow (`#faf5e4`) or light sage-50 - a soft warm tone that
-  stands out from the sky, readable for characters
+- Background: warm paper yellow (`#faf5e4`)
 - Shape: `rounded-2xl`
-- Shadow: keyboard-key style - `shadow-[0_6px_0_0_#d4c9b0]` for a lifted paper look
+- Shadow: keyboard-key style `shadow-[0_6px_0_0_#d4c9b0]`
 - Width: `max-w-md` (448px), full-width on small mobile
 - Padding: `p-6 md:p-8`
 
-Contents of the game window (top to bottom):
+**Top row (inside the card):**
+- Top left: Mode dropdown showing "Kana Tap", "Kana Type", or "Kana Swipe".
+  Clicking opens a list with Tap, Type, Swipe options. Switching is instant.
+  Bold dark text (`text-sm font-bold text-warm-800`).
+- Top right: Distance counter showing `0m` (plain text, `text-base font-bold text-warm-800`).
 
-1. Word display (text-sm, warm-400): the full word in kana (e.g. "あおい")
-   This provides context for the character being practised.
-   Hidden if the word is a single character.
+**Word prompt (centred, below top row):**
+The full word is displayed at `text-5xl md:text-6xl font-bold`. The user types
+through the word character by character. Each character in the word is a separate
+`<span>` with a colour that changes based on state:
 
-2. Character prompt (text-5xl md:text-6xl, warm-800, centred):
-   The large kana character being practised. This is the hero of the screen.
-   Font size decreases with mastery score if the font-size-linked-to-mastery setting is on.
+| Character state | Colour |
+|---|---|
+| Upcoming (not yet reached) | `text-warm-800` (dark) |
+| Completed correctly | `text-feedback-correct` (green) |
+| Current, wrong attempt 1 | `text-[#f5c490]` (light orange) |
+| Current, wrong attempt 2 | `text-[#f5ac6a]` (medium orange) |
+| Current, wrong attempt 3+ | `text-feedback-wrong` (full orange) |
+| All complete (word finished) | `text-feedback-correct` (all green) |
 
-3. Romaji hint (text-sm, warm-400, centred, below character):
-   Hidden by default. Shown briefly after a wrong answer (fades in at 800ms, same timing
-   as WRONG_ANSWER_DELAY_MS in constants).
+**Romaji hint (floating above current character):**
+Hidden by default. After 3 wrong attempts on a character, the romaji hint
+appears floating above that specific character using absolute positioning
+(`absolute -top-5 left-1/2 -translate-x-1/2 text-lg font-medium text-warm-400`).
+The hint persists until the user types the correct answer.
 
-4. Input area: varies by mode (see Sections 7.3, 7.4, 7.5)
+**English meaning (below word prompt):**
+Hidden until the last character in the word is answered correctly. Fades in
+over 150ms. Stays visible for MEANING_DISPLAY_MS (1500ms), then the next
+word loads. `text-base text-warm-600 text-center`.
 
-5. English meaning (text-base, warm-600, centred):
-   Hidden until correct answer is given. Fades in over 150ms.
-   Stays visible for MEANING_DISPLAY_MS (1500ms), then fades out.
+**Input area:** varies by mode (see Sections 7.3, 7.4, 7.5).
 
 ### 7.3 Type Mode
 
-The input area within the game window is a single text field:
-- Style: `rounded-xl border-2 border-border bg-white text-center text-xl`
+A single text field below the word prompt:
+- Style: `rounded-xl border-2 border-border bg-surface-raised text-center text-xl`
 - Placeholder: "Type here..." (warm-400)
-- Auto-focused on screen load and after each prompt advances
-- On correct character input: the field briefly flashes feedback-correct (green) and advances
-- On incorrect character input: the field briefly flashes feedback-wrong (orange)
-  and the romaji hint appears below the character prompt
-- On mobile: the native keyboard opens automatically
+- Auto-focused on mount and after each word advances
 
-No submit button. Input is evaluated character-by-character or on full romaji string match.
+Input is cumulative across characters in a word. For the word "いぬ" (romaji "inu"):
+the user types "i" (い turns green), then continues typing "nu" (full input is "inu",
+ぬ turns green, meaning appears). The input field is not cleared between characters.
+
+Border flashes green on correct character completion, orange on wrong input.
+Wrong input resets the field to the last valid prefix.
+
+Each typed letter plays its matching keyboard sound from the audio sprite
+(e.g. typing "a" plays the A key sample).
 
 ### 7.4 Tap Mode
 
-The input area is a grid of character tap buttons. On desktop these sit inside
-the game window below the character prompt. On mobile they extend below the game
-window to fill all available vertical space above the bottom edge of the screen.
+A grid of romaji buttons inside the game window below the word prompt.
+The user reads the kana word and taps the matching romaji for each character.
 
-**Tap button visual style:**
-Each tap button uses the same keyboard key style as the logo (see Section 2.3):
-- Rounded rectangle, `rounded-xl`
-- Face: sage-100 background (unlighted state)
-- Bottom shadow edge: `shadow-[0_3px_0_0_var(--color-sage-300)]` for the 3D lift
-- On press: translates down and shadow collapses, `active:translate-y-[3px] active:shadow-none`
-- Plays key-click.wav on every tap
-- Correct tap: face flashes sage-400 then returns to sage-100
-- Wrong tap: face flashes feedback-wrong orange then returns to sage-100
+**Button style:**
+- Rounded rectangle, `rounded-xl`, sage-100 background
+- Shadow: `shadow-[0_3px_0_0_var(--color-sage-300)]`
+- Active press: `translate-y-[3px]`, shadow collapse
+- Content: romaji text only (`text-base font-medium text-warm-800`)
+- Correct tap: face flashes sage-400
+- Wrong tap: face flashes feedback-wrong orange
 
-Button contents (top to bottom, centred):
-- Kana character: text-lg Zen Maru Gothic, warm-800
-- Romaji: text-xs, warm-400
+Each tap plays the matching romaji key sound from the audio sprite.
 
-Grid layout:
-- Mobile: `grid-cols-5`, buttons fill available width
-- Desktop: `grid-cols-8` or fewer if unlocked character count is small
-- Each button: minimum 44x44, consistent height within the grid
-
-On mobile, the tap grid sits below the game window and above the bottom edge.
-The mascot rides behind the grid at a lower z-index and is visually obscured
-by it. This is intentional - the mascot is decorative and tap targets take priority.
-The native keyboard does not open in Tap mode (no text input field is present).
-
-Locked characters do not appear in the tap grid. Only unlocked characters shown.
-
-**Tap mode reminder:** If the user has fewer than TAP_REMINDER_THRESHOLD (5) correct
-answers this session, a small tooltip appears above the grid: "Tap the matching character".
-Hidden after 5 correct answers or if dismissed.
+Grid: `grid-cols-5` at all breakpoints. Each button minimum 44x44.
+Only unlocked characters appear. Locked characters are excluded.
 
 ### 7.5 Swipe Mode
 
-No visible input elements in the game window other than the character prompt.
-
-A banner below the character prompt: "Swipe to type on your keyboard below."
-The native Japanese keyboard is expected to be open (user switches to it manually
-or is prompted on first entry into swipe mode).
-
-Layout adjusts when the keyboard is open:
-- Top bar hides (slides up out of view)
-- Game window shifts up to remain visible above the keyboard
-- Mascot and ground strip hide entirely (`display: none` via keyboard-open state)
-- Distance counter remains visible
-- Audio player remains visible (see Section 7.6)
+Same layout as Type and Tap modes (full landscape, top bar, mascot visible).
+A text field for input (same as Type mode) with a banner below:
+"This mode is for the mobile swipe keyboard"
 
 Input evaluation: same as Type mode. The swipe keyboard produces romaji or kana
-input, which the app evaluates against the expected romaji.
+input which is evaluated against the expected romaji.
 
 ### 7.6 Audio Player
 
-A translucent audio player is positioned to the right of the game window on desktop
-and below the game window on mobile (above the tap grid on mobile Tap mode).
+Positioned bottom-right of the screen at all breakpoints.
 
 Visual style:
-- Background: `bg-white/40 backdrop-blur-sm rounded-xl px-4 py-2`
-- Play/pause button: circular, translucent, charcoal icon, 36px
-- Song title: text-sm Zen Maru Gothic, warm-600, truncated with ellipsis if too long
-- No volume slider, no progress bar, no track list visible
+- Background: `bg-white/40 backdrop-blur-sm rounded-lg px-2.5 py-1.5`
+- Play/pause button: circular, `h-7 w-7`, `bg-white/50`, charcoal icon
+- Label: "Lo-fi" (`text-xs text-warm-600`)
 
-The player is built and rendered in all modes. In Phase 1 it displays the song title
-as a static placeholder ("Lo-fi study mix") and the play/pause button is present but
-plays nothing until lo-fi tracks are sourced and integrated in Sprint 10.
-The component must not throw or break if no audio source is provided.
+Phase 1 placeholder: button is present but plays nothing until lo-fi tracks
+are sourced in Sprint 10. Plays `ui-audio-toggle` sound on press.
 
-State:
-- Respects the "Key click sounds" and "Lo-fi music" toggles in Settings
-- Play/pause state is held in the settings store and persists across navigation
-- Plays key-click-soft.wav on the play/pause button press
+### 7.7 Sound System
 
-### 7.7 Wrong Answer Feedback
+**Current implementation (audio sprite):**
+All game and UI sounds use a single audio sprite (`public/sounds/keys.ogg`)
+loaded via the Web Audio API. The `useKeySound` hook initialises a shared
+`AudioContext`, decodes the sprite into an `AudioBuffer`, and exposes
+`playSound(id)` which plays a slice defined in `data/audio/key-sound-map.ts`.
 
-On any wrong answer (all modes):
-1. Immediate: the incorrect input or button highlights orange (feedback-wrong)
-2. At 800ms: the romaji hint appears below the character prompt, fading in
-3. The character prompt remains visible. The user is expected to retry.
-4. On correct retry: the prompt advances. No mastery score change for the retry.
-5. The orange highlight resets as soon as the correct input is received.
+Each key on a standard keyboard has a unique recorded sample in the sprite,
+mapped by `[startMs, durationMs]`. Letter keys (a-z) are used for typing sounds.
+Non-letter keys (Escape, F1-F12, Tab, CapsLock, etc.) are mapped to UI actions
+(settings click, profile click, logo click, mode switch, etc.) for variety.
 
-No sound effect for wrong answers. No vibration. No penalty score. Calm and silent.
+The sprite and mappings were sourced from the owner's Keyboard project.
 
-### 7.8 Correct Answer Feedback
+**Legacy fallback (single file):**
+The landing page components (`landing-nav.tsx`, `landing-footer.tsx`,
+`key-button.tsx`) and `useEasterEgg.ts` still use the old single-file approach:
+```ts
+const audio = new Audio('/sounds/Keyboard%20Click.mp3')
+audio.volume = 0.5
+audio.play().catch(() => {})
+```
+This can be migrated to the sprite system in a future pass, or kept as a
+lightweight fallback for pages that do not need the full sprite.
 
-1. Immediate: brief green flash on the input or button (feedback-correct)
-2. English meaning fades in below the character (150ms)
-3. Distance counter increments with an odometer roll
-4. Mascot cycling speed updates based on recent correct rate
-5. After MEANING_DISPLAY_MS (1500ms): meaning fades out, next prompt appears
-6. The game window content cross-fades to the next character (150ms)
+### 7.8 Wrong Answer Feedback
 
-No sound effect. No fanfare. Calm and immediate.
+Wrong answers use a **progressive 3-attempt system**:
 
-### 7.9 Mode Switcher
+1. **First wrong:** Current character turns light orange (`#f5c490`).
+   Input resets to last valid prefix. User retries.
+2. **Second wrong:** Character turns medium orange (`#f5ac6a`).
+   Input resets. User retries.
+3. **Third wrong:** Character turns full orange (`text-feedback-wrong`).
+   Romaji hint appears floating above the character.
+   Hint and orange persist until the user types the correct answer.
 
-A small icon in the top-right of the in-app top bar (not inside the game window).
-Shows the current mode icon: keyboard icon for Type, tap icon for Tap, swipe icon for Swipe.
-Tapping it opens a small popover with three mode options. Switching is instant,
-mid-session. No confirmation required.
+Wrong attempt count resets when the user gets the character right and advances.
+No sound effect for wrong answers. Calm and silent.
+
+### 7.9 Correct Answer Feedback
+
+**Per-character (within a word):**
+Completed character turns green (`text-feedback-correct`). Next character
+becomes the active target. Input continues accumulating (Type/Swipe) or
+user taps the next romaji (Tap). Wrong attempt count resets.
+
+**Word complete (last character correct):**
+1. All characters turn green simultaneously
+2. English meaning fades in below the word (150ms)
+3. After MEANING_DISPLAY_MS (1500ms): next word loads
+
+No sound effect. Calm and immediate.
+
+### 7.10 Mode Switcher
+
+The mode switcher is a text dropdown inside the game window card (top-left).
+It displays the current mode as "Kana Tap", "Kana Type", or "Kana Swipe".
+Clicking it opens a dropdown list with three options: Tap, Type, Swipe.
+Selecting an option switches the mode instantly. Plays `ui-mode-switch` sound.
+
+The dropdown closes on selection or outside click.
 
 ---
 

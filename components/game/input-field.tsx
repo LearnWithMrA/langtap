@@ -3,7 +3,7 @@
 // Purpose: Text input for Type and Swipe modes. Accepts romaji
 //          keyboard input. Border colour flashes green/orange
 //          based on feedback state. Auto-focuses on mount.
-// Depends on: nothing
+// Depends on: hooks/useKeySound.ts
 // ------------------------------------------------------------
 
 'use client'

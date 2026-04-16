@@ -1,9 +1,10 @@
 // ------------------------------------------------------------
 // File: components/game/tap-grid.tsx
-// Purpose: On-screen kana character button grid for Tap mode.
-//          Each button is keyboard-key style with 3D shadow.
-//          Correct taps flash green, wrong taps flash orange.
-// Depends on: nothing
+// Purpose: On-screen character button grid for Tap mode.
+//          Buttons show either romaji or kana depending on the
+//          direction prop. Each button is keyboard-key style with
+//          3D shadow. Correct taps flash green, wrong flash orange.
+// Depends on: hooks/useKeySound.ts
 // ------------------------------------------------------------
 
 'use client'
@@ -22,19 +23,20 @@ type TapCharacter = {
 
 type TapGridProps = {
   characters: TapCharacter[]
-  onTap: (id: string, romaji: string) => void
+  displayField: 'kana' | 'romaji'
+  onTap: (id: string, value: string) => void
   feedbackId: string | null
   feedbackState: 'correct' | 'wrong' | null
 }
 
 // -- Component ----------------------------------------------
 
-export function TapGrid({ characters, onTap, feedbackId, feedbackState }: TapGridProps): ReactNode {
+export function TapGrid({ characters, displayField, onTap, feedbackId, feedbackState }: TapGridProps): ReactNode {
   const { playSound } = useKeySound()
 
-  const handleTap = useCallback((id: string, romaji: string): void => {
-    playSound(romaji)
-    onTap(id, romaji)
+  const handleTap = useCallback((id: string, value: string, soundId: string): void => {
+    playSound(soundId)
+    onTap(id, value)
   }, [onTap, playSound])
 
   return (
@@ -43,7 +45,10 @@ export function TapGrid({ characters, onTap, feedbackId, feedbackState }: TapGri
       role="group"
       aria-label="Character selection grid"
     >
-      {characters.map((char) => {
+      {characters.map((char, index) => {
+        const tapSoundId = index % 2 === 0 ? 'e' : 'o'
+        const displayText = displayField === 'romaji' ? char.romaji : char.kana
+        const tapValue = displayField === 'romaji' ? char.romaji : char.kana
         const isFeedback = feedbackId === char.id
         let bgClass = 'bg-sage-100 shadow-[0_3px_0_0_var(--color-sage-300)]'
         if (isFeedback && feedbackState === 'correct') {
@@ -56,8 +61,8 @@ export function TapGrid({ characters, onTap, feedbackId, feedbackState }: TapGri
           <button
             key={char.id}
             type="button"
-            onClick={(): void => handleTap(char.id, char.romaji)}
-            aria-label={char.romaji}
+            onClick={(): void => handleTap(char.id, tapValue, tapSoundId)}
+            aria-label={displayText}
             className={[
               'flex flex-col items-center justify-center',
               'min-h-11 min-w-11 rounded-xl',
@@ -68,7 +73,7 @@ export function TapGrid({ characters, onTap, feedbackId, feedbackState }: TapGri
               bgClass,
             ].join(' ')}
           >
-            <span className="text-base font-medium text-warm-800">{char.romaji}</span>
+            <span className="text-lg font-medium text-warm-800">{displayText}</span>
           </button>
         )
       })}
