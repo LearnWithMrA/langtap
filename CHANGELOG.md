@@ -30,6 +30,181 @@ Format per entry:
 
 ---
 
+## [2026-04-16] - Session 32
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Write game home screen spec + build game home screen
+**Status:** Done
+
+### Changes made
+- [docs/UX_DESIGN.md]: Expanded Section 6 from skeleton to full spec: layout with z-index layers, responsive breakpoints, in-app top bar (Section 6.2), mode buttons with locked/unlocked states (Section 6.3), distance counter (Section 6.4), screen states (Section 6.5), accessibility (Section 6.6), guest behaviour (Section 6.7). Status set to Done.
+- [app/(main)/home/page.tsx]: New route at /home. Server component rendering GameHomeClient.
+- [components/layout/game-home-client.tsx]: New client component composing full game home screen: LandscapeBackgroundV2, CyclingCharacter, AppTopBar, and two ModeButtons. Reduced-motion support via useReducedMotion from motion/react. Theme-day default.
+- [components/layout/app-top-bar.tsx]: New in-app navigation bar. Full logo on desktop, LT logo on mobile. Centre: Home, Kana Dojo, Kotoba Dojo, Leaderboard links (text on desktop, icons on mobile). Right: Settings gear + Profile icons. All icons inline SVG with currentColor for theme support. Transparent background.
+- [components/game/mode-button.tsx]: New keyboard-key-style mode button. Unlocked: 3D press effect, key-click sound, navigates to practice. Locked: aria-disabled, greyed out, inline lock SVG below text, tooltip on click (3s auto-dismiss).
+- [components/game/distance-counter.tsx]: Replaced placeholder with zero-padded odometer display (static for now, wired in Sprint 4). Not used on game home per owner decision.
+- [components/animation/cycling-character.tsx]: Added 'stopped' to SpeedLevel type and freeze logic for reduced-motion support.
+- [public/images/icon-settings.svg]: Replaced sun/brightness icon with proper gear SVG using currentColor.
+- [public/images/icon-home.svg, icon-profile.svg, icon-lock.svg]: Changed hardcoded #3d3028 strokes to currentColor for theme support.
+- [mockups/game-home.html]: Interactive HTML mockup of the game home screen for owner approval.
+- [LangTap_Sprints.md]: Marked "Write game home screen spec" as Done.
+
+### Tests
+- TypeScript compiles with no errors
+- ESLint passes with no errors
+- Visual testing at mobile and desktop widths via dev server
+
+### Next task
+[To be confirmed by owner]
+
+### Notes
+- Distance counter was removed from the game home screen per owner direction. The component exists for use on the practice screen.
+- Top bar nav icons are not perfectly centred on mobile due to unequal left/right section widths. Minor mobile-first gap adjustments deferred to a future polish pass.
+- Guest redirect, theme selection, and Kotoba unlock check are deferred to Sprints 3, 8, and 4 respectively.
+
+---
+
+## [2026-04-16] - Session 31
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Move cloud rendering into LandscapeBackgroundV2 (landing page spec finalisation)
+**Status:** Done
+
+### Changes made
+- [components/layout/LandscapeBackgroundV2.tsx]: Added `Image` import from `next/image`. Added `CloudSet` component (five cloud images with responsive vw-based sizing and varying opacity). Added `CloudsLayer` wrapper using `cloud-drift` keyframe animation (60s continuous right-to-left loop). Rendered `<CloudsLayer />` between the sky gradient and the first hill layer. Updated file header to document clouds as included and list image dependencies.
+- [components/layout/landing-scene.tsx]: Removed `Image` import (no longer needed). Removed `CloudSet` function. Removed the clouds layer JSX block from the render output. Updated file header to note clouds are now handled by LandscapeBackgroundV2.
+- [LangTap_Sprints.md]: Marked "Write landing page spec" as Done.
+
+### Tests
+- TypeScript compiles with no errors (`tsc --noEmit` exit 0)
+
+### Next task
+[To be confirmed by owner]
+
+### Notes
+- Clouds now automatically appear on any page that uses `<LandscapeBackgroundV2 />`, making the background component fully self-contained.
+- The `cloud-drift` keyframe in `globals.css` remains unchanged and is now actively used again (it was unused after Session 22 switched to scroll-driven parallax on the landing page; the landing-scene re-adopted it in a later session).
+- The `BigGrass` component in LandscapeBackgroundV2 remains unused (flagged in Session 29, not removed per no-deletion rule).
+
+---
+
+## [2026-04-14] - Session 30
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Landing page polish: ground bleed, nav z-index, How it works section, icon cleanup
+**Status:** Done
+
+### Changes made
+- [components/layout/landing-scene.tsx]: Ground bleed curve container set to bg-white so cream page background does not show through the transparent areas of the SVG curve.
+- [components/layout/landing-client.tsx]: How it works section moved up (pt-7/pt-11), reduced bottom padding. Removed emoji characters from the three icon boxes (blank boxes kept).
+- [components/layout/landing-nav.tsx]: Nav z-index raised from z-50 to z-[100] so it always sits above the ground bleed curve and all scene layers on scroll.
+- [components/layout/landing-client.tsx]: Pricing section - tried gradient blend from white through warm-200 to white, reverted to original solid bg-cream per owner preference.
+
+### Tests
+- TypeScript compiles with no errors
+
+### Next task
+[To be confirmed by owner]
+
+### Notes
+- The nav was previously at z-50, same as the ground bleed curve z-[50], causing the curve to overlap the nav on scroll.
+
+---
+
+## [2026-04-14] - Session 29
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Fix seam lines, overflow, ground bleed, and layer naming in LandscapeBackgroundV2
+**Status:** Done
+
+### Changes made
+
+**Overflow fix (landing-scene.tsx, app/layout.tsx):**
+- Removed overflow-x-hidden from body in layout.tsx (caused double scrollbar)
+- Removed overflow-x-hidden wrapper div from landing-scene.tsx (CSS spec forces overflow-y to auto when overflow-x is not visible, clipping the ground bleed)
+- Final fix: wrapped entire hero section in `div.relative.w-full.overflow-hidden`. Ground bleed SVG moved to a flow element after the section (inside wrapper, not clipped). No double scrollbar, no horizontal overflow.
+
+**Ground bleed curve (landing-scene.tsx):**
+- Restored the concave bezier arc between hero and white content section. Originally inside LandscapeBackgroundV2's GroundBlendEdge component but clipped by the overflow wrapper. Now rendered directly in landing-scene.tsx as a flow element after the h-screen section.
+
+**Seam lines between layers - what was tried and failed:**
+- `h-[102%]` on SVGs with `-bottom-px`: extended SVGs above/below containers. Helped with horizontal layer seams but did not fix the vertical seam between the two scrolling strip halves.
+- `w-[50.1%]` on strip halves: caused visible overlap because SVG fill is solid and two anti-aliased edges stacking creates a darker line.
+- `-ml-px` and `-ml-0.5` negative margins: same anti-aliasing overlap issue.
+- `w-[calc(100%+2px)]` with `-left-px` on SVGs: SVG edges still anti-aliased at boundaries.
+- `shapeRendering="crispEdges"` on SVGs: reduced but did not eliminate the seam.
+- CSS background-color matching on container: works for ground (fills from bottom) but not hills (hill curves leave transparent sky area above, solid background rectangle visible).
+- Single doubled SVG (3200-wide viewBox with paths at x=0..1600 and x=1600..3200): preserveAspectRatio="none" stretched the content to half width, distorting trees and shapes.
+- Absolute positioning instead of flex: did not eliminate the gap.
+
+**Seam lines - what ultimately worked:**
+- `backfaceVisibility: hidden` + `willChange: transform` on each flex half: forces GPU compositing, significantly reduces sub-pixel gaps.
+- Split HillSetFar into two separate layers (back ridge and front ridge): each has a single solid fill colour, enabling single-colour tape strips.
+- "Tape strip" technique: a 4px-wide (`w-1`) absolutely positioned div at `left-[50%]` of the motion container, filled with the exact layer colour. Covers the join between the two strip halves. Positioned with `top` percentage matching where the hill curve starts in the viewBox. Applied to all five scrolling layers (Furthest1, Furthest2, Furthest3, Furthest4, Closest5 ground).
+- Key insight: the V1 landscape avoided seams because scrolling content was transparent overlays on solid CSS backgrounds. Solid edge-to-edge SVG fills always create seams at flex boundaries. The tape strip is the simplest reliable fix.
+
+**Shrub bottom clipping (LandscapeBackgroundV2.tsx):**
+- Clipped 10 units from bottom of shrub SVG viewBox (1203 to 1193) and reduced container height by 2px (500 to 498) to remove dark pixel row at base of shrub tufts.
+
+**Layer renaming (LandscapeBackgroundV2.tsx):**
+- HillSetFarBack renamed to Furthest1 (pale back ridge)
+- HillSetFarFront renamed to Furthest2 (darker front ridge)
+- HillSetMidBack renamed to Furthest3 (mid hills with distant trees)
+- HillSetMidFront renamed to Furthest4 (front hills with bushes and trees)
+- GroundLayer renamed to Closest5 (dirt path, shrubs, flowers)
+
+**Layer positioning (LandscapeBackgroundV2.tsx):**
+- All mountain layers raised 2%: far hills 25% to 27%, mid-back 18% to 20%, mid-front 12% to 14%
+- Hill animation speeds adjusted: midFront x6, midBack x12, farHills x24 (from x10/x20/x40)
+- Furthest1 and Furthest2 now animate independently (front ridge at 0.9x the back ridge duration) creating subtle depth parallax
+
+### Tests
+- TypeScript compiles with no errors
+- Visual testing at 360px, 768px, 1440px via browser
+
+### Next task
+[To be confirmed by owner]
+
+### Notes
+- The sub-pixel seam between flex children in CSS scroll animations is a known browser issue with no pure CSS fix for solid-fill SVGs. The tape strip approach is the pragmatic solution used in production.
+- BigGrass component exists but is unused (dead code). Not removed per CLAUDE.md no-deletion rule.
+- GroundBlendEdge component inside LandscapeBackgroundV2 is now effectively dead code (clipped by overflow wrapper). The visible ground bleed is rendered in landing-scene.tsx.
+
+---
+
+## [2026-04-14] - Session 28
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Fix LandscapeBackgroundV2.tsx review issues (#1, #2, #3, #4, #7, #8, #10, #11, responsive scaling)
+**Status:** Done
+
+### Changes made
+- [app/globals.css]: Updated --scene-hill-far and --scene-hill-mid values in all four theme classes to match Gemini's computed filter colours. Added new tokens --scene-hill-far-pale and --scene-hill-front per theme, derived from brightness/saturate filter math on --scene-hill base.
+- [components/layout/LandscapeBackgroundV2.tsx]: Replaced filter-based fills on four hill surface paths with dedicated CSS custom property tokens (--scene-hill-far-pale, --scene-hill-far, --scene-hill-mid, --scene-hill-front). No visual change on hill surfaces.
+- [components/layout/LandscapeBackgroundV2.tsx]: Added staticHills boolean prop (default false). When true, hill layers render statically with no horizontal scroll animation. Ground layer still animates via speed prop.
+- [components/layout/LandscapeBackgroundV2.tsx]: Fixed responsive scaling: flattened nested SVG in GroundLayer (removed xMinYMax slice wrapper) so dirt path, dark grass wave, shrubs, and flowers share the outer SVG's preserveAspectRatio="none" coordinate system. Dark green area no longer rises on narrow viewports.
+- [components/layout/LandscapeBackgroundV2.tsx]: Converted all layer container positioning from vh to % (bottom-[25vh] to bottom-[25%], etc.) so layers are relative to the scene container.
+- [components/layout/LandscapeBackgroundV2.tsx]: Changed speed prop from number to named string union ('idle' | 'slow' | 'medium' | 'fast' | 'stopped') with internal multiplier mapping. Default is 'idle' (0.3x).
+- [components/layout/LandscapeBackgroundV2.tsx]: Removed opacity: 0.8 from field flowers group, changed fill from var(--scene-cloud) to var(--scene-hill) at full opacity.
+- [components/layout/LandscapeBackgroundV2.tsx]: Consolidated inline styles by hoisting shared fill values onto parent g elements for DistantTree, Tree, BigGrass, and pebbles. Child elements now only carry individual filter props.
+- [components/layout/LandscapeBackgroundV2.tsx]: Replaced work-in-progress shrub comment with proper section label.
+- [components/layout/LandscapeBackgroundV2.tsx]: Updated file header to document that clouds are rendered separately in landing-scene.tsx.
+- [components/layout/landing-scene.tsx]: Updated LandscapeBackground call from speed={0.3} to speed="idle", staticHills={false}. Converted cyclist positioning from vh/vw to percentage units.
+
+### Tests
+- TypeScript compiles with no errors
+- Visual regression tested via Playwright screenshots at 360px, 768px, and 1440px
+
+### Next task
+[To be confirmed by owner]
+
+### Notes
+- Review issues #5 (kanji hill detail icons), #6 (four layers vs spec's two or three), #9 (extract shrub SVG to separate file), and #12 (preserveAspectRatio distortion) remain open for future sessions.
+- Hill vegetation (DistantTree, Tree, BushCluster1) still uses brightness filters on var(--scene-hill) for 3D shading. This is intentional: relative brightness on the base token works across all themes.
+- The GroundLayer nested SVG removal shifts the ground elements slightly at wide viewports (dark grass wave moves from ~36% to ~60% of ground container height) but ensures consistent positioning across all viewport widths.
+
+---
+
 ## [2026-04-14] - Session 27
 
 **Sprint:** Sprint 2B - UX/UI Design and Screen Specification

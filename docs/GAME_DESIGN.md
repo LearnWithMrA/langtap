@@ -263,7 +263,8 @@ is needed.
 - The set of currently unlocked characters
 - The full word bank across all JLPT levels, with word counters
 - The user's preferred JLPT level (from `kotoba_jlpt_level` on their profile) — used
-  as a starting preference for word selection, not as a hard filter
+  as a starting preference for word selection in Kana Mode, not as a hard filter.
+  This is the same field used in Kotoba Mode, keeping the profile simple and consistent.
 
 ### 5.2 Steps
 
@@ -551,42 +552,7 @@ In Kotoba Mode:
 
 ---
 
-## 12. Kanji Mode (Phase 3 - do not build in Phase 1 or 2)
-
-This section is documented here for architectural awareness only.
-Do not implement any of this during Phase 1 or 2.
-
-In Kanji Mode:
-- The user types the kana reading of a kanji character.
-- Two sub-modes: visual (see the kanji, type the reading) and audio (hear audio, type
-  the reading, then select the correct kanji).
-- Romaji input is accepted but earns zero points. The user is told this kindly.
-- Kanji follow JLPT N5-N1 levels, grouped in sets, same progression logic as kana.
-- Kanji mastery follows identical rules to kana mastery (score, weighting, threshold).
-- Kanji Mode is gated behind full Kana mastery.
-
-**Kanji JLPT level (`kanji_jlpt_level`):**
-- The user selects a Kanji JLPT level during onboarding (and can change it in Profile).
-- Word selection in Kanji Mode is strictly filtered to the selected level and above.
-  This is a hard filter, not a preference.
-- When the user sets or changes their Kanji JLPT level, all kanji at levels below
-  the selected level are automatically set to mastered (score set to a high value).
-  This allows experienced users to start at the right level without replaying content
-  they already know.
-- The user is shown a clear message when setting this level:
-  "Kanji below this level will be marked as mastered. To reset, change your level
-  in Profile settings."
-- Changing the level to a lower value does not un-master previously mastered kanji.
-  Resetting progress from Profile is the only way to clear mastery scores.
-
-**Kana Mode word preference:**
-- The Kana Mode word selection algorithm uses `kanji_jlpt_level` as the preferred
-  starting level when drawing words from the full bank. Words at the preferred level
-  are prioritised first before spilling to other levels.
-
----
-
-## 13. Constants Reference
+## 12. Constants Reference
 
 All constants must be defined in `engine/constants.ts` and imported where needed.
 No magic numbers anywhere in the codebase.
@@ -607,7 +573,7 @@ export const METRES_TO_FEET = 3.281        // conversion factor for US locale di
 
 ---
 
-## 14. Testing Requirements
+## 13. Testing Requirements
 
 Every function in `engine/` must have full test coverage.
 Tests live in `engine/__tests__/` or alongside the file as `filename.test.ts`.

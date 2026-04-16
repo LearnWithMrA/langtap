@@ -57,7 +57,7 @@ export function LandingClient(): ReactNode {
       {/* Content sections below the hero */}
       <div className="bg-white">
         {/* Section A: How it works */}
-        <section id="about" className="px-4 py-16 md:py-24">
+        <section id="about" className="px-4 pt-7 pb-12 md:pt-11 md:pb-20">
           <div className="mx-auto max-w-4xl">
             <h2 className="text-2xl md:text-3xl font-bold text-warm-800 text-center mb-12">
               How it works
@@ -65,7 +65,7 @@ export function LandingClient(): ReactNode {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="flex flex-col items-center text-center gap-3">
                 <div className="w-16 h-16 rounded-2xl bg-sage-100 flex items-center justify-center">
-                  <span className="text-2xl text-sage-500">あ</span>
+                  <span className="text-2xl text-sage-500"> </span>
                 </div>
                 <h3 className="text-lg font-medium text-warm-800">Choose your characters</h3>
                 <p className="text-sm text-warm-600 leading-relaxed">
@@ -74,7 +74,7 @@ export function LandingClient(): ReactNode {
               </div>
               <div className="flex flex-col items-center text-center gap-3">
                 <div className="w-16 h-16 rounded-2xl bg-mint-100 flex items-center justify-center">
-                  <span className="text-2xl text-mint-500">⌨</span>
+                  <span className="text-2xl text-mint-500"> </span>
                 </div>
                 <h3 className="text-lg font-medium text-warm-800">Type, tap, or swipe</h3>
                 <p className="text-sm text-warm-600 leading-relaxed">
@@ -83,7 +83,7 @@ export function LandingClient(): ReactNode {
               </div>
               <div className="flex flex-col items-center text-center gap-3">
                 <div className="w-16 h-16 rounded-2xl bg-blush-100 flex items-center justify-center">
-                  <span className="text-2xl text-blush-300">📊</span>
+                  <span className="text-2xl text-blush-300"> </span>
                 </div>
                 <h3 className="text-lg font-medium text-warm-800">Watch your progress</h3>
                 <p className="text-sm text-warm-600 leading-relaxed">

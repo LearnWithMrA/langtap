@@ -1,6 +1,6 @@
 # LangTap - Content
 
-Version 1.0 | April 2026
+Version 1.1 | April 2026
 Domain: Kana character data, word banks, mnemonics, audio assets, JLPT structure.
 Reference: LangTap_Planning.md Sections 5.4, 5.14, 4.
 Owner document: CLAUDE.md
@@ -29,39 +29,44 @@ Supabase stores only user state (mastery scores, word counters, profile).
 
 ## 2. Data Sources
 
-### 2.1 Word Bank Source: Jisho JLPT Excel File
+### 2.1 Word Bank Source: JMDict JSON Files
 
-The word bank is sourced from a pre-existing Excel file exported from Jisho.org,
-already owned by the project. No external download or third-party pipeline is needed.
+The word bank is sourced from five JSON files derived from JMDict, one per JLPT level.
+These are the primary and sole source for the word bank build pipeline.
 
-**File:** `JLPT_Word_List____From_Jisho_org.xlsx`
-**Location:** Committed to the repo at `scripts/source/jisho-jlpt-words.xlsx`
+**Files:** `n5.json`, `n4.json`, `n3.json`, `n2.json`, `n1.json`
+**Location:** Committed to the repo at `scripts/source/jmdict/`
 
-The file contains five sheets, one per JLPT level, with the following structure:
+Each file is an array of objects with the following structure:
 
-| Sheet | Columns | Word count |
-|---|---|---|
-| JLPT N5 | Word, Reading, Meaning | 658 |
-| JLPT N4 | Word, Reading, JLPT, Meaning | 578 |
-| JLPT N3 | Word, Reading, JLPT, Meaning | 1,780 |
-| JLPT N2 | Word, Reading, JLPT, Meaning | 1,804 |
-| JLPT N1 | Word, Reading, JLPT, Meaning | 3,444 |
+```json
+{
+  "jmdict_seq": "1234567",
+  "kana": "いぬ",
+  "kanji": "犬",
+  "waller_definition": "dog"
+}
+```
 
-**Total source words: 8,264 across all levels.**
+| File | Entry count |
+|---|---|
+| n5.json | TBC on commit |
+| n4.json | TBC on commit |
+| n3.json | TBC on commit |
+| n2.json | TBC on commit |
+| n1.json | 3,427 |
 
-**Known data characteristics:**
-- The Meaning field contains full Jisho definitions including grammar tags, alternate
-  forms, and notes (e.g. `[Godan verb] 1. to meet; to encounter...`). The build script
-  must strip this to the first clean definition only.
-- Some entries appear in multiple sheets (e.g. an N5 word also listed in N4).
-  The build script must deduplicate, keeping each word at its lowest JLPT level.
-- Katakana-only words (loanwords) are present across all levels but sparse at higher
-  levels. See Section 7.3 for the relaxed filter rule that applies to these.
+**Field notes:**
+- `jmdict_seq` is a stable unique identifier from the JMDict database. It serves as the word ID directly — no sequential ID generation needed.
+- `kana` is always present and clean. No stripping required.
+- `kanji` may be an empty string for pure kana words (e.g. adverbs, particles). Treat empty string as null.
+- `waller_definition` is already a short, clean English definition. No stripping required.
+- The JLPT level is known from which file the entry came from.
 
 **Attribution:**
-Data sourced from Jisho.org. Jisho is a free Japanese dictionary. No licence
-restriction applies to use of vocabulary data for educational software.
-No attribution is required on the credits screen for this source.
+Data derived from JMDict. JMDict is made available under a Creative Commons Attribution-ShareAlike Licence. Attribution required on the credits screen.
+
+**The Jisho Excel file** (`scripts/source/jisho-jlpt-words.xlsx`) is retained in the repo as a reference and cross-check resource only. It is not part of the active build pipeline. See Future Backlog in LangTap_Sprints.md for the optional cross-reference task.
 
 ### 2.2 Word Audio: VOICEVOX (Pre-generated)
 
@@ -348,7 +353,7 @@ Each entry in the word bank is a typed object.
 // data/words/n5.ts (and n4, n3, n2, n1)
 
 type WordBankEntry = {
-  id: string              // unique stable identifier, e.g. "n5-001"
+  id: string              // jmdict_seq from source JSON, e.g. "1234567"
   kana: string            // full kana reading: "いぬ", "がっこう"
   kanji: string | null    // kanji form if applicable: "犬", "学校" (null if kana-only)
   meaning: string         // English meaning shown after correct answer: "dog", "school"
@@ -365,7 +370,7 @@ It must include every distinct character in the `kana` field.
 **Example:**
 ```ts
 {
-  id: 'n5-001',
+  id: '1469800',
   kana: 'いぬ',
   kanji: '犬',
   meaning: 'dog',
@@ -377,22 +382,18 @@ It must include every distinct character in the `kana` field.
 
 ### 7.1 Word Bank Build Process
 
-The word bank is generated from the Jisho JLPT Excel file using a build script.
+The word bank is generated from the JMDict JSON files using a build script.
 Do not hand-write word bank entries. Do not spend session time manually building
 the word bank. This is a one-time automated content pipeline, not application code.
 
 **Build pipeline:**
-1. Source file is already in the repo at `scripts/source/jisho-jlpt-words.xlsx`.
-   No download required.
+1. Source files are in the repo at `scripts/source/jmdict/`. No download required.
 2. Run `scripts/build-word-bank.ts` which:
-   - Reads all five sheets from the Excel file
-   - Deduplicates entries, keeping each word at its lowest JLPT level
-   - Strips the Meaning field to the first clean definition (text before the first
-     `|` or `[` character, trimmed)
+   - Reads each JSON file (`n5.json` through `n1.json`)
+   - Maps `jmdict_seq` to `id`, `kana` to `kana`, `kanji` (empty string to null) to `kanji`, `waller_definition` to `meaning`
+   - Applies the JLPT level from the source filename
    - Applies all filtering rules from Section 7.3
-   - Generates `characterIds` by mapping each kana character in the Reading field
-     to its ID in `data/kana/characters.ts`
-   - Assigns stable sequential IDs (`n5-001`, `n5-002`, etc.)
+   - Generates `characterIds` by mapping each kana character in the `kana` field to its ID in `data/kana/characters.ts`
    - Outputs a katakana word count per level to the console for review
    - Writes the output to `data/words/n5.ts`, `data/words/n4.ts`, etc.
 3. Run the word bank validation test suite to confirm schema integrity.
@@ -404,28 +405,16 @@ files during a coding sprint without explicit instruction from the owner.
 
 ### 7.2 Word Bank Size Reference
 
-| Level | Source words (Excel file) | Expected after filtering |
+| Level | Source words (JSON) | Expected after filtering |
 |---|---|---|
-| N5 | 658 | ~600 |
-| N4 | 578 | ~500 |
-| N3 | 1,780 | ~1,600 |
-| N2 | 1,804 | ~1,600 |
-| N1 | 3,444 | ~3,000 |
+| N5 | TBC | TBC |
+| N4 | TBC | TBC |
+| N3 | TBC | TBC |
+| N2 | TBC | TBC |
+| N1 | 3,427 | ~3,000 |
 
-**Katakana-only words by level (pure loanwords in the source file):**
-
-| Level | Katakana-only words |
-|---|---|
-| N5 | 65 |
-| N4 | 42 |
-| N3 | 107 |
-| N2 | 134 |
-| N1 | 210 |
-
-Katakana word counts are low at early levels relative to the total pool. This is
-expected and is addressed by the relaxed katakana filter rule in Section 7.3.
-The build script must output these counts to the console so coverage can be
-confirmed after each run.
+Counts for N5-N2 to be confirmed once all JSON files are committed to the repo.
+The build script outputs final counts to the console after each run.
 
 ### 7.3 Word Bank Filtering Rules
 
@@ -454,7 +443,7 @@ Analysis of the source file confirms the problem at early unlock stages:
 
 **Kana Mode word selection behaviour:**
 In Kana Mode the entire word bank across all levels is available as the selection pool.
-The user's `kanji_jlpt_level` sets the preferred starting level. Words at that level
+The user's `kotoba_jlpt_level` sets the preferred starting level. Words at that level
 are prioritised first. When all eligible words at the preferred level have hit counter 5,
 selection spills to all other levels. When all words across all levels are at counter 5,
 counters reset and the cycle begins again. JLPT level is never a hard filter in Kana Mode.
@@ -475,14 +464,13 @@ This provides phonetic context and is more natural than isolated phoneme playbac
 
 | Status | Details |
 |---|---|
-| Source | Kanji Alive audio dataset |
-| URL | https://github.com/kanjialive/kanji-data-media |
-| Licence | CC BY 4.0 |
-| Format | Opus, AAC, OGG, MP3 |
-| Coverage | 10,187 files covering 1,235 kanji and compound words |
-| Phase | Phase 1 onwards. Integrate during the audio sprint in Sprint 10. |
-| Attribution text | To be confirmed with Kanji Alive before use; add to credits screen |
-| Gap note | The Kanji Alive dataset covers kanji compound words. Some kana-only N5 words may not have coverage. Document any gaps during the audio sprint and decide per gap: omit audio for that word, or source a compatible alternative. |
+| Source | VOICEVOX (pre-generated locally) |
+| URL | https://voicevox.hiroshiba.jp |
+| Licence | Free and open source. Voice character terms apply. |
+| Format | MP3 |
+| Coverage | Full - covers all words including pure kana words |
+| Phase | Sprint 10 - Audio Integration |
+| Attribution | To be confirmed per chosen voice character before Sprint 10 |
 
 ### 8.2 Lo-Fi Background Music
 
@@ -501,6 +489,10 @@ The app must include a credits screen listing all third-party content.
 The screen is part of the Profile section (or accessible from a settings link).
 
 Required attributions at Phase 1 launch:
+
+**Word data:**
+> Vocabulary data derived from JMDict (https://www.edrdg.org/jmdict/j_jdict.html).
+> JMDict is made available under a Creative Commons Attribution-ShareAlike Licence (CC BY-SA).
 
 **Word audio:**
 > Word pronunciation audio generated using VOICEVOX (https://voicevox.hiroshiba.jp).
@@ -533,32 +525,8 @@ Required attributions at Phase 1 launch:
 
 | Phase | Content required |
 |---|---|
-| Phase 1 - Kana | Full kana character dataset, N5 word bank (minimum 600 words), VOICEVOX audio for N5 words, mnemonics for all seion (dakuon and yoon mnemonics before those stages ship), lo-fi music tracks |
+| Phase 1 - Kana | Full kana character dataset, N5 word bank (minimum 600 words after filtering), VOICEVOX audio for N5 words, mnemonics for all seion (dakuon and yoon mnemonics before those stages ship), lo-fi music tracks |
 | Phase 2 - Kotoba | All word banks already generated in Sprint 5. No new word data needed. VOICEVOX audio for N4-N1 words. |
-| Phase 3 - Kanji | Kanji bank derived from word bank (see Section 11.1). Kanji mnemonics. VOICEVOX audio already covers kanji compound words. |
-| Phase 4 - Kanji Kotoba | No new content pipeline needed. Uses existing word bank and kanji bank. |
-
-### 11.1 Kanji Bank: Derived from Word Bank
-
-The kanji bank for Phase 3 does not require any external source or new pipeline.
-It is derived directly from the word bank generated in Sprint 5.
-
-**Derivation logic:**
-- Filter all word bank entries where `kanji` field is not null.
-- Each unique kanji character found across those entries becomes a kanji bank entry.
-- Group by `jlptLevel` from the parent word bank entry.
-- The kanji bank is generated by a separate script: `scripts/build-kanji-bank.ts`.
-- This script reads the already-committed word bank TypeScript files, not the Excel file.
-
-**What this gives us:**
-- Every kanji that appears in a JLPT-levelled word we already teach.
-- Readings come from the kana field of the parent word.
-- English meanings come from the meaning field of the parent word.
-- JLPT level is inherited from the word.
-- No third-party kanji dataset, no external download, no licence concerns.
-
-This script is created during the Phase 3 kanji content sprint, not Sprint 5.
-The word bank files must be committed and stable before this script is written.
 
 ---
 

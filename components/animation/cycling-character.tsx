@@ -18,7 +18,7 @@ import { motion } from 'motion/react'
 
 // -- Types --------------------------------------------------
 
-type SpeedLevel = 'idle' | 'slow' | 'medium' | 'fast'
+type SpeedLevel = 'stopped' | 'idle' | 'slow' | 'medium' | 'fast'
 
 type CyclingCharacterProps = {
   speed: SpeedLevel
@@ -29,6 +29,7 @@ type CyclingCharacterProps = {
 const FRAME_COUNT = 14
 
 const FRAME_INTERVAL_MS: Record<SpeedLevel, number> = {
+  stopped: 0,
   idle: 107,
   slow: 80,
   medium: 53,
@@ -51,11 +52,15 @@ export function CyclingCharacter({ speed }: CyclingCharacterProps): React.ReactE
 
     if (intervalRef.current !== null) {
       clearInterval(intervalRef.current)
+      intervalRef.current = null
     }
 
-    intervalRef.current = setInterval(() => {
-      setFrameIndex((prev) => (prev + 1) % FRAME_COUNT)
-    }, ms)
+    // When stopped, freeze on the current frame
+    if (ms > 0) {
+      intervalRef.current = setInterval(() => {
+        setFrameIndex((prev) => (prev + 1) % FRAME_COUNT)
+      }, ms)
+    }
 
     return (): void => {
       if (intervalRef.current !== null) {

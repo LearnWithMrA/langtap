@@ -1,6 +1,6 @@
 # LangTap - Planning Document
 
-Version 1.1 | April 2026
+Version 1.2 | April 2026
 Status: Active
 
 ---
@@ -68,7 +68,7 @@ the speed and automaticity that makes reading and typing feel effortless.
 
 ## 4. Scope and Phases
 
-LangTap is built in four phases. Each phase must be stable and complete before the
+LangTap is built in phases. Each phase must be stable and complete before the
 next begins. No phase 2 features are built during phase 1.
 
 ### Phase 1 - Kana (MVP)
@@ -104,26 +104,6 @@ The only scope for initial development.
 - Kotoba leaderboards
 - Requires full Kana mastery to unlock
 
-### Phase 3 - Kanji
-
-- Kanji mode: user types the reading (kana) for a given kanji
-- Grouped by JLPT level N5-N1, in sets, same progression structure as kanadojo.com
-- Two sub-modes:
-  - **Visual sub-mode**: the kanji character is shown and the user types its reading in kana
-  - **Audio sub-mode**: audio is played, the user types the correct reading in kana, then
-    selects the correct kanji from a set of options (for Tap mode this is a button selection;
-    for Type and Swipe the keyboard input handles it automatically via the IME)
-- Characters start locked at each level. 5 correct answers unlocks a character.
-  The full level set must be mastered before progressing to the next set.
-- Romaji input earns zero points. The user is told this clearly but without judgment.
-- Requires full Kana mastery to access
-
-### Phase 4 - Kanji with Kotoba
-
-- Kanji vocabulary mode
-- Kotoba Mode extended to include kanji readings
-- Full library with all JLPT levels
-
 ---
 
 ## 5. Feature Details
@@ -158,12 +138,11 @@ buttons are always the most prominent elements on the page.
 **Onboarding flow (first login only):**
 
 Step 1 - JLPT self-assessment. The user is shown the five vocabulary levels N5 through
-N1 with a brief description of each. They select two levels: their Kotoba JLPT level
-(which controls word selection in Kotoba Mode and sets lower-level words as mastered)
-and their Kanji JLPT level (which controls Kanji Mode and sets the preferred starting
-level for word selection in Kana Mode). Both default to N5 for new learners. A clear
-message is shown: "Words below your selected level will be marked as mastered. To reset,
-change your level in Profile settings." Both selections can be changed later in Profile.
+N1 with a brief description of each. They select their Kotoba JLPT level, which controls
+word selection in both Kotoba Mode (hard filter) and Kana Mode (soft preference). It
+defaults to N5 for new learners. A clear message is shown: "Words below your selected
+level will be marked as mastered. To reset, change your level in Profile settings."
+This selection can be changed later in Profile.
 
 Step 2 - Early character unlock. The user is shown the full kana chart with all characters
 listed. Characters they already know can be individually tapped or clicked to unlock them
@@ -230,10 +209,8 @@ any time from the top-right icon during practice.
 - All vocabulary levels are ranked equally. An N5 learner and an N1 learner compete
   on the same board. The breadth of vocabulary selected does not affect ranking.
 - Leaderboard scores are based on cumulative mastery points
-- Phase 2 will add Kana Kotoba leaderboards (separate from the main Kana boards)
-- Phase 3 will add Kanji leaderboards
-- Phase 4 will add Kanji Kotoba leaderboards
-- Each mode and phase has its own board; they are never merged across phases
+- Phase 2 will add Kotoba leaderboards (separate from the main Kana boards)
+- Each mode has its own board; they are never merged across modes
 
 ### 5.8 Dojo Screen
 
@@ -276,12 +253,10 @@ any time from the top-right icon during practice.
 
 - Username display
 - Language selection (Japanese only in Phase 1; architecture should support others later)
-- Kotoba JLPT level selection: sets the word level for Kotoba Mode. Words below the
-  selected level are marked as mastered. Changing to a lower level does not un-master
-  previously mastered words. A warning is shown: "To reset mastery, use Reset Progress."
-- Kanji JLPT level selection: sets the word level for Kanji Mode and the preferred
-  starting level for word selection in Kana Mode. Same mastery pre-set behaviour and
-  reset warning as Kotoba JLPT level.
+- Kotoba JLPT level selection: sets the word level for Kotoba Mode and the preferred
+  starting level for word selection in Kana Mode. Words below the selected level are
+  marked as mastered. Changing to a lower level does not un-master previously mastered
+  words. A warning is shown: "To reset mastery, use Reset Progress."
 - Font selection (Japanese-friendly fonts only; see Section 6 for font guidance)
 - Font size selection (manual slider or preset sizes)
 - Font size linked to mastery (later feature - planned but not in Phase 1):

@@ -1,6 +1,6 @@
 # LangTap UX/UI Design Specification
 
-Version 2.0 | April 2026
+Version 2.1 | April 2026
 Status: Active - Sprint 2B
 
 This document is the visual and interaction design source of truth for LangTap.
@@ -374,6 +374,11 @@ Five buttons stacked vertically, each describing a JLPT level:
 Selecting one highlights it in sage-200 and enables the Next button (mint-500 key style).
 Default: N5 is pre-selected.
 
+This single selection (`kotoba_jlpt_level`) controls word selection in both Kotoba Mode
+(hard filter) and Kana Mode (soft preference for word draws). Words below the selected
+level are marked as mastered. The user is shown: "Words below this level will be marked
+as mastered. To reset, change your level in Profile settings."
+
 ### 5.2 Step 2 - Early Character Unlock
 
 Heading: "Which characters do you already know?"
@@ -448,20 +453,19 @@ Background: `bg-white/70 backdrop-blur-sm`.
 
 **Mobile layout:**
 - Left: Compressed LT logo
-- Centre: Home icon (house), Dojo icon (hiragana あ for Kana dojo, 漢 for Kanji dojo, 言 for Kotoba dojo)
+- Centre: Home icon (house), Dojo icon (hiragana あ for Kana dojo, 言 for Kotoba dojo)
 - Right: Settings gear icon, Profile avatar icon
 
 All icons are 24x24, charcoal, minimum touch target 44x44. No labels on mobile.
 
 ### 6.3 Mode Selection Buttons
 
-Three large floating buttons positioned in the sky area, above the ground strip.
+Two large floating buttons positioned in the sky area, above the ground strip.
 Each button is in the keyboard key style but larger (approximately 120x80px on desktop).
 
 Positions (approximate, visual balance):
 - Left: Hiragana/Katakana - sage-500 background, white text "Kana"
-- Centre: Kotoba - blush-300 background, warm-800 text "Kotoba" - locked until Kana mastery threshold met
-- Right: Kanji - warm-400 background, warm-800 text "Kanji" - locked until Kana mastery threshold met
+- Right: Kotoba - blush-300 background, warm-800 text "Kotoba" - locked until Kana mastery threshold met
 
 Locked state: greyed out, padlock icon overlay, tooltip on hover: "Complete Kana mode to unlock".
 
@@ -734,24 +738,24 @@ All unlock actions require a confirmation tap. No single-tap bulk unlocks.
 
 ---
 
-## 9. Dojo Screen Spec - Kanji and Kotoba
+## 9. Dojo Screen Spec - Kotoba
 
 **Status:** To Do
-**Route:** `/dojo` when Kanji or Kotoba mode is active
+**Route:** `/dojo` when Kotoba mode is active
 **Scrollable:** Yes
 **Layout:** Standard in-app layout
 
 ### 9.1 Overview
 
-Kanji and Kotoba each have their own dojo, accessed by navigating to Dojo while
-that mode is active (or by selecting from the game home screen).
+Kotoba has its own dojo, accessed by navigating to Dojo while Kotoba mode is active
+(or by selecting from the game home screen).
 
 Content population: placeholders only in v1. Full data to be populated in later sprints.
 The first level of each N (N5 level 1, N4 level 1, etc.) should have sample content.
 
 ### 9.2 JLPT Level Navigation
 
-At the top of the Kanji and Kotoba Dojo: a horizontal row of five buttons:
+At the top of the Kotoba Dojo: a horizontal row of five buttons:
 N5, N4, N3, N2, N1
 
 Style: key-style buttons. Active level: mint-500 background. Inactive: sage-100 background.
@@ -770,13 +774,12 @@ Layout inspired by the WaniKani unit reference images:
 Clicking a unit expands a list of level groups beneath it (accordion style):
 - "Levels 1-2" (expandable row)
 - "Levels 3-4" (expandable row)
-Each level group, when expanded, shows a grid of character or word cards
+Each level group, when expanded, shows a grid of word cards
 with their mastery tile style (same heatmap as Kana dojo).
 
 ### 9.4 Sample Content (v1)
 
 For implementation purposes, populate:
-- Kanji N5 Level 1: 一 二 三 四 五 六 七 八 九 十 (numbers 1-10)
 - Kotoba N5 Level 1: first 10 entries from the JMdict N5 word bank
 
 All other sets are shown as empty or locked placeholders.
@@ -869,11 +872,10 @@ Settings are grouped into sections with subtle section headers (text-sm, warm-40
 
 ### 12.1 Tabs
 
-Four tabs at the top of the content area (below the top bar):
+Three tabs at the top of the content area (below the top bar):
 1. Kana - global leaderboard by total kana mastery score
 2. Kotoba - global leaderboard by total Kotoba mastery score (Phase 2, shown but empty in Phase 1)
-3. Kanji - global leaderboard by total Kanji mastery score (Phase 3, shown but empty in Phase 1)
-4. Friends - not in Phase 1, shown as "Coming soon"
+3. Friends - not in Phase 1, shown as "Coming soon"
 
 Tab style: bottom-border active indicator in sage-500. Inactive tabs: warm-400 text.
 
@@ -929,10 +931,11 @@ game home, practice screen). Violating these rules is a bug, not a style choice.
 
 ---
 
-## 14. Asset Production Notes for Gemini
+## 14. Asset Production Notes
 
 This section documents every asset that needs to be created before implementation begins.
-Gemini is responsible for producing these assets. Claude Code does not create visual assets.
+Claude builds all SVG and code-based assets. Gemini is used for image generation only
+when photographic or painted assets are needed (none currently planned).
 
 All assets are stored in `public/` in the appropriate subfolder.
 File naming: lowercase, hyphens, descriptive. No spaces.
@@ -978,25 +981,25 @@ File naming: lowercase, hyphens, descriptive. No spaces.
 
 ## 15. Screen Status Summary
 
-| Screen | Spec status | Gemini mockup | Approved |
-|---|---|---|---|
-| Landing page | In Progress | To Do | No |
-| Game home | To Do | To Do | No |
-| Practice - Type mode | To Do | To Do | No |
-| Practice - Tap mode | To Do | To Do | No |
-| Practice - Swipe mode | To Do | To Do | No |
-| Dojo - Kana | To Do | To Do | No |
-| Dojo - Kanji / Kotoba | To Do | To Do | No |
-| Sign-up | To Do | To Do | No |
-| Log-in | To Do | To Do | No |
-| Onboarding steps 1-4 | To Do | To Do | No |
-| Profile | To Do | To Do | No |
-| Settings | To Do | To Do | No |
-| Leaderboard | To Do | To Do | No |
+| Screen | Spec status | Approved |
+|---|---|---|
+| Landing page | In Progress | No |
+| Game home | To Do | No |
+| Practice - Type mode | To Do | No |
+| Practice - Tap mode | To Do | No |
+| Practice - Swipe mode | To Do | No |
+| Dojo - Kana | To Do | No |
+| Dojo - Kotoba | To Do | No |
+| Sign-up | To Do | No |
+| Log-in | To Do | No |
+| Onboarding steps 1-4 | To Do | No |
+| Profile | To Do | No |
+| Settings | To Do | No |
+| Leaderboard | To Do | No |
 
 ---
 
 *This document is the visual and interaction design source of truth for LangTap.*
-*No screen may be built until its row in the status summary shows Approved.*
+*No screen may be built until its spec is marked Approved in the table above.*
 *Update this document when a design decision changes. Do not update FRONTEND.md*
 *directly from this document - wait for the Consolidation task in Sprint 2B.*

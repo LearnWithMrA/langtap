@@ -87,36 +87,33 @@ Rules:
 ## Sprint 2B - UX/UI Design and Screen Specification
 
 **Goal:** Define the full user experience before any further functional development.
-Every screen is specced, visually designed, and approved before Sprint 3 resumes.
+Every screen is specced and approved before Sprint 3 resumes.
 This sprint produces the design source of truth that all future sprints build from.
 Full specs live in UX_DESIGN.md. This board tracks status only.
 **Status:** Active
 
 Sprint 3 (auth implementation) is on hold until this sprint is complete.
-Specs are written in UX_DESIGN.md. Gemini handles visual mockups and asset production.
+Specs are written in UX_DESIGN.md. Claude builds all SVG assets.
 Claude Code does not touch implementation until designs are approved.
+Gemini is used for image generation only when photographic or painted assets are needed.
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
 | Write landing page spec | Medium | In Progress | See UX_DESIGN.md Section 3. Parallax landscape, nav, hero, footer. |
-| Write game home screen spec | Small | Done | See UX_DESIGN.md Section 6. Mode selection, floating buttons, distance counter. |
-| Write practice screen spec (all three input modes) | Medium | Done | See UX_DESIGN.md Section 7. Type, Tap, Swipe. Full states and interactions. |
-| Write Dojo screen spec - Kana | Medium | Done | See UX_DESIGN.md Section 8. Heatmap grid, unlock interactions. |
-| Write Dojo screen spec - Kanji and Kotoba | Medium | Done | See UX_DESIGN.md Section 9. JLPT level browsing, unit and level sets. |
-| Write auth screens spec | Small | Done | See UX_DESIGN.md Section 4. Sign-up, log-in. Blue gradient background. |
-| Write onboarding flow spec | Medium | Done | See UX_DESIGN.md Section 5. Four steps. |
-| Write Profile screen spec | Small | Done | See UX_DESIGN.md Section 10. |
-| Write Settings screen spec | Small | Done | See UX_DESIGN.md Section 11. |
-| Write Leaderboard screen spec | Small | Done | See UX_DESIGN.md Section 12. |
-| Document global visual identity and asset list | Small | Done | See UX_DESIGN.md Sections 1, 2, 13. Logo, key button style, sounds, mascot, parallax, four scene themes. |
-| Gemini asset production - SVG assets | Medium | To Do | All SVGs listed in UX_DESIGN.md Section 13.1. Mascot, clouds, hills, icons, logos. Brief Gemini with spec from Section 2.6 and 2.7. |
-| Gemini asset production - sound assets | Small | To Do | Three WAV files listed in UX_DESIGN.md Section 13.2. |
-| Gemini UX fine-tuning pass | Medium | To Do | Share Claude mockups with Gemini for visual refinement feedback on SVG assets and illustration style only. Not for layout or interaction decisions. |
-| Build interactive mockup - landing page | Medium | To Do | Claude builds HTML mockup in chat. Review and approve before implementation. |
-| Build interactive mockup - practice screen (all modes) | Medium | To Do | Claude builds HTML mockup in chat. Review and approve before implementation. |
-| Build interactive mockups - remaining screens | Large | To Do | Game home, Dojo, auth, onboarding, profile, settings, leaderboard. |
+| Write game home screen spec | Small | Done | See UX_DESIGN.md Section 6. Spec written and screen built. |
+| Write practice screen spec (all three input modes) | Medium | To Do | See UX_DESIGN.md Section 7. Type, Tap, Swipe. Full states and interactions. |
+| Write Dojo screen spec - Kana | Medium | To Do | See UX_DESIGN.md Section 8. Heatmap grid, unlock interactions. |
+| Write Dojo screen spec - Kotoba | Medium | To Do | See UX_DESIGN.md Section 9. JLPT level browsing, unit and level sets. |
+| Write auth screens spec | Small | To Do | See UX_DESIGN.md Section 4. Sign-up, log-in. Blue gradient background. |
+| Write onboarding flow spec | Medium | To Do | See UX_DESIGN.md Section 5. Four steps. |
+| Write Profile screen spec | Small | To Do | See UX_DESIGN.md Section 10. |
+| Write Settings screen spec | Small | To Do | See UX_DESIGN.md Section 11. |
+| Write Leaderboard screen spec | Small | To Do | See UX_DESIGN.md Section 12. |
+| Document global visual identity and asset list | Small | To Do | See UX_DESIGN.md Sections 1, 2, 14. Logo, key button style, sounds, mascot, parallax, four scene themes. |
+| Build SVG assets | Medium | To Do | All SVGs listed in UX_DESIGN.md Section 14.1. Mascot, clouds, hills, icons, logos. Claude builds these. |
+| Source sound assets | Small | To Do | Three WAV files listed in UX_DESIGN.md Section 14.2. Source from freesound.org (CC0) or generate. |
 | Build sample data files | Small | To Do | Claude builds samples/ folder with mock game state, leaderboard, and N5 words. |
-| Consolidate approved designs into FRONTEND.md and UX_DESIGN.md | Medium | To Do | Update both docs with any decisions from the mockup review process. |
+| Consolidate approved designs into FRONTEND.md and UX_DESIGN.md | Medium | To Do | Update both docs with any decisions made during the spec writing process. |
 
 ---
 
@@ -287,41 +284,9 @@ Not assigned to a sprint. Pulled in once Phase 1 is complete and stable.
 | Build word mastery store (Zustand) | **Medium** | **To Do** | Same logic as character mastery but for words. Frequency-weighted selection. Counter cap at 5. |
 | Build Library screen | **Large** | **To Do** | JLPT N5-N1 word banks. Organised by level and set. Heatmap colouring per word. Remove "Under Construction" placeholder. |
 | Build Kotoba Mode game loop | **Large** | **To Do** | Show English word. User types kana. Correct: word mastery increments. Wrong: silent, try again. |
-| Integrate Kanji Alive word audio | **Medium** | **To Do** | No longer needed. VOICEVOX covers all words including pure kana. Remove this task when Phase 2 sprint is planned. |
-| Build Kotoba leaderboards | **Medium** | **To Do** | Kana Kotoba board. Separate from the main Kana boards. Same ranking logic. |
+| Build Kotoba leaderboards | **Medium** | **To Do** | Kotoba board. Separate from the main Kana boards. Same ranking logic. |
 | Gate Kotoba Mode behind full Kana mastery | **Small** | **To Do** | Check mastery threshold before allowing access. Show friendly message if not yet unlocked. |
 | Activate Stripe membership | **Epic** | **To Do** | Break into smaller tasks at the time. Define pricing model first. |
-
----
-
-## Phase 3 Backlog - Kanji
-
-Not assigned to a sprint. Pulled in once Phase 2 is complete and stable.
-
-| Task | Size | Status | Notes |
-|---|---|---|---|
-| Build `scripts/build-kanji-bank.ts` | **Medium** | **To Do** | Derives kanji bank from the committed word bank files. Filters entries where kanji field is not null. Groups by JLPT level. No external source needed. See CONTENT.md Section 11.1. |
-| Run kanji bank script and commit output | **Small** | **To Do** | Run script, validate output, commit to `data/kanji/`. |
-| Design kanji content structure | **Medium** | **To Do** | JLPT N5-N1, grouped into sets. Document in CONTENT.md. |
-| Build kanji mastery store | **Medium** | **To Do** | Same logic as kana mastery. Separate store. |
-| Build kanji visual sub-mode | **Large** | **To Do** | Show kanji, user types reading in kana. Correct answer unlocks character. Same mastery loop. |
-| Build kanji audio sub-mode | **Large** | **To Do** | Play audio. User types reading. Then selects correct kanji (Tap: button grid, Type/Swipe: IME auto-handles). |
-| Generate kanji audio via VOICEVOX | **Medium** | **To Do** | Run VOICEVOX locally for all kanji bank entries. Same pipeline as word audio. No external audio source needed. |
-| Build kanji leaderboards | **Medium** | **To Do** | Separate from kana and kotoba boards. |
-| Gate Kanji Mode behind full Kana mastery | **Small** | **To Do** | Same gate logic as Kotoba Mode. |
-| Handle romaji input in Kanji Mode | **Small** | **To Do** | Detect romaji input. Award zero points. Show kind message explaining why. |
-
----
-
-## Phase 4 Backlog - Kanji with Kotoba
-
-Not assigned to a sprint. Pulled in once Phase 3 is complete and stable.
-
-| Task | Size | Status | Notes |
-|---|---|---|---|
-| Extend Kotoba Mode to include kanji readings | **Large** | **To Do** | Show English word. User types kanji reading (via kana). |
-| Build Kanji Kotoba leaderboards | **Medium** | **To Do** | Separate board. |
-| Full library with all JLPT levels (kanji) | **Medium** | **To Do** | Extend Library screen to include kanji word bank. |
 
 ---
 
@@ -331,10 +296,12 @@ Ideas and improvements not tied to a phase. Pulled in when the time is right.
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
+| Cross-reference JMDict JSON files against Jisho Excel word bank | **Small** | **To Do** | Five JSON files (N5-N1) sourced from JMDict via Waller. Each entry has jmdict_seq, kana, kanji, waller_definition. N1 JSON has 3,427 entries vs Excel's 3,444 (17 gap). Script should match on kana, output words unique to each source, and flag definition differences. Goal: confirm nothing is missing from the word bank and evaluate waller_definition as a cleaner alternative to the stripped Jisho definitions. JSON files stored at scripts/source/. |
 | Google Sign-In | **Medium** | **To Do** | Add as a second auth option. Supabase OAuth. |
 | Apple Sign-In | **Medium** | **To Do** | Add as a third auth option. Required for any future iOS wrapper. |
 | Font size linked to mastery | **Medium** | **To Do** | Starts at 30pt. Decreases by 2pt per correct answer. Minimum size TBD (suggested 12pt). Toggle in Profile. |
 | Additional language support | **Epic** | **To Do** | Architecture should support this from Phase 1. Korean and Mandarin are the most likely additions. Break into tasks when scoping begins. |
+| Cross-reference JMDict JSON against Jisho Excel | **Small** | **To Do** | Write `scripts/compare-word-sources.ts`. Match on kana across both sources per JLPT level. Output: words only in Excel, words only in JSON, count totals. Useful for validating word bank completeness. Not blocking anything. |
 | Animation asset upgrade | **Small** | **To Do** | Commission or generate a higher-quality cycling character animation if the initial asset needs replacing. |
 | Mnemonic content expansion | **Medium** | **To Do** | Review and expand the mnemonic library. Ensure all seion, dakuon, and yoon characters have a mnemonic. |
 
@@ -344,4 +311,5 @@ Ideas and improvements not tied to a phase. Pulled in when the time is right.
 
 | Version | Date | Notes |
 |---|---|---|
-| 1.0 | April 2026 | Initial sprint board. Sprint 1 active. Sprints 2-11 pending. Phase 2-4 backlogs drafted. |
+| 1.0 | April 2026 | Initial sprint board. Sprint 1 active. Sprints 2-11 pending. Phase 2 backlog drafted. |
+| 1.1 | April 2026 | Kanji removed from scope. Phase 3 (Kanji) and Phase 4 (Kanji with Kotoba) backlogs dropped. Game structure simplified to Kana then Kotoba. kotoba_jlpt_level now serves both modes. |
