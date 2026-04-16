@@ -1,0 +1,124 @@
+// ------------------------------------------------------------
+// File: components/layout/practice-client.tsx
+// Purpose: Client component composing the full practice screen.
+//          Layers the parallax landscape, mascot, top bar,
+//          distance counter with mode selector, game window, and
+//          audio player into a full-viewport scene. Swipe mode
+//          uses a compact layout preset (hides mascot and top bar).
+// Depends on: components/layout/LandscapeBackgroundV2.tsx,
+//             components/animation/cycling-character.tsx,
+//             components/layout/app-top-bar.tsx,
+//             components/game/game-window.tsx,
+//             components/game/distance-counter.tsx,
+//             components/audio/audio-player.tsx
+// ------------------------------------------------------------
+
+'use client'
+
+import { useState } from 'react'
+import type { ReactNode } from 'react'
+import { useReducedMotion } from 'motion/react'
+import { LandscapeBackgroundV2 } from '@/components/layout/LandscapeBackgroundV2'
+import { CyclingCharacter } from '@/components/animation/cycling-character'
+import { AppTopBar } from '@/components/layout/app-top-bar'
+import { GameWindow } from '@/components/game/game-window'
+import { DistanceCounter } from '@/components/game/distance-counter'
+import { AudioPlayer } from '@/components/audio/audio-player'
+import { useKeySound } from '@/hooks/useKeySound'
+
+// -- Types --------------------------------------------------
+
+type InputMode = 'type' | 'tap' | 'swipe'
+
+const ALL_MODES: InputMode[] = ['tap', 'type', 'swipe']
+
+const MODE_LABELS: Record<InputMode, string> = {
+  type: 'Type',
+  tap: 'Tap',
+  swipe: 'Swipe',
+}
+
+// -- Mode dropdown ------------------------------------------
+
+function ModeDropdown({ mode, onModeChange }: { mode: InputMode; onModeChange: (m: InputMode) => void }): ReactNode {
+  const [isOpen, setIsOpen] = useState(false)
+  const { playSound } = useKeySound()
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={(): void => {
+          playSound('ui-dropdown')
+          setIsOpen(!isOpen)
+        }}
+        className="text-sm font-bold text-warm-800 hover:text-sage-400 transition-colors duration-150 cursor-pointer translate-y-0"
+        aria-label={`Current mode: Kana ${MODE_LABELS[mode]}. Click to change.`}
+        aria-expanded={isOpen}
+      >
+        Kana {MODE_LABELS[mode]} ▾
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-1 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg py-1 min-w-[120px] z-50">
+          {ALL_MODES.map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={(): void => {
+                playSound('ui-mode-switch')
+                onModeChange(m)
+                setIsOpen(false)
+              }}
+              className={[
+                'w-full text-left px-3 py-1.5 text-sm transition-colors duration-150 cursor-pointer',
+                m === mode
+                  ? 'text-sage-500 font-bold'
+                  : 'text-warm-800 hover:text-sage-400 hover:bg-sage-50',
+              ].join(' ')}
+            >
+              {MODE_LABELS[m]}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// -- Component ----------------------------------------------
+
+export function PracticeClient(): ReactNode {
+  const [mode, setMode] = useState<InputMode>('type')
+  const prefersReducedMotion = useReducedMotion()
+
+  const sceneSpeed = prefersReducedMotion ? 'stopped' : 'idle'
+
+  return (
+    <div className="theme-day relative w-full h-screen overflow-hidden">
+      {/* Parallax landscape */}
+      <LandscapeBackgroundV2 speed={sceneSpeed} staticHills={prefersReducedMotion ?? false} />
+
+      {/* Mascot */}
+      <div className="absolute bottom-[8%] left-[3%] md:left-[8%] z-[3]" aria-hidden="true">
+        <CyclingCharacter speed={sceneSpeed} />
+      </div>
+
+      {/* Top bar */}
+      <AppTopBar />
+
+      {/* Audio player: bottom right */}
+      <div className="absolute bottom-4 right-4 z-10">
+        <AudioPlayer />
+      </div>
+
+      {/* Game window: centred, raised 40% */}
+      <div className="absolute left-1/2 -translate-x-1/2 top-[35%] -translate-y-1/2 z-10 w-full px-4">
+        <GameWindow mode={mode}>
+          <ModeDropdown mode={mode} onModeChange={setMode} />
+          <DistanceCounter value={0} />
+        </GameWindow>
+      </div>
+    </div>
+  )
+}

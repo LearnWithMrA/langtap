@@ -1,10 +1,34 @@
 // ------------------------------------------------------------
 // File: engine/constants.ts
-// Purpose: Single source of truth for all game engine constants.
-//          Imported by all engine files and stores. No magic numbers
+// Purpose: All named constants for game timing, thresholds, and
+//          scoring. Single source of truth. No magic numbers
 //          anywhere else in the codebase.
-//          Placeholder - to be implemented in Sprint 4.
 // Depends on: nothing
 // ------------------------------------------------------------
 
-export {}
+// -- Feedback timing ----------------------------------------
+
+/** Duration of correct/wrong flash on input or tap button (ms) */
+export const FEEDBACK_FLASH_MS = 300
+
+/** Delay before romaji hint appears after a wrong answer (ms) */
+export const WRONG_ANSWER_DELAY_MS = 800
+
+/** Duration the English meaning stays visible after correct answer (ms) */
+export const MEANING_DISPLAY_MS = 1500
+
+/** Fade-in duration for meaning reveal (ms) */
+export const MEANING_FADE_MS = 150
+
+// -- Tap mode -----------------------------------------------
+
+/** Number of correct answers before the tap reminder tooltip hides */
+export const TAP_REMINDER_THRESHOLD = 5
+
+// -- Mastery ------------------------------------------------
+
+/** Mastery score required to unlock a character */
+export const UNLOCK_THRESHOLD = 5
+
+/** Maximum value of the per-word counter before reset */
+export const MAX_WORD_COUNTER = 5

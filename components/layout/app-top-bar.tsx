@@ -21,6 +21,7 @@ import { usePathname } from 'next/navigation'
 import { LogoFull } from '@/components/ui/logo-full'
 import { LogoLt } from '@/components/ui/logo-lt'
 import { useEasterEgg } from '@/hooks/useEasterEgg'
+import { useKeySound } from '@/hooks/useKeySound'
 
 // -- Inline SVG icons (use currentColor for theme support) ---
 
@@ -64,16 +65,6 @@ function IconProfile(): ReactNode {
   )
 }
 
-// -- Helpers ------------------------------------------------
-
-function playKeySound(): void {
-  const audio = new Audio('/sounds/Keyboard%20Click.mp3')
-  audio.volume = 0.3
-  audio.play().catch(() => {
-    // Sound file may not exist yet
-  })
-}
-
 const ICON_LINK = 'min-h-11 min-w-11 flex items-center justify-center rounded-lg transition-all duration-150 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-sage-300'
 
 // -- Component ----------------------------------------------
@@ -81,6 +72,7 @@ const ICON_LINK = 'min-h-11 min-w-11 flex items-center justify-center rounded-lg
 export function AppTopBar(): ReactNode {
   const pathname = usePathname()
   const { isActive: easterEggActive } = useEasterEgg()
+  const { playSound } = useKeySound()
 
   const isHome = pathname === '/home'
   const isKanaDojo = pathname === '/dojo'
@@ -94,7 +86,7 @@ export function AppTopBar(): ReactNode {
       {/* Left: Logo */}
       <button
         type="button"
-        onClick={playKeySound}
+        onClick={(): void => playSound('ui-logo')}
         className="flex-none min-h-11 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-sage-300 rounded-lg cursor-pointer"
         aria-label="LangTap logo"
       >

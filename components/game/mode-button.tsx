@@ -12,6 +12,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import type { ReactNode } from 'react'
+import { useKeySound } from '@/hooks/useKeySound'
 
 // -- Types --------------------------------------------------
 
@@ -44,19 +45,10 @@ const LOCKED_STYLES = {
   shadow: 'shadow-[0_6px_0_0_#b8a898]',
 }
 
-// -- Helpers ------------------------------------------------
-
-function playKeySound(): void {
-  const audio = new Audio('/sounds/Keyboard%20Click.mp3')
-  audio.volume = 0.5
-  audio.play().catch(() => {
-    // Sound file may not exist yet
-  })
-}
-
 // -- Component ----------------------------------------------
 
 export function ModeButton({ variant, label, locked, onClick }: ModeButtonProps): ReactNode {
+  const { playSound } = useKeySound()
   const [showTooltip, setShowTooltip] = useState(false)
   const tooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -73,7 +65,7 @@ export function ModeButton({ variant, label, locked, onClick }: ModeButtonProps)
       tooltipTimeoutRef.current = setTimeout(() => setShowTooltip(false), TOOLTIP_DURATION_MS)
       return
     }
-    playKeySound()
+    playSound(variant === 'kana' ? 'ui-mode-kana' : 'ui-mode-kotoba')
     onClick()
   }, [locked, onClick])
 
