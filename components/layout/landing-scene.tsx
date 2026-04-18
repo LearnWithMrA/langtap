@@ -43,9 +43,21 @@ export function LandingScene({ children }: LandingSceneProps): ReactNode {
       </section>
 
       {/* Curved ground bleed into the content section below */}
-      <div className="w-full h-[10vh] md:h-[15vh] pointer-events-none -mt-px bg-white" aria-hidden="true">
-        <svg width="100%" height="100%" viewBox="0 0 1600 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M 0 0 L 1600 0 L 1600 200 Q 800 0, 0 200 Z" style={{ fill: 'var(--scene-ground)', filter: 'brightness(0.85)' }} />
+      <div
+        className="w-full h-[10vh] md:h-[15vh] pointer-events-none -mt-px bg-white"
+        aria-hidden="true"
+      >
+        <svg
+          width="100%"
+          height="100%"
+          viewBox="0 0 1600 200"
+          preserveAspectRatio="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M 0 0 L 1600 0 L 1600 200 Q 800 0, 0 200 Z"
+            style={{ fill: 'var(--scene-ground)', filter: 'brightness(0.85)' }}
+          />
         </svg>
       </div>
     </div>

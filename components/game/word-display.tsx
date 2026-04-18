@@ -19,9 +19,5 @@ type WordDisplayProps = {
 export function WordDisplay({ word, visible }: WordDisplayProps): ReactNode {
   if (!visible || word.length <= 1) return null
 
-  return (
-    <div className="text-sm text-warm-400 text-center">
-      {word}
-    </div>
-  )
+  return <div className="text-sm text-warm-400 text-center">{word}</div>
 }

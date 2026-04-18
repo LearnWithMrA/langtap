@@ -49,9 +49,33 @@ function GroundDetails(): ReactNode {
       <path d="M 1350 185 Q 1360 170 1370 185 Z" fill="rgba(255,255,255,0.4)" />
 
       {/* Speed lines */}
-      <line x1="50" y1="110" x2="150" y2="110" stroke="rgba(0,0,0,0.08)" strokeWidth="3" strokeLinecap="round" />
-      <line x1="300" y1="160" x2="450" y2="160" stroke="rgba(0,0,0,0.08)" strokeWidth="3" strokeLinecap="round" />
-      <line x1="800" y1="115" x2="900" y2="115" stroke="rgba(0,0,0,0.08)" strokeWidth="3" strokeLinecap="round" />
+      <line
+        x1="50"
+        y1="110"
+        x2="150"
+        y2="110"
+        stroke="rgba(0,0,0,0.08)"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+      <line
+        x1="300"
+        y1="160"
+        x2="450"
+        y2="160"
+        stroke="rgba(0,0,0,0.08)"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+      <line
+        x1="800"
+        y1="115"
+        x2="900"
+        y2="115"
+        stroke="rgba(0,0,0,0.08)"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
     </svg>
   )
 }

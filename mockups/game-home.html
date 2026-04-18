@@ -1,446 +1,515 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LangTap - Game Home Mockup</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap');
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LangTap - Game Home Mockup</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap');
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-  :root {
-    /* Scene: day theme */
-    --sky-top: #c9e8f5;
-    --sky-bottom: #e8f4fb;
-    --ground: #8bc34a;
-    --hill: #5a9e3a;
-    --hill-far-pale: #7bb86a;
-    --hill-far: #6aad58;
-    --hill-mid: #5a9e3a;
-    --hill-front: #4a8e2a;
-    --cloud: #ffffff;
+      :root {
+        /* Scene: day theme */
+        --sky-top: #c9e8f5;
+        --sky-bottom: #e8f4fb;
+        --ground: #8bc34a;
+        --hill: #5a9e3a;
+        --hill-far-pale: #7bb86a;
+        --hill-far: #6aad58;
+        --hill-mid: #5a9e3a;
+        --hill-front: #4a8e2a;
+        --cloud: #ffffff;
 
-    /* UI tokens */
-    --sage-300: #a8c4a0;
-    --sage-500: #5a8a50;
-    --sage-600: #456e3d;
-    --warm-200: #e8ddd0;
-    --warm-400: #b8a898;
-    --warm-600: #7a6a5a;
-    --warm-800: #3d3028;
-    --blush-300: #f0a8b4;
-    --border: #e8ddd0;
-    --font: 'Zen Maru Gothic', sans-serif;
-  }
+        /* UI tokens */
+        --sage-300: #a8c4a0;
+        --sage-500: #5a8a50;
+        --sage-600: #456e3d;
+        --warm-200: #e8ddd0;
+        --warm-400: #b8a898;
+        --warm-600: #7a6a5a;
+        --warm-800: #3d3028;
+        --blush-300: #f0a8b4;
+        --border: #e8ddd0;
+        --font: 'Zen Maru Gothic', sans-serif;
+      }
 
-  body {
-    font-family: var(--font);
-    overflow: hidden;
-    height: 100vh;
-    width: 100vw;
-    background: var(--sky-bottom);
-  }
+      body {
+        font-family: var(--font);
+        overflow: hidden;
+        height: 100vh;
+        width: 100vw;
+        background: var(--sky-bottom);
+      }
 
-  /* ── Scene container ── */
-  .scene {
-    position: relative;
-    width: 100%;
-    height: 100vh;
-    overflow: hidden;
-  }
+      /* ── Scene container ── */
+      .scene {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+      }
 
-  /* ── Sky gradient ── */
-  .sky {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom));
-  }
+      /* ── Sky gradient ── */
+      .sky {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom));
+      }
 
-  /* ── Clouds ── */
-  .clouds {
-    position: absolute;
-    top: 56px;
-    left: 0;
-    right: 0;
-    height: 40vh;
-    overflow: hidden;
-    pointer-events: none;
-    z-index: 1;
-  }
-  .clouds-strip {
-    display: flex;
-    width: 200%;
-    height: 100%;
-    animation: cloud-drift 60s linear infinite;
-  }
-  .cloud-set {
-    position: relative;
-    width: 50%;
-    height: 100%;
-  }
-  .cloud {
-    position: absolute;
-    background: var(--cloud);
-    border-radius: 999px;
-    opacity: 0.8;
-  }
-  .cloud-1 { top: 10%; left: 5%; width: 120px; height: 50px; opacity: 0.8; }
-  .cloud-2 { top: 25%; left: 30%; width: 80px; height: 35px; opacity: 0.6; }
-  .cloud-3 { top: 8%; left: 55%; width: 110px; height: 45px; opacity: 0.7; }
-  .cloud-4 { top: 30%; left: 75%; width: 70px; height: 30px; opacity: 0.5; }
-  .cloud-5 { top: 15%; left: 90%; width: 100px; height: 40px; opacity: 0.75; }
+      /* ── Clouds ── */
+      .clouds {
+        position: absolute;
+        top: 56px;
+        left: 0;
+        right: 0;
+        height: 40vh;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 1;
+      }
+      .clouds-strip {
+        display: flex;
+        width: 200%;
+        height: 100%;
+        animation: cloud-drift 60s linear infinite;
+      }
+      .cloud-set {
+        position: relative;
+        width: 50%;
+        height: 100%;
+      }
+      .cloud {
+        position: absolute;
+        background: var(--cloud);
+        border-radius: 999px;
+        opacity: 0.8;
+      }
+      .cloud-1 {
+        top: 10%;
+        left: 5%;
+        width: 120px;
+        height: 50px;
+        opacity: 0.8;
+      }
+      .cloud-2 {
+        top: 25%;
+        left: 30%;
+        width: 80px;
+        height: 35px;
+        opacity: 0.6;
+      }
+      .cloud-3 {
+        top: 8%;
+        left: 55%;
+        width: 110px;
+        height: 45px;
+        opacity: 0.7;
+      }
+      .cloud-4 {
+        top: 30%;
+        left: 75%;
+        width: 70px;
+        height: 30px;
+        opacity: 0.5;
+      }
+      .cloud-5 {
+        top: 15%;
+        left: 90%;
+        width: 100px;
+        height: 40px;
+        opacity: 0.75;
+      }
 
-  @keyframes cloud-drift {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
+      @keyframes cloud-drift {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-50%);
+        }
+      }
 
-  /* ── Hills ── */
-  .hills { position: absolute; bottom: 0; left: 0; right: 0; height: 45%; z-index: 2; }
-  .hill-layer {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-  }
-  .hill-far {
-    height: 70%;
-    background: var(--hill-far-pale);
-    border-radius: 60% 80% 0 0 / 100% 100% 0 0;
-  }
-  .hill-mid {
-    height: 55%;
-    background: var(--hill-mid);
-    border-radius: 50% 70% 0 0 / 100% 100% 0 0;
-  }
-  .hill-front {
-    height: 40%;
-    background: var(--hill-front);
-    border-radius: 40% 60% 0 0 / 100% 100% 0 0;
-  }
-  .ground-strip {
-    height: 22%;
-    background: var(--ground);
-  }
+      /* ── Hills ── */
+      .hills {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 45%;
+        z-index: 2;
+      }
+      .hill-layer {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+      }
+      .hill-far {
+        height: 70%;
+        background: var(--hill-far-pale);
+        border-radius: 60% 80% 0 0 / 100% 100% 0 0;
+      }
+      .hill-mid {
+        height: 55%;
+        background: var(--hill-mid);
+        border-radius: 50% 70% 0 0 / 100% 100% 0 0;
+      }
+      .hill-front {
+        height: 40%;
+        background: var(--hill-front);
+        border-radius: 40% 60% 0 0 / 100% 100% 0 0;
+      }
+      .ground-strip {
+        height: 22%;
+        background: var(--ground);
+      }
 
-  /* ── Mascot placeholder ── */
-  .mascot {
-    position: absolute;
-    bottom: 5%;
-    left: 8%;
-    z-index: 3;
-    width: 120px;
-    height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    color: var(--warm-600);
-    background: rgba(255,255,255,0.4);
-    border-radius: 12px;
-    backdrop-filter: blur(2px);
-  }
+      /* ── Mascot placeholder ── */
+      .mascot {
+        position: absolute;
+        bottom: 5%;
+        left: 8%;
+        z-index: 3;
+        width: 120px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        color: var(--warm-600);
+        background: rgba(255, 255, 255, 0.4);
+        border-radius: 12px;
+        backdrop-filter: blur(2px);
+      }
 
-  /* ── Top bar ── */
-  .top-bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 56px;
-    z-index: 50;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 16px;
-    background: rgba(255,255,255,0.7);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--border);
-  }
-  .top-bar-logo {
-    width: 36px;
-    height: 36px;
-    background: var(--warm-800);
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 900;
-    font-size: 14px;
-    font-family: var(--font);
-    box-shadow: 0 3px 0 0 rgba(0,0,0,0.2);
-  }
-  .top-bar-nav {
-    display: flex;
-    gap: 24px;
-    font-size: 15px;
-    font-weight: 500;
-  }
-  .top-bar-nav a {
-    text-decoration: none;
-    color: var(--warm-800);
-    transition: color 150ms;
-  }
-  .top-bar-nav a.active {
-    color: var(--sage-500);
-    font-weight: 700;
-  }
-  .top-bar-icons {
-    display: flex;
-    gap: 12px;
-  }
-  .top-bar-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--warm-800);
-    font-size: 18px;
-    cursor: pointer;
-    transition: background 150ms;
-  }
-  .top-bar-icon:hover {
-    background: rgba(0,0,0,0.05);
-  }
+      /* ── Top bar ── */
+      .top-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 56px;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid var(--border);
+      }
+      .top-bar-logo {
+        width: 36px;
+        height: 36px;
+        background: var(--warm-800);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 900;
+        font-size: 14px;
+        font-family: var(--font);
+        box-shadow: 0 3px 0 0 rgba(0, 0, 0, 0.2);
+      }
+      .top-bar-nav {
+        display: flex;
+        gap: 24px;
+        font-size: 15px;
+        font-weight: 500;
+      }
+      .top-bar-nav a {
+        text-decoration: none;
+        color: var(--warm-800);
+        transition: color 150ms;
+      }
+      .top-bar-nav a.active {
+        color: var(--sage-500);
+        font-weight: 700;
+      }
+      .top-bar-icons {
+        display: flex;
+        gap: 12px;
+      }
+      .top-bar-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--warm-800);
+        font-size: 18px;
+        cursor: pointer;
+        transition: background 150ms;
+      }
+      .top-bar-icon:hover {
+        background: rgba(0, 0, 0, 0.05);
+      }
 
-  /* ── Distance counter ── */
-  .distance-counter {
-    position: absolute;
-    top: 72px;
-    right: 20px;
-    z-index: 10;
-    background: rgba(61,48,40,0.6);
-    backdrop-filter: blur(8px);
-    border-radius: 10px;
-    padding: 8px 16px;
-    text-align: center;
-  }
-  .distance-value {
-    font-family: 'Courier New', monospace;
-    font-size: 22px;
-    font-weight: 700;
-    color: white;
-    letter-spacing: 2px;
-  }
-  .distance-mode {
-    font-size: 11px;
-    color: rgba(255,255,255,0.6);
-    margin-top: 2px;
-  }
+      /* ── Distance counter ── */
+      .distance-counter {
+        position: absolute;
+        top: 72px;
+        right: 20px;
+        z-index: 10;
+        background: rgba(61, 48, 40, 0.6);
+        backdrop-filter: blur(8px);
+        border-radius: 10px;
+        padding: 8px 16px;
+        text-align: center;
+      }
+      .distance-value {
+        font-family: 'Courier New', monospace;
+        font-size: 22px;
+        font-weight: 700;
+        color: white;
+        letter-spacing: 2px;
+      }
+      .distance-mode {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.6);
+        margin-top: 2px;
+      }
 
-  /* ── Mode buttons ── */
-  .mode-buttons {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -60%);
-    z-index: 10;
-    display: flex;
-    gap: 24px;
-    align-items: center;
-  }
-  .mode-btn {
-    width: 180px;
-    height: 100px;
-    border-radius: 16px;
-    border: none;
-    font-family: var(--font);
-    font-size: 22px;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    transition: all 150ms;
-    position: relative;
-  }
-  .mode-btn:focus-visible {
-    outline: none;
-    box-shadow: 0 6px 0 0 var(--sage-600), 0 0 0 3px var(--sage-300), 0 0 0 6px rgba(168,196,160,0.3);
-  }
+      /* ── Mode buttons ── */
+      .mode-buttons {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -60%);
+        z-index: 10;
+        display: flex;
+        gap: 24px;
+        align-items: center;
+      }
+      .mode-btn {
+        width: 180px;
+        height: 100px;
+        border-radius: 16px;
+        border: none;
+        font-family: var(--font);
+        font-size: 22px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        transition: all 150ms;
+        position: relative;
+      }
+      .mode-btn:focus-visible {
+        outline: none;
+        box-shadow:
+          0 6px 0 0 var(--sage-600),
+          0 0 0 3px var(--sage-300),
+          0 0 0 6px rgba(168, 196, 160, 0.3);
+      }
 
-  /* Kana button */
-  .mode-btn-kana {
-    background: var(--sage-500);
-    color: white;
-    box-shadow: 0 6px 0 0 var(--sage-600);
-  }
-  .mode-btn-kana:hover {
-    filter: brightness(1.1);
-  }
-  .mode-btn-kana:active {
-    box-shadow: 0 2px 0 0 var(--sage-600);
-    transform: translateY(4px);
-  }
+      /* Kana button */
+      .mode-btn-kana {
+        background: var(--sage-500);
+        color: white;
+        box-shadow: 0 6px 0 0 var(--sage-600);
+      }
+      .mode-btn-kana:hover {
+        filter: brightness(1.1);
+      }
+      .mode-btn-kana:active {
+        box-shadow: 0 2px 0 0 var(--sage-600);
+        transform: translateY(4px);
+      }
 
-  /* Kotoba button (locked) */
-  .mode-btn-kotoba {
-    background: var(--warm-200);
-    color: var(--warm-400);
-    box-shadow: 0 6px 0 0 var(--warm-400);
-    cursor: not-allowed;
-  }
-  .mode-btn-kotoba .lock-icon {
-    font-size: 16px;
-    opacity: 0.6;
-  }
+      /* Kotoba button (locked) */
+      .mode-btn-kotoba {
+        background: var(--warm-200);
+        color: var(--warm-400);
+        box-shadow: 0 6px 0 0 var(--warm-400);
+        cursor: not-allowed;
+      }
+      .mode-btn-kotoba .lock-icon {
+        font-size: 16px;
+        opacity: 0.6;
+      }
 
-  /* Tooltip */
-  .tooltip {
-    display: none;
-    position: absolute;
-    bottom: -40px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(255,255,255,0.92);
-    color: var(--warm-600);
-    font-size: 13px;
-    font-weight: 400;
-    padding: 6px 12px;
-    border-radius: 8px;
-    white-space: nowrap;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  }
-  .mode-btn-kotoba:hover .tooltip {
-    display: block;
-  }
+      /* Tooltip */
+      .tooltip {
+        display: none;
+        position: absolute;
+        bottom: -40px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(255, 255, 255, 0.92);
+        color: var(--warm-600);
+        font-size: 13px;
+        font-weight: 400;
+        padding: 6px 12px;
+        border-radius: 8px;
+        white-space: nowrap;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      .mode-btn-kotoba:hover .tooltip {
+        display: block;
+      }
 
-  /* ── Breakpoint label ── */
-  .breakpoint-label {
-    position: fixed;
-    bottom: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 999;
-    background: rgba(0,0,0,0.6);
-    color: white;
-    font-size: 11px;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-family: monospace;
-    pointer-events: none;
-  }
+      /* ── Breakpoint label ── */
+      .breakpoint-label {
+        position: fixed;
+        bottom: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 999;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        font-size: 11px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-family: monospace;
+        pointer-events: none;
+      }
 
-  /* ── Mobile responsive ── */
-  @media (max-width: 767px) {
-    .top-bar-nav a { font-size: 0; width: 0; overflow: hidden; }
-    .top-bar-nav { gap: 16px; }
-    .top-bar-nav a::before {
-      font-size: 18px;
-      display: inline-block;
-      width: 36px;
-      height: 36px;
-      text-align: center;
-      line-height: 36px;
-    }
-    .top-bar-nav a.nav-home::before { content: "\1F3E0"; font-size: 18px; }
-    .top-bar-nav a.nav-dojo::before { content: "あ"; font-size: 16px; font-family: var(--font); color: var(--warm-800); }
-    .top-bar-nav a.nav-home.active::before { color: var(--sage-500); }
+      /* ── Mobile responsive ── */
+      @media (max-width: 767px) {
+        .top-bar-nav a {
+          font-size: 0;
+          width: 0;
+          overflow: hidden;
+        }
+        .top-bar-nav {
+          gap: 16px;
+        }
+        .top-bar-nav a::before {
+          font-size: 18px;
+          display: inline-block;
+          width: 36px;
+          height: 36px;
+          text-align: center;
+          line-height: 36px;
+        }
+        .top-bar-nav a.nav-home::before {
+          content: '\1F3E0';
+          font-size: 18px;
+        }
+        .top-bar-nav a.nav-dojo::before {
+          content: 'あ';
+          font-size: 16px;
+          font-family: var(--font);
+          color: var(--warm-800);
+        }
+        .top-bar-nav a.nav-home.active::before {
+          color: var(--sage-500);
+        }
 
-    .mode-buttons {
-      flex-direction: column;
-      gap: 16px;
-    }
-    .mode-btn {
-      width: 260px;
-      height: 80px;
-      font-size: 20px;
-    }
+        .mode-buttons {
+          flex-direction: column;
+          gap: 16px;
+        }
+        .mode-btn {
+          width: 260px;
+          height: 80px;
+          font-size: 20px;
+        }
 
-    .distance-counter {
-      top: 72px;
-      right: auto;
-      left: 50%;
-      transform: translateX(-50%);
-    }
+        .distance-counter {
+          top: 72px;
+          right: auto;
+          left: 50%;
+          transform: translateX(-50%);
+        }
 
-    .mascot {
-      left: 4%;
-      width: 90px;
-      height: 60px;
-      font-size: 10px;
-    }
-  }
-</style>
-</head>
-<body>
+        .mascot {
+          left: 4%;
+          width: 90px;
+          height: 60px;
+          font-size: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="scene">
+      <!-- Sky -->
+      <div class="sky"></div>
 
-<div class="scene">
-  <!-- Sky -->
-  <div class="sky"></div>
-
-  <!-- Clouds -->
-  <div class="clouds">
-    <div class="clouds-strip">
-      <div class="cloud-set">
-        <div class="cloud cloud-1"></div>
-        <div class="cloud cloud-2"></div>
-        <div class="cloud cloud-3"></div>
-        <div class="cloud cloud-4"></div>
-        <div class="cloud cloud-5"></div>
+      <!-- Clouds -->
+      <div class="clouds">
+        <div class="clouds-strip">
+          <div class="cloud-set">
+            <div class="cloud cloud-1"></div>
+            <div class="cloud cloud-2"></div>
+            <div class="cloud cloud-3"></div>
+            <div class="cloud cloud-4"></div>
+            <div class="cloud cloud-5"></div>
+          </div>
+          <div class="cloud-set">
+            <div class="cloud cloud-1"></div>
+            <div class="cloud cloud-2"></div>
+            <div class="cloud cloud-3"></div>
+            <div class="cloud cloud-4"></div>
+            <div class="cloud cloud-5"></div>
+          </div>
+        </div>
       </div>
-      <div class="cloud-set">
-        <div class="cloud cloud-1"></div>
-        <div class="cloud cloud-2"></div>
-        <div class="cloud cloud-3"></div>
-        <div class="cloud cloud-4"></div>
-        <div class="cloud cloud-5"></div>
+
+      <!-- Hills -->
+      <div class="hills">
+        <div class="hill-layer hill-far"></div>
+        <div class="hill-layer hill-mid"></div>
+        <div class="hill-layer hill-front"></div>
+        <div class="hill-layer ground-strip"></div>
+      </div>
+
+      <!-- Mascot placeholder -->
+      <div class="mascot" aria-hidden="true">🚴 Mascot</div>
+
+      <!-- Top bar -->
+      <header class="top-bar">
+        <div class="top-bar-logo">LT</div>
+        <nav class="top-bar-nav">
+          <a href="#" class="nav-home active">Home</a>
+          <a href="#" class="nav-dojo">Dojo</a>
+        </nav>
+        <div class="top-bar-icons">
+          <div class="top-bar-icon" aria-label="Settings">⚙</div>
+          <div class="top-bar-icon" aria-label="Profile">👤</div>
+        </div>
+      </header>
+
+      <!-- Distance counter -->
+      <div
+        class="distance-counter"
+        role="status"
+        aria-live="polite"
+        aria-label="Distance: 1,247 metres"
+      >
+        <div class="distance-value">01247m</div>
+        <div class="distance-mode">Kana</div>
+      </div>
+
+      <!-- Mode buttons -->
+      <div class="mode-buttons">
+        <button class="mode-btn mode-btn-kana" aria-label="Start Kana practice">Kana</button>
+        <button
+          class="mode-btn mode-btn-kotoba"
+          aria-disabled="true"
+          aria-label="Kotoba mode - locked"
+        >
+          Kotoba
+          <span class="lock-icon">🔒</span>
+          <div class="tooltip">Complete Kana to unlock</div>
+        </button>
       </div>
     </div>
-  </div>
 
-  <!-- Hills -->
-  <div class="hills">
-    <div class="hill-layer hill-far"></div>
-    <div class="hill-layer hill-mid"></div>
-    <div class="hill-layer hill-front"></div>
-    <div class="hill-layer ground-strip"></div>
-  </div>
-
-  <!-- Mascot placeholder -->
-  <div class="mascot" aria-hidden="true">🚴 Mascot</div>
-
-  <!-- Top bar -->
-  <header class="top-bar">
-    <div class="top-bar-logo">LT</div>
-    <nav class="top-bar-nav">
-      <a href="#" class="nav-home active">Home</a>
-      <a href="#" class="nav-dojo">Dojo</a>
-    </nav>
-    <div class="top-bar-icons">
-      <div class="top-bar-icon" aria-label="Settings">⚙</div>
-      <div class="top-bar-icon" aria-label="Profile">👤</div>
-    </div>
-  </header>
-
-  <!-- Distance counter -->
-  <div class="distance-counter" role="status" aria-live="polite" aria-label="Distance: 1,247 metres">
-    <div class="distance-value">01247m</div>
-    <div class="distance-mode">Kana</div>
-  </div>
-
-  <!-- Mode buttons -->
-  <div class="mode-buttons">
-    <button class="mode-btn mode-btn-kana" aria-label="Start Kana practice">
-      Kana
-    </button>
-    <button class="mode-btn mode-btn-kotoba" aria-disabled="true" aria-label="Kotoba mode - locked">
-      Kotoba
-      <span class="lock-icon">🔒</span>
-      <div class="tooltip">Complete Kana to unlock</div>
-    </button>
-  </div>
-</div>
-
-<div class="breakpoint-label">
-  Mockup: Game Home Screen (resize to see mobile layout)
-</div>
-
-</body>
+    <div class="breakpoint-label">Mockup: Game Home Screen (resize to see mobile layout)</div>
+  </body>
 </html>

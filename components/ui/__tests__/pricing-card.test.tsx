@@ -13,10 +13,15 @@ import { render, screen } from '@testing-library/react'
 import { PricingSection } from '../pricing-card'
 
 // Mock Audio
-vi.stubGlobal('Audio', class MockAudio {
-  volume = 1
-  play(): Promise<void> { return Promise.resolve() }
-})
+vi.stubGlobal(
+  'Audio',
+  class MockAudio {
+    volume = 1
+    play(): Promise<void> {
+      return Promise.resolve()
+    }
+  },
+)
 
 describe('PricingSection', () => {
   it('renders all three tier names', () => {

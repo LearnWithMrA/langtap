@@ -40,11 +40,7 @@ export function useEasterEgg(): { isActive: boolean } {
     const handleKeyDown = (e: KeyboardEvent): void => {
       // Skip if focus is inside an input field
       const target = e.target as HTMLElement
-      if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable
-      ) {
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
         return
       }
 

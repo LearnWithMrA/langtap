@@ -18,10 +18,13 @@ let playMock: ReturnType<typeof vi.fn>
 
 beforeEach(() => {
   playMock = vi.fn().mockResolvedValue(undefined)
-  vi.stubGlobal('Audio', class MockAudio {
-    volume = 1
-    play = playMock
-  })
+  vi.stubGlobal(
+    'Audio',
+    class MockAudio {
+      volume = 1
+      play = playMock
+    },
+  )
 })
 
 // -- Tests --------------------------------------------------
@@ -54,7 +57,11 @@ describe('KeyButton', () => {
 
   it('does not call onClick when disabled', () => {
     const onClick = vi.fn()
-    render(<KeyButton onClick={onClick} disabled>Press</KeyButton>)
+    render(
+      <KeyButton onClick={onClick} disabled>
+        Press
+      </KeyButton>,
+    )
     fireEvent.click(screen.getByRole('button'))
     expect(onClick).not.toHaveBeenCalled()
   })

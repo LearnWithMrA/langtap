@@ -34,10 +34,15 @@ describe('useEasterEgg', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     // Mock Audio to avoid file-not-found errors
-    vi.stubGlobal('Audio', class MockAudio {
-      volume = 1
-      play(): Promise<void> { return Promise.resolve() }
-    })
+    vi.stubGlobal(
+      'Audio',
+      class MockAudio {
+        volume = 1
+        play(): Promise<void> {
+          return Promise.resolve()
+        }
+      },
+    )
   })
 
   afterEach(() => {
@@ -64,7 +69,9 @@ describe('useEasterEgg', () => {
     act(() => typeTrigger())
     expect(result.current.isActive).toBe(true)
 
-    act(() => { vi.advanceTimersByTime(4000) })
+    act(() => {
+      vi.advanceTimersByTime(4000)
+    })
     expect(result.current.isActive).toBe(false)
   })
 
@@ -149,7 +156,9 @@ describe('useEasterEgg', () => {
     act(() => typeTrigger())
     expect(result.current.isActive).toBe(true)
 
-    act(() => { vi.advanceTimersByTime(4000) })
+    act(() => {
+      vi.advanceTimersByTime(4000)
+    })
     expect(result.current.isActive).toBe(false)
 
     // Type it again: should activate again

@@ -25,7 +25,16 @@ type ModeSwitcherProps = {
 
 function IconKeyboard(): ReactNode {
   return (
-    <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      viewBox="0 0 24 24"
+      width={20}
+      height={20}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <rect x={2} y={5} width={20} height={14} rx={2} />
       <path d="M6 9h1 M10 9h1 M14 9h1 M18 9h1 M8 13h8" />
     </svg>
@@ -34,7 +43,16 @@ function IconKeyboard(): ReactNode {
 
 function IconTap(): ReactNode {
   return (
-    <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      viewBox="0 0 24 24"
+      width={20}
+      height={20}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <circle cx={12} cy={12} r={3} />
       <circle cx={12} cy={12} r={7} opacity={0.4} />
       <circle cx={12} cy={12} r={10} opacity={0.2} />
@@ -44,7 +62,16 @@ function IconTap(): ReactNode {
 
 function IconSwipe(): ReactNode {
   return (
-    <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      viewBox="0 0 24 24"
+      width={20}
+      height={20}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M5 12 h14" />
       <path d="M15 8 l4 4 -4 4" />
     </svg>
@@ -88,10 +115,13 @@ export function ModeSwitcher({ mode, onModeChange }: ModeSwitcherProps): ReactNo
     }
   }, [isOpen])
 
-  const handleSelect = useCallback((selected: InputMode): void => {
-    onModeChange(selected)
-    setIsOpen(false)
-  }, [onModeChange])
+  const handleSelect = useCallback(
+    (selected: InputMode): void => {
+      onModeChange(selected)
+      setIsOpen(false)
+    },
+    [onModeChange],
+  )
 
   const CurrentIcon = MODE_ICONS[mode]
 
@@ -119,7 +149,9 @@ export function ModeSwitcher({ mode, onModeChange }: ModeSwitcherProps): ReactNo
                 onClick={(): void => handleSelect(m)}
                 className={[
                   'w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors duration-150 cursor-pointer',
-                  isActive ? 'text-sage-500 font-bold' : 'text-warm-800 hover:text-sage-400 hover:bg-sage-50',
+                  isActive
+                    ? 'text-sage-500 font-bold'
+                    : 'text-warm-800 hover:text-sage-400 hover:bg-sage-50',
                 ].join(' ')}
                 aria-label={`Switch to ${MODE_LABELS[m]} mode`}
               >

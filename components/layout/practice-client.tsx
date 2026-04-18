@@ -40,7 +40,13 @@ const MODE_LABELS: Record<InputMode, string> = {
 
 // -- Mode dropdown ------------------------------------------
 
-function ModeDropdown({ mode, onModeChange }: { mode: InputMode; onModeChange: (m: InputMode) => void }): ReactNode {
+function ModeDropdown({
+  mode,
+  onModeChange,
+}: {
+  mode: InputMode
+  onModeChange: (m: InputMode) => void
+}): ReactNode {
   const [isOpen, setIsOpen] = useState(false)
   const { playSound } = useKeySound()
 
@@ -113,7 +119,7 @@ export function PracticeClient(): ReactNode {
       </div>
 
       {/* Game window: centred, raised 40% */}
-      <div className="absolute left-1/2 -translate-x-1/2 top-[35%] -translate-y-1/2 z-10 w-full px-4">
+      <div className="absolute left-1/2 -translate-x-1/2 top-[30%] -translate-y-1/2 z-10 w-full max-w-lg px-4">
         <GameWindow mode={mode}>
           <ModeDropdown mode={mode} onModeChange={setMode} />
           <DistanceCounter value={0} />

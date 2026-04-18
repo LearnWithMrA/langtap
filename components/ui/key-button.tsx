@@ -68,9 +68,14 @@ export function KeyButton({
 
   if (href && !disabled) {
     return (
-      <a href={href} className={baseClasses} aria-label={ariaLabel} onClick={() => {
-        if (sound !== 'none') playKeySound(sound)
-      }}>
+      <a
+        href={href}
+        className={baseClasses}
+        aria-label={ariaLabel}
+        onClick={() => {
+          if (sound !== 'none') playKeySound(sound)
+        }}
+      >
         {children}
       </a>
     )

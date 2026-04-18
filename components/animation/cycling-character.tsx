@@ -38,7 +38,7 @@ const FRAME_INTERVAL_MS: Record<SpeedLevel, number> = {
 
 const FRAME_PATHS: string[] = Array.from(
   { length: FRAME_COUNT },
-  (_, i) => `/images/cyclist/${String(i + 1).padStart(2, '0')}.png`
+  (_, i) => `/images/cyclist/${String(i + 1).padStart(2, '0')}.png`,
 )
 
 // -- PNG sprite-sheet animation -----------------------------
@@ -76,7 +76,7 @@ export function CyclingCharacter({ speed }: CyclingCharacterProps): React.ReactE
         alt=""
         width={400}
         height={380}
-        className="h-auto w-[55vw] min-w-68 md:w-[40vw] md:min-w-[26rem] lg:w-[33vw] lg:max-w-[39rem]"
+        className="h-auto w-[max(37vw,300px)]"
         priority
         unoptimized
       />
@@ -159,7 +159,12 @@ const SCARF_MOVING = [
 // -- SVG Helpers --------------------------------------------
 
 // Renders a single bicycle wheel with animated spoke rotation
-function Wheel({ cx, cy, wheelDuration, stopped }: {
+function Wheel({
+  cx,
+  cy,
+  wheelDuration,
+  stopped,
+}: {
   cx: number
   cy: number
   wheelDuration: number
@@ -270,8 +275,20 @@ export function CyclingCharacterSVG({ speed }: CyclingCharacterSVGProps): React.
         <Wheel cx={320} cy={300} wheelDuration={wheelDuration} stopped={stopped} />
 
         {/* 5. Fenders */}
-        <path d="M 20 300 A 62 62 0 0 1 130 255" fill="none" stroke="#121212" strokeWidth="6" strokeLinecap="round" />
-        <path d="M 270 270 A 62 62 0 0 1 375 285" fill="none" stroke="#121212" strokeWidth="6" strokeLinecap="round" />
+        <path
+          d="M 20 300 A 62 62 0 0 1 130 255"
+          fill="none"
+          stroke="#121212"
+          strokeWidth="6"
+          strokeLinecap="round"
+        />
+        <path
+          d="M 270 270 A 62 62 0 0 1 375 285"
+          fill="none"
+          stroke="#121212"
+          strokeWidth="6"
+          strokeLinecap="round"
+        />
 
         {/* 6. Bike frame */}
         <g stroke="#17181a" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
@@ -282,15 +299,47 @@ export function CyclingCharacterSVG({ speed }: CyclingCharacterSVGProps): React.
           <line x1="130" y1="170" x2="270" y2="160" />
           <line x1="285" y1="200" x2="320" y2="300" />
         </g>
-        <line x1="270" y1="160" x2="285" y2="200" stroke="#17181a" strokeWidth="10" strokeLinecap="round" />
+        <line
+          x1="270"
+          y1="160"
+          x2="285"
+          y2="200"
+          stroke="#17181a"
+          strokeWidth="10"
+          strokeLinecap="round"
+        />
 
         {/* Seat post and saddle */}
-        <line x1="130" y1="170" x2="125" y2="140" stroke="#a0a0a0" strokeWidth="6" strokeLinecap="round" />
+        <line
+          x1="130"
+          y1="170"
+          x2="125"
+          y2="140"
+          stroke="#a0a0a0"
+          strokeWidth="6"
+          strokeLinecap="round"
+        />
         <path d="M 105 140 Q 125 135 140 140 L 148 145 L 105 145 Z" fill="#121212" />
 
         {/* Handlebars */}
-        <line x1="270" y1="160" x2="265" y2="140" stroke="#a0a0a0" strokeWidth="6" strokeLinecap="round" />
-        <line x1="255" y1="140" x2="290" y2="140" stroke="#121212" strokeWidth="6" strokeLinecap="round" />
+        <line
+          x1="270"
+          y1="160"
+          x2="265"
+          y2="140"
+          stroke="#a0a0a0"
+          strokeWidth="6"
+          strokeLinecap="round"
+        />
+        <line
+          x1="255"
+          y1="140"
+          x2="290"
+          y2="140"
+          stroke="#121212"
+          strokeWidth="6"
+          strokeLinecap="round"
+        />
 
         {/* 7. Chainring and chain */}
         <circle cx="160" cy="300" r="16" fill="none" stroke="#17181a" strokeWidth="6" />
@@ -351,7 +400,15 @@ export function CyclingCharacterSVG({ speed }: CyclingCharacterSVGProps): React.
         />
 
         {/* 12. Head and neck */}
-        <line x1="195" y1="70" x2="205" y2="55" stroke="#fad1af" strokeWidth="12" strokeLinecap="round" />
+        <line
+          x1="195"
+          y1="70"
+          x2="205"
+          y2="55"
+          stroke="#fad1af"
+          strokeWidth="12"
+          strokeLinecap="round"
+        />
         <circle cx="215" cy="40" r="18" fill="#fad1af" />
         <circle cx="222" cy="38" r="2.5" fill="#111" />
 

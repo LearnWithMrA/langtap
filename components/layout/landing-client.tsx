@@ -45,7 +45,7 @@ export function LandingClient(): ReactNode {
             A journey of a thousand miles begins with a single tap.
           </h1>
           <KeyButton
-            href="/practice?guest=true"
+            href="/home"
             className="bg-[#4a90c4] text-white px-8 py-2 text-xl shadow-[0_4px_0_0_#3570a0]"
             aria-label="Try LangTap now as a guest"
           >
@@ -69,7 +69,8 @@ export function LandingClient(): ReactNode {
                 </div>
                 <h3 className="text-lg font-medium text-warm-800">Choose your characters</h3>
                 <p className="text-sm text-warm-600 leading-relaxed">
-                  Start with the basics and unlock new characters as you go. Or skip ahead if you already know some kana.
+                  Start with the basics and unlock new characters as you go. Or skip ahead if you
+                  already know some kana.
                 </p>
               </div>
               <div className="flex flex-col items-center text-center gap-3">
@@ -78,7 +79,8 @@ export function LandingClient(): ReactNode {
                 </div>
                 <h3 className="text-lg font-medium text-warm-800">Type, tap, or swipe</h3>
                 <p className="text-sm text-warm-600 leading-relaxed">
-                  Use your physical keyboard, tap on screen, or swipe on your phone. Three ways to build speed.
+                  Use your physical keyboard, tap on screen, or swipe on your phone. Three ways to
+                  build speed.
                 </p>
               </div>
               <div className="flex flex-col items-center text-center gap-3">
@@ -87,7 +89,8 @@ export function LandingClient(): ReactNode {
                 </div>
                 <h3 className="text-lg font-medium text-warm-800">Watch your progress</h3>
                 <p className="text-sm text-warm-600 leading-relaxed">
-                  The Dojo shows your mastery heatmap. Characters you struggle with appear more often.
+                  The Dojo shows your mastery heatmap. Characters you struggle with appear more
+                  often.
                 </p>
               </div>
             </div>
@@ -126,7 +129,6 @@ export function LandingClient(): ReactNode {
             </div>
           </div>
         </section>
-
       </div>
 
       <LandingFooter />

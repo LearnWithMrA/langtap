@@ -550,13 +550,23 @@ Visual style:
 
 **Direction alternation:**
 The game alternates between two directions with each new word:
-- **Kana-to-romaji:** Word displays in kana. User types romaji (Type/Swipe) or taps
-  romaji buttons (Tap). Hint shows romaji on wrong.
-- **Romaji-to-kana:** Word displays in romaji. User types kana (Type/Swipe) or taps
-  kana buttons (Tap). Hint shows kana on wrong.
+- **Kana-to-romaji:** Word displays in kana (hiragana or katakana). User types romaji
+  (Type/Swipe) or taps romaji buttons (Tap). Hint shows romaji on wrong.
+- **Romaji-to-kana:** Word displays in romaji. User types hiragana on their Japanese
+  keyboard. For katakana words, the input field displays the typed hiragana as katakana
+  in real time (see Section 7.3 katakana display). For hiragana words, input displays
+  as-is. Tap mode shows kana buttons matching the word's script. Hint shows the
+  expected kana on wrong.
 
-The tap grid buttons flip accordingly: romaji buttons when reading kana, kana buttons
-when reading romaji. The direction flips automatically on each word advance.
+The direction flips automatically on each word advance.
+
+**Hiragana and katakana words:**
+The word bank contains both hiragana words (e.g. いぬ, あおい) and katakana words
+(e.g. ネコ, テレビ, コーヒー). The game detects the script of each word by checking
+the first character's Unicode range (katakana: U+30A0-U+30FF). This determines:
+- Which tap grid to show (hiragana-only or katakana-only, 10 buttons each)
+- Whether to apply the katakana display conversion on the input field
+- Which characters to use for the answer hint on wrong attempts
 
 **Word prompt (centred, below top row):**
 The full word is displayed at `text-5xl md:text-6xl font-bold`. The user types
@@ -572,11 +582,15 @@ through the word character by character. Each character in the word is a separat
 | Current, wrong attempt 3+ | `text-feedback-wrong` (full orange) |
 | All complete (word finished) | `text-feedback-correct` (all green) |
 
-**Romaji hint (floating above current character):**
-Hidden by default. After 3 wrong attempts on a character, the romaji hint
-appears floating above that specific character using absolute positioning
-(`absolute -top-5 left-1/2 -translate-x-1/2 text-lg font-medium text-warm-400`).
-The hint persists until the user types the correct answer.
+**Answer hint (floating above current character):**
+Hidden by default. After 3 wrong attempts on a character, the answer hint
+appears floating above that specific character using absolute positioning.
+The hint content depends on the direction:
+- **Kana-to-romaji:** Shows the romaji (`-top-5 text-lg`)
+- **Romaji-to-kana:** Shows the kana character (`-top-4 text-2xl`)
+
+The hint persists until the user types the correct answer. Positioned with
+`absolute left-1/2 -translate-x-1/2 font-medium text-warm-400 whitespace-nowrap`.
 
 **English meaning (below word prompt):**
 Hidden until the last character in the word is answered correctly. Fades in
@@ -604,6 +618,18 @@ the player direct control.
 Each typed letter plays its matching keyboard sound from the audio sprite
 (e.g. typing "a" plays the A key sample).
 
+**Katakana display conversion (romaji-to-kana direction, katakana words):**
+When the current word is katakana and the direction is romaji-to-kana, the user
+types hiragana on their Japanese keyboard but the input field displays katakana.
+This is achieved by overlaying a visual div on top of the real input:
+- The real `<input>` has `text-transparent caret-warm-800` (invisible text, visible cursor)
+- An absolutely positioned `<div>` overlays it, showing the value converted to katakana
+- Conversion uses a fixed Unicode offset: hiragana (U+3040-U+309F) + 0x60 = katakana
+- The evaluation logic also converts the hiragana input to katakana before comparing
+  against the expected katakana answer
+- The user sees katakana as they type, reinforcing the visual association between
+  the hiragana they know and the katakana they are learning
+
 **Japanese IME handling (zero-width space technique):**
 When the user types hiragana using a Japanese keyboard, the IME normally tries
 to compose multiple kana into kanji. To prevent this, the InputField inserts a
@@ -621,18 +647,31 @@ Implementation details:
 
 ### 7.4 Tap Mode
 
-A grid of romaji buttons inside the game window below the word prompt.
-The user reads the kana word and taps the matching romaji for each character.
+A grid of buttons inside the game window below the word prompt. The button
+content and the matching logic depend on the direction and word script:
+
+| Direction | Word script | Buttons show | User taps | Match against |
+|---|---|---|---|---|
+| Kana-to-romaji | Hiragana | Romaji | Romaji for current char | `char.romaji` |
+| Kana-to-romaji | Katakana | Romaji | Romaji for current char | `char.romaji` |
+| Romaji-to-kana | Hiragana | Hiragana | Kana for current char | `char.kana` |
+| Romaji-to-kana | Katakana | Katakana | Kana for current char | `char.kana` |
+
+**Script-specific grids:**
+Two separate tap character arrays are maintained: `HIRAGANA_TAP` (10 hiragana
+characters) and `KATAKANA_TAP` (10 katakana characters). The grid shown is
+selected by detecting the word's script via `isKatakanaWord()`. This ensures
+the user only sees characters from the relevant script, not a mixed set.
 
 **Button style:**
 - Rounded rectangle, `rounded-xl`, sage-100 background
 - Shadow: `shadow-[0_3px_0_0_var(--color-sage-300)]`
 - Active press: `translate-y-[3px]`, shadow collapse
-- Content: romaji text only (`text-base font-medium text-warm-800`)
+- Content: `text-lg font-medium text-warm-800`
 - Correct tap: face flashes sage-400
 - Wrong tap: face flashes feedback-wrong orange
 
-Each tap plays the matching romaji key sound from the audio sprite.
+All taps play alternating key sounds from the audio sprite.
 
 Grid: `grid-cols-5` at all breakpoints. Each button minimum 44x44.
 Only unlocked characters appear. Locked characters are excluded.

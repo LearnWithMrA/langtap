@@ -30,6 +30,87 @@ Format per entry:
 
 ---
 
+## [2026-04-17] - Session 35
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Polish: katakana input fix, audio lazy load, tap grid focus ring, doc updates
+**Status:** Done
+
+### Changes made
+- [components/game/game-window.tsx]: Fixed katakana display only activating for katakana words (was activating for all romaji-to-kana words including hiragana). Changed `showKatakana={!isKanaToRomaji}` to `showKatakana={!isKanaToRomaji && isKatakanaWord(currentWord)}`.
+- [hooks/useKeySound.ts]: Deferred audio sprite loading from mount to first `playSound` call. Reduces page load by ~1.9MB on initial render.
+- [components/game/tap-grid.tsx]: Removed focus ring from tap buttons (was leaving a coloured ring after click).
+- [docs/UX_DESIGN.md]: Updated Section 7.2 (direction alternation covers hiragana/katakana script detection), Section 7.3 (katakana display conversion, IME zero-width space), Section 7.4 (script-specific tap grids with direction/script table), answer hint section (covers both romaji and kana hints).
+- [components/layout/practice-client.tsx]: Game window raised to top-[30%].
+
+### Tests
+- TypeScript compiles with no errors
+- Hiragana words display hiragana in input (not katakana)
+- Katakana words display katakana in input
+
+### Next task
+[To be confirmed by owner]
+
+### Notes
+- First sound after page load may be silent (audio sprite still fetching). All subsequent sounds play normally.
+- Lo-fi audio streaming (YouTube/Icecast) investigated but deferred due to reliability, licensing, and CORS concerns.
+
+---
+
+## [2026-04-17] - Session 34
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Katakana display, IME fix, responsive scaling, ground layer split, top bar three-stage nav
+**Status:** Done
+
+### Changes made
+
+**Katakana input display:**
+- [components/game/input-field.tsx]: Added `showKatakana` prop. When active, the real input has transparent text and a katakana overlay div shows the converted characters. User types hiragana, sees katakana. Uses `toKatakana()` helper (Unicode offset 0x60).
+- [components/game/game-window.tsx]: Added `toKatakana()` and `isKatakanaWord()` helpers. Input comparison converts hiragana to katakana for katakana words. 5 katakana mock words added (ネコ, パン, テレビ, カメラ, コーヒー). Tap grid split into HIRAGANA_TAP and KATAKANA_TAP arrays, selected by word script.
+
+**Japanese IME zero-width space fix:**
+- [components/game/input-field.tsx]: After each hiragana character, a zero-width space (U+200B) is inserted so the IME treats each kana as separate and does not suggest kanji. Backspace strips the invisible space and kana together. Game evaluation strips all U+200B before comparing.
+
+**Per-character wrong state:**
+- [components/game/game-window.tsx]: Replaced single `wrongAttempts` counter with `wrongAttemptsMap` array (one count per character index). Backspacing preserves each character's wrong state. No auto-clear on wrong answer: player backspaces to correct.
+
+**Direction alternation:**
+- [components/game/game-window.tsx]: Direction flips each word between kana-to-romaji and romaji-to-kana. Tap grid buttons show romaji or kana accordingly. Hint text flips too. Mode switching keeps the current word.
+
+**Responsive scaling:**
+- [components/animation/cycling-character.tsx]: Replaced breakpoint-based sizing with smooth `w-[max(37vw,300px)]`. No min/max jumps. Scales proportionally with viewport from first pixel.
+- [components/layout/LandscapeBackgroundV2.tsx]: Split `Closest5` into `GroundBase` (z-[2], behind cyclist) and `GroundFoliage` (z-[4], in front of cyclist). Foreground grass and shrubs now overlap the cyclist for depth.
+
+**Three-stage top bar:**
+- [components/layout/app-top-bar.tsx]: Three responsive stages:
+  - 768px+: Full logo + text links (Home, Kana Dojo, Kotoba Dojo, Leaderboard) + settings/profile icons
+  - 425px-768px: LT logo + icon bar (house, あ, 言, trophy, gear, profile) evenly spaced
+  - <425px: LT logo + settings gear + hamburger menu (frosted glass overlay, click-away to close)
+
+**Sound system:**
+- [hooks/useKeySound.ts]: All `playSound` calls now alternate between two key samples ('e' and 'o') globally.
+
+**Documentation:**
+- [docs/UX_DESIGN.md]: Updated Sections 7.2 (direction alternation), 7.3 (IME fix, no auto-clear), 7.8 (per-character wrong state).
+- [LangTap_Sprints.md]: JIS kana keyboard mapping added to Future Backlog.
+
+### Tests
+- TypeScript compiles with no errors
+- Visual testing at mobile (375px), tablet (768px), and desktop widths
+- Japanese IME tested: zero-width space prevents kanji suggestions
+- Katakana display verified: type hiragana, see katakana
+
+### Next task
+[To be confirmed by owner]
+
+### Notes
+- Landing page shares the cyclist scaling and ground layer split but has its own nav (landing-nav.tsx) and layout (landing-scene.tsx).
+- The `max-[424px]:flex` breakpoint for the hamburger menu uses Tailwind v4 arbitrary breakpoint syntax.
+- コーヒー mock word includes the long vowel mark (ー) which uses romaji "-" for matching.
+
+---
+
 ## [2026-04-16] - Session 33
 
 **Sprint:** Sprint 2B - UX/UI Design and Screen Specification

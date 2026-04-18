@@ -19,14 +19,8 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import type { ReactNode } from 'react'
 import { InputField } from '@/components/game/input-field'
 import { TapGrid } from '@/components/game/tap-grid'
-import { FeedbackOverlay } from '@/components/game/feedback-overlay'
 import { MeaningReveal } from '@/components/game/meaning-reveal'
-import {
-  FEEDBACK_FLASH_MS,
-  WRONG_ANSWER_DELAY_MS,
-  MEANING_DISPLAY_MS,
-  MEANING_FADE_MS,
-} from '@/engine/constants'
+import { FEEDBACK_FLASH_MS, MEANING_DISPLAY_MS, MEANING_FADE_MS } from '@/engine/constants'
 
 const MAX_WRONG_ATTEMPTS = 3
 
@@ -53,6 +47,14 @@ type MockWord = {
 // -- Mock data (replaced by real engine in Sprint 4-5) ------
 
 const MOCK_WORDS: MockWord[] = [
+  {
+    word: 'ネコ',
+    meaning: 'cat',
+    characters: [
+      { kana: 'ネ', romaji: 'ne' },
+      { kana: 'コ', romaji: 'ko' },
+    ],
+  },
   {
     word: 'あおい',
     meaning: 'blue',
@@ -95,9 +97,35 @@ const MOCK_WORDS: MockWord[] = [
       { kana: 'な', romaji: 'na' },
     ],
   },
+  {
+    word: 'パン',
+    meaning: 'bread',
+    characters: [
+      { kana: 'パ', romaji: 'pa' },
+      { kana: 'ン', romaji: 'n' },
+    ],
+  },
+  {
+    word: 'テレビ',
+    meaning: 'television',
+    characters: [
+      { kana: 'テ', romaji: 'te' },
+      { kana: 'レ', romaji: 're' },
+      { kana: 'ビ', romaji: 'bi' },
+    ],
+  },
+  {
+    word: 'カメラ',
+    meaning: 'camera',
+    characters: [
+      { kana: 'カ', romaji: 'ka' },
+      { kana: 'メ', romaji: 'me' },
+      { kana: 'ラ', romaji: 'ra' },
+    ],
+  },
 ]
 
-const MOCK_TAP_CHARACTERS = [
+const HIRAGANA_TAP = [
   { id: 'h-a', kana: 'あ', romaji: 'a' },
   { id: 'h-i', kana: 'い', romaji: 'i' },
   { id: 'h-u', kana: 'う', romaji: 'u' },
@@ -109,6 +137,30 @@ const MOCK_TAP_CHARACTERS = [
   { id: 'h-n', kana: 'ん', romaji: 'n' },
   { id: 'h-na', kana: 'な', romaji: 'na' },
 ]
+
+const KATAKANA_TAP = [
+  { id: 'k-ne', kana: 'ネ', romaji: 'ne' },
+  { id: 'k-ko', kana: 'コ', romaji: 'ko' },
+  { id: 'k-pa', kana: 'パ', romaji: 'pa' },
+  { id: 'k-n', kana: 'ン', romaji: 'n' },
+  { id: 'k-te', kana: 'テ', romaji: 'te' },
+  { id: 'k-re', kana: 'レ', romaji: 're' },
+  { id: 'k-bi', kana: 'ビ', romaji: 'bi' },
+  { id: 'k-ka', kana: 'カ', romaji: 'ka' },
+  { id: 'k-me', kana: 'メ', romaji: 'me' },
+  { id: 'k-ra', kana: 'ラ', romaji: 'ra' },
+]
+
+// Detect if a word uses katakana (check first character)
+function isKatakanaWord(word: MockWord): boolean {
+  const code = word.characters[0].kana.charCodeAt(0)
+  return code >= 0x30a0 && code <= 0x30ff
+}
+
+// Convert hiragana to katakana (fixed Unicode offset of 0x60)
+function toKatakana(str: string): string {
+  return str.replace(/[\u3040-\u309F]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) + 0x60))
+}
 
 // -- Component ----------------------------------------------
 
@@ -168,7 +220,8 @@ export function GameWindow({ mode, children }: GameWindowProps): ReactNode {
   function getWrongAttempts(charIdx: number): number {
     return wrongAttemptsMap[charIdx] ?? 0
   }
-  const showHintForChar = (charIdx: number): boolean => getWrongAttempts(charIdx) >= MAX_WRONG_ATTEMPTS
+  const showHintForChar = (charIdx: number): boolean =>
+    getWrongAttempts(charIdx) >= MAX_WRONG_ATTEMPTS
 
   const clearTimers = useCallback((): void => {
     timersRef.current.forEach(clearTimeout)
@@ -198,14 +251,13 @@ export function GameWindow({ mode, children }: GameWindowProps): ReactNode {
 
   const advanceWord = useCallback((): void => {
     resetAll()
-    setDirection((prev) => prev === 'kana-to-romaji' ? 'romaji-to-kana' : 'kana-to-romaji')
+    setDirection((prev) => (prev === 'kana-to-romaji' ? 'romaji-to-kana' : 'kana-to-romaji'))
     setWordIndex((prev) => (prev + 1) % MOCK_WORDS.length)
   }, [resetAll])
 
-  // Reset on mode change
+  // Reset input on mode change but keep the current word
   useEffect((): void => {
     resetAll()
-    setWordIndex(0)
   }, [mode, resetAll])
 
   useEffect((): (() => void) => {
@@ -244,76 +296,108 @@ export function GameWindow({ mode, children }: GameWindowProps): ReactNode {
   }, [clearTimers, scheduleTimeout, currentCharIndex])
 
   // Type/Swipe: cumulative input evaluation
-  const handleInputChange = useCallback((value: string): void => {
-    if (wordDone) return
-    // For kana input, compare as-is. For romaji input, lowercase.
-    // Strip zero-width spaces inserted by InputField for IME separation
-    const cleaned = value.replace(/\u200B/g, '')
-    const compare = isKanaToRomaji ? cleaned.toLowerCase() : cleaned
-
-    setInputValue(value)
-
-    // Check if input is a valid prefix of the expected answer
-    if (!fullAnswer.startsWith(compare)) {
-      handleWrong()
-      return
-    }
-
-    // Valid prefix: clear wrong state if user backspaced to fix
-    if (feedbackState === 'wrong') {
-      setFeedbackState('idle')
-    }
-
-    // Update completed count based on breakpoints passed
-    let newCompleted = 0
-    for (const bp of breakpoints) {
-      if (compare.length >= bp.length && compare.substring(0, bp.length) === bp) {
-        newCompleted++
+  const handleInputChange = useCallback(
+    (value: string): void => {
+      if (wordDone) return
+      // For kana input, compare as-is. For romaji input, lowercase.
+      // Strip zero-width spaces inserted by InputField for IME separation
+      const cleaned = value.replace(/\u200B/g, '')
+      // For romaji input: lowercase. For kana input on a katakana word: convert hiragana to katakana.
+      let compare = isKanaToRomaji ? cleaned.toLowerCase() : cleaned
+      if (!isKanaToRomaji && isKatakanaWord(currentWord)) {
+        compare = toKatakana(compare)
       }
-    }
-    setCompletedCount(newCompleted)
 
-    // Check if word is fully typed
-    if (compare === fullAnswer) {
-      handleWordComplete()
-    }
-  }, [fullAnswer, breakpoints, completedCount, feedbackState, wordDone, isKanaToRomaji, handleWrong, handleWordComplete])
+      setInputValue(value)
 
-  // Tap: character-by-character, matching answer value
-  const handleTap = useCallback((id: string, value: string): void => {
-    if (wordDone) return
-    setTapFeedbackId(id)
-    const expected = isKanaToRomaji ? currentChar.romaji : currentChar.kana
-    if (value === expected) {
-      setTapFeedbackState('correct')
-      const newCompleted = completedCount + 1
+      // Check if input is a valid prefix of the expected answer
+      if (!fullAnswer.startsWith(compare)) {
+        handleWrong()
+        return
+      }
+
+      // Valid prefix: clear wrong state if user backspaced to fix
+      if (feedbackState === 'wrong') {
+        setFeedbackState('idle')
+      }
+
+      // Update completed count based on breakpoints passed
+      let newCompleted = 0
+      for (const bp of breakpoints) {
+        if (compare.length >= bp.length && compare.substring(0, bp.length) === bp) {
+          newCompleted++
+        }
+      }
       setCompletedCount(newCompleted)
 
-      if (newCompleted === currentWord.characters.length) {
+      // Check if word is fully typed
+      if (compare === fullAnswer) {
         handleWordComplete()
-      } else {
-        // Brief flash then reset tap feedback
-        clearTimers()
-        generationRef.current++
-        setFeedbackState('correct')
-        scheduleTimeout((): void => {
-          setFeedbackState('idle')
-          setTapFeedbackId(null)
-          setTapFeedbackState(null)
-        }, FEEDBACK_FLASH_MS)
       }
-    } else {
-      setTapFeedbackState('wrong')
-      handleWrong()
-    }
-  }, [currentChar.romaji, currentChar.kana, isKanaToRomaji, completedCount, currentWord.characters.length, wordDone, handleWordComplete, handleWrong, clearTimers, scheduleTimeout])
+    },
+    [
+      fullAnswer,
+      breakpoints,
+      feedbackState,
+      wordDone,
+      isKanaToRomaji,
+      handleWrong,
+      handleWordComplete,
+    ],
+  )
+
+  // Tap: character-by-character, matching answer value
+  const handleTap = useCallback(
+    (id: string, value: string): void => {
+      if (wordDone) return
+      setTapFeedbackId(id)
+      const expected = isKanaToRomaji ? currentChar.romaji : currentChar.kana
+      if (value === expected) {
+        setTapFeedbackState('correct')
+        const newCompleted = completedCount + 1
+        setCompletedCount(newCompleted)
+
+        if (newCompleted === currentWord.characters.length) {
+          handleWordComplete()
+        } else {
+          // Brief flash then reset tap feedback
+          clearTimers()
+          generationRef.current++
+          setFeedbackState('correct')
+          scheduleTimeout((): void => {
+            setFeedbackState('idle')
+            setTapFeedbackId(null)
+            setTapFeedbackState(null)
+          }, FEEDBACK_FLASH_MS)
+        }
+      } else {
+        setTapFeedbackState('wrong')
+        handleWrong()
+      }
+    },
+    [
+      currentChar.romaji,
+      currentChar.kana,
+      isKanaToRomaji,
+      completedCount,
+      currentWord.characters.length,
+      wordDone,
+      handleWordComplete,
+      handleWrong,
+      clearTimers,
+      scheduleTimeout,
+    ],
+  )
 
   // Character colour: green when complete, dimmed when passed, dark when current/upcoming
   // Progressive orange: light on first wrong, medium on second, full on third
   const WRONG_COLOURS = ['text-[#f5c490]', 'text-[#f5ac6a]', 'text-feedback-wrong']
 
   function charColour(index: number): string {
-    if (showMeaning || feedbackState === 'correct' && completedCount === currentWord.characters.length) {
+    if (
+      showMeaning ||
+      (feedbackState === 'correct' && completedCount === currentWord.characters.length)
+    ) {
       return 'text-feedback-correct'
     }
     const charWrong = getWrongAttempts(index)
@@ -340,12 +424,20 @@ export function GameWindow({ mode, children }: GameWindowProps): ReactNode {
           const displayText = isKanaToRomaji ? char.kana : char.romaji
           const hintText = isKanaToRomaji ? char.romaji : char.kana
           return (
-            <span key={i} className={['relative inline-block transition-colors duration-150', charColour(i)].join(' ')}>
+            <span
+              key={i}
+              className={[
+                'relative inline-block transition-colors duration-150',
+                charColour(i),
+              ].join(' ')}
+            >
               {showHintForChar(i) && i >= completedCount && (
-                <span className={[
-                  'absolute left-1/2 -translate-x-1/2 font-medium text-warm-400 whitespace-nowrap',
-                  isKanaToRomaji ? '-top-5 text-lg' : '-top-4 text-2xl',
-                ].join(' ')}>
+                <span
+                  className={[
+                    'absolute left-1/2 -translate-x-1/2 font-medium text-warm-400 whitespace-nowrap',
+                    isKanaToRomaji ? '-top-5 text-lg' : '-top-4 text-2xl',
+                  ].join(' ')}
+                >
                   {hintText}
                 </span>
               )}
@@ -364,6 +456,7 @@ export function GameWindow({ mode, children }: GameWindowProps): ReactNode {
             onChange={handleInputChange}
             feedbackState={feedbackState}
             disabled={wordDone}
+            showKatakana={!isKanaToRomaji && isKatakanaWord(currentWord)}
           />
           {mode === 'swipe' && (
             <p className="text-sm text-warm-400 text-center mt-2">
@@ -375,7 +468,7 @@ export function GameWindow({ mode, children }: GameWindowProps): ReactNode {
 
       {mode === 'tap' && (
         <TapGrid
-          characters={MOCK_TAP_CHARACTERS}
+          characters={isKatakanaWord(currentWord) ? KATAKANA_TAP : HIRAGANA_TAP}
           displayField={isKanaToRomaji ? 'romaji' : 'kana'}
           onTap={handleTap}
           feedbackId={tapFeedbackId}

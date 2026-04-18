@@ -31,20 +31,25 @@ type TapGridProps = {
 
 // -- Component ----------------------------------------------
 
-export function TapGrid({ characters, displayField, onTap, feedbackId, feedbackState }: TapGridProps): ReactNode {
+export function TapGrid({
+  characters,
+  displayField,
+  onTap,
+  feedbackId,
+  feedbackState,
+}: TapGridProps): ReactNode {
   const { playSound } = useKeySound()
 
-  const handleTap = useCallback((id: string, value: string, soundId: string): void => {
-    playSound(soundId)
-    onTap(id, value)
-  }, [onTap, playSound])
+  const handleTap = useCallback(
+    (id: string, value: string, soundId: string): void => {
+      playSound(soundId)
+      onTap(id, value)
+    },
+    [onTap, playSound],
+  )
 
   return (
-    <div
-      className="grid grid-cols-5 gap-2 pt-3"
-      role="group"
-      aria-label="Character selection grid"
-    >
+    <div className="grid grid-cols-5 gap-2 pt-3" role="group" aria-label="Character selection grid">
       {characters.map((char, index) => {
         const tapSoundId = index % 2 === 0 ? 'e' : 'o'
         const displayText = displayField === 'romaji' ? char.romaji : char.kana
@@ -68,7 +73,7 @@ export function TapGrid({ characters, displayField, onTap, feedbackId, feedbackS
               'min-h-11 min-w-11 rounded-xl',
               'transition-all duration-75',
               'active:translate-y-[3px] active:shadow-none',
-              'focus:outline-none focus:ring-2 focus:ring-sage-300',
+              'focus:outline-none',
               'cursor-pointer',
               bgClass,
             ].join(' ')}

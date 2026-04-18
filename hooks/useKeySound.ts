@@ -53,8 +53,7 @@ export function useKeySound(): { playSound: (id: string) => void } {
 
   useEffect((): (() => void) => {
     mountedRef.current = true
-    // Pre-load the sprite on mount
-    void ensureLoaded()
+    // Audio sprite loads on first playSound call, not on mount
     return (): void => {
       mountedRef.current = false
     }

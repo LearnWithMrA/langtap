@@ -27,12 +27,31 @@ export function LogoFull(props: LogoFullProps): ReactElement {
       {...props}
     >
       {/* Key border */}
-      <mask id="logo-mask0" style={{ maskType: 'luminance' }} maskUnits="userSpaceOnUse" x="160" y="143" width="757" height="757">
+      <mask
+        id="logo-mask0"
+        style={{ maskType: 'luminance' }}
+        maskUnits="userSpaceOnUse"
+        x="160"
+        y="143"
+        width="757"
+        height="757"
+      >
         <path d="M160.182 143.505H916.182V899.505H160.182V143.505Z" fill="white" />
       </mask>
       <g mask="url(#logo-mask0)">
-        <mask id="logo-mask1" style={{ maskType: 'luminance' }} maskUnits="userSpaceOnUse" x="160" y="143" width="757" height="757">
-          <path d="M236.182 143.505H840.182C860.338 143.505 879.667 151.51 893.922 165.766C908.172 180.021 916.182 199.349 916.182 219.505V823.505C916.182 843.661 908.172 862.995 893.922 877.245C879.667 891.5 860.338 899.505 840.182 899.505H236.182C216.026 899.505 196.693 891.5 182.443 877.245C168.187 862.995 160.182 843.661 160.182 823.505V219.505C160.182 199.349 168.187 180.021 182.443 165.766C196.693 151.51 216.026 143.505 236.182 143.505Z" fill="white" />
+        <mask
+          id="logo-mask1"
+          style={{ maskType: 'luminance' }}
+          maskUnits="userSpaceOnUse"
+          x="160"
+          y="143"
+          width="757"
+          height="757"
+        >
+          <path
+            d="M236.182 143.505H840.182C860.338 143.505 879.667 151.51 893.922 165.766C908.172 180.021 916.182 199.349 916.182 219.505V823.505C916.182 843.661 908.172 862.995 893.922 877.245C879.667 891.5 860.338 899.505 840.182 899.505H236.182C216.026 899.505 196.693 891.5 182.443 877.245C168.187 862.995 160.182 843.661 160.182 823.505V219.505C160.182 199.349 168.187 180.021 182.443 165.766C196.693 151.51 216.026 143.505 236.182 143.505Z"
+            fill="white"
+          />
         </mask>
         <g mask="url(#logo-mask1)">
           <path

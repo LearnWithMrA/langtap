@@ -60,9 +60,7 @@ export function LandingNav(): ReactNode {
         className={[
           'fixed top-0 left-0 right-0 z-[100] h-16',
           'transition-all duration-200',
-          scrolled
-            ? 'bg-white/80 backdrop-blur-sm border-b border-border'
-            : 'bg-transparent',
+          scrolled ? 'bg-white/80 backdrop-blur-sm border-b border-border' : 'bg-transparent',
         ].join(' ')}
       >
         <div className="mx-auto flex h-full max-w-5xl items-center justify-between px-4">
@@ -116,12 +114,28 @@ export function LandingNav(): ReactNode {
             onClick={() => setMenuOpen(!menuOpen)}
           >
             {menuOpen ? (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              >
                 <line x1="6" y1="6" x2="18" y2="18" />
                 <line x1="6" y1="18" x2="18" y2="6" />
               </svg>
             ) : (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              >
                 <line x1="4" y1="6" x2="20" y2="6" />
                 <line x1="4" y1="12" x2="20" y2="12" />
                 <line x1="4" y1="18" x2="20" y2="18" />

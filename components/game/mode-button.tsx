@@ -67,7 +67,7 @@ export function ModeButton({ variant, label, locked, onClick }: ModeButtonProps)
     }
     playSound(variant === 'kana' ? 'ui-mode-kana' : 'ui-mode-kotoba')
     onClick()
-  }, [locked, onClick])
+  }, [locked, onClick, playSound, variant])
 
   const styles = locked ? LOCKED_STYLES : VARIANT_STYLES[variant]
 
@@ -93,7 +93,17 @@ export function ModeButton({ variant, label, locked, onClick }: ModeButtonProps)
       >
         <span className="whitespace-nowrap">{label}</span>
         {locked && (
-          <svg width={16} height={18} viewBox="0 0 18 20" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" className="mt-1">
+          <svg
+            width={16}
+            height={18}
+            viewBox="0 0 18 20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={3}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="mt-1"
+          >
             <rect x={2} y={9} width={14} height={10} rx={2} />
             <path d="M5 9 V6 Q5 1 9 1 Q13 1 13 6 V9" />
           </svg>

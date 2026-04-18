@@ -25,12 +25,31 @@ export function LogoLt(props: LogoLtProps): ReactElement {
       {...props}
     >
       {/* Key border */}
-      <mask id="lt-mask0" style={{ maskType: 'luminance' }} maskUnits="userSpaceOnUse" x="0" y="0" width="756" height="756">
+      <mask
+        id="lt-mask0"
+        style={{ maskType: 'luminance' }}
+        maskUnits="userSpaceOnUse"
+        x="0"
+        y="0"
+        width="756"
+        height="756"
+      >
         <path d="M0 0H756V756H0V0Z" fill="white" />
       </mask>
       <g mask="url(#lt-mask0)">
-        <mask id="lt-mask1" style={{ maskType: 'luminance' }} maskUnits="userSpaceOnUse" x="0" y="0" width="756" height="756">
-          <path d="M76 0H680C700.156 0 719.485 8.005 733.74 22.261C747.99 36.516 756 55.844 756 76V680C756 700.156 747.99 719.49 733.74 733.74C719.485 747.995 700.156 756 680 756H76C55.844 756 36.511 747.995 22.261 733.74C8.00499 719.49 0 700.156 0 680V76C0 55.844 8.00499 36.516 22.261 22.261C36.511 8.005 55.844 0 76 0Z" fill="white" />
+        <mask
+          id="lt-mask1"
+          style={{ maskType: 'luminance' }}
+          maskUnits="userSpaceOnUse"
+          x="0"
+          y="0"
+          width="756"
+          height="756"
+        >
+          <path
+            d="M76 0H680C700.156 0 719.485 8.005 733.74 22.261C747.99 36.516 756 55.844 756 76V680C756 700.156 747.99 719.49 733.74 733.74C719.485 747.995 700.156 756 680 756H76C55.844 756 36.511 747.995 22.261 733.74C8.00499 719.49 0 700.156 0 680V76C0 55.844 8.00499 36.516 22.261 22.261C36.511 8.005 55.844 0 76 0Z"
+            fill="white"
+          />
         </mask>
         <g mask="url(#lt-mask1)">
           <path

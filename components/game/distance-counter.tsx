@@ -20,7 +20,6 @@ type DistanceCounterProps = {
 
 export function DistanceCounter({ value }: DistanceCounterProps): ReactNode {
   const clamped = Math.max(0, Math.floor(value))
-  const padded = String(clamped).padStart(5, '0')
 
   return (
     <div

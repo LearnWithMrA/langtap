@@ -31,7 +31,16 @@ function TwitterIcon(): ReactNode {
 
 function InstagramIcon(): ReactNode {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3d3028" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#3d3028"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <rect x="2" y="2" width="20" height="20" rx="5" />
       <circle cx="12" cy="12" r="5" />
       <circle cx="17.5" cy="6.5" r="1.5" fill="#3d3028" stroke="none" />
@@ -70,15 +79,25 @@ export function LandingFooter(): ReactNode {
       <div className="mx-auto max-w-5xl grid grid-cols-1 md:grid-cols-4 gap-8 text-sm text-warm-600">
         {/* About column */}
         <div className="flex flex-col gap-2">
-          <a href="#" className="hover:text-text-primary transition-colors">About Us</a>
-          <a href="#" className="hover:text-text-primary transition-colors">Contact Us</a>
-          <a href="#" className="hover:text-text-primary transition-colors">FAQ</a>
+          <a href="#" className="hover:text-text-primary transition-colors">
+            About Us
+          </a>
+          <a href="#" className="hover:text-text-primary transition-colors">
+            Contact Us
+          </a>
+          <a href="#" className="hover:text-text-primary transition-colors">
+            FAQ
+          </a>
         </div>
 
         {/* Legal column */}
         <div className="flex flex-col gap-2">
-          <a href="#" className="hover:text-text-primary transition-colors">Privacy Policy</a>
-          <a href="#" className="hover:text-text-primary transition-colors">Terms of Service</a>
+          <a href="#" className="hover:text-text-primary transition-colors">
+            Privacy Policy
+          </a>
+          <a href="#" className="hover:text-text-primary transition-colors">
+            Terms of Service
+          </a>
         </div>
 
         {/* Empty spacer for desktop layout */}

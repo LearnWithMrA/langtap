@@ -19,7 +19,7 @@ export default tseslint.config(
   // ── Ignore patterns ───────────────────────────────────────────
 
   {
-    ignores: ['.next/**', 'node_modules/**', 'public/**', 'next-env.d.ts'],
+    ignores: ['.next/**', 'node_modules/**', 'public/**', 'next-env.d.ts', 'update_shrubs.js'],
   },
 
   // ── Base rules ────────────────────────────────────────────────

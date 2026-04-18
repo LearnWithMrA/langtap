@@ -42,7 +42,7 @@ export function AudioPlayer(): ReactNode {
     playSound('ui-audio-toggle')
     setIsPlaying((prev) => !prev)
     // No actual audio playback in Phase 1
-  }, [])
+  }, [playSound])
 
   return (
     <div className="flex items-center gap-2 bg-white/40 backdrop-blur-sm rounded-lg px-2.5 py-1.5">
@@ -54,9 +54,7 @@ export function AudioPlayer(): ReactNode {
       >
         {isPlaying ? <IconPause /> : <IconPlay />}
       </button>
-      <span className="text-xs text-warm-600 truncate max-w-[100px]">
-        Lo-fi
-      </span>
+      <span className="text-xs text-warm-600 truncate max-w-[100px]">Lo-fi</span>
     </div>
   )
 }
