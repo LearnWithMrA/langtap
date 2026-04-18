@@ -32,7 +32,7 @@ export function GameHomeClient(): ReactNode {
   const mascotSpeed = prefersReducedMotion ? 'stopped' : 'idle'
 
   return (
-    <div className="theme-day relative w-full h-screen overflow-hidden">
+    <div className="theme-day relative w-full h-svh overflow-hidden">
       {/* Parallax landscape (sky, clouds, hills, ground) */}
       <LandscapeBackgroundV2 speed={sceneSpeed} staticHills={prefersReducedMotion ?? false} />
 
@@ -41,7 +41,7 @@ export function GameHomeClient(): ReactNode {
           her wheels sit on the dirt path regardless of viewport size.
           Matches landing-scene. */}
       <div
-        className="absolute bottom-[calc(12vh-max(7.73vw,62.7px))] left-[3%] md:left-[8%] z-[3]"
+        className="absolute bottom-[calc(12svh-max(7.73vw,62.7px))] left-[3%] md:left-[8%] z-[3]"
         aria-hidden="true"
       >
         <CyclingCharacter speed={mascotSpeed} />

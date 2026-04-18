@@ -27,31 +27,33 @@ type LandingSceneProps = {
 export function LandingScene({ children }: LandingSceneProps): ReactNode {
   return (
     <div className="theme-day relative w-full overflow-hidden">
-      <section className="relative h-screen">
+      <section className="relative h-svh">
         {/* Animated landscape (sky, hills, clouds, ground with continuous motion) */}
         <LandscapeBackground speed="idle" staticHills={false} />
 
         {/* Mascot riding along the dark green mid-hill path.
             Bottom offset compensates for the PNG's transparent bottom padding
             (~22% of container height, scales with viewport width) so her
-            wheels sit on the dirt path at ~15vh from viewport bottom
-            regardless of screen size. */}
+            wheels sit on the dirt path regardless of screen size. Uses svh
+            instead of vh so the hero fits iOS Safari's visible viewport
+            (with address bar showing) rather than the large-viewport 100vh,
+            which overflows and creates a small unwanted scroll. */}
         <div
-          className="absolute bottom-[calc(12vh-max(7.73vw,62.7px))] left-[3%] md:left-[8%] z-[3]"
+          className="absolute bottom-[calc(12svh-max(7.73vw,62.7px))] left-[3%] md:left-[8%] z-[3]"
           aria-hidden="true"
         >
           <CyclingCharacter speed="idle" />
         </div>
 
         {/* Content overlay (hero copy, etc.) - positioned in the sky above the hills */}
-        <div className="relative z-20 flex h-screen flex-col items-center px-4 pt-[19vh] md:pt-[12vh]">
+        <div className="relative z-20 flex h-svh flex-col items-center px-4 pt-[19svh] md:pt-[12svh]">
           {children}
         </div>
       </section>
 
       {/* Curved ground bleed into the content section below */}
       <div
-        className="w-full h-[10vh] md:h-[15vh] pointer-events-none -mt-px bg-white"
+        className="w-full h-[10svh] md:h-[15svh] pointer-events-none -mt-px bg-white"
         aria-hidden="true"
       >
         <svg
