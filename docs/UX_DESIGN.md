@@ -632,9 +632,12 @@ This is achieved by overlaying a visual div on top of the real input:
 
 **Japanese IME handling (zero-width space technique):**
 When the user types hiragana using a Japanese keyboard, the IME normally tries
-to compose multiple kana into kanji. To prevent this, the InputField inserts a
+to compose multiple kana into kanji. To prevent this, TypeInput inserts a
 zero-width space (`U+200B`) after each hiragana character. The IME sees each
-kana as a separate "word" and does not offer kanji suggestions.
+kana as a separate "word" and does not offer kanji suggestions. This technique
+is Type-mode-only — SwipeInput deliberately skips it, because mobile swipe
+keyboards commit multi-character batches and the invisible spaces caused
+doubled characters, broken backspace, and page crashes on iPhone.
 
 Implementation details:
 - On input change, if the last character is in the hiragana range (U+3040-U+309F),
@@ -679,8 +682,15 @@ Only unlocked characters appear. Locked characters are excluded.
 ### 7.5 Swipe Mode
 
 Same layout as Type and Tap modes (full landscape, top bar, mascot visible).
-A text field for input (same as Type mode) with a banner below:
-"This mode is for the mobile swipe keyboard"
+Uses SwipeInput (a separate component from Type's TypeInput) with a banner
+below: "This mode is for the mobile swipe keyboard".
+
+SwipeInput accepts raw input from the mobile swipe keyboard without the
+zero-width-space IME trick used by TypeInput. The trick breaks on swipe
+keyboards because they commit whole multi-character batches rather than one
+keystroke at a time; on iPhone this caused doubled characters, broken
+backspace, and page crashes. The katakana visual overlay (hiragana input,
+katakana display for katakana words) is still applied, same as TypeInput.
 
 Input evaluation: same as Type mode. The swipe keyboard produces romaji or kana
 input which is evaluated against the expected romaji.

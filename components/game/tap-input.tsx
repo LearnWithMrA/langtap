@@ -1,5 +1,5 @@
 // ------------------------------------------------------------
-// File: components/game/tap-grid.tsx
+// File: components/game/tap-input.tsx
 // Purpose: On-screen character button grid for Tap mode.
 //          Buttons show either romaji or kana depending on the
 //          direction prop. Each button is keyboard-key style with
@@ -21,7 +21,7 @@ type TapCharacter = {
   romaji: string
 }
 
-type TapGridProps = {
+type TapInputProps = {
   characters: TapCharacter[]
   displayField: 'kana' | 'romaji'
   onTap: (id: string, value: string) => void
@@ -31,13 +31,13 @@ type TapGridProps = {
 
 // -- Component ----------------------------------------------
 
-export function TapGrid({
+export function TapInput({
   characters,
   displayField,
   onTap,
   feedbackId,
   feedbackState,
-}: TapGridProps): ReactNode {
+}: TapInputProps): ReactNode {
   const { playSound } = useKeySound()
 
   const handleTap = useCallback(

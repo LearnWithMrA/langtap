@@ -7,9 +7,9 @@
 //          word completion. Mock game loop with generation-guarded
 //          timers. Replaced by the real engine in Sprint 4-5.
 // Depends on: engine/constants.ts,
-//             components/game/input-field.tsx,
-//             components/game/tap-grid.tsx,
-//             components/game/feedback-overlay.tsx,
+//             components/game/type-input.tsx,
+//             components/game/swipe-input.tsx,
+//             components/game/tap-input.tsx,
 //             components/game/meaning-reveal.tsx
 // ------------------------------------------------------------
 
@@ -17,8 +17,9 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import type { ReactNode } from 'react'
-import { InputField } from '@/components/game/input-field'
-import { TapGrid } from '@/components/game/tap-grid'
+import { TypeInput } from '@/components/game/type-input'
+import { SwipeInput } from '@/components/game/swipe-input'
+import { TapInput } from '@/components/game/tap-input'
 import { MeaningReveal } from '@/components/game/meaning-reveal'
 import { FEEDBACK_FLASH_MS, MEANING_DISPLAY_MS, MEANING_FADE_MS } from '@/engine/constants'
 
@@ -31,6 +32,7 @@ type InputMode = 'type' | 'tap' | 'swipe'
 type GameWindowProps = {
   mode: InputMode
   children?: ReactNode
+  onCharacterCorrect?: () => void
 }
 
 type MockCharacter = {
@@ -164,7 +166,7 @@ function toKatakana(str: string): string {
 
 // -- Component ----------------------------------------------
 
-export function GameWindow({ mode, children }: GameWindowProps): ReactNode {
+export function GameWindow({ mode, children, onCharacterCorrect }: GameWindowProps): ReactNode {
   const childArray = Array.isArray(children) ? children : children ? [children] : []
   const topLeft = childArray[0] ?? null
   const topRight = childArray[1] ?? null
@@ -300,7 +302,7 @@ export function GameWindow({ mode, children }: GameWindowProps): ReactNode {
     (value: string): void => {
       if (wordDone) return
       // For kana input, compare as-is. For romaji input, lowercase.
-      // Strip zero-width spaces inserted by InputField for IME separation
+      // Strip zero-width spaces inserted by TypeInput for IME separation
       const cleaned = value.replace(/\u200B/g, '')
       // For romaji input: lowercase. For kana input on a katakana word: convert hiragana to katakana.
       let compare = isKanaToRomaji ? cleaned.toLowerCase() : cleaned
@@ -328,6 +330,13 @@ export function GameWindow({ mode, children }: GameWindowProps): ReactNode {
           newCompleted++
         }
       }
+      // Fire correct-character event for each newly-completed kana (handles
+      // normal 1-at-a-time typing and paste/predictive input that lands several at once)
+      if (newCompleted > completedCount) {
+        for (let i = 0; i < newCompleted - completedCount; i++) {
+          onCharacterCorrect?.()
+        }
+      }
       setCompletedCount(newCompleted)
 
       // Check if word is fully typed
@@ -341,6 +350,8 @@ export function GameWindow({ mode, children }: GameWindowProps): ReactNode {
       feedbackState,
       wordDone,
       isKanaToRomaji,
+      completedCount,
+      onCharacterCorrect,
       handleWrong,
       handleWordComplete,
     ],
@@ -356,6 +367,7 @@ export function GameWindow({ mode, children }: GameWindowProps): ReactNode {
         setTapFeedbackState('correct')
         const newCompleted = completedCount + 1
         setCompletedCount(newCompleted)
+        onCharacterCorrect?.()
 
         if (newCompleted === currentWord.characters.length) {
           handleWordComplete()
@@ -382,6 +394,7 @@ export function GameWindow({ mode, children }: GameWindowProps): ReactNode {
       completedCount,
       currentWord.characters.length,
       wordDone,
+      onCharacterCorrect,
       handleWordComplete,
       handleWrong,
       clearTimers,
@@ -449,25 +462,35 @@ export function GameWindow({ mode, children }: GameWindowProps): ReactNode {
 
       <MeaningReveal meaning={currentWord.meaning} visible={showMeaning} />
 
-      {(mode === 'type' || mode === 'swipe') && (
+      {mode === 'type' && (
         <div className="pt-3">
-          <InputField
+          <TypeInput
             value={inputValue}
             onChange={handleInputChange}
             feedbackState={feedbackState}
             disabled={wordDone}
             showKatakana={!isKanaToRomaji && isKatakanaWord(currentWord)}
           />
-          {mode === 'swipe' && (
-            <p className="text-sm text-warm-400 text-center mt-2">
-              This mode is for the mobile swipe keyboard
-            </p>
-          )}
+        </div>
+      )}
+
+      {mode === 'swipe' && (
+        <div className="pt-3">
+          <SwipeInput
+            value={inputValue}
+            onChange={handleInputChange}
+            feedbackState={feedbackState}
+            disabled={wordDone}
+            showKatakana={!isKanaToRomaji && isKatakanaWord(currentWord)}
+          />
+          <p className="text-sm text-warm-400 text-center mt-2">
+            This mode is for the mobile swipe keyboard
+          </p>
         </div>
       )}
 
       {mode === 'tap' && (
-        <TapGrid
+        <TapInput
           characters={isKatakanaWord(currentWord) ? KATAKANA_TAP : HIRAGANA_TAP}
           displayField={isKanaToRomaji ? 'romaji' : 'kana'}
           onTap={handleTap}

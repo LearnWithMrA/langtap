@@ -1,8 +1,11 @@
 // ------------------------------------------------------------
-// File: components/game/input-field.tsx
-// Purpose: Text input for Type and Swipe modes. Accepts romaji
-//          keyboard input. Border colour flashes green/orange
-//          based on feedback state. Auto-focuses on mount.
+// File: components/game/type-input.tsx
+// Purpose: Text input for Type mode. Accepts romaji keyboard
+//          input. Inserts zero-width spaces after each hiragana
+//          so the Japanese IME treats each kana as separate
+//          (prevents kanji suggestions). Border colour flashes
+//          green/orange based on feedback state. Auto-focuses
+//          on mount.
 // Depends on: hooks/useKeySound.ts
 // ------------------------------------------------------------
 
@@ -16,7 +19,7 @@ import { useKeySound } from '@/hooks/useKeySound'
 
 type FeedbackState = 'idle' | 'correct' | 'wrong'
 
-type InputFieldProps = {
+type TypeInputProps = {
   value: string
   onChange: (value: string) => void
   feedbackState: FeedbackState
@@ -41,15 +44,15 @@ const BORDER_CLASSES: Record<FeedbackState, string> = {
 
 // -- Component ----------------------------------------------
 
-export function InputField({
+export function TypeInput({
   value,
   onChange,
   feedbackState,
   disabled,
   showKatakana = false,
-}: InputFieldProps): ReactNode {
-  // Display value: convert hiragana to katakana if showKatakana is on
-  // Strip zero-width spaces for display, then convert
+}: TypeInputProps): ReactNode {
+  // Display value: convert hiragana to katakana if showKatakana is on.
+  // Strip zero-width spaces for display, then convert.
   const displayValue = showKatakana ? toKatakana(value.replace(/\u200B/g, '')) : value
   const inputRef = useRef<HTMLInputElement>(null)
   const { playSound } = useKeySound()

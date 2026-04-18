@@ -122,6 +122,17 @@
   --scene-hill-mid: #93ca79;
   --scene-hill-front: #72b155;
   --scene-hill: #5a9e3a;
+  --scene-path: #c19a6b;
+  --scene-grass-dark: #7ba143;
+  --scene-shrub: #4a6f2e;
+  --scene-tree-trunk: #2a2a20;
+  --scene-tree-far-dark: #446a2c;
+  --scene-tree-far-mid: #4d7634;
+  --scene-tree-far-light: #55823c;
+  --scene-tree-near-dark: #5a9a3a;
+  --scene-tree-near-mid: #65a642;
+  --scene-tree-near-light: #72b350;
+  --scene-pebble: #d4b480;
 }
 
 .theme-sunrise {
@@ -134,6 +145,17 @@
   --scene-hill-mid: #7caf65;
   --scene-hill-front: #5f9a45;
   --scene-hill: #4a8a2e;
+  --scene-path: #b48960;
+  --scene-grass-dark: #6b9638;
+  --scene-shrub: #3f6227;
+  --scene-tree-trunk: #24241c;
+  --scene-tree-far-dark: #3a5f26;
+  --scene-tree-far-mid: #446b2e;
+  --scene-tree-far-light: #4c7636;
+  --scene-tree-near-dark: #4a8030;
+  --scene-tree-near-mid: #548c38;
+  --scene-tree-near-light: #5f9a45;
+  --scene-pebble: #c9a876;
 }
 
 .theme-sunset {
@@ -146,6 +168,17 @@
   --scene-hill-mid: #4f7360;
   --scene-hill-front: #3c654f;
   --scene-hill: #2d5a42;
+  --scene-path: #8f6b4a;
+  --scene-grass-dark: #3c6849;
+  --scene-shrub: #284732;
+  --scene-tree-trunk: #1a1a14;
+  --scene-tree-far-dark: #25452e;
+  --scene-tree-far-mid: #2d5037;
+  --scene-tree-far-light: #355b3f;
+  --scene-tree-near-dark: #355a42;
+  --scene-tree-near-mid: #3c664a;
+  --scene-tree-near-light: #477356;
+  --scene-pebble: #a89070;
 }
 
 .theme-night {
@@ -158,6 +191,17 @@
   --scene-hill-mid: #2c3e37;
   --scene-hill-front: #22362f;
   --scene-hill: #1a3028;
+  --scene-path: #4a3a2c;
+  --scene-grass-dark: #213a30;
+  --scene-shrub: #152820;
+  --scene-tree-trunk: #0a0a08;
+  --scene-tree-far-dark: #14291a;
+  --scene-tree-far-mid: #1a3021;
+  --scene-tree-far-light: #1f3728;
+  --scene-tree-near-dark: #1d3425;
+  --scene-tree-near-mid: #223b2b;
+  --scene-tree-near-light: #2a4432;
+  --scene-pebble: #5a4a38;
 }
 
 /* -- Cloud drift animation ----------------------------------------- */

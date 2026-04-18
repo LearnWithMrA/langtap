@@ -147,7 +147,7 @@ export function LandingNav(): ReactNode {
 
       {/* Mobile full-screen menu overlay */}
       {menuOpen && (
-        <div className="fixed inset-0 z-40 bg-sage-50 flex flex-col items-center justify-center gap-8 pt-16">
+        <div className="fixed inset-0 z-[90] bg-sage-50 flex flex-col items-center justify-center gap-8 pt-16">
           {NAV_LINKS.map((link) => (
             <a
               key={link.href}
@@ -158,22 +158,22 @@ export function LandingNav(): ReactNode {
               {link.label}
             </a>
           ))}
-          <div className="flex flex-col gap-4 w-64 mt-4">
-            <KeyButton
-              href="/sign-up"
-              className="bg-mint-500 text-white px-6 py-3 text-lg shadow-[0_4px_0_0_#2a8a6a] w-full justify-center"
-              aria-label="Sign up for LangTap"
-            >
-              Sign Up
-            </KeyButton>
-            <KeyButton
-              href="/log-in"
-              className="bg-navy-deep text-white px-6 py-3 text-lg shadow-[0_4px_0_0_#0f2540] w-full justify-center"
-              aria-label="Log in to LangTap"
-            >
-              Log In
-            </KeyButton>
-          </div>
+          <a
+            href="/sign-up"
+            onClick={closeMenu}
+            className="text-2xl font-medium text-text-primary hover:text-sage-500 transition-colors duration-150"
+            aria-label="Sign up for LangTap"
+          >
+            Sign Up
+          </a>
+          <a
+            href="/log-in"
+            onClick={closeMenu}
+            className="text-2xl font-medium text-text-primary hover:text-sage-500 transition-colors duration-150"
+            aria-label="Log in to LangTap"
+          >
+            Log In
+          </a>
         </div>
       )}
     </>

@@ -15,7 +15,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useReducedMotion } from 'motion/react'
 import { LandscapeBackgroundV2 } from '@/components/layout/LandscapeBackgroundV2'
@@ -25,6 +25,7 @@ import { GameWindow } from '@/components/game/game-window'
 import { DistanceCounter } from '@/components/game/distance-counter'
 import { AudioPlayer } from '@/components/audio/audio-player'
 import { useKeySound } from '@/hooks/useKeySound'
+import { usePracticeCounters } from '@/hooks/usePracticeCounters'
 
 // -- Types --------------------------------------------------
 
@@ -97,8 +98,13 @@ function ModeDropdown({
 export function PracticeClient(): ReactNode {
   const [mode, setMode] = useState<InputMode>('type')
   const prefersReducedMotion = useReducedMotion()
+  const { counters, incrementCorrect } = usePracticeCounters()
 
   const sceneSpeed = prefersReducedMotion ? 'stopped' : 'idle'
+
+  const handleCharacterCorrect = useCallback((): void => {
+    incrementCorrect(mode)
+  }, [incrementCorrect, mode])
 
   return (
     <div className="theme-day relative w-full h-screen overflow-hidden">
@@ -120,9 +126,9 @@ export function PracticeClient(): ReactNode {
 
       {/* Game window: centred, raised 40% */}
       <div className="absolute left-1/2 -translate-x-1/2 top-[30%] -translate-y-1/2 z-10 w-full max-w-lg px-4">
-        <GameWindow mode={mode}>
+        <GameWindow mode={mode} onCharacterCorrect={handleCharacterCorrect}>
           <ModeDropdown mode={mode} onModeChange={setMode} />
-          <DistanceCounter value={0} />
+          <DistanceCounter value={counters[mode]} />
         </GameWindow>
       </div>
     </div>

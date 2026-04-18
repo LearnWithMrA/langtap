@@ -431,7 +431,24 @@ type CharacterDisplayProps = {
 }
 ```
 
-**TapGrid**
+**TypeInput**
+
+Text field for Type mode. Accepts romaji keyboard input. Inserts a zero-width
+space (`U+200B`) after each hiragana so the Japanese IME treats each kana as
+separate and does not offer kanji suggestions (see `docs/UX_DESIGN.md` section
+7.3 for detail). When the current word is katakana, the real `<input>` has
+transparent text and a katakana overlay `<div>` renders the converted display
+value on top. Auto-focuses on mount and after each word advance.
+
+**SwipeInput**
+
+Text field for Swipe mode. Accepts raw mobile-swipe-keyboard input with no
+zero-width-space manipulation (that trick doubles characters, breaks backspace,
+and can crash the page on iOS because swipe keyboards commit multi-character
+batches rather than one keystroke at a time). Keeps the same katakana overlay
+as TypeInput for katakana words.
+
+**TapInput**
 
 On-screen character button grid for Tap mode. Shows only unlocked characters.
 Buttons are sized for touch. The correct button highlights green on correct tap.

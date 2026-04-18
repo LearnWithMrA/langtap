@@ -112,8 +112,9 @@ langtap/
 |  |- game/                     # Practice screen components
 |  |  |- character-display.tsx  # Shows the kana character being practised
 |  |  |- word-display.tsx       # Shows the full word context
-|  |  |- input-field.tsx        # Type mode text input
-|  |  |- tap-grid.tsx           # Tap mode character button grid
+|  |  |- type-input.tsx         # Type mode text input (keyboard, IME zero-width-space trick)
+|  |  |- swipe-input.tsx        # Swipe mode text input (mobile swipe keyboard, raw input)
+|  |  |- tap-input.tsx          # Tap mode character button grid
 |  |  |- feedback-overlay.tsx   # Wrong answer highlight and mnemonic
 |  |  |- meaning-reveal.tsx     # English meaning shown after correct answer
 |  |  |- distance-counter.tsx   # Running distance display
