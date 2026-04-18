@@ -330,11 +330,14 @@ export function GameWindow({ mode, children, onCharacterCorrect }: GameWindowPro
           newCompleted++
         }
       }
-      // Fire correct-character event for each newly-completed kana (handles
-      // normal 1-at-a-time typing and paste/predictive input that lands several at once)
+      // Fire correct-character event for each newly-completed kana, but only
+      // if that character had zero wrong attempts. A character that was
+      // missed and then corrected does not count toward distance.
       if (newCompleted > completedCount) {
-        for (let i = 0; i < newCompleted - completedCount; i++) {
-          onCharacterCorrect?.()
+        for (let idx = completedCount; idx < newCompleted; idx++) {
+          if ((wrongAttemptsMap[idx] ?? 0) === 0) {
+            onCharacterCorrect?.()
+          }
         }
       }
       setCompletedCount(newCompleted)
@@ -351,6 +354,7 @@ export function GameWindow({ mode, children, onCharacterCorrect }: GameWindowPro
       wordDone,
       isKanaToRomaji,
       completedCount,
+      wrongAttemptsMap,
       onCharacterCorrect,
       handleWrong,
       handleWordComplete,
@@ -367,7 +371,10 @@ export function GameWindow({ mode, children, onCharacterCorrect }: GameWindowPro
         setTapFeedbackState('correct')
         const newCompleted = completedCount + 1
         setCompletedCount(newCompleted)
-        onCharacterCorrect?.()
+        // Only count toward distance if this char had zero prior wrong attempts
+        if ((wrongAttemptsMap[currentCharIndex] ?? 0) === 0) {
+          onCharacterCorrect?.()
+        }
 
         if (newCompleted === currentWord.characters.length) {
           handleWordComplete()
@@ -390,10 +397,12 @@ export function GameWindow({ mode, children, onCharacterCorrect }: GameWindowPro
     [
       currentChar.romaji,
       currentChar.kana,
+      currentCharIndex,
       isKanaToRomaji,
       completedCount,
       currentWord.characters.length,
       wordDone,
+      wrongAttemptsMap,
       onCharacterCorrect,
       handleWordComplete,
       handleWrong,

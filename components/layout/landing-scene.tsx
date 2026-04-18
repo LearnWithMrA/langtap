@@ -31,13 +31,20 @@ export function LandingScene({ children }: LandingSceneProps): ReactNode {
         {/* Animated landscape (sky, hills, clouds, ground with continuous motion) */}
         <LandscapeBackground speed="idle" staticHills={false} />
 
-        {/* Mascot riding along the dark green mid-hill path */}
-        <div className="absolute bottom-[8%] left-[3%] md:left-[8%] z-[3]" aria-hidden="true">
+        {/* Mascot riding along the dark green mid-hill path.
+            Bottom offset compensates for the PNG's transparent bottom padding
+            (~22% of container height, scales with viewport width) so her
+            wheels sit on the dirt path at ~15vh from viewport bottom
+            regardless of screen size. */}
+        <div
+          className="absolute bottom-[calc(12vh-max(7.73vw,62.7px))] left-[3%] md:left-[8%] z-[3]"
+          aria-hidden="true"
+        >
           <CyclingCharacter speed="idle" />
         </div>
 
         {/* Content overlay (hero copy, etc.) - positioned in the sky above the hills */}
-        <div className="relative z-20 flex h-screen flex-col items-center px-4 pt-[19vh]">
+        <div className="relative z-20 flex h-screen flex-col items-center px-4 pt-[19vh] md:pt-[12vh]">
           {children}
         </div>
       </section>

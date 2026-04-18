@@ -111,8 +111,14 @@ export function PracticeClient(): ReactNode {
       {/* Parallax landscape */}
       <LandscapeBackgroundV2 speed={sceneSpeed} staticHills={prefersReducedMotion ?? false} />
 
-      {/* Mascot */}
-      <div className="absolute bottom-[8%] left-[3%] md:left-[8%] z-[3]" aria-hidden="true">
+      {/* Mascot. Bottom offset compensates for the PNG's transparent bottom
+          padding (~22% of container height, scales with viewport width) so
+          her wheels sit on the dirt path regardless of screen size. Matches
+          landing-scene. */}
+      <div
+        className="absolute bottom-[calc(12vh-max(7.73vw,62.7px))] left-[3%] md:left-[8%] z-[3]"
+        aria-hidden="true"
+      >
         <CyclingCharacter speed={sceneSpeed} />
       </div>
 

@@ -30,6 +30,34 @@ Format per entry:
 
 ---
 
+## [2026-04-18] - Session 38
+
+**Sprint:** Sprint 2B - Game Home Screen
+**Task completed:** Cyclist grounding across viewports, hero copy position, first-try-only distance
+**Status:** Done
+
+### Changes made
+- [components/layout/landing-scene.tsx]: Mascot `bottom` is now `calc(12vh - max(7.73vw, 62.7px))`. The PNG has ~22% transparent padding below the wheels; padding size scales with the container (which scales with viewport width), so a flat `bottom-[8%]` left her floating on wide screens. The `calc` compensates for that padding so her wheels land on the dirt path regardless of viewport width. Hero copy top padding on md+ raised to `pt-[12vh]` so "A journey of a thousand miles..." sits higher without touching the button's resting position.
+- [components/layout/practice-client.tsx]: Same mascot `bottom` calc so the cyclist is grounded consistently on the practice screen.
+- [components/layout/game-home-client.tsx]: Same mascot `bottom` calc for the game home screen.
+- [components/layout/landing-client.tsx]: Hero content stack gains `md:gap-[14vh]` between title and button, so raising the title on desktop leaves the "Try it now" button in roughly its original vertical position.
+- [components/game/game-window.tsx]: Distance counter now only increments on **first-try-correct** characters. Both the Type/Swipe path (`handleInputChange`) and the Tap path (`handleTap`) now check `wrongAttemptsMap[charIndex]` before calling `onCharacterCorrect`; a kana that was answered wrong and then corrected still completes the word but does not contribute to distance. `wrongAttemptsMap` and `currentCharIndex` added to the respective useCallback dep arrays.
+
+### Tests
+- `npm run format:check`, `npm run lint`, `npm run type-check`: Pass. One pre-existing eslint warning (`react-hooks/exhaustive-deps` on `currentWord` in `game-window.tsx`) remains — not blocking.
+
+### Next task
+Open items from Session 37 still apply:
+- Ambiguous romaji for the single `ー` tap-grid button when katakana words with `ー` are reintroduced.
+- The pre-existing `currentWord` useCallback dependency warning.
+
+### Notes
+- Cyclist `calc` formula was calibrated empirically: the 22% padding ratio was derived from a desktop screenshot where her wheels were clearly above the path by a known amount, then iterated against the live site until grounded on both mobile and desktop.
+- The first-try-only rule matches the stated practice-mode design: distance is a signal of fluency, not of persistence. A missed-then-corrected character still teaches the user but should not look the same as a first-try hit on the counter.
+- Dev-server animation freeze reported during this session turned out to be a stale `.next` cache / HMR-stuck state. `rm -rf .next && npm run dev` plus a hard refresh resolved it; no code change needed.
+
+---
+
 ## [2026-04-18] - Session 37
 
 **Sprint:** Sprint 2B - Game Home Screen

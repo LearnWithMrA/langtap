@@ -40,7 +40,7 @@ export function LandingClient(): ReactNode {
 
       {/* Hero section with parallax landscape */}
       <LandingScene>
-        <div className="flex flex-col items-center gap-6 text-center max-w-lg">
+        <div className="flex flex-col items-center gap-6 md:gap-[14vh] text-center max-w-lg">
           <h1 className="text-4xl md:text-5xl font-bold text-warm-800 leading-tight">
             A journey of a thousand miles begins with a single tap.
           </h1>
