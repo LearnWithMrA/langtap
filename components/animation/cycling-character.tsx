@@ -70,16 +70,25 @@ export function CyclingCharacter({ speed }: CyclingCharacterProps): React.ReactE
   }, [speed])
 
   return (
-    <div aria-hidden="true" className="pointer-events-none select-none">
-      <Image
-        src={FRAME_PATHS[frameIndex]}
-        alt=""
-        width={400}
-        height={380}
-        className="h-auto w-[max(37vw,300px)]"
-        priority
-        unoptimized
-      />
+    <div
+      aria-hidden="true"
+      className="relative pointer-events-none select-none w-[max(37vw,300px)] aspect-[400/380]"
+    >
+      {FRAME_PATHS.map((src, i) => (
+        <Image
+          key={src}
+          src={src}
+          alt=""
+          width={400}
+          height={380}
+          priority
+          unoptimized
+          className={[
+            'absolute inset-0 h-full w-full object-contain',
+            i === frameIndex ? 'opacity-100' : 'opacity-0',
+          ].join(' ')}
+        />
+      ))}
     </div>
   )
 }

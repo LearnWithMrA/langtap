@@ -21,11 +21,18 @@ const zenMaruGothic = Zen_Maru_Gothic({
 export const metadata: Metadata = {
   title: 'LangTap',
   description: 'Japanese typing fluency app',
+  // Block Chrome's built-in Google Translate prompt. The app's Japanese
+  // content (kana, romaji, katakana overlays) becomes nonsense when machine-
+  // translated, and triggered a page crash + mis-rendered prompts during
+  // testing. Renders as <meta name="google" content="notranslate" />.
+  other: {
+    google: 'notranslate',
+  },
 }
 
 export default function RootLayout({ children }: { children: ReactNode }): ReactNode {
   return (
-    <html lang="ja" className={zenMaruGothic.variable}>
+    <html lang="ja" translate="no" className={zenMaruGothic.variable}>
       <body suppressHydrationWarning>{children}</body>
     </html>
   )

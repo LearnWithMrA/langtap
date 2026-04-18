@@ -33,13 +33,15 @@ Format per entry:
 ## [2026-04-18] - Session 37
 
 **Sprint:** Sprint 2B - Game Home Screen
-**Task completed:** Mobile scene polish, per-mode input split, practice counters
+**Task completed:** Mobile scene polish, per-mode input split, practice counters, cycling flicker fix, no-translate guard
 **Status:** Done
 
 ### Changes made
 - [components/layout/landing-nav.tsx]: Mobile sandwich menu now renders Sign Up / Log In as text links matching About/Pricing/Leaderboard style. Overlay bumped to `z-[90]` so the landing scene's `GroundBlendEdge` (`z-[50]`) no longer punches a green band through the menu.
 - [app/globals.css]: Added 8 new scene colour tokens per theme (`--scene-path`, `--scene-grass-dark`, `--scene-shrub`, `--scene-tree-trunk`, `--scene-tree-far-dark/mid/light`, `--scene-tree-near-dark/mid/light`, `--scene-pebble`). Replaces the `filter: sepia/brightness/saturate` scheme that silently fails on iOS WebKit (caused dirt path to render green, shrubs to blend in, trees to flatten to one tone on iPhone).
 - [components/layout/LandscapeBackgroundV2.tsx]: Every `filter: brightness(...)` / `sepia(...)` fill swapped for direct token-backed fills. Trees now use `tree-far-*` (distant, subtle dark band) and `tree-near-*` (close, subtle light band) so each tree has three foliage tones and distant trees stay darker. Dropped `willChange: 'transform'` and `backfaceVisibility: 'hidden'` from the inner-half divs in every parallax layer — they forced redundant GPU compositor layers on iOS WebKit and caused seam-line flicker. Deleted the unused `_BigGrass` helper.
+- [components/animation/cycling-character.tsx]: Render all 14 cyclist sprite frames stacked at mount and toggle `opacity` for the active one instead of swapping the `<Image>` src each tick. Src-swap was forcing a fresh decode every frame on mobile, which read as a flicker. Frames preload via `priority` so after initial load the "animation" is pure GPU compositor opacity toggles.
+- [app/layout.tsx]: Added `other.google: 'notranslate'` to the Metadata export (renders `<meta name="google" content="notranslate" />`) and `translate="no"` on `<html>`. Together these block Chrome/Edge (Google Translate) via the meta tag and Safari/Firefox/other browsers via the W3C html attribute. Prevents the auto-translate that was turning katakana into garbled Latin ("NeKo") and crashing the page after repeated taps.
 - [components/game/type-input.tsx] (new): Split out of the old `input-field.tsx`. Keyboard input only. Keeps the IME zero-width-space trick and the hiragana→katakana visual overlay.
 - [components/game/swipe-input.tsx] (new): Split out of the old `input-field.tsx`. Mobile swipe keyboard only. Raw input — no zero-width-space insertion (that trick was doubling characters, breaking backspace, and crashing the page on iPhone). Keeps the katakana overlay.
 - [components/game/tap-input.tsx] (new): Renamed from `tap-grid.tsx` for consistency with the type/swipe input trio. No behavioural change.
