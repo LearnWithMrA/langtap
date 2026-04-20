@@ -6,7 +6,8 @@
 //          Left: Full logo (desktop) / LT logo (mobile).
 //          Centre: Home, Kana Dojo, Kotoba Dojo links.
 //          Right: Settings + Profile icons.
-//          Transparent background like the landing page nav.
+//          Transparent at the top of the page, frosted white after
+//          a small scroll threshold, matching the landing nav.
 //          All icons use inline SVG so they inherit text colour
 //          from Tailwind classes and respond to theme tokens.
 // Depends on: components/ui/logo-full.tsx, components/ui/logo-lt.tsx,
@@ -15,7 +16,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -104,23 +105,42 @@ function IconProfile(): ReactNode {
 const ICON_LINK =
   'min-h-9 min-w-9 min-[425px]:min-h-11 min-[425px]:min-w-11 flex items-center justify-center rounded-lg transition-all duration-150 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-sage-300'
 
+// Scroll distance (px) before the bar turns from transparent to frosted.
+const SCROLL_THRESHOLD = 16
+
 // -- Component ----------------------------------------------
 
 export function AppTopBar(): ReactNode {
-  const pathname = usePathname()
+  const pathname = usePathname() ?? ''
   const { isActive: easterEggActive } = useEasterEgg()
   const { playSound } = useKeySound()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect((): (() => void) => {
+    const handleScroll = (): void => {
+      setScrolled(window.scrollY > SCROLL_THRESHOLD)
+    }
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const isHome = pathname === '/home'
-  const isKanaDojo = pathname === '/dojo'
-  const isKotobaDojo = pathname === '/dojo/kotoba'
+  const isKanaDojo = pathname.startsWith('/dojo/kana')
+  const isKotobaDojo = pathname.startsWith('/dojo/kotoba')
   const isLeaderboard = pathname === '/leaderboard'
 
   const logoColour = easterEggActive ? 'text-sage-500 scale-105' : 'text-warm-800'
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-14 z-50 px-2 min-[425px]:px-4">
+    <header
+      className={[
+        'fixed top-0 left-0 right-0 h-14 z-50 px-2 min-[425px]:px-4',
+        'transition-all duration-200',
+        scrolled ? 'bg-white/80 backdrop-blur-sm border-b border-border' : 'bg-transparent',
+      ].join(' ')}
+    >
       {/* Mobile: logo left, settings + hamburger right */}
       <div className="max-[424px]:flex hidden items-center justify-between h-full">
         <button
@@ -200,7 +220,7 @@ export function AppTopBar(): ReactNode {
             Home
           </Link>
           <Link
-            href="/dojo"
+            href="/dojo/kana"
             onClick={(): void => setMenuOpen(false)}
             className={[
               'text-2xl font-medium transition-colors duration-150',
@@ -263,7 +283,7 @@ export function AppTopBar(): ReactNode {
           <IconHome />
         </Link>
         <Link
-          href="/dojo"
+          href="/dojo/kana"
           className={[
             ICON_LINK,
             isKanaDojo ? 'text-sage-500 font-bold' : 'text-warm-800 hover:text-sage-400',
@@ -330,7 +350,7 @@ export function AppTopBar(): ReactNode {
             Home
           </Link>
           <Link
-            href="/dojo"
+            href="/dojo/kana"
             className={[
               'text-base transition-all duration-150 min-h-11 leading-[2.75rem] px-3 rounded-lg hover:bg-white/10',
               isKanaDojo

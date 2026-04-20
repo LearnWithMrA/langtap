@@ -37,17 +37,44 @@
   --color-blush-100: #faeef0;
   --color-blush-300: #f0a8b4;
 
+  /* Sky-blue action palette (used for unlock buttons in the Dojo). Four
+     shades let each button tier have its own base fill plus a
+     one-step-darker bottom border for the 3D keyboard-key effect:
+       - small  (stage-level):   bg-sky-400 + border-sky-500
+       - medium (script-level):  bg-sky-500 + border-sky-600
+       - large  (page-level):    bg-sky-600 + border-sky-700
+     The darker a button's base, the more deliberate the action it
+     represents, so the top-level "Unlock All" reads as the boldest. */
+  --color-sky-400: #7ab0da;
+  --color-sky-500: #5b96cb;
+  --color-sky-600: #4b81b3;
+  --color-sky-700: #3570a0;
+
+  /* Dedicated Dojo page background and mastered-tile fill. */
+  --color-dojo-bg: #e2eff6;
+  --color-heat-gold-fill: #fffaec;
+
   /* Feedback colours */
   --color-feedback-wrong: #f59e60;
   --color-feedback-correct: #7da873;
 
-  /* Heatmap colours (mastery progress) */
-  --color-heat-0: #e6ede3;
-  --color-heat-1: #ccdcc6;
-  --color-heat-2: #a8c4a0;
-  --color-heat-3: #7da873;
-  --color-heat-4: #5a8a50;
-  --color-heat-5: #456e3d;
+  /* Heatmap colours (mastery progress).
+     Saturated traffic-light ramp: beige default → red → amber → yellow →
+     light green → solid green → bright classic gold for mastery. The
+     score-band contract in engine/mastery.ts is:
+       0         → heat-0   (warm beige, untouched)
+       1-4       → heat-1   (rose/red, just starting)
+       5-9       → heat-2   (amber)
+       10-19     → heat-3   (yellow)
+       20-39     → heat-4   (light green)
+       40+       → heat-5   (solid green) → override to heat-gold in practice */
+  --color-heat-0: #ebe2da;
+  --color-heat-1: #e38782;
+  --color-heat-2: #f0a166;
+  --color-heat-3: #dfca5e;
+  --color-heat-4: #a9d178;
+  --color-heat-5: #7eb560;
+  --color-heat-gold: #ffc72c;
 
   /* Surface and text */
   --color-surface: var(--color-cream);

@@ -786,82 +786,332 @@ The dropdown closes on selection or outside click.
 
 ## 8. Dojo Screen Spec - Kana
 
-**Status:** To Do
-**Route:** `/dojo` (when in Kana mode)
-**Scrollable:** Yes (content may exceed one screen)
-**Layout:** Standard in-app layout with top bar, scrollable content area
+**Status:** Built and iterating (Sprint 2B, Sessions 41-42). Source of truth
+for behaviour is the shipped page; this spec is kept in sync so future work
+has an accurate starting point.
+**Route:** `/dojo/kana` (logged-in users and guests)
+**Scrollable:** Yes (content exceeds one screen at all breakpoints)
+**Layout:** In-app top bar (see Section 6.2) over a scrollable content column.
+The top bar is transparent at the top of the page and frosts to
+`bg-white/80 backdrop-blur-sm border-b border-border` after ~16px of scroll.
 
 ### 8.1 Overview
 
-The Dojo shows the user's complete mastery picture for kana characters.
-It is a progress screen, not a game screen. No input occurs here.
+The Kana Dojo is the user's complete mastery picture for kana characters.
+It is a progress screen, not a game screen: no practice input occurs here.
+Its jobs, in order of priority:
+1. Show at a glance how much of the kana chart the user has mastered.
+2. Let the user jump into practice on a character they want to target.
+3. Let the user unlock characters ahead of the guided sequence.
 
-### 8.2 Chart Layout
+No distance counter, no mascot, no cycling animation on this screen.
+Background matches the current scene theme token (default `theme-day`) but
+without the parallax landscape: a flat scene colour only, so the grid reads cleanly.
 
-On the Dojo screen, all characters are organised into the progression stages
-defined in GAME_DESIGN.md Section 4.3:
+### 8.2 Route and Navigation
+
+Route: `/dojo/kana`. Reached via the "Kana Dojo" link in the top bar (Section 6.2)
+or the Kana mastery CTA on the game home screen.
+
+Kotoba has its own route (`/dojo/kotoba`, Section 9). The two dojos are separate
+pages: there is no in-screen toggle between them.
+
+Back navigation: browser back. No in-page back button; the top bar is the
+primary navigation affordance on every in-app screen.
+
+### 8.3 Chart Layout
+
+All characters are organised into the progression stages defined in
+GAME_DESIGN.md Section 4.3:
 - Stage 1: Seion (hiragana then katakana)
 - Stage 2: Dakuon
 - Stage 3: Yoon
 
-**Desktop:** Charts are displayed horizontally with rows for each consonant group
-(a, ka, sa, ta, na, ha, ma, ya, ra, wa) and columns for each vowel (a, i, u, e, o).
+The chart flips orientation at a content-fit breakpoint (`min-[1028px]:`) -
+the width at which the full gojuon grid plus outer padding first fits on
+screen without squeezing. There is no intermediate layout between these two
+forms; one or the other is active.
 
-**Mobile:** Charts are also horizontal (scrollable within the row), matching the
-reference hiragana table image. The table scrolls horizontally within its container.
+**Desktop (`min-[1028px]:` and above):** Gojuon-style grid with rows for each
+consonant group (a, k-, s-, t-, n-, h-, m-, y-, r-, w-) and columns for each
+vowel (a, i, u, e, o). Tiles fixed at 76x76px. Grid is centred in the content
+column.
 
-### 8.3 Stage Sections
+**Mobile (below 1028px):** The grid rotates 90 degrees. Columns become the
+vowels (a, i, u, e, o) and rows become the consonant groups, so the page
+scrolls vertically (never horizontally) as the user moves through a stage.
+Tiles and text scale fluidly via `clamp()` + container queries (see
+FRONTEND.md §8.1); tile size is `clamp(44px, calc(20vw - 20px), 76px)` so the
+chart holds up at the 320px baseline without squish.
 
-Each stage (Seion, Dakuon, Yoon) is a collapsible section with:
-- Section heading (text-xl, warm-800): e.g. "Seion"
-- A total progress bar for the entire stage (using heatmap logic)
-  showing average mastery across all characters in the stage
-- Toggle arrow (chevron right / chevron down)
-- Collapsed by default for stages the user has not reached
-- Open by default for the current active stage
+Row label gutter: 20px fixed on both orientations, so headings and tiles
+share a consistent left edge.
 
-Within each stage, sub-sections by script (Hiragana, Katakana) each have:
-- Sub-heading (text-lg, warm-600)
-- Their own progress bar (average mastery for that sub-section)
-- The character grid
+Grid gap: `gap-2` on mobile, `gap-3` on desktop.
 
-### 8.4 Character Tiles
+Row labels show the consonant in hyphenated form (`k-`, `s-`, `t-`) rather
+than `ka`/`sa`/`ta` - these are visual row headers, not pronunciations. The
+`a` row is blank (the bare vowel row), and the standalone `n` label stays
+as `n`.
 
-Each character is a tile in the grid:
-- Background: heatmap colour based on mastery score using the colour scale:
-  - 0 points: grey (locked visual) or sage-100 (unlocked but unpractised)
-  - 1-3 points: blush pink `#F09EA7` to orange `#F6CA94`
-  - 4-5 points: orange `#F6CA94` to yellow `#FAFABE`
-  - 6-7 points: yellow `#FAFABE` to green `#C1EBC0`
-  - 8-9 points: green `#C1EBC0`
-  - 10+ points: green `#C1EBC0` with a gold shimmer accent `#D4AF37`
-- Kana character: centred, text-xl Zen Maru Gothic
-- Romaji below: text-xs, warm-400
-- Mini progress bar at bottom of tile using the heatmap colour
-- Locked state: grey background, padlock icon overlay, character slightly dimmed
+### 8.4 Script and Stage Sections
 
-Tapping a tile:
-- If locked: opens the unlock prompt for that individual character
-- If unlocked: opens a detail popover showing the character, its romaji, its mnemonic
-  (if mnemonics are enabled in settings), and its current mastery score
+The shipped structure nests by script first, then by stage. The outer group
+is the script (Hiragana, Katakana); inside each open script are three stage
+sub-sections (Seion, Dakuon, Yoon). This matches the user's mental model of
+"which script am I working in" being the higher-level choice.
 
-### 8.5 Unlock Interaction
+**Script-level `GroupBar`:**
+- Heading (`text-xl`, `text-warm-800`, Zen Maru Gothic): e.g. "Hiragana"
+- Progress bar: average mastery across every character in the script
+- Percentage readout to the right of the bar
+- Tiered unlock button: dark blue when any characters remain locked; grey
+  "unlocked" icon when every character is already unlocked, which opens the
+  reset-progress flow (Section 8.9)
+- Toggle chevron, `text-warm-600`, 44x44pt touch target
+- Collapsed by default for scripts the user has not reached; open by
+  default for the current active script
 
-**Individual unlock:**
-Tapping a locked character tile opens a modal:
-"Unlock [character]?"
-Subtext: "You can practise this character straight away."
-Buttons: "Unlock" (mint-500) and "Cancel"
+**Stage-level `GroupBar`:** same shape as the script bar but one visual
+level down:
+- Heading (`text-lg`, `text-warm-700`): "Seion", "Dakuon", "Yoon"
+- Progress bar and percentage for the stage only
+- Tiered unlock button: medium blue (Seion) / light blue (Dakuon, Yoon), or
+  grey when the stage is fully unlocked
+- Heading indents visually (sub-bullet hierarchy) but the progress bar still
+  starts at the same x-coordinate as the script bar above it. This is
+  achieved with `border-box` + `min-width` + internal `padding-left` on the
+  heading button (see FRONTEND.md §8.1).
 
-**Group unlock (via progress bar):**
-Tapping the progress bar of any section (stage or sub-section) that contains locked
-characters opens a modal with three options:
-1. "Unlock all characters in [Stage name]"
-2. "Unlock all characters in [Sub-section name]" (e.g. Hiragana Seion)
-3. "Select characters to unlock" - opens a multi-select view of all locked characters
-   in that section, with checkboxes. Confirm button: "Unlock [n] characters".
+Collapse/expand animation: height transition, 200ms, `ease-out`.
+Respects `prefers-reduced-motion: reduce`: instant toggle with no transition.
 
-All unlock actions require a confirmation tap. No single-tap bulk unlocks.
+### 8.5 Character Tiles
+
+Each character is a tile in the grid.
+
+**Dimensions:**
+- Desktop (`min-[1028px]:` and above): 76x76px fixed.
+- Mobile (below 1028px): fluid
+  `clamp(44px, calc(20vw - 20px), 76px)` square. Tile contents (kana glyph,
+  romaji, mastery pill) scale proportionally via container queries and `cqw`
+  units, so nothing squishes at 320px - see FRONTEND.md §8.1.
+- Height decouples slightly from width at the smallest sizes to protect
+  vertical content: `clamp(54px, calc(20vw - 10px), 86px)`. Minimum 44x44pt
+  touch target preserved at every breakpoint.
+- Rounded: `rounded-lg`
+- Border: `border border-warm-200` at rest, `border-warm-400` on hover
+
+**Content stacked inside the tile:**
+- Kana character: centred, `text-xl` Zen Maru Gothic, colour depends on state
+  (see locked state below)
+- Romaji below: `text-xs`, `text-warm-400`
+- Mini progress bar at bottom of tile, 2px tall, full width of tile,
+  coloured with the heatmap value for that score
+
+**Locked state:**
+- Background: `bg-warm-100`
+- Kana character: `text-warm-300`, slightly dimmed
+- Padlock icon overlay: inline SVG, `text-warm-400`, centred over the character
+  at 40% opacity so the character is still readable
+- Mini progress bar hidden (no mastery to show)
+- Cursor: `cursor-pointer` (it is tappable to unlock, see Section 8.9)
+
+**Unlocked, unpractised state (score 0):**
+- Background: `bg-sage-100`
+- Kana character: `text-warm-800` full strength
+- Mini progress bar: empty (0%)
+
+**Hover (desktop only):**
+- Slight lift: `translate-y-[-1px]`, subtle shadow `shadow-sm`
+- No sound cue on hover
+
+**Active (pressed):**
+- `translate-y-[0.5px]`, shadow reduced
+
+### 8.6 Heatmap Colour Scale
+
+Tile background colour is driven by the existing heat contract defined in
+`engine/mastery.ts` (`getMasteryHeatClass`) and documented in
+`docs/FRONTEND.md` §2.1. Bands and tokens:
+
+| Score | Token | Notes |
+|---|---|---|
+| 0 (unlocked) | `bg-heat-0` | Unlocked but unpractised |
+| 1-4 | `bg-heat-1` | Early practice, building toward unlock threshold (5) |
+| 5-9 | `bg-heat-2` | Unlock threshold crossed; building comfort |
+| 10-19 | `bg-heat-3` | Comfortable |
+| 20-39 | `bg-heat-4` | Strong |
+| 40+ | `bg-heat-5` | Mastered (see below) |
+
+The same classes drive the stage and sub-section progress bars, applied to
+the average mastery score of the characters in that group via `ProgressBar`.
+
+Locked tiles render on `bg-warm-100` with a padlock overlay; the mini
+progress bar is suppressed because there is no mastery to visualise yet.
+
+**Mastered visual (score >= `MASTERY_THRESHOLD`, 40+):** a 1px gold ring
+using `--color-heat-gold` (`#D4AF37`) plus a soft diagonal shimmer animation
+applied above the heat fill. The animation is gated behind
+`prefers-reduced-motion: no-preference`; under reduced motion the ring stays,
+the sweep does not. Ring contrast is measured against the page's cream
+surface, not the heat fill.
+
+This contract is intentionally shared with the progress bar. Do not introduce
+a parallel palette for the Dojo; any future re-palette must update the engine
+helper and the CSS tokens together so every heat surface stays in sync.
+
+### 8.7 Tile Detail Popover
+
+Tapping an unlocked tile opens a detail popover anchored to the tile
+(desktop) or a bottom sheet (mobile, below `md`).
+
+**Contents:**
+- Character: large, `text-4xl` Zen Maru Gothic, centred
+- Romaji: `text-lg`, `text-warm-600`
+- Mastery score: "Mastery: [n]" (`text-sm`, `text-warm-500`)
+- Mnemonic: shown only if mnemonics are enabled in Settings. `text-sm`,
+  `text-warm-700`, max-width 28ch for readability.
+- Two buttons (key-button style, stacked on mobile, side-by-side desktop):
+  - "Practise this" - navigates to `/practice?mode=kana&focus=[character]`
+    (focus param biases selection toward that character; selection algorithm
+    details in GAME_DESIGN.md Section 5)
+  - "Close" - dismisses the popover
+
+**Dismiss behaviour:**
+- Tap outside the popover / bottom sheet
+- ESC key (desktop)
+- Swipe down on the sheet (mobile)
+- Close button
+
+Animation: fade + scale 150ms on desktop popover, slide-up 200ms on mobile
+sheet. Reduced-motion: instant.
+
+Only one detail popover can be open at a time. Opening a second tile closes
+the first.
+
+### 8.8 Active Stage Indicator
+
+The "active stage" is the earliest stage (within the active script) that
+still has locked characters. It is visually emphasised so the user knows
+where the guided sequence is currently positioned.
+
+- Active stage is expanded by default on page load. The script above it is
+  also expanded by default.
+- No "Current" badge on the bar. (An earlier spec included a mint `Current`
+  pill; removed in Session 41 because the default-open behaviour already
+  communicates the active stage and the badge added visual noise.)
+- Completed stages (no locked characters): chevron state persists from last
+  session (default collapsed); the tiered unlock button on the bar switches
+  to the grey unlocked-icon reset affordance (see Section 8.9).
+- Future stages (all characters still locked from guided progression, no
+  early-unlocks): collapsed by default, muted heading `text-warm-400`.
+
+### 8.9 Unlock and Reset Interactions
+
+**Individual unlock (tap a locked tile):**
+Opens `UnlockPrompt`, a single-step modal:
+- Title: "Unlock [character]?"
+- Body: "You can practise this character straight away. This cannot be undone
+  without resetting all progress."
+- Buttons: "Unlock" (`bg-mint-500`, `text-white`) and "Cancel"
+  (`bg-warm-100`, `text-warm-800`).
+- Single confirmation tap is sufficient per GAME_DESIGN.md Section 4.5.
+
+**Tap an unlocked tile:** opens the two-step reset-this-character flow
+(GAME_DESIGN.md 4.6). The detail popover described in §8.7 is deferred to a
+follow-up pass; the current direct-reset behaviour is intentional for now.
+
+**Group unlock (tiered unlock buttons in each `GroupBar`):**
+Every `GroupBar` carries a single tiered action button that changes state
+based on whether any characters in that scope are still locked.
+
+- Any locked remaining: the button is a blue lock icon, colour-ranked by
+  level. Script bar uses dark blue, Seion uses medium blue, Dakuon and Yoon
+  use light blue. Tapping it opens `BulkUnlockPrompt`, a two-step modal:
+  - Step 1: "Unlock all [n] characters in [Label]?" with Yes/No.
+  - Step 2: "Are you sure? This can't be undone." with Yes/No.
+  - Confirm completes the bulk unlock (GAME_DESIGN.md 4.6).
+- Nothing locked in that scope: the button flips to a grey unlocked icon.
+  Tapping it opens `BulkResetPrompt`, a two-step modal that clears mastery
+  scores back to 0 while keeping every character in the manually-unlocked
+  set (so they stay visible as unlocked-at-0 tiles):
+  - Step 1: "Reset progress on all characters in [Label]?" with Yes/No.
+  - Step 2: "Are you sure? This can't be undone." with Yes/No.
+
+All colours on the unlock/reset button carry `/85` translucency so the
+action reads as a secondary affordance, not a primary call to action.
+
+The earlier draft in this section specified a three-option group-unlock
+modal ("stage", "sub-section", "select characters"). That was replaced by
+the tiered per-bar buttons because (a) the selection is implicit in which
+bar you tap, and (b) swapping the same button between unlock and reset
+flows kept the bar density low. The deferred multi-select view is still
+flagged for a follow-up pass.
+
+Progress bars with no characters in scope are not rendered (impossible
+state in practice). Bars where the action is inapplicable fall back to the
+grey reset affordance described above, never disappear.
+
+### 8.10 Sound Cues
+
+This screen is a progress view, not a keyboard surface. Sound cues are minimal:
+- Tile tap (unlocked): soft UI click, `ui-tap.ogg` (see Section 14.2).
+  Consistent with other non-practice taps in the app.
+- Locked tile tap (opens unlock modal): same `ui-tap.ogg`, plus the modal's
+  own open sound.
+- Unlock confirmation: `ui-unlock.ogg` (see Section 14.2) plays once on
+  successful unlock.
+- Stage collapse/expand: no sound.
+- Popover / modal open and close: default modal sounds (Section 14.2).
+
+Key-press sounds (the sprite from `data/audio/key-sound-map.ts`) are not used
+on the Dojo. Those are reserved for practice input surfaces.
+
+### 8.11 Loading, Error, and Empty States
+
+**Loading:**
+On first paint, the stage scaffolding renders immediately with skeleton tiles
+(`bg-warm-100` pulse animation). Mastery scores and unlock state are fetched
+from the mastery store (Zustand, hydrated from Supabase or localStorage).
+Skeleton resolves to real tiles within one frame on guests (localStorage is
+synchronous) and within ~200ms on logged-in users (Supabase fetch).
+
+No top-level spinner. The stage sections themselves are the skeleton.
+
+**Error (mastery fetch fails for logged-in users):**
+Inline banner at the top of the content column: `bg-blush-100`, `text-warm-800`.
+Text: "We could not load your progress. Check your connection and try again."
+Button: "Retry" (`bg-sage-500`, `text-white`).
+Grid below the banner falls back to the last-known state from localStorage if
+present, otherwise renders all characters as locked and suppresses all unlock
+actions (read-only fallback).
+
+**Empty (0 characters unlocked, post-skip onboarding):**
+All tiles render in locked state. A small help card sits above the Seion
+section:
+- Icon: mascot SVG, 48px
+- Headline: "Start your journey" (`text-lg`, `text-warm-800`)
+- Body: "Tap any character to unlock it, or jump into practice and unlock
+  as you go." (`text-sm`, `text-warm-600`)
+- Button: "Start practice" (`bg-sage-500`, `text-white`) - navigates to
+  `/practice?mode=kana`
+
+The help card is dismissible; once dismissed it does not return. Dismissal
+state is per-user and persisted to the profile (logged-in) or localStorage
+(guest).
+
+### 8.12 Accessibility
+
+- Every tile: `button` element, `aria-label` of the form "Character [kana], romaji [romaji], mastery [n], [locked|unlocked]"
+- Locked tile `aria-label` additionally includes "tap to unlock"
+- Stage headings: `<h2>`, sub-section headings: `<h3>`
+- Progress bars: `role="progressbar"`, `aria-valuenow`, `aria-valuemin="0"`, `aria-valuemax="10"` (10 reads as the mastery ceiling for screen readers; beyond 10 the value caps at 10 for a11y semantics but the visual gold shimmer signals "mastered")
+- Progress bars with locked characters: `aria-label` includes "tap to unlock characters in [group]"
+- Popover: focus trap, `aria-modal="true"`, focus returns to the originating tile on close
+- Keyboard navigation: tab cycles tiles left-to-right, top-to-bottom within a section, then to the next section's heading
+- All touch targets minimum 44x44pt (mobile tile size + padding)
+- `prefers-reduced-motion`: disables tile hover lift, collapse/expand transitions, popover fade/slide
 
 ---
 
@@ -1045,16 +1295,22 @@ game home, practice screen). Violating these rules is a bug, not a style choice.
 - The cyclist uses percentage-based `bottom` and `left` positioning relative to the scene container, not fixed pixels.
 - Hero copy and CTA buttons use percentage-based vertical positioning within the sky area so they stay centred in the available sky space at any viewport height.
 - Elements reposition gracefully as the viewport narrows. Nothing squishes, overlaps, or clips.
-- Every new scene-based screen must be tested at 360px, 768px, and 1440px widths before the task is marked Done.
+- Every new scene-based screen must be tested at 320px, 375px, 768px, and 1440px widths before the task is marked Done. 320px is the hard mobile floor (iPhone 5/SE, folded foldables mid-unfold); anything that breaks there blocks the task. See FRONTEND.md §8 and §8.1 for the fluid-scaling stack (clamp + container queries) used to honour this baseline.
 
 ### 13.2 General Layout Rules
 
-- Top bar: sticky, 56px height. Logo left, mode/action icons right.
+- Top bar: fixed, 56px height. Logo left, nav centre (desktop) or hamburger
+  (mobile), settings and profile icons right. Transparent at the top of the
+  page, frosts to `bg-white/80 backdrop-blur-sm border-b border-border` after
+  a small scroll threshold (16px in-app, 80px on the landing page) with a
+  200ms transition. See FRONTEND.md §5.2.
 - Bottom nav (in-app): 64px height, 4 tabs. Active tab uses sage-500.
 - Content max-width: `max-w-md` for practice and Dojo, `max-w-2xl` for reading-heavy screens.
 - Swipe mode: hide bottom nav and cyclist when native keyboard is open. Maximise space for the character prompt.
 - Micro-interactions: soft fade-ins and scale transitions, 150ms to 300ms. No harsh flashes or aggressive spring animations.
 - Touch targets: minimum 44x44pt on all interactive elements, no exceptions.
+- Mobile baseline: every page must render cleanly at 320px with no horizontal
+  scroll. This is a binding rule, not an aspiration.
 
 ---
 
@@ -1115,7 +1371,7 @@ File naming: lowercase, hyphens, descriptive. No spaces.
 | Practice - Type mode | To Do | No |
 | Practice - Tap mode | To Do | No |
 | Practice - Swipe mode | To Do | No |
-| Dojo - Kana | To Do | No |
+| Dojo - Kana | Done | No |
 | Dojo - Kotoba | To Do | No |
 | Sign-up | To Do | No |
 | Log-in | To Do | No |

@@ -281,10 +281,16 @@ main screen and applies this structure consistently.
 ### 5.2 Top Bar
 
 - Height: `h-14` (56px).
-- Left: LangTap logo (text or SVG, not an image file).
-- Right: Input mode icon, tappable, opens mode switcher.
-- Background: `bg-surface-raised` with a subtle bottom border `border-b border-border`.
-- Position: sticky top.
+- Position: `fixed top-0 left-0 right-0 z-50`.
+- Left: LangTap logo. LogoLt on compact viewports, LogoFull on desktop.
+- Centre (desktop 768px+): in-app nav links (Home, Kana Dojo, Kotoba Dojo, Leaderboard).
+- Right: Settings and Profile icons. On viewports under 425px the nav
+  collapses behind a hamburger.
+- Background: transparent at the top of the page, frosted
+  `bg-white/80 backdrop-blur-sm border-b border-border` once the user has
+  scrolled past a small threshold (16px in-app, 80px on the landing page).
+  Transition runs over 200ms. See `components/layout/app-top-bar.tsx` and
+  `components/layout/landing-nav.tsx` for the reference implementation.
 
 ### 5.3 Bottom Navigation
 
@@ -469,11 +475,17 @@ Shown on a wrong answer. Contains:
 
 **CharacterGroup**
 
-A collapsible section in the Dojo. Has a heading (e.g. "Seion"), a subheading
-(e.g. "Hiragana"), a toggle arrow, and a grid of `CharacterTile` components.
+Top-level collapsible group for one script (Hiragana or Katakana). When open,
+nests three `StageBlock` sub-sections (Seion, Dakuon, Yoon), each with its
+own `GroupBar` and `CharacterGrid`. Every `GroupBar` (script and stage)
+exposes label, progress bar, percentage, and a tiered unlock action: dark
+blue for the script bar, medium/light blue for stage bars, grey when every
+character in that scope is already unlocked (at which point the action
+becomes "reset progress" and opens `BulkResetPrompt`).
 
-Collapsed by default for stages the user has not reached. Open by default for
-the current active stage.
+Collapsed by default for scripts the user has not reached. Open by default
+for the current active script; the earliest stage within that script with
+locked characters auto-opens as the current stage.
 
 **CharacterTile**
 
@@ -534,19 +546,25 @@ larger screens receive more breathing room around the same layout. This is
 industry-standard practice and the correct approach for an app where the primary
 use case is mobile swipe input.
 
-**Design baseline:** 360px wide, 667px tall. This is the smallest common
-smartphone viewport and the industry-standard minimum for mobile-first wireframing.
-If the layout works here, it works on every device.
+**Design baseline:** 320px wide, 568px tall. This is a hard floor, not an
+aspiration. It covers the narrowest viewports still in the wild (iPhone 5/SE,
+older Android compacts, folded foldables mid-unfold) as well as the standard
+360x640 and 375x667 profiles. Every page must render cleanly at 320px with no
+horizontal scroll and every touch target still at or above 44x44pt. If the
+layout works here, it works on every device. The Kana Dojo is the reference
+screen for this baseline; its fluid-scaling stack (see §8.1) is the pattern
+to follow when content would otherwise squish or overflow on narrow viewports.
 
-**Swipe mode compact target:** 360px wide, 300px tall content area (keyboard open).
-This is the hardest constraint in the entire app. It must be tested first.
+**Swipe mode compact target:** 320px wide, 300px tall content area (keyboard
+open). This is the hardest constraint in the entire app. It must be tested
+first.
 
 **Font size minimum:** 16px for all body text. Below this, iOS Safari auto-zooms
 the page when an input field is focused, which breaks the layout.
 
 | Breakpoint | Tailwind prefix | Target device | Notes |
 |---|---|---|---|
-| 360px+ (default) | none | Small phones | Base styles. Single-column layout. |
+| 320px+ (default) | none | Compact phones, folded foldables | Base styles. Single-column layout. Must fit without horizontal scroll. |
 | 480px+ | `xs:` (custom) | Large phones | Minor spacing increases. |
 | 768px+ | `md:` | Tablets | Wider tap grid, more padding. |
 | 1024px+ | `lg:` | Desktop | Max-width container centred on screen. |
@@ -558,6 +576,75 @@ desktop styles first and shrink down.
 The `max-w-md` (448px) container on the practice screen and Dojo means the
 layout never stretches uncomfortably wide on desktop. It simply sits centred
 with neutral background on either side.
+
+### 8.1 Fluid Component Scaling
+
+Some components need to scale their contents smoothly between the 320px
+baseline and a larger max size, rather than snap at breakpoints. Two
+patterns apply, used together where needed.
+
+**Page-level fluid sizing (`clamp()` + `vw`).** Use when a component's size
+should track the viewport width.
+
+```css
+width:     clamp(44px, calc(20vw - 20px), 76px);
+font-size: clamp(12px, 3.5vw,  24px);
+```
+
+The `calc()` inside the middle argument is optional; it lets you bias the
+scaling rate away from a pure linear vw mapping (for example, to subtract a
+fixed gutter). Always include both a floor and a ceiling so the value pins at
+the extremes.
+
+**Component-internal fluid sizing (container queries + `cqw`).** Use when a
+component's internal elements should scale with the *component's own width*,
+not the viewport. Set the component as a width container, then use `cqw`
+(container-query width) units for its children.
+
+```ts
+// Component root
+style={{ containerType: 'inline-size', width: '100%', maxWidth: '76px' }}
+
+// Inner text scales with the container, not the page.
+style={{ fontSize: 'clamp(12px, 37cqw, 28px)' }}
+```
+
+This is the reference pattern for grids of tiles where each tile is itself
+fluid. The Kana Dojo's `CharacterTile` uses this pattern so kana, romaji,
+and the mastery pill all scale proportionally with the tile box.
+
+**Cross-row alignment with `border-box` + `min-width` + internal padding.**
+When a heading button must visually indent (sub-bullet hierarchy) while all
+progress bars across rows still start at the same x-coordinate, pin the
+heading's outer width with `min-width` on a `border-box` and apply the
+indent as internal `padding-left`. The padding moves the label but leaves
+the outer width (and therefore the bar start) untouched.
+
+```ts
+// Script row: pins the heading area at 145px max.
+// Stage row: same min-width, adds padding-left so the stage label sits
+// visually indented but the bar after the heading still starts at the
+// same x as the script bar above it.
+style={{
+  boxSizing:   'border-box',
+  minWidth:    'clamp(95px, calc(31.25vw - 5px), 145px)',
+  paddingLeft: 'clamp(16px, 5vw, 24px)', // stage only
+}}
+```
+
+**Responsive orientation flip at a content-fit breakpoint.** When a grid
+layout needs to change orientation (e.g. horizontal on desktop, vertical on
+mobile), pick the breakpoint at which the horizontal form stops fitting
+rather than a default Tailwind size. The Kana Dojo flips at
+`min-[1028px]:` because that is where its 988px content grid plus 40px of
+outer padding first fits; other components may flip elsewhere. Use a single
+tuned arbitrary breakpoint per component, not a chain of default breakpoints.
+
+**Inline style is the accepted expression for these values.** Tailwind v4's
+arbitrary-value syntax supports `clamp()` but is awkward with `calc()` that
+contains commas and with container-query units. Inline `style={}` is
+clearer at the call site for fluid expressions only. Hardcoded colours,
+font sizes, and discrete spacing still use theme classes (see §13).
 
 ---
 
@@ -645,7 +732,12 @@ rewrite the sentence. See CLAUDE.md Section 15 for the full rule.
 
 ## 13. What the AI Must Not Do
 
-- Never add inline styles to a component. Tailwind utility classes only.
+- Never add inline styles for colour, discrete spacing, or font size.
+  Always use theme tokens and Tailwind utility classes for these. Inline
+  `style={}` is only permitted for fluid-scaling expressions (`clamp()` with
+  `vw` or `cqw`, `container-type: inline-size`, `border-box` `min-width` +
+  `padding-left` alignment) where Tailwind arbitrary-value syntax is awkward.
+  See §8.1 for the sanctioned patterns.
 - Never hardcode a colour value. Always use a token class.
 - Never hardcode a font size in pixels. Always use a type scale class.
 - Never hardcode a spacing value. Always use the spacing scale.

@@ -30,6 +30,139 @@ Format per entry:
 
 ---
 
+## [2026-04-20] - Session 42
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Iterate Kana Dojo UI (fluid mobile scaling to 320px, tiered unlock buttons with grey reset swap, translucent-on-scroll top bar) and roll the resulting decisions into CHANGELOG, LangTap_Sprints, FRONTEND.md, and UX_DESIGN.md.
+**Status:** Done
+
+### Changes made
+- [components/dojo/character-tile.tsx]: Fluid tile sizing via `containerType: 'inline-size'` + `clamp()` on height and `cqw` units on inner kana glyph, romaji, and mastery pill. Height decoupled from width at the smallest sizes so text no longer squishes at 320px. Locked vs unlocked padding swap preserves the visual position of the glyph and romaji relative to the pill between states.
+- [components/dojo/character-grid.tsx]: Two explicit grid templates (mobile fluid, desktop fixed) switched at `min-[1028px]:`. Mobile columns: 20px label gutter + `repeat(N, clamp(44px, calc(20vw - 20px), 76px))`. Grid centres on the page; horizontal scroll removed entirely (vertical-only scroll below the breakpoint). Row labels use hyphenated consonant forms (`k-`, `s-`, `t-`) instead of `ka`/`sa`/`ta`; the bare vowel row is blank and standalone `n` stays as `n`.
+- [components/dojo/group-bar.tsx]: `UnlockButton` now has three decoupled props (size: large/medium/small, colour: dark/medium/light/grey, icon: locked/unlocked) so a stage sub-bar can be smaller than the script bar but share its colour rules, and can swap between blue-locked and grey-unlocked states without its layout shifting. Heading button pinned with `min-width: clamp(95px, calc(31.25vw - 5px), 145px)` on a border-box, with internal `padding-left` for stage indent, so all progress bars start at the same x across script and stage rows. Colours carry `/85` translucency so the action reads as secondary. New `onReset` callback fires when every character in the scope is already unlocked.
+- [components/dojo/bulk-reset-prompt.tsx]: New two-step confirmation modal. Step 1: "Reset progress on all characters in {label}?"; step 2: "Are you sure? This can't be undone." Confirming clears mastery scores to 0 while leaving characters in the manually-unlocked set so they stay visible as unlocked-at-0 tiles.
+- [components/layout/kana-dojo-client.tsx]: `bulkResetScope` state + handler, plus `handleResetScript`, `handleResetStage`, `handleResetAll`. Master Unlock-All button always renders and swaps between the blue locked icon (unlock flow) and the grey unlocked icon (reset flow) based on whether any characters in that scope remain locked.
+- [components/layout/app-top-bar.tsx]: Scroll listener + transparent to `bg-white/80 backdrop-blur-sm border-b border-border` on `scrollY > 16px`, with a 200ms transition. Matches `components/layout/landing-nav.tsx` (which uses an 80px threshold because it sits above a hero band). Smaller threshold in-app because content starts directly below the bar.
+- [LangTap_Sprints.md]: Appended Session 42 iteration note to the Kana Dojo spec row.
+- [docs/FRONTEND.md]: (a) §5.2 Top Bar rewritten to document the `fixed` + translucent-on-scroll pattern and the three-layout (mobile hamburger / medium icon bar / desktop text links) structure. (b) §6.3 CharacterGroup description corrected to match shipped nesting (script outer, stage inner). (c) §8 Responsive Behaviour baseline dropped from 360 to 320px; Kana Dojo is the reference screen that validates the full fluid-scaling stack at 320. Breakpoint table updated to lead with 320px. (d) New §8.1 "Fluid Component Scaling" subsection documenting `clamp()` + `vw` for page-level sizing, container queries + `cqw` for component-internal proportional scaling, the border-box `min-width` + internal `padding-left` trick for cross-row bar alignment, and content-fit breakpoints (e.g. `min-[1028px]:`) in place of default Tailwind sizes. (e) §13 "Never add inline styles" narrowed: colour, discrete spacing, and font size still require theme tokens, but inline `style={}` is explicitly permitted for fluid-scaling expressions that Tailwind arbitrary-value syntax handles awkwardly (clamp with commas in calc, container-query units, containerType). Cross-references §8.1.
+- [docs/UX_DESIGN.md]: Kana Dojo spec (§8) synced to shipped behaviour. (a) Status flipped from "Spec drafted, page not yet built" to "Built and iterating". (b) §8.3 Chart Layout rewritten: orientation flip at `min-[1028px]:`, vertical scroll only on mobile, fluid tile size, hyphenated row labels. (c) §8.4 renamed to "Script and Stage Sections" and reworked to document the shipped script-outer / stage-inner nesting plus the tiered unlock button on every `GroupBar`. (d) §8.5 tile dimensions replaced with the fluid clamp values. (e) §8.8 removed the "Current" badge (deleted in Session 41) and explains the default-open behaviour instead. (f) §8.9 rewritten as "Unlock and Reset Interactions": tiered per-bar buttons replacing the earlier three-option modal, plus the grey `BulkResetPrompt` flow. (g) §13.1 test widths updated from 360/768/1440 to 320/375/768/1440 and flagged as a binding rule. (h) §13.2 top bar line updated to match the fixed + translucent-on-scroll pattern, plus a new bullet declaring the 320px mobile baseline as binding.
+
+### Tests
+- npm run check: Pass (format, lint, type-check, 238 vitest tests). One pre-existing unrelated warning in components/game/game-window.tsx (useCallback dep, unchanged). No regressions.
+- Browser smoke (Kana Dojo): renders cleanly at 320 / 375 / 414 / 768 / 1028 / 1280px. Progress bars pin to the same x across script and stage rows at every width. All-unlocked groups show the grey reset icon and open BulkResetPrompt. Top bar frosts after ~16px of scroll.
+
+### Next task
+- Write Dojo screen spec - Kotoba (full page, Phase-2-locked in-product) per UX_DESIGN.md §9.
+
+### Notes
+- The 320px mobile baseline is now a binding rule (FRONTEND.md §8, UX_DESIGN.md §13.2). Previously the baseline was 360px. The Kana Dojo is the reference screen for the full fluid-scaling stack; other pages should follow its pattern when narrow-viewport fidelity matters.
+- Per-bar tiered unlock button (dark/medium/light blue, plus grey reset swap) replaces the earlier three-option group-unlock modal. The selection is now implicit in which bar you tap, which kept the visual density low and avoided a branching modal. The deferred multi-select variant is still tracked as a follow-up.
+- `BulkResetPrompt` deliberately mirrors `BulkUnlockPrompt`'s two-step shape so the two destructive bulk flows feel symmetrical.
+- Inline `style={}` is now explicitly sanctioned for fluid-scaling values only. Hardcoded colour, font size, and discrete spacing still go through theme tokens. This is a narrow exception, not a loosening of the no-inline-styles rule.
+- The comment at the bottom of UX_DESIGN.md ("Do not update FRONTEND.md directly from this document - wait for the Consolidation task in Sprint 2B") is unchanged. This session did not do the broader consolidation; it only synced Kana Dojo-specific shipped behaviour and added the frontend-level rules (320px baseline, fluid-scaling patterns, translucent top bar) that legitimately belong in FRONTEND.md regardless of per-screen specs.
+
+---
+
+## [2026-04-20] - Session 41
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Write Dojo screen spec - Kana (spec + visual shell build)
+**Status:** Done
+
+### Changes made
+- [docs/UX_DESIGN.md]: Expanded §8 (Kana Dojo spec) - route, top bar, chart layout, stage sections, character tiles, heatmap scale, tile detail popover, active-stage indicator, unlock interaction, sound cues, loading/error/empty states, a11y. Rewrote §8.6 to match the existing heat contract in engine/mastery.ts + FRONTEND.md §2.1 (keeping sage ramp + 0/1-4/5-9/10-19/20-39/40+ bands) after discovering my draft palette conflicted with tested engine code. Flipped §15 summary row to Done/No.
+- [types/kana.types.ts]: Added KanaCharacter, Script, Stage, ProgressionGroup types. MasteryScore unchanged.
+- [data/kana/characters.ts]: Populated 208 kana (seion 92 + dakuon 50 + yoon 66) from empty scaffold. Hepburn romaji for display, Kunrei-style id suffixes where Hepburn collides (ぢ→h-di, づ→h-du). getCharacterById helper with O(1) map lookup.
+- [data/kana/progression-groups.ts]: Populated from empty scaffold. Interleaved H/K groups per GAME_DESIGN.md §4.3.
+- [data/kana/__tests__/characters.test.ts]: 12 integrity tests pinning id uniqueness, glyph uniqueness per (script, stage), orphan-free progression references, contiguous group indexing.
+- [engine/mastery.ts]: Added MASTERY_THRESHOLD (40) constant and isMastered() helper. getMasteryHeatClass and getMasteryWeight unchanged.
+- [engine/__tests__/mastery.test.ts]: +5 tests for isMastered.
+- [app/globals.css]: Added --color-heat-gold (#d4af37) and .dojo-tile-mastered shimmer animation gated behind prefers-reduced-motion: no-preference.
+- [samples/mastery-fixtures.ts]: New. EMPTY_STATE / MID_PROGRESS / COMPLETE_STATE fixtures. Wire format uses string[] for manuallyUnlocked so it crosses the server/client boundary without Set serialisation issues.
+- [components/dojo/character-tile.tsx]: Populated from null scaffold. Renders locked/unlocked/mastered states, padlock overlay, gold ring on mastered, aria-label with state hints.
+- [components/dojo/character-group.tsx]: Populated from null scaffold. Collapsible stage wrapper with inline Hiragana/Katakana sub-sections, stage progress bar, sub-section progress bars, "Current" badge on active stage, mint checkmark on completed, muted heading on future stages. Grid uses touch-action: pan-x + overscroll-behavior-x: contain.
+- [components/dojo/unlock-prompt.tsx]: Populated. Single-step confirm via shared Modal.
+- [components/dojo/bulk-unlock-prompt.tsx]: Populated. Two-phase flow: phase 1 custom option picker (three options), phase 2 shared Modal confirmation with count + "cannot be undone" warning. "Select characters to unlock" option is disabled in this pass (multi-select view deferred).
+- [components/dojo/tile-detail-popover.tsx]: New. Shows character, romaji, mastery score, optional mnemonic. "Practise this" link deep-links /practice?mode=kana&focus=. Own focus trap + ESC + scroll lock. Mobile bottom-sheet + swipe-down dismiss deferred.
+- [components/dojo/help-card.tsx]: New. Empty-state onboarding. Dismissal persists to localStorage under dojo.kana.helpDismissed. Read via useSyncExternalStore with SSR-safe server snapshot + same-tab notify emitter so in-tab writes propagate without needing the cross-tab storage event.
+- [components/layout/kana-dojo-client.tsx]: New. Orchestrates fixtures → derived locked set → stage activity → open-stages state → tile/popover/unlock/bulk-unlock/help-card flows. Flat background via bg-[var(--scene-sky-bottom)] under .theme-day.
+- [app/(main)/dojo/kana/page.tsx]: New. Server component wrapper around KanaDojoClient with fixture="mid".
+- [app/(main)/dojo/page.tsx]: New 3-line permanentRedirect('/dojo/kana'). In dev, Next emits a meta-refresh; prod serves HTTP 308.
+- [components/layout/app-top-bar.tsx]: Updated Kana Dojo href to /dojo/kana in all three layouts (mobile menu, medium icon bar, desktop text links). Active-state check changed from pathname === '/dojo' to pathname.startsWith('/dojo/kana') (same future-proofing for kotoba). Added ?? '' guard on usePathname() since it can be null in the Vitest/jsdom test environment.
+- [components/dojo/__tests__/character-tile.test.tsx]: New. 9 tests covering all states, aria-label, shimmer class, touch target, onClick.
+- [components/dojo/__tests__/character-group.test.tsx]: New. 7 tests covering collapse/expand, Current badge, completed checkmark, grid hidden when collapsed, disabled bar when 0 locked.
+- [components/dojo/__tests__/kana-dojo-client.test.tsx]: New. 8 tests covering mid-fixture render, empty-state help card, dismiss persistence, locked-tile → unlock flow, unlocked-tile → popover, stage bar → bulk-unlock flow.
+- [LangTap_Sprints.md]: Marked "Write Dojo screen spec - Kana" Done.
+
+### Tests
+- npm run check: Pass (222 total, +41 new this session; format, lint, type-check, vitest all green).
+- Browser smoke: /dojo/kana returns 200 with expected stage headings, mid-fixture mastery labels, and the mastered shimmer class present on あ. /dojo renders the Next meta-refresh to /dojo/kana in dev.
+
+### Next task
+- Write Dojo screen spec - Kotoba (full page, Phase-2-locked in-product) per UX_DESIGN.md §9.
+
+### Notes
+- Codex gate 1 and gate 2 both cleared before implementation. Key reconciliation during gate 2: kept the existing engine/mastery.ts heat contract (bands 0/1-4/5-9/10-19/20-39/40+ and sage-ramp tokens) instead of introducing a parallel blush→gold palette; gold is a 1px ring + shimmer on top of bg-heat-5, not a palette change.
+- Mastery store remains a Sprint 4 placeholder. KanaDojoClient talks to a local useState over the fixture, and swapping to Zustand later means replacing one prop source.
+- Deferred from this pass (flagged for follow-ups): mobile bottom-sheet + swipe-down dismiss on TileDetailPopover; BulkUnlockPrompt's "Select characters" multi-select view; populating data/kana/mnemonics.ts (popover hides the mnemonic pill when absent, so nothing breaks).
+- Saved a feedback memory: Sprint 2B "Write X screen spec" tasks are only Done when the page is built, not when the spec is written.
+
+---
+
+## [2026-04-18] - Session 40
+
+**Sprint:** Sprint 2B - Game Home Screen
+**Task completed:** Audio payload reduction - split key sound sprite into per-id files
+**Status:** Done
+
+### Changes made
+- [scripts/split-key-sounds.mjs]: New one-time script. Reads the original `keys.ogg` sprite offsets and uses `ffmpeg` to slice the sprite into per-id `.ogg` files under `public/sounds/keys/`. Encodes with `libopus -b:a 64k`. Idempotent - clears the output dir before writing. Script is self-contained (offsets inlined) so it can run without the TS build.
+- [public/sounds/keys/*.ogg]: 55 per-id slices generated, 220KB total on disk. Only `e.ogg` and `o.ogg` (1.6KB each) are ever fetched at runtime - the other 53 sit unused for now but are kept so future features (distinct UI sounds, per-key feedback) can wire them up without re-slicing.
+- [data/audio/key-sound-map.ts]: Rewritten. Was a map of id to `[startMs, durationMs]` sprite slices plus a `SOUND_SPRITE_URL` constant. Now a simple `Record<string, string>` mapping id to `/sounds/keys/{id}.ogg`. `SOUND_SPRITE_URL` removed (no longer referenced).
+- [hooks/useKeySound.ts]: Rewritten around per-id lazy loading. `bufferCache: Map<string, AudioBuffer>` and `loadingPromises: Map<string, Promise>` replace the single shared buffer. On first `playSound`, the requested file is fetched and decoded; subsequent plays reuse the cached buffer. First call still returns silently (same behaviour as before, since the AudioContext needs a user gesture anyway) but kicks off the load so the next keypress plays.
+- [eslint.config.mjs]: Added `scripts/**` to the ignores array, matching the existing `update_shrubs.js` one-off-script exception. `split-key-sounds.mjs` uses Node globals (`process`, `console`) that the repo's browser/TS lint config does not recognise.
+
+### Tests
+- `npm run check`: Pass (format, lint, type-check, 181 vitest tests). Pre-existing `react-hooks/exhaustive-deps` warning on `currentWord` in `game-window.tsx` still present - not blocking, not introduced this session.
+- Browser verification: owner confirmed the original 1.9MB `keys.ogg` can be removed after manual check.
+
+### Next task
+- Owner to delete `public/sounds/keys.ogg` (1.9MB) - now unreferenced. Flagged per no-deletion rule.
+- Open items from prior sessions still apply: ambiguous romaji for the single `ー` tap-grid button when katakana with `ー` are reintroduced; pre-existing `currentWord` useCallback dependency warning.
+
+### Notes
+- Audio payload dropped from 1.9MB on first keypress to ~3KB (e.ogg + o.ogg combined). The sprite was being fully downloaded and decoded just so two ~100ms slices could play, alternating. The per-id approach preserves that two-sound alternation and leaves the door open to wire up more ids later without reloading any sprite.
+- Used Opus in an Ogg container (`libopus -b:a 64k`). The Homebrew ffmpeg build did not include `libvorbis`; the built-in `vorbis` encoder is flagged experimental. Opus is universally supported on current browsers (Safari 11+, Chrome, Firefox, Edge) and produces smaller files than Vorbis for short effect clips.
+- The script adds 20ms of duration padding to each slice to give the Opus encoder headroom on the tail - the source sprite offsets were hand-tuned for ~100ms effects and cutting exactly on the millisecond produced audible clicks.
+
+---
+
+## [2026-04-18] - Session 39
+
+**Sprint:** Sprint 2B - Game Home Screen
+**Task completed:** Mobile viewport fit (svh), input mode labels
+**Status:** Done
+
+### Changes made
+- [components/layout/landing-scene.tsx]: Swapped every `vh` unit for `svh` in the hero stack — section `h-screen` → `h-svh`, inner content `h-screen` → `h-svh`, hero `pt-[19vh] md:pt-[12vh]` → `pt-[19svh] md:pt-[12svh]`, cyclist `bottom-[calc(12vh-...)]` → `bottom-[calc(12svh-...)]`, ground bleed `h-[10vh] md:h-[15vh]` → `h-[10svh] md:h-[15svh]`. On iOS Safari / Chrome mobile, `100vh` resolves to the large viewport (as if browser chrome were hidden), so the hero was overflowing the actual visible area by the height of the address bar and triggering a small unwanted scroll. `100svh` binds to the small viewport (chrome visible), so the hero fits on load. DevTools responsive mode didn't reproduce because it doesn't simulate mobile browser chrome.
+- [components/layout/landing-client.tsx]: Page wrapper `min-h-screen` → `min-h-svh`, hero stack `md:gap-[14vh]` → `md:gap-[14svh]` for consistency with the section.
+- [components/layout/practice-client.tsx]: Outer `h-screen` → `h-svh`, cyclist calc `12vh` → `12svh`.
+- [components/layout/game-home-client.tsx]: Outer `h-screen` → `h-svh`, cyclist calc `12vh` → `12svh`.
+- [components/game/game-window.tsx]: Added a type-mode hint matching the swipe-mode one — Type shows "This mode is for a computer keyboard", Swipe updated to "This mode is for the mobile keyboard" (dropped "swipe"). Same `text-sm text-warm-400 text-center mt-2` styling, no period on either.
+
+### Tests
+- `npm run format:check`, `npm run type-check`: Pass. Pre-existing `react-hooks/exhaustive-deps` warning on `currentWord` in `game-window.tsx` still present — not blocking.
+
+### Next task
+- Ambiguous romaji for the single `ー` tap-grid button when katakana words with `ー` are reintroduced.
+- Pre-existing `currentWord` useCallback dependency warning.
+
+### Notes
+- `svh` is supported on iOS Safari 15.4+, Chrome 108+, Firefox 101+. All current mobile browsers in active use support it. No fallback needed for the target audience.
+- All scene-internal positioning (cyclist bottom, hero padding) uses `svh` now, so the layout stays consistent regardless of whether the browser's chrome is expanded or retracted — the hero won't grow as the user starts scrolling and the bar collapses.
+
+---
+
 ## [2026-04-18] - Session 38
 
 **Sprint:** Sprint 2B - Game Home Screen

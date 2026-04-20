@@ -1,9 +1,10 @@
 // ------------------------------------------------------------
 // File: hooks/useKeySound.ts
 // Purpose: Web Audio API hook for keyboard-style sound effects.
-//          Loads a single audio sprite on first use and plays
-//          slices by ID. Uses a module-level singleton so the
-//          AudioContext and buffer are shared across all components.
+//          Fetches individual sound files on demand and caches
+//          decoded AudioBuffers per sound ID. Only the sounds
+//          actually triggered get downloaded, so the initial
+//          page load is not blocked by a large audio sprite.
 //          Lazy init: AudioContext is created on first playSound
 //          call to comply with browser autoplay policies.
 // Depends on: data/audio/key-sound-map.ts
@@ -12,38 +13,47 @@
 'use client'
 
 import { useCallback, useEffect, useRef } from 'react'
-import { KEY_SOUND_MAP, SOUND_SPRITE_URL } from '@/data/audio/key-sound-map'
+import { KEY_SOUND_MAP } from '@/data/audio/key-sound-map'
 
-// -- Module-level singleton ---------------------------------
+// -- Module-level singletons --------------------------------
 
 let sharedContext: AudioContext | null = null
-let sharedBuffer: AudioBuffer | null = null
-let loadingPromise: Promise<void> | null = null
+const bufferCache = new Map<string, AudioBuffer>()
+const loadingPromises = new Map<string, Promise<AudioBuffer | null>>()
 let alternateIndex = 0
 const ALTERNATE_SOUNDS = ['e', 'o']
 
-async function ensureLoaded(): Promise<void> {
-  if (sharedBuffer) return
-  if (loadingPromise) {
-    await loadingPromise
-    return
-  }
+async function loadSound(id: string): Promise<AudioBuffer | null> {
+  const cached = bufferCache.get(id)
+  if (cached) return cached
 
-  loadingPromise = (async (): Promise<void> => {
+  const existing = loadingPromises.get(id)
+  if (existing) return existing
+
+  const url = KEY_SOUND_MAP[id]
+  if (!url) return null
+
+  const promise = (async (): Promise<AudioBuffer | null> => {
     try {
       if (!sharedContext) {
         sharedContext = new AudioContext()
       }
-      const response = await fetch(SOUND_SPRITE_URL)
-      if (!response.ok) return
+      const response = await fetch(url)
+      if (!response.ok) return null
       const arrayBuffer = await response.arrayBuffer()
-      sharedBuffer = await sharedContext.decodeAudioData(arrayBuffer)
+      const buffer = await sharedContext.decodeAudioData(arrayBuffer)
+      bufferCache.set(id, buffer)
+      return buffer
     } catch {
       // Sound is optional. Keep UI interactive if loading fails.
+      return null
+    } finally {
+      loadingPromises.delete(id)
     }
   })()
 
-  await loadingPromise
+  loadingPromises.set(id, promise)
+  return promise
 }
 
 // -- Hook ---------------------------------------------------
@@ -53,7 +63,6 @@ export function useKeySound(): { playSound: (id: string) => void } {
 
   useEffect((): (() => void) => {
     mountedRef.current = true
-    // Audio sprite loads on first playSound call, not on mount
     return (): void => {
       mountedRef.current = false
     }
@@ -63,14 +72,12 @@ export function useKeySound(): { playSound: (id: string) => void } {
     // Alternate between two sounds on every call
     const soundId = ALTERNATE_SOUNDS[alternateIndex % ALTERNATE_SOUNDS.length]
     alternateIndex++
-    const slice = KEY_SOUND_MAP[soundId]
-    if (!slice) return
 
     const ctx = sharedContext
-    const buf = sharedBuffer
+    const buf = bufferCache.get(soundId)
     if (!ctx || !buf) {
-      // Not loaded yet, try lazy init
-      void ensureLoaded()
+      // Not loaded yet. Kick off the fetch so the next call can play it.
+      void loadSound(soundId)
       return
     }
 
@@ -78,11 +85,10 @@ export function useKeySound(): { playSound: (id: string) => void } {
       void ctx.resume()
     }
 
-    const [startMs, durationMs] = slice
     const source = ctx.createBufferSource()
     source.buffer = buf
     source.connect(ctx.destination)
-    source.start(0, startMs / 1000, durationMs / 1000)
+    source.start(0)
   }, [])
 
   return { playSound }

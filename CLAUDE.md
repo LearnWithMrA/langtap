@@ -420,12 +420,13 @@ architecture questions only.
 
 ### At the end of every session
 
-1. Run `npm run check` in full before generating the changelog entry. If it
-   fails, fix all errors before closing the session. Never generate a changelog
+1. Run `npm run check` in full before writing the changelog entry. If it
+   fails, fix all errors before closing the session. Never write a changelog
    entry for a session that leaves the codebase in a failing state.
 2. Confirm all changes made during the session.
 3. Confirm tests pass (or state which tests need to be run manually).
-4. Generate a CHANGELOG.md entry in the format below.
+4. Write the session entry to the top of `CHANGELOG.md` (after the format
+   preamble, before the previous session). Use the format below.
 5. State clearly what the next task is (the owner will confirm at the start of
    the next session).
 
@@ -452,8 +453,10 @@ architecture questions only.
 [Any decisions made, blockers encountered, or things the owner should know]
 ```
 
-The owner copies this entry and pastes it into `CHANGELOG.md` manually.
-The AI does not write to `CHANGELOG.md` directly.
+The AI writes this entry directly to `CHANGELOG.md` as part of the end-of-session
+protocol (step 4 above). New entries go at the top, immediately below the
+format preamble and above the previous session's entry. The owner reviews on
+their next pass rather than hand-pasting.
 
 ---
 

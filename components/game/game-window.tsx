@@ -480,6 +480,9 @@ export function GameWindow({ mode, children, onCharacterCorrect }: GameWindowPro
             disabled={wordDone}
             showKatakana={!isKanaToRomaji && isKatakanaWord(currentWord)}
           />
+          <p className="text-sm text-warm-400 text-center mt-2">
+            This mode is for a computer keyboard
+          </p>
         </div>
       )}
 
@@ -493,7 +496,7 @@ export function GameWindow({ mode, children, onCharacterCorrect }: GameWindowPro
             showKatakana={!isKanaToRomaji && isKatakanaWord(currentWord)}
           />
           <p className="text-sm text-warm-400 text-center mt-2">
-            This mode is for the mobile swipe keyboard
+            This mode is for the mobile keyboard
           </p>
         </div>
       )}

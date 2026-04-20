@@ -99,10 +99,10 @@ Gemini is used for image generation only when photographic or painted assets are
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Write landing page spec | Medium | In Progress | See UX_DESIGN.md Section 3. Parallax landscape, nav, hero, footer. |
+| Write landing page spec | Medium | Done | See UX_DESIGN.md Section 3. Parallax landscape, nav, hero, footer. |
 | Write game home screen spec | Small | Done | See UX_DESIGN.md Section 6. Spec written and screen built. |
 | Write practice screen spec (all three input modes) | Medium | Done | See UX_DESIGN.md Section 7. Spec written and screen built with all three modes, audio sprite sound system, IME handling, and direction alternation. |
-| Write Dojo screen spec - Kana | Medium | To Do | See UX_DESIGN.md Section 8. Heatmap grid, unlock interactions. |
+| Write Dojo screen spec - Kana | Medium | Done | See UX_DESIGN.md Section 8. Visual shell built at /dojo/kana with mid-progress mock fixture. Spec revised to match existing heat contract. Session 42 iteration: fluid mobile scaling (clamp + container queries) validated down to 320px, tiered unlock buttons (dark/medium/light blue, grey reset swap when all unlocked), translucent-on-scroll top bar, bulk-reset flow. |
 | Write Dojo screen spec - Kotoba | Medium | To Do | See UX_DESIGN.md Section 9. JLPT level browsing, unit and level sets. |
 | Write auth screens spec | Small | To Do | See UX_DESIGN.md Section 4. Sign-up, log-in. Blue gradient background. |
 | Write onboarding flow spec | Medium | To Do | See UX_DESIGN.md Section 5. Four steps. |
