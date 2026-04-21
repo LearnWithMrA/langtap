@@ -361,14 +361,25 @@ tokens from the context window. Disable unused servers in project settings.
 
 ### At the start of every session
 
+The owner opens the session with the phrase "start session". On that cue the
+AI runs the start-of-session protocol below. Do not run these steps on other
+openings (one-off questions, mid-session resumes, ad-hoc edits).
+
 1. Read this file in full.
-2. Read `LangTap_Sprints.md` and identify the current active sprint and task.
-3. Read the relevant sub-document(s) for the domain being worked on.
-4. State clearly: what sprint is active, what task is being worked on, and what
-   files will be affected.
-5. If the task is Large or larger, state the token estimate and wait for approval.
-6. If the task is Large or Epic, prefix the message with `ultrathink`. For Small and Medium tasks, use the default thinking budget.
-7. Run the pre-task checklist before writing any code:
+2. Read `LangTap_Sprints.md` and identify the current active sprint and the
+   next task on the board.
+3. Read the relevant sub-document(s) for the domain the next task touches
+   (see §4 for the domain-to-document map). Re-read these for every task,
+   not just the first one in a session.
+4. State clearly: what sprint is active, what task is being proposed, and
+   what files will be affected.
+5. Show a plan before writing any code. Do not start edits until the owner
+   approves the plan.
+6. If the task is Large or larger, state the token estimate and wait for
+   approval as part of the plan (§10).
+7. If the task is Large or Epic, prefix the message with `ultrathink`. For
+   Small and Medium tasks, use the default thinking budget.
+8. Run the pre-task checklist as part of the plan, before writing any code:
 
 **Pre-task checklist (inspired by production SaaS Claude Code configs):**
 - What is the blast radius of this change? Which files and systems does it touch?
@@ -420,15 +431,43 @@ architecture questions only.
 
 ### At the end of every session
 
-1. Run `npm run check` in full before writing the changelog entry. If it
-   fails, fix all errors before closing the session. Never write a changelog
-   entry for a session that leaves the codebase in a failing state.
-2. Confirm all changes made during the session.
-3. Confirm tests pass (or state which tests need to be run manually).
-4. Write the session entry to the top of `CHANGELOG.md` (after the format
+The owner closes the session with the phrase "session end" (or an
+equivalent direct ask like "run checks", "update the board", "write the
+changelog", "close the session"). On that cue the AI runs the
+end-of-session protocol below. Without that cue the AI does not run
+`npm run check`, touch `LangTap_Sprints.md`, or write to `CHANGELOG.md`
+on its own initiative, because those three actions close the session and
+the owner needs a review window first.
+
+Until the owner says "session end":
+
+1. Summarise the changes made during the session in chat.
+2. State which tests pass and which need to be run manually.
+3. Flag the next task from the sprint board as a proposal, not a fact.
+4. Wait.
+
+On "session end" (or equivalent), in order:
+
+1. Run `npm run check` in full. If it fails in files the session touched,
+   fix them before writing the changelog. If it fails in unrelated files,
+   flag the failures to the owner and stop rather than auto-fixing.
+2. Update `LangTap_Sprints.md` for the task the owner has approved (status
+   and notes column).
+3. Write the session entry to the top of `CHANGELOG.md` (after the format
    preamble, before the previous session). Use the format below.
-5. State clearly what the next task is (the owner will confirm at the start of
-   the next session).
+4. Provide the commit-and-push block for the owner to run:
+
+   ```
+   git add .
+   git commit -m "Sprint X: description"
+   git push
+   ```
+
+   Fill in the sprint number and a one-line description. The owner
+   runs these commands manually; the AI does not execute git on its
+   own initiative.
+5. State clearly what the next task is (the owner will confirm at the
+   start of the next session).
 
 ### CHANGELOG.md entry format
 
@@ -453,10 +492,10 @@ architecture questions only.
 [Any decisions made, blockers encountered, or things the owner should know]
 ```
 
-The AI writes this entry directly to `CHANGELOG.md` as part of the end-of-session
-protocol (step 4 above). New entries go at the top, immediately below the
-format preamble and above the previous session's entry. The owner reviews on
-their next pass rather than hand-pasting.
+The AI writes this entry directly to `CHANGELOG.md` only after the owner
+confirms the session is closing (see "At the end of every session" above).
+New entries go at the top, immediately below the format preamble and above
+the previous session's entry.
 
 ---
 

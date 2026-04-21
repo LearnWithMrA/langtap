@@ -109,8 +109,12 @@ function StageBlock({
           controlsId={controlsId}
         />
       </div>
-      {/* The grid itself sits flush at the main's left edge so its 20px
-          label gutter aligns with the script heading's indent. */}
+      {/* The grid sits flush at the main's left edge so its 20px
+          label gutter aligns with the script heading's indent. The
+          surrounding white surface wrapper now lives at the
+          CharacterGroup level (one card wrapping both scripts) so
+          Hiragana and Katakana read as a single grouped surface
+          split by a divider. */}
       {isOpen && (
         <div id={controlsId} className="mt-4">
           <CharacterGrid

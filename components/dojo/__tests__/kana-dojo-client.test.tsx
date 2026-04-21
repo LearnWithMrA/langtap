@@ -151,3 +151,30 @@ describe('KanaDojoClient', () => {
     expect(within(dialog).getAllByText(/Hiragana Seion/).length).toBeGreaterThan(0)
   })
 })
+
+describe('KanaDojoClient - parity state prop', () => {
+  it('default render is unchanged when no state prop is passed', () => {
+    render(<KanaDojoClient fixture="variety" />)
+    expect(screen.getByRole('heading', { level: 1, name: 'Kana Dojo' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Hiragana' })).toBeInTheDocument()
+  })
+
+  it('renders the loading shell when state="loading" is passed', () => {
+    const { container } = render(<KanaDojoClient state="loading" />)
+    expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0)
+    expect(screen.queryByRole('heading', { name: 'Hiragana' })).not.toBeInTheDocument()
+  })
+
+  it('renders the error shell when state="error" is passed', () => {
+    render(<KanaDojoClient state="error" />)
+    expect(screen.getByRole('alert')).toHaveTextContent(/could not load your progress/i)
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+  })
+
+  it('renders the empty shell when state="empty" is passed', () => {
+    render(<KanaDojoClient state="empty" />)
+    expect(screen.getByRole('heading', { name: 'Start your journey' })).toBeInTheDocument()
+    const cta = screen.getByRole('link', { name: 'Start practice' })
+    expect(cta).toHaveAttribute('href', '/practice?mode=kana')
+  })
+})

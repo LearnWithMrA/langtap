@@ -30,6 +30,92 @@ Format per entry:
 
 ---
 
+## [2026-04-21] - Session 44
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task:** Iterate the Kotoba Dojo shell against owner review feedback - word-tile visual clone of the Kana key style, 360-word sample fixture across every JLPT level, scoped lock affordances at every depth, popover redesign with Mark mastered, shared white surface wrapping both Kana scripts, tab-width and mobile-padding fixes. Sprint board row 5 ("Write Dojo screen spec - Kotoba") stays **In Progress** at the owner is request while they browse each level.
+**Status:** In progress (iterating against owner review)
+
+### Changes made
+
+- [samples/kotoba-dojo-fixtures.ts]: Populated every JLPT level (N5-N1) with three units of two level groups of twelve words each - 360 hand-authored entries total. Added a `w(level, slug, kanji, kana, english)` helper and a shared `SCORE_PATTERN` so each group hits every heat band and leaves two tiles locked by default (positions 5 and 11) plus two manual-unlocks (positions 4 and 9). N5 Unit 1 Levels 1-2 keeps the original twelve words (now at stable positions); N5 Units 2-3 and every N4-N1 unit are new content. Called out in the file header as hand-authored sample content - Sprint 5 JMdict generation replaces it.
+- [types/kotoba.types.ts]: Dropped `status: 'unlocked' | 'locked'` from `KotobaUnit`. Every unit is expandable now; word-level locking drives the padlock visuals. Added `manuallyUnlockedWords: readonly string[]` to `KotobaMasteryState` so the Kana-style unlock contract (score >= threshold OR in manual set) maps onto Kotoba.
+- [components/dojo/kotoba-word-tile.tsx]: Reworked as a visual clone of `CharacterTile`: cream fill, asymmetric 3D key border driven by `progressBarBorderClass`, mini progress pill at the bottom, gold ring + text when mastered, padlock overlay when locked. Kanji-bearing words render three content rows (kanji / kana / english); kana-only words render two rows (kana in the glyph slot, english in the reading slot) with no third row so the tile fills its usable space. Mobile grid switched to a two-column layout below `md:` so 320-545px viewports no longer show dead space.
+- [components/dojo/kotoba-level-group.tsx]: Level-group row now carries the green-light `UnlockButton` inline when the group has locked words. Tile grid is `grid-cols-2` on mobile and `repeat(auto-fill, minmax(144px, 1fr))` on `md:` and above, with `justify-items-center` and a 200px per-tile cap so tiles stay well-proportioned.
+- [components/dojo/kotoba-unit-card.tsx]: Removed the `LockedCard` variant; every unit renders as the expandable card. The card is role=button on a div so the green-medium `UnlockButton` can live inline with the progress bar and percentage as a sibling sub-button with stopPropagation, instead of an absolute-positioned overlay that was crashing into the progress row.
+- [components/dojo/kotoba-level-tabs.tsx]: Tabs are `flex-1 min-w-0` so all five N5-N1 tabs share the content column evenly and fit at 320px with no horizontal scroll. Padding steps up at 380 and 640px.
+- [components/dojo/kotoba-unlock-prompt.tsx] [components/dojo/kotoba-bulk-unlock-prompt.tsx]: New single-step and bulk confirmation modals. Mirror the Kana `UnlockPrompt` / `BulkUnlockPrompt` pair so the copy and UX are consistent across both dojos; payloads differ only in entity name (word vs character).
+- [components/dojo/kotoba-word-popover.tsx]: Rewritten. Modal title now renders the hero kanji (or kana when kanji is absent) as a centred 4xl block via the new ReactNode-capable title slot. Body keeps the kana reading (only when a kanji is present), full English gloss, and mastery readout. Footer carries three equal-width buttons: Close, Mark mastered, Reset progress. Mark mastered sets the score to `MASTERY_THRESHOLD + 5` and closes without confirmation; Reset progress enters the two-step confirmation flow.
+- [components/dojo/group-bar.tsx]: Extended `UnlockButton`'s colour union with `green-dark | green-medium | green-light`, mapped to `sage-600 / 500 / 400` at `/85` translucency. Kana's sky-blue tiers untouched so the two dojos read as palette siblings.
+- [components/dojo/character-group.tsx]: Reverted the per-stage white card wrapper so the new shared container wraps both scripts instead of each stage panel.
+- [components/dojo/character-grid.tsx]: Desktop horizontal grid is now centred via `flex justify-center` at `min-[1028px]:` so the chart sits in the middle of the widened content column.
+- [components/ui/modal.tsx]: `ModalStep.title` accepts `ReactNode` so hero glyphs can render as the heading. Footer laid out with `flex-1` on every button so short labels (Yes / No) and long labels (Reset progress / Mark mastered) share equal width. New optional `secondaryAction` prop slots a second primary-style button between cancel and confirm.
+- [components/layout/kotoba-dojo-client.tsx]: Removed the status filter (every unit is openable now). Added `handleMarkMastered` (sets score to `MASTERY_THRESHOLD + 5`). `handleResetWord` updated to mirror Kana: keeps the word in `manuallyUnlockedWords` after reset so the tile stays visible as unlocked-at-0 instead of flipping back to the padlock state. Page-level `green-dark` unlock button rendered next to the heading when any word at the active JLPT level is locked.
+- [components/layout/kana-dojo-client.tsx]: Added a single white surface wrapping both `Hiragana` and `Katakana` scripts with a `border-t` divider between them, matching the Kotoba accordion card. Widened the ready-shell `main` from `max-w-[988px]` to `max-w-[1080px]` and reduced mobile outer padding from `px-5` to `px-2` below `md:` so the card extends past the gojuon chart with real breathing room and sits closer to the viewport edges on phones. Card internal padding drops from `p-3` to `p-2` below `1028px` so the five-column mobile grid fits.
+- [app/globals.css]: New `--color-kotoba-dojo-bg: #e6f0d9` token for the Kotoba page wash. Kana's `--color-dojo-bg` untouched.
+- [docs/UX_DESIGN.md]: Section 9 revised in place for the new word tile visual, scoped lock affordances, popover hero title, 12-word groups, and kana-only two-row behaviour. §9.3 sizing note updated for the `flex-1` tab row. §9.6 rewritten as a Kana-tile clone spec.
+- [components/dojo/__tests__/kotoba-dojo-client.test.tsx]: 29 tests (up from 18). New coverage for the hero-title popover, Mark mastered, equal-weight button row, twelve tiles per group, kana-only two-row layout, and scoped unlock buttons at page / unit / group depth. Dropped the "locked and unclickable unit" assertion and the "Coming soon" assertion - both no longer surface in the variety fixture.
+- [components/dojo/__tests__/kana-dojo-client.test.tsx]: Parity block for the `state` prop still passes unchanged.
+
+### Tests
+
+- Kotoba: 29 / 29 passing.
+- Kana: 16 / 16 passing.
+- Full `npm run check`: 271 tests passed across 17 test files, 7 skipped (pre-existing placeholder suites). Format + lint + type-check + vitest all green.
+
+### Notes
+
+- `LangTap_Sprints.md` not updated this session at the owner is request - the Kotoba row stays `In Progress` while the owner pages through every JLPT level.
+- `data/words/*.ts` is still empty - the 360 entries live in `samples/kotoba-dojo-fixtures.ts` as hand-authored sample content until the Sprint 5 JMdict pipeline lands. Flagged in the fixture file header.
+- Per-word score pattern is deterministic: the same twelve-position pattern is applied to every group, so every group has one tile in every heat band, two manual-unlocks, and two locked tiles regardless of level. Easy to tune globally if the owner wants a different mix.
+- N4 Unit 2 Levels 7-8 has 失敗 replacing 喜び's paired opposite so pairs line up cleanly; N1 Unit 1 Levels 3-4 has 虚無 in place of a duplicate 郷愁, and N1 Unit 2 Levels 7-8 has 感性 in place of a duplicate 才能. These are the only places hand-authored content diverged from the typical JLPT wordlist to keep ids unique across levels.
+- Mark mastered does not confirm because it is an additive (non-destructive) action the user can undo via the existing Reset progress flow. If that reads as too aggressive once the owner sees it live, a one-step confirmation is a trivial follow-up.
+- Bare `/dojo` still 404s via `app/(main)/dojo/page.tsx` (`notFound()`). No change this session.
+
+---
+
+## [2026-04-20] - Session 43
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Write Dojo screen spec - Kotoba, and ship the visual shell at `/dojo/kotoba`. Sprint-2B "Done" criteria treat spec tasks as complete only when the page is built, so this session covers both the spec rewrite and the implementation.
+**Status:** Done
+
+### Changes made
+- [docs/UX_DESIGN.md]: Section 9 rewritten from four short subsections to a full Kana-depth structure (§9.1-9.13) covering Overview, Route and Navigation, JLPT Level Tabs (roving tabindex, key-style buttons, horizontal scroll), Unit Card Layout (active / completed / locked variants), Level Group Accordion (single-open at unit level, multi-open at inner rows), Word Tile (three-row stack with reserved kanji row for kana-only words), Heatmap Colour Scale (identical reuse of §8.6 contract), Word Tile Popover (Modal primitive shared with Kana), Active Level Indicator, Sound Cues, Loading / Error / Empty / Locked states (driven by a new `state` prop on the client), Accessibility, and Sample Content. §15 status row flipped to "Built and iterating".
+- [app/globals.css]: New `--color-kotoba-dojo-bg` token (`#e6f0d9`, pale sage wash). Existing `--color-dojo-bg` (Kana blue) untouched. Comment block clarifies the two tones keep the dojos visually distinct without introducing a full scene.
+- [types/kotoba.types.ts]: New forward-looking type file covering `JlptLevel`, `KotobaWord`, `KotobaLevelGroup`, `KotobaUnit`, `KotobaMasteryState`, `KotobaClientState`, `KotobaDojoFixture`, and `KotobaFixtureKey`. Shape is designed so the Sprint 5 word-bank generator can populate the same types without ripple changes.
+- [samples/kotoba-dojo-fixtures.ts]: Hand-authored mock fixtures. Ten N5 sample words chosen to hit every heat band (0, 1-4, 5-9, 10-19, 20-39, 40+) plus three kana-only entries (ひらがな, カタカナ, こんにちは) so the reserved-kanji-row treatment is exercised, and a long English gloss on ひらがな to drive the truncation path. `variety` fixture: N5 Unit 1 populated, N5 Unit 2 unlocked-but-empty (to exercise the single-open accordion + "Coming soon"), N5 Unit 3 locked, all N4-N1 units locked placeholders. `empty` and `complete` presets also exported.
+- [components/dojo/kotoba-level-tabs.tsx]: N5-N1 `role="tablist"` row with roving tabindex, mint-500 active fill, sage-100 inactive fill, 3D key-button border, horizontal scroll snap on narrow viewports. ArrowLeft / ArrowRight / Home / End all wrap and move focus with selection.
+- [components/dojo/kotoba-unit-card.tsx]: Summary card + accordion trigger. Three variants: default (sage-50), completed (mint-100 + check glyph), locked (warm-100 + padlock, non-focusable `<div role="group" aria-disabled="true">` so browsers never trap focus on it). Unlocked variant is a `<button aria-expanded aria-controls>` that toggles the unit accordion.
+- [components/dojo/kotoba-level-group.tsx]: Accordion row for a single level group. Header shows chevron + label + mini progress bar + percentage; expanded body shows either a responsive word-tile grid (auto-fill at `minmax(140px, 1fr)`) or a centred "Coming soon" placeholder. Multi-open by contract: opening a sibling row does not close this one.
+- [components/dojo/kotoba-word-tile.tsx]: Three-row word tile (kanji / kana / english). Kana-only words render a non-breaking-space placeholder in the kanji row so every tile is the same height regardless of content shape. Background driven by `getMasteryHeatClass`; mastered tiles add the gold ring (`ring-1 ring-[color:var(--color-heat-gold)]`). English gloss truncates with `title` attribute carrying the full text for hover.
+- [components/dojo/kotoba-word-popover.tsx]: Shared-Modal-backed flow. First screen shows kanji / kana / english + mastery with a "Reset progress" confirm action; confirming advances into the two-step reset sequence (Step 1 "Reset progress on X?", Step 2 "Are you sure?"). Mirrors the shape of `TileDetailPopover` without forking the Modal primitive.
+- [components/layout/kotoba-dojo-client.tsx]: Client island with `fixture` and `state` props. `state: 'ready' | 'loading' | 'error' | 'empty'` drives deterministic non-happy screens; `'ready'` runs the JLPT tab row, the unit grid for the active level, the single-open unit accordion, the multi-open level-group accordion, and the word popover. Level change re-seeds the open unit and the open group so the view is never blank. Unit toggle auto-expands the first level-group of the newly-opened unit.
+- [components/layout/kana-dojo-client.tsx]: Retroactive parity update. Extracted the existing body into `KanaDojoReadyShell` and added a small dispatcher `KanaDojoClient` that takes the same `state` prop surface (`'ready' | 'loading' | 'error' | 'empty'`). Default `'ready'` preserves the shipped behaviour exactly; non-ready values render matching Loading / Error / Empty shells. Existing route file `app/(main)/dojo/kana/page.tsx` needed no change.
+- [app/(main)/dojo/kotoba/page.tsx]: New route entry. Renders `<KotobaDojoClient fixture="variety" />`.
+- [app/(main)/dojo/page.tsx]: Bare `/dojo` changed from a 308 redirect to `/dojo/kana` to a `notFound()` call. The in-app top bar links directly to `/dojo/kana` and `/dojo/kotoba`; nothing in the UI targets bare `/dojo`, so typed URLs / stale bookmarks fall through to the global not-found page.
+- [components/dojo/__tests__/kotoba-dojo-client.test.tsx]: New Vitest coverage: tab render + ArrowRight / Home / End keyboard navigation, three unit cards rendered with the locked card using the `group` role instead of `button`, locked card aria-disabled and non-focusable, Unit 1 open by default with Levels 1-2 expanded, single-open unit accordion (opening Unit 2 closes Unit 1), "Coming soon" placeholder, multi-open inner accordion, ten word tiles in Unit 1 Levels 1-2, kanji + kana + english rendered for kanji-bearing words, kana-only words render without a kanji glyph, long English gloss attached via `title`, word popover opens with reset action, two-step reset flow clears the word's score. State-prop block covers loading / error / empty deterministic shells.
+- [components/dojo/__tests__/kana-dojo-client.test.tsx]: Appended parity block. Default render unchanged; `state="loading"` / `"error"` / `"empty"` render the matching shells.
+- [LangTap_Sprints.md]: Sprint 2B "Write Dojo screen spec - Kotoba" flipped from To Do to Done with the session summary appended to the Notes column.
+
+### Tests
+- [components/dojo/__tests__/kotoba-dojo-client.test.tsx]: 18 passed.
+- [components/dojo/__tests__/kana-dojo-client.test.tsx]: 16 passed (12 existing + 4 new parity tests).
+- Full suite: 260 tests passed, 7 skipped (pre-existing placeholder suites). `npm run check` (format + lint + type-check + tests) green.
+
+### Next task
+Sprint 2B: Write auth screens spec (Small, see UX_DESIGN.md Section 4).
+
+### Notes
+- Decision log: reused the Kana heat palette, `UnlockButton`, `Modal`, and `AppTopBar` verbatim. Only layout and size change between the two dojos; no new heat tokens introduced. Owner confirmed this approach before implementation.
+- Popover contract: the Kana `TileDetailPopover` was already decoupled at the right level (thin wrapper over the shared `Modal` primitive). The Kotoba popover reuses `Modal` directly instead of forking the tile-anatomy coupled outer component.
+- State-prop parity on the Kana client was added now rather than deferred. The change is purely additive (default `'ready'` preserves shipped behaviour, one new export `KanaDojoClientState`). Owner flagged that doing it now was cleaner than letting the two clients diverge until Sprint 4 wiring.
+- URL deep-linking for the JLPT tab (`?level=n5`) is deferred to Sprint 4 alongside persistence. The shell keeps the active level in local state with `n5` as the default. Spec §9.3 updated to match.
+- Solid-green background uses a new `--color-kotoba-dojo-bg` token (`#e6f0d9`). Flagging for owner review alongside the first visual pass; if the tone needs to shift sage-ward or mint-ward, it is a single-token change.
+- Bare `/dojo` now 404s via `notFound()`. The prior 308 redirect to Kana was removed because the spec (and the in-app navigation model) treats the two dojos as separate destinations, not a hub and its default child. If a redirect is preferred for any legacy path, it can be added back at the layout level without touching this file.
+
+---
+
 ## [2026-04-20] - Session 42
 
 **Sprint:** Sprint 2B - UX/UI Design and Screen Specification

@@ -80,7 +80,19 @@ function Chevron({ open, sizeStyle }: { open: boolean; sizeStyle: CSSProperties 
 // ── Unlock icon button (shared 3D blue style) ─
 
 type UnlockButtonSize = 'large' | 'medium' | 'small'
-type UnlockButtonColor = 'dark' | 'medium' | 'light' | 'grey'
+// `dark` / `medium` / `light` are the Kana sky-blue tiers.
+// `green-dark` / `green-medium` / `green-light` are the Kotoba sage-green
+// tiers; semantically equivalent, just on a different palette so the
+// two dojos read as siblings without sharing a look.
+// `grey` is the shared "everything unlocked, tap to reset" state.
+type UnlockButtonColor =
+  | 'dark'
+  | 'medium'
+  | 'light'
+  | 'green-dark'
+  | 'green-medium'
+  | 'green-light'
+  | 'grey'
 type UnlockButtonIcon = 'locked' | 'unlocked'
 
 type UnlockButtonProps = {
@@ -145,6 +157,11 @@ const UNLOCK_BUTTON_COLOR_CLASSES: Record<UnlockButtonColor, string> = {
   dark: 'bg-sky-600/85 border-b-sky-700/85',
   medium: 'bg-sky-500/85 border-b-sky-600/85',
   light: 'bg-sky-400/85 border-b-sky-500/85',
+  // Kotoba tiers use sage-greens to echo the pale-green page wash and
+  // the mint-500 active tab without introducing new tokens.
+  'green-dark': 'bg-sage-600/85 border-b-[color:var(--color-sage-600)]',
+  'green-medium': 'bg-sage-500/85 border-b-sage-600/85',
+  'green-light': 'bg-sage-400/85 border-b-sage-500/85',
   grey: 'bg-warm-400/85 border-b-warm-600/85',
 }
 

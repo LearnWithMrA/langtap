@@ -1117,49 +1117,417 @@ state is per-user and persisted to the profile (logged-in) or localStorage
 
 ## 9. Dojo Screen Spec - Kotoba
 
-**Status:** To Do
-**Route:** `/dojo` when Kotoba mode is active
-**Scrollable:** Yes
-**Layout:** Standard in-app layout
+**Status:** Built and iterating (Sprint 2B). Parallel sibling to the Kana Dojo
+(§8). The shipped page is the source of truth for behaviour; this spec is kept
+in sync.
+**Route:** `/dojo/kotoba` (logged-in users and guests)
+**Scrollable:** Yes (content exceeds one screen at all breakpoints)
+**Layout:** In-app top bar (Section 6.2) over a scrollable content column on a
+flat green page background. The top bar is transparent at the top of the page
+and frosts to `bg-white/80 backdrop-blur-sm border-b border-border` after ~16px
+of scroll, exactly as on `/dojo/kana`.
 
 ### 9.1 Overview
 
-Kotoba has its own dojo, accessed by navigating to Dojo while Kotoba mode is active
-(or by selecting from the game home screen).
+The Kotoba Dojo is the user's complete mastery picture for Kotoba (vocabulary).
+It mirrors the Kana Dojo's role: a progress screen, not a game screen, with no
+practice input on the page itself. Its jobs, in priority order:
+1. Show at a glance how much of each JLPT level the user has covered.
+2. Let the user drill into any level group to see their per-word mastery.
+3. Let the user jump into focused practice on a specific word.
 
-Content population: placeholders only in v1. Full data to be populated in later sprints.
-The first level of each N (N5 level 1, N4 level 1, etc.) should have sample content.
+No distance counter, no mascot, no cycling animation. Background is a flat
+pale-green wash (`--color-kotoba-dojo-bg`, new token) so the grid and tiles
+read cleanly. The Kana Dojo's blue wash (`--color-dojo-bg`) remains its own.
 
-### 9.2 JLPT Level Navigation
+### 9.2 Route and Navigation
 
-At the top of the Kotoba Dojo: a horizontal row of five buttons:
-N5, N4, N3, N2, N1
+Route: `/dojo/kotoba`. Reached via the "Kotoba Dojo" link in the in-app top bar
+(Section 6.2) from any practice screen, regardless of the mode the user entered
+through, or via the Kotoba mastery CTA on the game home screen.
 
-Style: key-style buttons. Active level: mint-500 background. Inactive: sage-100 background.
-These are scrollable horizontally on mobile.
+The two dojos are separate pages: there is no in-screen toggle between them.
+Mode selection lives on the game home screen (Section 6.3); the dojos are
+destination screens, not mode-scoped dashboards.
 
-### 9.3 Level Set Browsing
+Back navigation: browser back. No in-page back button; the top bar is the
+primary navigation affordance on every in-app screen.
 
-Below the JLPT buttons, the selected level shows its sets of content.
+Bare `/dojo` is intentionally unhandled: Next.js renders the default
+`app/not-found.tsx` for that URL. Nothing in the UI links to it.
 
-Layout inspired by the WaniKani unit reference images:
-- A horizontal row of unit cards (Unit 1, Unit 2, etc.)
-- Each card shows the unit name and the level range it contains (e.g. "Levels 1-69")
-- The active or available unit is highlighted (lighter background with border)
-- Locked units are greyed out
+### 9.3 JLPT Level Tabs
 
-Clicking a unit expands a list of level groups beneath it (accordion style):
-- "Levels 1-2" (expandable row)
-- "Levels 3-4" (expandable row)
-Each level group, when expanded, shows a grid of word cards
-with their mastery tile style (same heatmap as Kana dojo).
+A horizontal row of five key-style buttons sits under the page heading:
+`N5`, `N4`, `N3`, `N2`, `N1`. The row behaves as a single-select tab group.
 
-### 9.4 Sample Content (v1)
+**Visuals:**
+- Active tab: `bg-mint-500` fill, `text-white`, one-step-darker bottom border
+  for the 3D key effect, consistent with the key-button style in §2.3.
+- Inactive tab: `bg-sage-100` fill, `text-warm-700`. Hover raises slightly.
+- Disabled tabs (no data): never used in v1; every N level renders the tab
+  and shows placeholder content on select.
+- Row scrolls horizontally on mobile under 480px (`overflow-x-auto`,
+  scroll-snap per tab so a tap always lands on a whole key).
 
-For implementation purposes, populate:
-- Kotoba N5 Level 1: first 10 entries from the JMdict N5 word bank
+**Behaviour:**
+- Selecting a tab swaps the unit grid beneath with a 150ms fade. Reduced
+  motion: instant.
+- URL sync (`?level=n5` deep-links) is a Sprint 4 follow-up once persistence
+  lands. v1 keeps the active level in local state with `n5` as the default.
 
-All other sets are shown as empty or locked placeholders.
+**Sizing:**
+- Tabs use `flex-1 min-w-0` so all five share the content column evenly.
+  Internal padding steps up with viewport (`px-2` under 380px,
+  `px-3` up to `sm:`, `px-4` above). No horizontal scroll — five tabs
+  always fit even at the 320px mobile floor.
+
+**Page-level unlock:** the `Kotoba Dojo` heading is paired with a
+large `green-dark` `UnlockButton` (Section 2.3 key style, green tier)
+whenever at least one word at the active JLPT level is locked.
+Tapping it opens a single-confirmation prompt asking to unlock every
+remaining locked word at that level. When nothing is locked at the
+active level, the button is not rendered (a grey reset swap is a
+Sprint 4 follow-up once persistence lands).
+
+**Keyboard:**
+- Roving tabindex across the five buttons (only the active one is focusable).
+- `ArrowLeft` / `ArrowRight`: move selection one tab, wraps at the ends.
+- `Home` / `End`: jump to first / last tab.
+- `Enter` / `Space`: redundant with the selection change but supported.
+
+### 9.4 Unit Card Layout
+
+Under the tabs, the selected JLPT level renders a grid of unit cards.
+Each card represents a chunk of level groups within that JLPT level.
+
+**Dimensions:**
+- Desktop (`md:` and above): minimum card width 240px, auto-fill grid via
+  `grid-cols-[repeat(auto-fill,minmax(240px,1fr))]`, `gap-4`. Cards expand to
+  fill each row.
+- Mobile: single column, full-width cards, `gap-3`.
+- Card inner padding: `p-4`. Border radius: `rounded-xl`.
+
+**Contents (stacked):**
+- Unit title (`text-lg`, `text-warm-800`, Zen Maru Gothic): e.g. "Unit 1".
+- Level range (`text-sm`, `text-warm-600`): e.g. "Levels 1-2".
+- Unit-average progress bar: same `ProgressBar` primitive the Kana Dojo uses,
+  driven by the same heatmap scale from §8.6 applied to the unit's mean word
+  mastery.
+- Percentage readout right of the bar (`text-xs`, `text-warm-600`).
+
+**Variants:**
+- Default (active or in-progress, matches the Kana `active` / `in-progress`
+  semantics): `bg-sage-50`, `border border-sage-200`. Hover lifts
+  `translate-y-[-1px]` with `shadow-sm`.
+- Completed (every word in the unit at or above `MASTERY_THRESHOLD`):
+  `bg-mint-100`, `border border-mint-300`, a small mint check glyph in the
+  top-right corner. Same hover.
+- Locked (JLPT level's earlier units not yet cleared, or content not yet
+  released): `bg-warm-100`, `border border-warm-200`, all text `text-warm-400`,
+  progress bar suppressed. Copy under the level range line: `Locked` next to
+  an inline padlock SVG. See Section 9.5 for expansion behaviour. See
+  Section 9.11 for the full non-interactive contract.
+
+Cards themselves are both summary and trigger: clicking the main body
+expands that unit's level-group accordion beneath the grid (Section 9.5).
+Locked cards never expand.
+
+**Unit-level unlock:** when the unit has at least one locked word, a
+`medium` `green-medium` `UnlockButton` sits in the card's bottom-right
+corner. Tapping it opens the bulk-unlock prompt for every locked word
+in that unit. The unlock button sits outside the toggle `<button>`
+(not nested) so the two controls never conflict: the rest of the card
+toggles the accordion, the small corner button opens the prompt. The
+locked variant never shows this button - the whole unit is gated.
+
+### 9.5 Level Group Accordion
+
+Below the unit grid, the selected unit's level groups render as a vertical
+accordion.
+
+**Structure:**
+- Only one unit is expanded at a time. Opening Unit 2 collapses Unit 1.
+  This keeps the top-level view tidy and limits the scroll length. The
+  accordion is single-open by contract, not by emergent behaviour.
+- Within a unit, level-group rows are multi-open: opening "Levels 3-4"
+  while "Levels 1-2" is open leaves both open. This lets the user compare
+  adjacent groups without re-expanding.
+
+**Row visual (closed):**
+- Row height: 52px.
+- Left cluster: chevron (`text-warm-600`, 44x44pt touch target, rotates 90deg
+  when open), level-group title (`text-base`, `text-warm-800`).
+- Right cluster: mini progress bar for the group, percentage readout,
+  `text-xs`, `text-warm-600`.
+
+**Row visual (open):**
+- Animates height 200ms `ease-out`. Reduced motion: instant.
+- Reveals a word-tile grid (Section 9.6) below the row.
+
+**Empty state (unlocked group with no content in v1):**
+- Expanded body renders a single centred line: `Coming soon`
+  (`text-sm`, `text-warm-500`), 48px vertical padding.
+- Progress bar on the closed row reads 0% with muted text.
+
+**Group-level unlock:** when the group has at least one locked word,
+a `small` `green-light` `UnlockButton` sits on the row to the right
+of the percentage. Tapping it opens the bulk-unlock prompt for every
+locked word in that group. Renders only when the group has words
+(empty "Coming soon" groups never show an unlock button).
+
+**Tile grid (expanded body):**
+- Mobile (`max-[md]:`): `grid-cols-2`, `gap-3`. Two tiles per row at
+  every breakpoint below `md`, which fixes the dead-space issue the
+  previous single-column layout produced on 320-420px phones.
+- Desktop (`md:` and above): `grid-cols-[repeat(auto-fill,minmax(144px,1fr))]`,
+  `gap-4`. Tiles self-fill the available width.
+- Tiles themselves cap at 180px wide via `max-w-[180px]` so the grid
+  can flow a bit narrower without the cells stretching out of
+  proportion. `justify-items-center` keeps tiles centred in their
+  cell at the upper end of the clamp.
+
+### 9.6 Word Tile
+
+Every tile is a direct visual clone of the Kana `CharacterTile` (§8.5)
+scaled up to hold three rows of text instead of two. Cream fill, a
+3D keyboard-key border coloured by the heat palette, a mini progress
+pill at the bottom edge, and a padlock badge when locked. This is a
+shared-contract reuse, not a parallel implementation: the same
+`progressBarBorderClass` + `progressBarFillClass` helpers drive both
+dojos.
+
+**Dimensions:**
+- `containerType: inline-size` on the button so inner text and the
+  progress pill scale proportionally with the tile width.
+- Width: `100%` of its grid cell, capped at `max-w-[180px]`.
+- Height: `clamp(96px, calc(30vw + 12px), 128px)` so the tile keeps a
+  touch-friendly size at 320px and grows to a comfortable rectangle
+  above `sm:`.
+- Rounded `rounded-[12px]`, `rounded-[16px]` at `min-[1028px]:`.
+- Border: asymmetric `border-[3px] border-b-[6px]` for the 3D key look.
+  Colour ramps through the heatmap palette via `progressBarBorderClass`
+  and switches to the gold accent at or above `MASTERY_THRESHOLD`.
+
+**Content stacked inside the tile (top to bottom):**
+- Row 1 - Glyph slot: kanji if the word has a kanji form, otherwise
+  the kana reading is promoted into this slot. `clamp(20px, 17cqw, 30px)`
+  font size (`cqw` scales with the tile's own width). Colour:
+  `text-[#3e312e]`, switches to gold when mastered and grey when locked.
+- Row 2 - Reading slot: the kana reading when a kanji is present in
+  Row 1, otherwise a blank-but-reserved non-breaking space so the
+  tile keeps a consistent height. `clamp(10px, 8cqw, 14px)` font
+  size, `text-warm-600` palette.
+- Row 3 - English gloss: `clamp(9px, 6.5cqw, 12px)` font size,
+  `text-warm-500`. Single line, truncated with `truncate`, full gloss
+  attached via the native `title` attribute for hover-to-view on
+  pointer devices.
+
+**Mini progress pill:**
+Same contract as `CharacterTile`. Absolutely positioned near the
+bottom edge, fluid width (`clamp(36px, 55cqw, 80px)`), 3-4px tall.
+`bg-[#e5e7eb]` track with a heat-coloured fill (`progressBarFillClass`).
+Hidden entirely when the tile is locked.
+
+**Mastered state (score >= `MASTERY_THRESHOLD`):**
+- Tile fill swaps to `bg-[color:var(--color-heat-gold-fill)]`.
+- Glyph, reading, and gloss text all swap to the gold accent.
+- Border colour stays gold via `progressBarBorderClass`.
+
+**Locked state:**
+- Tile opacity drops to 70.
+- Padlock badge in the top-right corner, fluid size via `cqw`.
+- Progress pill is suppressed (no mastery to visualise).
+- Glyph / reading / gloss render in `text-[#bdbdbd]`.
+- Tapping a locked tile opens the single-step `KotobaUnlockPrompt`
+  (copy: "Unlock {kanji (kana) | kana}?"). Does not open the detail
+  popover. Mirrors the Kana `CharacterTile` + `UnlockPrompt` flow.
+
+**Hover (pointer devices):** No lift; the 3D press effect provides
+the tactile cue instead. `active:translate-y-[3px] active:border-b-[3px]`.
+
+**Aria label:**
+- Unlocked: "Word {kanji}, reading {kana}, meaning {english}, mastery {n}"
+- Kana-only unlocked: "Word {kana}, meaning {english}, mastery {n}"
+- Mastered: above string + "mastered"
+- Locked: above string + "locked. Tap to unlock."
+
+### 9.7 Heatmap Colour Scale
+
+Identical to §8.6. The Kotoba Dojo does not introduce a parallel palette:
+tile backgrounds, unit-card progress bars, and level-group mini bars all
+pull from `engine/mastery.ts` (`getMasteryHeatClass`) using the same six
+bands. Any future re-palette must update the engine helper and the CSS
+tokens once, and every heat surface across both dojos must stay in sync.
+
+### 9.8 Word Tile Popover
+
+Tapping an unlocked word tile opens a detail popover anchored to the tile
+(desktop) or a bottom sheet (mobile, below `md`). The popover reuses the
+shared `Modal` primitive that powers the Kana tile flow in §8.7, not a forked
+component.
+
+**Contents:**
+- Kanji (if present): `text-4xl` Zen Maru Gothic, centred.
+- Kana: `text-xl`, `text-warm-600`, centred.
+- English gloss: full text, `text-base`, `text-warm-700`, max-width 32ch
+  for readability.
+- "Mastery: [n]" readout (`text-sm`, `text-warm-500`).
+- Two buttons (key-button style, stacked on mobile, side-by-side desktop):
+  - "Practise this word" navigates to
+    `/practice?mode=kotoba&focus=[wordId]` (biases selection, Sprint 5).
+  - "Reset progress" opens the two-step reset confirmation flow, identical
+    shape to §8.9 but scoped to the word.
+
+**Dismiss behaviour, animation, focus trap, and mutual exclusion:** match
+§8.7 verbatim. Reduced-motion: instant.
+
+### 9.9 Active Level Indicator
+
+The "active level" (equivalent to the Kana active stage in §8.8) is the
+earliest JLPT level whose active unit still contains words below
+`UNLOCK_THRESHOLD`. It is signalled, not badged.
+
+- Active level tab: the default selection on first render. URL
+  `?level=[id]` overrides.
+- Active unit within that level: renders in the default sage card variant,
+  expanded by default in the accordion.
+- Completed levels: tab stays normal, the level-strip shows mint
+  completed-unit cards inline.
+- Future levels (all units locked, no user data): tab label muted
+  `text-warm-400`. Selecting the tab still works and reveals the locked
+  cards.
+
+### 9.10 Sound Cues
+
+This is a progress view, not a keyboard surface. Sound cues are minimal and
+reuse the existing sprite exactly:
+- Tab select: no sound (consistent with Kana stage collapse/expand).
+- Unit card tap (unlocked): soft UI click, `ui-tap.ogg` (§14.2).
+- Locked card tap: no sound (tap is absorbed silently; see §9.11).
+- Word tile tap: `ui-tap.ogg`.
+- Popover / modal open and close: default modal sounds (§14.2).
+
+Key-press sounds from `data/audio/key-sound-map.ts` are never used on the
+Dojo, same rule as §8.10.
+
+### 9.11 Loading, Error, Empty, and Locked States
+
+The client component accepts an explicit `state` prop with values
+`'ready' | 'loading' | 'error' | 'empty'`. `'ready'` is the default and is
+what the route passes in v1. The other values are deterministic triggers
+for tests and future wiring; they never depend on timing. The Kana client
+is retrofitted with the same prop for parity (no user-visible change).
+
+**Loading (`state='loading'`):**
+On first paint the tabs and unit grid scaffolding render immediately with
+skeleton cards (`bg-warm-100` pulse animation). Real mastery arrives from
+the store in Sprint 4; skeletons resolve within one frame on guests,
+~200ms on logged-in users. No top-level spinner.
+
+**Error (`state='error'`, mastery fetch fails for logged-in users):**
+Inline banner at the top of the content column, `bg-blush-100`,
+`text-warm-800`. Text: "We could not load your Kotoba progress. Check your
+connection and try again." Retry button `bg-sage-500`, `text-white`. The
+grid below falls back to the last-known state from localStorage if
+present, otherwise renders every unit as locked and suppresses popovers.
+
+**Empty (`state='empty'`, new user post-onboarding):**
+Tabs render normally. Under the tabs, a centred help card:
+- Icon: mascot SVG, 48px.
+- Headline: "Start building your vocabulary" (`text-lg`, `text-warm-800`).
+- Body: "Pick a unit to see the words inside, or jump straight into
+  Kotoba practice." (`text-sm`, `text-warm-600`).
+- Button: "Start practice" (`bg-sage-500`, `text-white`), navigates to
+  `/practice?mode=kotoba`.
+
+Help card is dismissible once per user; dismissal persists to profile
+(logged-in) or localStorage (guest).
+
+**Locked (per-card, independent of `state`):**
+- Card container: `<div role="group" aria-disabled="true">`, no
+  `tabindex`, no focus ring, `cursor-default`, no hover transform, no
+  active transform.
+- The unit title is read to screen readers as
+  "Unit [n], levels [range], locked".
+- Tap events on the container are suppressed at the card level; there is
+  no trigger for an accordion row or popover.
+- Visually distinct per §9.4 (warm-100 background, muted text, padlock).
+- Locked cards do not block keyboard traversal of the tab row above.
+- Locked cards never render the unit unlock button. Unlocking happens
+  at the JLPT level scope (page-level button, §9.3) instead.
+
+**Locked (per-word tile, independent of `state`):**
+- Tile stays in the grid (visible, not hidden) with opacity 70, a
+  padlock badge top-right, and dimmed text.
+- Progress pill is suppressed.
+- Tapping opens the single-step `KotobaUnlockPrompt` asking to
+  unlock that word. Confirming adds the id to
+  `manuallyUnlockedWords`; the tile then reveals its heat fill and
+  progress pill.
+- A word is considered unlocked when either `score >= UNLOCK_THRESHOLD`
+  or the id is present in `manuallyUnlockedWords`. Mirrors the Kana
+  model exactly.
+
+### 9.12 Accessibility
+
+- Tab row: `role="tablist"` with each button `role="tab"`,
+  `aria-selected`, `aria-controls` targeting the unit-grid container.
+  Unit-grid container is `role="tabpanel"` with matching `aria-labelledby`.
+  Roving tabindex per §9.3.
+- Unit cards (unlocked): `<button>` elements, `aria-expanded` reflects the
+  accordion state, `aria-controls` points at the level-group container.
+  `aria-label` reads "Unit [n], levels [range], [average mastery], [open
+  or closed]".
+- Unit cards (locked): non-focusable `<div role="group"
+  aria-disabled="true">` per §9.11. Never a `<button disabled>` because
+  that still receives focus on some browsers; the role change is
+  deliberate.
+- Level-group rows: `<button aria-expanded aria-controls>`. Chevron is
+  decorative (`aria-hidden="true"`). On collapse, focus returns to the
+  row trigger.
+- Word tiles: `<button>` with `aria-label` "[kanji if present], [kana],
+  [english], mastery [n]". No locked variant at tile level.
+- Popover: focus trap, `aria-modal="true"`, focus returns to the
+  originating tile on close. Reuses Kana popover behaviour.
+- Keyboard navigation inside an expanded level-group tile grid: tab
+  cycles left-to-right, top-to-bottom, then to the next open level-group
+  row or unit card. Arrow-key traversal within the tile grid is
+  deferred; tab order is sufficient for v1.
+- Screen-reader announcements: tab change announces
+  "[JLPT level] selected". Accordion expand announces "expanded,
+  [n] level groups" and collapse announces "collapsed".
+- Touch targets: minimum 44x44pt on every interactive element. Every
+  clickable surface on mobile meets this via padding, even when the
+  visible box is smaller.
+- `prefers-reduced-motion`: disables tile hover lift, accordion height
+  transition, popover fade/slide, and the gold-mastery sweep.
+
+### 9.13 Sample Content (v1)
+
+Content population in v1 is deliberately thin; Sprint 5 generates the real
+bank from JMdict. The visual shell uses a hand-authored fixture with:
+- `N5 Unit 1 Levels 1-2`: twelve real N5 words covering every heatmap
+  band end-to-end, including two hiragana-only entries (`さようなら`,
+  `おはよう`), two katakana-only entries (`テレビ`, `コーヒー`), one
+  long English gloss on `さようなら` for truncation coverage, and two
+  words (`学校`, `コーヒー`) left locked so the padlock tile variant
+  renders. The kanji-bearing eight are `日本`, `学生`, `先生`, `水`,
+  `本`, `人`, `車`, `学校`.
+- `N5 Unit 1 Levels 3-4`: empty, renders "Coming soon".
+- `N5 Unit 2`: unlocked but empty so the single-open unit accordion
+  can be exercised end-to-end. Renders a single "Coming soon"
+  level-group row.
+- `N5 Unit 3` and all `N4`-`N1` units: locked placeholders, three
+  units per level so the grid renders naturally.
+
+The fixture lives at `samples/kotoba-dojo-fixtures.ts` with the same
+shape contract as `samples/mastery-fixtures.ts` and is typed against the
+forward-looking `types/kotoba.types.ts`. The `KotobaMasteryState`
+includes both `manuallyUnlockedUnits` and `manuallyUnlockedWords` so the
+word-level locking model maps cleanly onto future real data. Swapping
+the fixture source for real data in Sprint 5 requires no component
+changes.
 
 ---
 
@@ -1372,7 +1740,7 @@ File naming: lowercase, hyphens, descriptive. No spaces.
 | Practice - Tap mode | To Do | No |
 | Practice - Swipe mode | To Do | No |
 | Dojo - Kana | Done | No |
-| Dojo - Kotoba | To Do | No |
+| Dojo - Kotoba | Built and iterating | No |
 | Sign-up | To Do | No |
 | Log-in | To Do | No |
 | Onboarding steps 1-4 | To Do | No |

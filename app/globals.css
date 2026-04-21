@@ -50,8 +50,12 @@
   --color-sky-600: #4b81b3;
   --color-sky-700: #3570a0;
 
-  /* Dedicated Dojo page background and mastered-tile fill. */
+  /* Dedicated Dojo page backgrounds and mastered-tile fill.
+     Kana sits on a pale sky-blue wash; Kotoba on a pale sage-green
+     wash. The two tones keep the dojos visually distinct without
+     introducing a full scene (no parallax, no clouds). */
   --color-dojo-bg: #e2eff6;
+  --color-kotoba-dojo-bg: #e6f0d9;
   --color-heat-gold-fill: #fffaec;
 
   /* Feedback colours */

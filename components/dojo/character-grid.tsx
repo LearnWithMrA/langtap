@@ -177,39 +177,39 @@ export function CharacterGrid({
         </div>
       </div>
 
-      {/* Horizontal (shown at min-[1028px]+ where the full 988px grid fits). */}
-      <div
-        className="hidden min-[1028px]:grid gap-3 items-center"
-        style={{ gridTemplateColumns: desktopTemplate }}
-      >
-        {/* Header row */}
-        <span aria-hidden="true" />
-        {rowKeys.map((rowKey) => (
-          <span
-            key={`d-h-${rowKey}`}
-            className="text-center text-[13px] font-semibold text-[#a3acb3] tabular-nums"
-          >
-            {consonantLabel(rowKey)}
-          </span>
-        ))}
-
-        {/* Data rows */}
-        {columnKeys.map((colKey) => (
-          <Fragment key={`d-r-${colKey}`}>
-            <span className="text-right text-[13px] font-semibold text-[#a3acb3] tabular-nums">
-              {colKey}
+      {/* Horizontal (shown at min-[1028px]+). Wrapped in a flex
+          justify-center so the grid centres inside a wider card. */}
+      <div className="hidden min-[1028px]:flex justify-center">
+        <div className="grid gap-3 items-center" style={{ gridTemplateColumns: desktopTemplate }}>
+          {/* Header row */}
+          <span aria-hidden="true" />
+          {rowKeys.map((rowKey) => (
+            <span
+              key={`d-h-${rowKey}`}
+              className="text-center text-[13px] font-semibold text-[#a3acb3] tabular-nums"
+            >
+              {consonantLabel(rowKey)}
             </span>
-            {rowKeys.map((rowKey) => (
-              <Cell
-                key={`d-${colKey}-${rowKey}`}
-                character={lookup.get(`${rowKey}|${colKey}`)}
-                scores={scores}
-                lockedIds={lockedIds}
-                onTileClick={onTileClick}
-              />
-            ))}
-          </Fragment>
-        ))}
+          ))}
+
+          {/* Data rows */}
+          {columnKeys.map((colKey) => (
+            <Fragment key={`d-r-${colKey}`}>
+              <span className="text-right text-[13px] font-semibold text-[#a3acb3] tabular-nums">
+                {colKey}
+              </span>
+              {rowKeys.map((rowKey) => (
+                <Cell
+                  key={`d-${colKey}-${rowKey}`}
+                  character={lookup.get(`${rowKey}|${colKey}`)}
+                  scores={scores}
+                  lockedIds={lockedIds}
+                  onTileClick={onTileClick}
+                />
+              ))}
+            </Fragment>
+          ))}
+        </div>
       </div>
     </>
   )

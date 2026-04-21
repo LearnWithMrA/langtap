@@ -1,11 +1,14 @@
 // ------------------------------------------------------------
 // File: components/ui/modal.tsx
-// Purpose: Two-step confirmation modal for destructive actions.
-//          Used for unlock and reset progress flows.
+// Purpose: Confirmation modal for destructive or hero-detail flows.
+//          Supports one or two sequential steps, an optional third
+//          "secondary" action button alongside cancel and confirm, and
+//          a ReactNode title so a step can render a big hero glyph
+//          (e.g. the Kotoba word popover) in place of a plain heading.
 //          Accessibility: focus trap, Escape to close, scroll lock,
 //          focus restore, backdrop click to close, role="dialog".
-//          One or two steps supported. Second step is the final
-//          confirmation - shown only after the first is confirmed.
+//          Footer buttons are laid out as equal-width flex children so
+//          short and long labels line up cleanly.
 // Depends on: components/ui/button.tsx
 // ------------------------------------------------------------
 
@@ -18,10 +21,15 @@ import { Button } from '@/components/ui/button'
 // -- Types -------------------------------------------------------
 
 type ModalStep = {
-  title: string
+  title: ReactNode
   body: ReactNode
   confirmLabel: string
   cancelLabel?: string
+}
+
+export type ModalSecondaryAction = {
+  label: string
+  onClick: () => void
 }
 
 type ModalProps = {
@@ -32,11 +40,11 @@ type ModalProps = {
   currentStep?: number
   onNextStep?: () => void
   isDanger?: boolean
+  secondaryAction?: ModalSecondaryAction
 }
 
 // -- Constants ---------------------------------------------------
 
-// Selectors for all focusable elements within the modal panel
 const FOCUSABLE_SELECTORS = [
   'a[href]',
   'button:not([disabled])',
@@ -48,7 +56,6 @@ const FOCUSABLE_SELECTORS = [
 
 // -- Helpers -----------------------------------------------------
 
-// Locks body scroll while modal is open
 function useScrollLock(isOpen: boolean): void {
   useEffect(() => {
     if (!isOpen) return
@@ -60,7 +67,6 @@ function useScrollLock(isOpen: boolean): void {
   }, [isOpen])
 }
 
-// Traps focus within the panel and handles Escape key
 function useFocusTrap(
   panelRef: React.RefObject<HTMLDivElement | null>,
   isOpen: boolean,
@@ -70,15 +76,12 @@ function useFocusTrap(
 
   useEffect(() => {
     if (!isOpen) return
-    // Store the element that opened the modal so we can restore focus on close
     triggerRef.current = document.activeElement
 
-    // Move focus to the first focusable element in the panel
     const firstFocusable = panelRef.current?.querySelector<HTMLElement>(FOCUSABLE_SELECTORS)
     firstFocusable?.focus()
 
     return (): void => {
-      // Restore focus to the trigger element on close
       if (triggerRef.current instanceof HTMLElement) {
         triggerRef.current.focus()
       }
@@ -136,6 +139,7 @@ export function Modal({
   currentStep = 0,
   onNextStep,
   isDanger = false,
+  secondaryAction,
 }: ModalProps): ReactNode {
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -148,7 +152,6 @@ export function Modal({
   const isFinalStep = currentStep >= steps.length - 1
   const cancelLabel = step.cancelLabel ?? 'Cancel'
 
-  // Two-step flow: first confirm advances to step 2, second calls onConfirm
   const handleConfirm = (): void => {
     if (!isFinalStep && onNextStep) {
       onNextStep()
@@ -163,10 +166,8 @@ export function Modal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
-      {/* Backdrop */}
       <div aria-hidden="true" className="absolute inset-0 bg-warm-800/40" />
 
-      {/* Panel */}
       <div
         ref={panelRef}
         role="dialog"
@@ -181,11 +182,25 @@ export function Modal({
 
         <div className="text-sm text-text-secondary mb-6">{step.body}</div>
 
-        <div className="flex gap-3 justify-end">
-          <Button variant="ghost" size="sm" onClick={onClose}>
+        {/* Footer buttons share equal width via flex-1 so short labels
+            (Yes / No) and long labels (Reset progress / Mark mastered)
+            never visually mismatch within the same modal. */}
+        <div className="flex gap-3">
+          <Button className="flex-1" variant="ghost" size="sm" onClick={onClose}>
             {cancelLabel}
           </Button>
+          {secondaryAction && (
+            <Button
+              className="flex-1"
+              variant="secondary"
+              size="sm"
+              onClick={secondaryAction.onClick}
+            >
+              {secondaryAction.label}
+            </Button>
+          )}
           <Button
+            className="flex-1"
             variant={isDanger && isFinalStep ? 'danger' : 'primary'}
             size="sm"
             onClick={handleConfirm}

@@ -1,15 +1,16 @@
 // ─────────────────────────────────────────────
 // File: app/(main)/dojo/page.tsx
-// Purpose: Permanent (308) redirect from the legacy /dojo path to the
-//          canonical /dojo/kana route. The Kana Dojo and Kotoba Dojo
-//          are separate pages with their own top-bar links; there is
-//          no hub at /dojo. This redirect protects bookmarks and any
-//          external links still pointing at the old path.
+// Purpose: Bare /dojo is intentionally unhandled. Nothing in the UI
+//          links here: Kana and Kotoba each have their own canonical
+//          route (/dojo/kana and /dojo/kotoba) reached via the in-app
+//          top bar. Typed URLs, stale bookmarks, and external links
+//          fall through to the global not-found page. See
+//          UX_DESIGN.md §9.2.
 // Depends on: next/navigation
 // ─────────────────────────────────────────────
 
-import { permanentRedirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 
 export default function DojoIndex(): never {
-  permanentRedirect('/dojo/kana')
+  notFound()
 }
