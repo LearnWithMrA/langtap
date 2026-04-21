@@ -30,6 +30,40 @@ Format per entry:
 
 ---
 
+## [2026-04-21] - Session 45
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Write Dojo screen spec - Kotoba
+**Status:** Done
+
+### Changes made
+- `components/dojo/kotoba-word-tile.tsx`: Bumped all three text row font sizes to ~1.6x original via cqw clamps. Added auto-scaling text system using Range API measurement + `transform: scale()` on a wrapper div so the primary text (kanji or kana) shrinks to fit one line and all rows scale proportionally. ResizeObserver recalculates on container resize. Reduced tile maxWidth to 146px. Progress pill width changed to 80% of tile. Locked tiles get symmetric padding (no pill space reserved) for true centering.
+- `components/dojo/kotoba-level-group.tsx`: Added `onResetGroup` prop. Grey unlock button swaps in when all words in the group are unlocked.
+- `components/dojo/kotoba-unit-card.tsx`: Added `onResetUnit` prop. Grey unlock button swaps in when all words in the unit are unlocked.
+- `components/layout/kotoba-dojo-client.tsx`: Added bulk reset state, handlers for reset and mark-mastered at level/unit/group scopes. Page-level button swaps to grey reset when all unlocked. Wired `KotobaBulkResetPrompt`.
+- `components/dojo/kotoba-bulk-reset-prompt.tsx` (NEW): Two-option prompt ("Reset all progress" with two-step confirmation, or "Mark all as mastered") for fully-unlocked Kotoba scopes.
+- `components/dojo/kotoba-word-popover.tsx`: Label changed from "Mark mastered" to "Mark as mastered".
+- `components/dojo/tile-detail-popover.tsx`: Added `onMarkMastered` prop. First step now shows three options (Cancel / Mark as mastered / Reset progress) instead of the old two-step reset-only flow.
+- `components/dojo/bulk-reset-prompt.tsx`: Added `onMarkMastered` prop. First step now shows three options matching the Kotoba pattern.
+- `components/layout/kana-dojo-client.tsx`: Added `handleMarkCharacterMastered` and `handleBulkMarkMastered` handlers. Wired `onMarkMastered` to tile popover and bulk reset prompt.
+- `docs/ARCHITECTURE.md`: Updated dojo component tree to list all Kana and Kotoba components.
+- `LangTap_Sprints.md`: Marked Kotoba Dojo spec task as Done.
+- `components/dojo/__tests__/kotoba-dojo-client.test.tsx`: Added ResizeObserver polyfill for jsdom. Updated "Mark mastered" references to "Mark as mastered".
+- `components/dojo/__tests__/kana-dojo-client.test.tsx`: Updated tile popover tests to match the new three-option choice UI.
+
+### Tests
+- 271 tests passing (17 suites, 7 skipped placeholder suites)
+- One pre-existing lint warning in `game-window.tsx` (unrelated to this session)
+
+### Next task
+Write auth screens spec (Sprint 2B)
+
+### Notes
+- The auto-scaling text system uses `document.createRange().getBoundingClientRect()` to reliably measure primary text width regardless of CSS display type. `scrollWidth`/`clientWidth` proved unreliable in flex + container-query contexts.
+- "Mark as mastered" is now available on both Kana and Kotoba dojos, at both individual tile and bulk scope levels.
+
+---
+
 ## [2026-04-21] - Session 44
 
 **Sprint:** Sprint 2B - UX/UI Design and Screen Specification

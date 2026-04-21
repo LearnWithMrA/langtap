@@ -120,11 +120,23 @@ langtap/
 |  |  |- distance-counter.tsx   # Running distance display
 |  |  |- mode-switcher.tsx      # Input mode toggle icon (top right)
 |  |
-|  |- dojo/                     # Dojo screen components
-|  |  |- character-group.tsx    # Collapsible group (Seion, Dakuon, Yoon)
-|  |  |- character-tile.tsx     # Individual character with mastery bar
-|  |  |- unlock-prompt.tsx      # Confirmation modal for individual unlock
-|  |  |- bulk-unlock-prompt.tsx # Two-step confirmation for unlock all
+|  |- dojo/                     # Dojo screen components (Kana and Kotoba)
+|  |  |- character-group.tsx    # Kana: collapsible group (Seion, Dakuon, Yoon)
+|  |  |- character-tile.tsx     # Kana: individual character with mastery bar
+|  |  |- group-bar.tsx          # Shared heading bar with progress + UnlockButton
+|  |  |- unlock-prompt.tsx      # Kana: single-step individual unlock
+|  |  |- bulk-unlock-prompt.tsx # Kana: single-step bulk unlock
+|  |  |- bulk-reset-prompt.tsx  # Kana: two-option bulk reset/mark-mastered
+|  |  |- tile-detail-popover.tsx# Kana: tile options (reset/mark mastered)
+|  |  |- help-card.tsx          # Dismissible onboarding help card
+|  |  |- kotoba-word-tile.tsx   # Kotoba: word tile with auto-scaling text
+|  |  |- kotoba-unit-card.tsx   # Kotoba: unit summary card with accordion toggle
+|  |  |- kotoba-level-tabs.tsx  # Kotoba: JLPT N5-N1 tab row
+|  |  |- kotoba-level-group.tsx # Kotoba: level-group accordion row with word grid
+|  |  |- kotoba-word-popover.tsx# Kotoba: word detail with reset/mark mastered
+|  |  |- kotoba-unlock-prompt.tsx      # Kotoba: single-step individual unlock
+|  |  |- kotoba-bulk-unlock-prompt.tsx # Kotoba: single-step bulk unlock
+|  |  |- kotoba-bulk-reset-prompt.tsx  # Kotoba: two-option bulk reset/mark-mastered
 |  |
 |  |- animation/
 |  |  |- cycling-character.tsx  # Looping cycling girl animation

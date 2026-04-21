@@ -1,15 +1,13 @@
 // ─────────────────────────────────────────────
-// File: components/dojo/bulk-reset-prompt.tsx
-// Purpose: Two-step confirmation flow for resetting progress on every
-//          character in a group (a stage, a script, or the whole
-//          dojo). Triggered when the user taps the grey "unlocked"
-//          icon that replaces the blue unlock button once every
-//          character in that scope is already unlocked.
-//          Step 1: "Reset progress on all characters in [label]?" Yes/No
-//          Step 2: "Are you sure? This can't be undone." Yes/No
-//          Confirming clears each character's mastery score back to 0
-//          while keeping them in the manually-unlocked set so they
-//          remain visible as unlocked-at-0 tiles.
+// File: components/dojo/kotoba-bulk-reset-prompt.tsx
+// Purpose: Two-option prompt for fully-unlocked Kotoba scopes. When
+//          every word in a scope is already unlocked, the grey button
+//          opens this prompt with two actions:
+//          - "Reset all progress": clears scores to 0, keeps unlocked.
+//            Uses a two-step confirmation before executing.
+//          - "Mark all as mastered": sets every word to mastered.
+//          Mirrors the Kana BulkResetPrompt pattern with the added
+//          mark-mastered option.
 // Depends on: components/ui/modal.tsx
 // ─────────────────────────────────────────────
 
@@ -21,35 +19,35 @@ import { Modal } from '@/components/ui/modal'
 
 // ── Types ─────────────────────────────────────
 
-export type BulkResetScope = {
+export type KotobaBulkResetScope = {
   label: string
-  characterIds: readonly string[]
+  wordIds: readonly string[]
 }
 
-type BulkResetPromptProps = {
-  scope: BulkResetScope | null
-  onConfirm: (characterIds: readonly string[]) => void
-  onMarkMastered: (characterIds: readonly string[]) => void
+type KotobaBulkResetPromptProps = {
+  scope: KotobaBulkResetScope | null
+  onReset: (wordIds: readonly string[]) => void
+  onMarkMastered: (wordIds: readonly string[]) => void
   onClose: () => void
 }
 
 // ── Component ─────────────────────────────────
 
-export function BulkResetPrompt({
+export function KotobaBulkResetPrompt({
   scope,
-  onConfirm,
+  onReset,
   onMarkMastered,
   onClose,
-}: BulkResetPromptProps): ReactNode {
+}: KotobaBulkResetPromptProps): ReactNode {
   const [step, setStep] = useState<0 | 1>(0)
 
   useEffect(() => {
     if (!scope) setStep(0)
   }, [scope])
 
-  if (!scope || scope.characterIds.length === 0) return null
+  if (!scope || scope.wordIds.length === 0) return null
 
-  const count = scope.characterIds.length
+  const count = scope.wordIds.length
   const plural = count === 1 ? '' : 's'
 
   const handleClose = (): void => {
@@ -66,14 +64,14 @@ export function BulkResetPrompt({
         secondaryAction={{
           label: 'Mark all as mastered',
           onClick: (): void => {
-            onMarkMastered(scope.characterIds)
+            onMarkMastered(scope.wordIds)
             handleClose()
           },
         }}
         steps={[
           {
-            title: scope.label,
-            body: `All ${count} character${plural} in ${scope.label} are unlocked. What would you like to do?`,
+            title: `${scope.label}`,
+            body: `All ${count} word${plural} in ${scope.label} are unlocked. What would you like to do?`,
             confirmLabel: 'Reset all progress',
             cancelLabel: 'Cancel',
           },
@@ -87,14 +85,14 @@ export function BulkResetPrompt({
       isOpen={true}
       onClose={handleClose}
       onConfirm={(): void => {
-        onConfirm(scope.characterIds)
+        onReset(scope.wordIds)
         handleClose()
       }}
       isDanger={true}
       steps={[
         {
           title: 'Are you sure?',
-          body: `This can't be undone. All ${count} character${plural} in ${scope.label} will go back to mastery of 0.`,
+          body: `This can't be undone. All ${count} word${plural} in ${scope.label} will go back to mastery of 0.`,
           confirmLabel: 'Yes, reset',
           cancelLabel: 'No',
         },

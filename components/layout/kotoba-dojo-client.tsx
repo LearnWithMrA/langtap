@@ -46,6 +46,8 @@ import { KotobaWordPopover } from '@/components/dojo/kotoba-word-popover'
 import { KotobaUnlockPrompt } from '@/components/dojo/kotoba-unlock-prompt'
 import { KotobaBulkUnlockPrompt } from '@/components/dojo/kotoba-bulk-unlock-prompt'
 import type { KotobaBulkUnlockScope } from '@/components/dojo/kotoba-bulk-unlock-prompt'
+import { KotobaBulkResetPrompt } from '@/components/dojo/kotoba-bulk-reset-prompt'
+import type { KotobaBulkResetScope } from '@/components/dojo/kotoba-bulk-reset-prompt'
 import { UnlockButton } from '@/components/dojo/group-bar'
 import { UNLOCK_THRESHOLD } from '@/engine/constants'
 import { MASTERY_THRESHOLD } from '@/engine/mastery'
@@ -227,6 +229,7 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
   const [selectedWord, setSelectedWord] = useState<KotobaWord | null>(null)
   const [pendingUnlockWord, setPendingUnlockWord] = useState<KotobaWord | null>(null)
   const [bulkScope, setBulkScope] = useState<KotobaBulkUnlockScope | null>(null)
+  const [bulkResetScope, setBulkResetScope] = useState<KotobaBulkResetScope | null>(null)
 
   const lockedWordIds = useMemo(
     () => buildLockedWordSet(initial.words, mastery),
@@ -370,6 +373,51 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
     })
   }, [activeLevel, lockedAtLevel])
 
+  const handleBulkResetConfirm = useCallback((wordIds: readonly string[]): void => {
+    setMastery((prev) => {
+      const nextScores = { ...prev.scores }
+      const manual = new Set(prev.manuallyUnlockedWords)
+      for (const id of wordIds) {
+        delete nextScores[id]
+        manual.add(id)
+      }
+      return {
+        ...prev,
+        scores: nextScores,
+        manuallyUnlockedWords: [...manual],
+      }
+    })
+    setBulkResetScope(null)
+  }, [])
+
+  const handleBulkMarkMastered = useCallback((wordIds: readonly string[]): void => {
+    setMastery((prev) => {
+      const nextScores = { ...prev.scores }
+      for (const id of wordIds) {
+        nextScores[id] = MASTERY_THRESHOLD + 5
+      }
+      return { ...prev, scores: nextScores }
+    })
+    setBulkResetScope(null)
+  }, [])
+
+  const handleResetLevel = useCallback((): void => {
+    const allIds = unitsForLevel.flatMap((u) => u.groups.flatMap((g) => g.wordIds))
+    if (allIds.length === 0) return
+    setBulkResetScope({ label: `${JLPT_LABELS[activeLevel]} Kotoba`, wordIds: allIds })
+  }, [activeLevel, unitsForLevel])
+
+  const handleResetUnit = useCallback((unit: KotobaUnit): void => {
+    const ids = unit.groups.flatMap((g) => g.wordIds)
+    if (ids.length === 0) return
+    setBulkResetScope({ label: unit.label, wordIds: ids })
+  }, [])
+
+  const handleResetGroup = useCallback((group: KotobaLevelGroup): void => {
+    if (group.wordIds.length === 0) return
+    setBulkResetScope({ label: group.label, wordIds: group.wordIds })
+  }, [])
+
   const selectedScore = selectedWord ? (mastery.scores[selectedWord.id] ?? 0) : 0
 
   return (
@@ -388,13 +436,21 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
             >
               Kotoba Dojo
             </h1>
-            {lockedAtLevel.length > 0 && (
+            {lockedAtLevel.length > 0 ? (
               <UnlockButton
                 size="large"
                 color="green-dark"
                 icon="locked"
                 onClick={handleUnlockLevel}
                 ariaLabel={`Unlock all ${lockedAtLevel.length} locked word${lockedAtLevel.length === 1 ? '' : 's'} at ${JLPT_LABELS[activeLevel]}`}
+              />
+            ) : (
+              <UnlockButton
+                size="large"
+                color="grey"
+                icon="unlocked"
+                onClick={handleResetLevel}
+                ariaLabel={`Reset progress on all words at ${JLPT_LABELS[activeLevel]}`}
               />
             )}
           </div>
@@ -422,6 +478,8 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
               onToggleGroup={handleToggleGroup}
               onUnlockUnit={handleUnlockUnit}
               onUnlockGroup={handleUnlockGroup}
+              onResetUnit={handleResetUnit}
+              onResetGroup={handleResetGroup}
               onWordClick={handleWordClick}
             />
           </div>
@@ -447,6 +505,13 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
         onConfirm={handleBulkUnlockConfirm}
         onClose={(): void => setBulkScope(null)}
       />
+
+      <KotobaBulkResetPrompt
+        scope={bulkResetScope}
+        onReset={handleBulkResetConfirm}
+        onMarkMastered={handleBulkMarkMastered}
+        onClose={(): void => setBulkResetScope(null)}
+      />
     </div>
   )
 }
@@ -464,6 +529,8 @@ type UnitGridProps = {
   onToggleGroup: (groupId: string) => void
   onUnlockUnit: (unit: KotobaUnit) => void
   onUnlockGroup: (group: KotobaLevelGroup) => void
+  onResetUnit: (unit: KotobaUnit) => void
+  onResetGroup: (group: KotobaLevelGroup) => void
   onWordClick: (word: KotobaWord) => void
 }
 
@@ -478,6 +545,8 @@ function UnitGrid({
   onToggleGroup,
   onUnlockUnit,
   onUnlockGroup,
+  onResetUnit,
+  onResetGroup,
   onWordClick,
 }: UnitGridProps): ReactNode {
   const openUnit = openUnitId ? units.find((u) => u.id === openUnitId) : null
@@ -500,6 +569,7 @@ function UnitGrid({
               isOpen={openUnitId === unit.id}
               onToggle={onToggleUnit}
               onUnlockUnit={onUnlockUnit}
+              onResetUnit={onResetUnit}
               controlsId={controlsId}
             />
           )
@@ -525,6 +595,7 @@ function UnitGrid({
                 isOpen={openGroupIds.has(group.id)}
                 onToggle={onToggleGroup}
                 onUnlockGroup={onUnlockGroup}
+                onResetGroup={onResetGroup}
                 onWordClick={onWordClick}
               />
             ))

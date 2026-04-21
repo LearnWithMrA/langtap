@@ -26,6 +26,7 @@ type TileDetailPopoverProps = {
   character: KanaCharacter | null
   score: number
   onReset: (characterId: string) => void
+  onMarkMastered: (characterId: string) => void
   onClose: () => void
 }
 
@@ -35,6 +36,7 @@ export function TileDetailPopover({
   character,
   score,
   onReset,
+  onMarkMastered,
   onClose,
 }: TileDetailPopoverProps): ReactNode {
   const [step, setStep] = useState<0 | 1>(0)
@@ -62,13 +64,24 @@ export function TileDetailPopover({
         handleClose()
       }}
       currentStep={step}
-      isDanger={true}
+      isDanger={step === 1}
+      secondaryAction={
+        step === 0
+          ? {
+              label: 'Mark as mastered',
+              onClick: (): void => {
+                onMarkMastered(character.id)
+                handleClose()
+              },
+            }
+          : undefined
+      }
       steps={[
         {
-          title: `Reset progress on ${character.kana}?`,
-          body: `Current mastery: ${score}. Resetting clears your progress for ${character.kana} (${character.romaji}) but keeps the character unlocked.`,
-          confirmLabel: 'Yes',
-          cancelLabel: 'No',
+          title: `${character.kana} (${character.romaji})`,
+          body: `Current mastery: ${score}. What would you like to do?`,
+          confirmLabel: 'Reset progress',
+          cancelLabel: 'Cancel',
         },
         {
           title: 'Are you sure?',

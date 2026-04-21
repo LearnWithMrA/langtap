@@ -8,7 +8,7 @@
 //          variant), multi-open level-group accordion, word tile
 //          content for kanji-bearing and kana-only entries,
 //          long-gloss truncation, word popover flow (hero title,
-//          Mark mastered action, reset two-step), locked word tile
+//          Mark as mastered action, reset two-step), locked word tile
 //          rendering + tap-to-unlock, page / unit / group unlock
 //          buttons, deterministic loading / error / empty state-prop
 //          screens.
@@ -18,6 +18,14 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { KotobaDojoClient } from '@/components/layout/kotoba-dojo-client'
+
+beforeAll(() => {
+  globalThis.ResizeObserver = class {
+    observe(): void {}
+    unobserve(): void {}
+    disconnect(): void {}
+  }
+})
 
 describe('KotobaDojoClient - ready shell', () => {
   it('renders the page heading and the JLPT tab row', () => {
@@ -166,24 +174,24 @@ describe('KotobaDojoClient - word popover', () => {
     expect(within(dialog).queryAllByText('おはよう').length).toBe(1)
   })
 
-  it('exposes Close, Mark mastered, and Reset progress as equal-weight actions', async () => {
+  it('exposes Close, Mark as mastered, and Reset progress as equal-weight actions', async () => {
     const user = userEvent.setup()
     render(<KotobaDojoClient fixture="variety" />)
     const region = screen.getByRole('region', { name: 'Levels 1-2' })
     await user.click(within(region).getByRole('button', { name: /Word 水, reading みず/ }))
     const dialog = await screen.findByRole('dialog')
     expect(within(dialog).getByRole('button', { name: 'Close' })).toBeInTheDocument()
-    expect(within(dialog).getByRole('button', { name: 'Mark mastered' })).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Mark as mastered' })).toBeInTheDocument()
     expect(within(dialog).getByRole('button', { name: 'Reset progress' })).toBeInTheDocument()
   })
 
-  it('Mark mastered flips the tile straight into the mastered band', async () => {
+  it('Mark as mastered flips the tile straight into the mastered band', async () => {
     const user = userEvent.setup()
     render(<KotobaDojoClient fixture="variety" />)
     const region = screen.getByRole('region', { name: 'Levels 1-2' })
     await user.click(within(region).getByRole('button', { name: /Word 水, reading みず/ }))
     const dialog = await screen.findByRole('dialog')
-    await user.click(within(dialog).getByRole('button', { name: 'Mark mastered' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Mark as mastered' }))
     expect(
       within(region).getByRole('button', { name: /Word 水, reading みず.*mastered/ }),
     ).toBeInTheDocument()

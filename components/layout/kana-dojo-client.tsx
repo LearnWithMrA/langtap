@@ -55,6 +55,7 @@ import { UnlockButton } from '@/components/dojo/group-bar'
 import { HelpCard, useHelpDismissed } from '@/components/dojo/help-card'
 import { KANA_CHARACTERS } from '@/data/kana/characters'
 import { UNLOCK_THRESHOLD } from '@/engine/constants'
+import { MASTERY_THRESHOLD } from '@/engine/mastery'
 import { getFixture } from '@/samples/mastery-fixtures'
 import type { FixtureKey, MasteryState } from '@/samples/mastery-fixtures'
 import type { KanaCharacter, Script, Stage } from '@/types/kana.types'
@@ -397,6 +398,13 @@ function KanaDojoReadyShell({ fixture = 'variety' }: { fixture?: FixtureKey }): 
     })
   }, [])
 
+  const handleMarkCharacterMastered = useCallback((characterId: string): void => {
+    setMastery((prev) => ({
+      ...prev,
+      scores: { ...prev.scores, [characterId]: MASTERY_THRESHOLD + 5 },
+    }))
+  }, [])
+
   const handleUnlockScript = useCallback(
     (script: Script): void => {
       const ids = lockedInScope(scriptCharacters(script), lockedIds)
@@ -441,6 +449,17 @@ function KanaDojoReadyShell({ fixture = 'variety' }: { fixture?: FixtureKey }): 
         scores: nextScores,
         manuallyUnlocked: [...manualSet],
       }
+    })
+    setBulkResetScope(null)
+  }, [])
+
+  const handleBulkMarkMastered = useCallback((characterIds: readonly string[]): void => {
+    setMastery((prev) => {
+      const nextScores = { ...prev.scores }
+      for (const id of characterIds) {
+        nextScores[id] = MASTERY_THRESHOLD + 5
+      }
+      return { ...prev, scores: nextScores }
     })
     setBulkResetScope(null)
   }, [])
@@ -544,6 +563,7 @@ function KanaDojoReadyShell({ fixture = 'variety' }: { fixture?: FixtureKey }): 
         character={selected}
         score={selectedScore}
         onReset={handleResetCharacter}
+        onMarkMastered={handleMarkCharacterMastered}
         onClose={(): void => setSelected(null)}
       />
 
@@ -562,6 +582,7 @@ function KanaDojoReadyShell({ fixture = 'variety' }: { fixture?: FixtureKey }): 
       <BulkResetPrompt
         scope={bulkResetScope}
         onConfirm={handleBulkResetConfirm}
+        onMarkMastered={handleBulkMarkMastered}
         onClose={(): void => setBulkResetScope(null)}
       />
     </div>

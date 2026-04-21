@@ -23,7 +23,7 @@
 
 'use client'
 
-import type { CSSProperties, ReactNode } from 'react'
+import { useLayoutEffect, useRef, type CSSProperties, type ReactNode } from 'react'
 import {
   MASTERY_THRESHOLD,
   isMastered,
@@ -63,16 +63,18 @@ export function KotobaWordTile({ word, score, isLocked, onClick }: KotobaWordTil
   const fill = pillFillPercent(score)
   const fillClass = progressBarFillClass(score)
   const borderClass = progressBarBorderClass(score)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const primaryRef = useRef<HTMLSpanElement>(null)
 
   // Container-query root so text and the progress pill scale
   // proportionally with the tile's rendered width.
   const buttonStyle: CSSProperties = {
     containerType: 'inline-size',
     width: '100%',
-    maxWidth: '200px',
-    height: 'clamp(96px, calc(30vw + 12px), 128px)',
+    maxWidth: '146px',
+    height: 'clamp(91px, calc(28.5vw + 11px), 123px)',
     paddingTop: 'clamp(6px, 7cqw, 12px)',
-    paddingBottom: 'clamp(4px, 6cqw, 10px)',
+    paddingBottom: isLocked ? 'clamp(6px, 7cqw, 12px)' : 'clamp(10px, 9cqw, 16px)',
     paddingLeft: 'clamp(6px, 5cqw, 10px)',
     paddingRight: 'clamp(6px, 5cqw, 10px)',
   }
@@ -116,25 +118,25 @@ export function KotobaWordTile({ word, score, isLocked, onClick }: KotobaWordTil
       : 'text-[#a0a0a0]'
 
   const primaryStyle: CSSProperties = {
-    fontSize: 'clamp(20px, 17cqw, 30px)',
+    fontSize: 'clamp(32px, 27cqw, 48px)',
     lineHeight: 1.1,
   }
 
   const secondaryStyle: CSSProperties = {
-    fontSize: 'clamp(11px, 9cqw, 16px)',
+    fontSize: 'clamp(18px, 14cqw, 26px)',
     lineHeight: 1.2,
     marginTop: 'clamp(3px, 3cqw, 6px)',
   }
 
   const tertiaryStyle: CSSProperties = {
-    fontSize: 'clamp(10px, 7cqw, 13px)',
+    fontSize: 'clamp(16px, 11cqw, 21px)',
     lineHeight: 1.15,
     marginTop: 'clamp(2px, 2cqw, 4px)',
   }
 
   const pillStyle: CSSProperties = {
     bottom: 'clamp(4px, 5cqw, 8px)',
-    width: 'clamp(36px, 55cqw, 80px)',
+    width: '80%',
     height: 'clamp(3px, 3cqw, 4px)',
   }
 
@@ -157,6 +159,47 @@ export function KotobaWordTile({ word, score, isLocked, onClick }: KotobaWordTil
   const primaryText = word.kanji ?? word.kana
   const secondaryText = word.kanji ? word.kana : word.english
   const tertiaryText = word.kanji ? word.english : null
+
+  useLayoutEffect(() => {
+    const wrapper = wrapperRef.current
+    const primary = primaryRef.current
+    if (!wrapper || !primary) return
+    const button = wrapper.parentElement
+    if (!button) return
+
+    function recalc(): void {
+      if (!wrapper || !primary || !button) return
+      wrapper.style.transform = ''
+      let ratio = 1
+
+      const containerWidth = wrapper.clientWidth
+      if (containerWidth > 0) {
+        const range = document.createRange()
+        range.selectNodeContents(primary)
+        const textWidth = range.getBoundingClientRect().width
+        if (textWidth > containerWidth) {
+          ratio = Math.min(ratio, containerWidth / textWidth)
+        }
+      }
+
+      const bs = getComputedStyle(button)
+      const availableHeight =
+        button.clientHeight - parseFloat(bs.paddingTop) - parseFloat(bs.paddingBottom)
+      const contentHeight = wrapper.scrollHeight
+      if (contentHeight > availableHeight && availableHeight > 0) {
+        ratio = Math.min(ratio, availableHeight / contentHeight)
+      }
+
+      if (ratio < 1) {
+        wrapper.style.transform = `scale(${ratio})`
+      }
+    }
+
+    recalc()
+    const observer = new ResizeObserver(recalc)
+    observer.observe(button)
+    return (): void => observer.disconnect()
+  }, [primaryText])
 
   return (
     <button
@@ -187,27 +230,38 @@ export function KotobaWordTile({ word, score, isLocked, onClick }: KotobaWordTil
         </span>
       )}
 
-      <span className={['font-medium text-center', primaryClass].join(' ')} style={primaryStyle}>
-        {primaryText}
-      </span>
-
-      <span
-        className={['font-medium text-center max-w-full truncate px-1', secondaryClass].join(' ')}
-        style={secondaryStyle}
-        title={word.kanji ? undefined : word.english}
+      <div
+        ref={wrapperRef}
+        className={['flex flex-col items-center w-full pt-1', isLocked ? '' : 'pb-1'].join(' ')}
       >
-        {secondaryText}
-      </span>
-
-      {tertiaryText && (
         <span
-          className={['font-medium text-center max-w-full truncate px-1', tertiaryClass].join(' ')}
-          style={tertiaryStyle}
-          title={word.english}
+          ref={primaryRef}
+          className={['font-medium text-center whitespace-nowrap', primaryClass].join(' ')}
+          style={primaryStyle}
         >
-          {tertiaryText}
+          {primaryText}
         </span>
-      )}
+
+        <span
+          className={['font-medium text-center max-w-full truncate px-1', secondaryClass].join(' ')}
+          style={secondaryStyle}
+          title={word.kanji ? undefined : word.english}
+        >
+          {secondaryText}
+        </span>
+
+        {tertiaryText && (
+          <span
+            className={['font-medium text-center max-w-full truncate px-1', tertiaryClass].join(
+              ' ',
+            )}
+            style={tertiaryStyle}
+            title={word.english}
+          >
+            {tertiaryText}
+          </span>
+        )}
+      </div>
 
       {/* Mini progress pill: fluid width, centred above the bottom border */}
       <span

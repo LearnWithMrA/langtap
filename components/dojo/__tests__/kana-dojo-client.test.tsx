@@ -92,11 +92,11 @@ describe('KanaDojoClient', () => {
     })
     await user.click(masteredTiles[0])
     const dialog = await screen.findByRole('dialog')
-    // First step of the reset flow: "Reset progress on か?" with Yes/No buttons.
-    expect(within(dialog).getByText(/Reset progress on か\?/)).toBeInTheDocument()
-    expect(within(dialog).getByRole('button', { name: 'Yes' })).toBeInTheDocument()
-    expect(within(dialog).getByRole('button', { name: 'No' })).toBeInTheDocument()
-    expect(within(dialog).queryByRole('button', { name: 'Reset progress' })).not.toBeInTheDocument()
+    // Choice step: title is the character, with Cancel / Mark as mastered / Reset progress buttons.
+    expect(within(dialog).getByText(/か \(ka\)/)).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Mark as mastered' })).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Reset progress' })).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
   })
 
   it('runs the two-step reset flow to clear progress on a character', async () => {
@@ -107,9 +107,9 @@ describe('KanaDojoClient', () => {
     })
     await user.click(masteredTiles[0])
     const dialog = await screen.findByRole('dialog')
-    // Step 1 → Yes
-    await user.click(within(dialog).getByRole('button', { name: 'Yes' }))
-    // Step 2: "Are you sure? This can't be undone." → Yes
+    // Choice step → Reset progress
+    await user.click(within(dialog).getByRole('button', { name: 'Reset progress' }))
+    // Confirmation: "Are you sure? This can't be undone." → Yes
     expect(within(dialog).getByText(/Are you sure\?/)).toBeInTheDocument()
     expect(within(dialog).getByText(/can't be undone/i)).toBeInTheDocument()
     await user.click(within(dialog).getByRole('button', { name: 'Yes' }))

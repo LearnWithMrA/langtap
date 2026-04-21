@@ -95,7 +95,7 @@ export function KotobaWordPopover({
         currentStep={0}
         isDanger={false}
         secondaryAction={{
-          label: 'Mark mastered',
+          label: 'Mark as mastered',
           onClick: (): void => {
             onMarkMastered(word.id)
             handleClose()

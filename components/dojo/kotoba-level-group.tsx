@@ -36,6 +36,7 @@ type KotobaLevelGroupProps = {
   onToggle: (groupId: string) => void
   onWordClick: (word: KotobaWord) => void
   onUnlockGroup: (group: KotobaLevelGroup) => void
+  onResetGroup: (group: KotobaLevelGroup) => void
 }
 
 // ── Helpers ───────────────────────────────────
@@ -87,6 +88,7 @@ export function KotobaLevelGroupRow({
   onToggle,
   onWordClick,
   onUnlockGroup,
+  onResetGroup,
 }: KotobaLevelGroupProps): ReactNode {
   const percent = groupProgressPercent(group.wordIds, scores)
   const lockedCount = countLockedInGroup(group.wordIds, lockedWordIds)
@@ -130,15 +132,24 @@ export function KotobaLevelGroupRow({
           </div>
         </button>
 
-        {hasAnyWords && lockedCount > 0 && (
-          <UnlockButton
-            size="small"
-            color="green-light"
-            icon="locked"
-            onClick={(): void => onUnlockGroup(group)}
-            ariaLabel={`Unlock ${lockedCount} word${lockedCount === 1 ? '' : 's'} in ${group.label}`}
-          />
-        )}
+        {hasAnyWords &&
+          (lockedCount > 0 ? (
+            <UnlockButton
+              size="small"
+              color="green-light"
+              icon="locked"
+              onClick={(): void => onUnlockGroup(group)}
+              ariaLabel={`Unlock ${lockedCount} word${lockedCount === 1 ? '' : 's'} in ${group.label}`}
+            />
+          ) : (
+            <UnlockButton
+              size="small"
+              color="grey"
+              icon="unlocked"
+              onClick={(): void => onResetGroup(group)}
+              ariaLabel={`Reset progress on all words in ${group.label}`}
+            />
+          ))}
       </div>
 
       {isOpen && (

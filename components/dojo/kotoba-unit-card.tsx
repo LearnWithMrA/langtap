@@ -33,6 +33,7 @@ type KotobaUnitCardProps = {
   isOpen: boolean
   onToggle: (unitId: string) => void
   onUnlockUnit: (unit: KotobaUnit) => void
+  onResetUnit: (unit: KotobaUnit) => void
   controlsId: string
 }
 
@@ -93,6 +94,7 @@ export function KotobaUnitCard({
   isOpen,
   onToggle,
   onUnlockUnit,
+  onResetUnit,
   controlsId,
 }: KotobaUnitCardProps): ReactNode {
   const percent = unitProgressPercent(unit, scores)
@@ -170,8 +172,8 @@ export function KotobaUnitCard({
           />
         </div>
         <span className="text-xs font-bold tabular-nums text-warm-600">{percent}%</span>
-        {lockedCount > 0 && (
-          <span onClick={stopPropagation} onKeyDown={stopPropagation}>
+        <span onClick={stopPropagation} onKeyDown={stopPropagation}>
+          {lockedCount > 0 ? (
             <UnlockButton
               size="medium"
               color="green-medium"
@@ -179,8 +181,16 @@ export function KotobaUnitCard({
               onClick={(): void => onUnlockUnit(unit)}
               ariaLabel={`Unlock ${lockedCount} word${lockedCount === 1 ? '' : 's'} in ${unit.label}`}
             />
-          </span>
-        )}
+          ) : (
+            <UnlockButton
+              size="medium"
+              color="grey"
+              icon="unlocked"
+              onClick={(): void => onResetUnit(unit)}
+              ariaLabel={`Reset progress on all words in ${unit.label}`}
+            />
+          )}
+        </span>
       </div>
     </div>
   )
