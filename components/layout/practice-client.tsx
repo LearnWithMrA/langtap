@@ -96,7 +96,7 @@ function ModeDropdown({
 // -- Component ----------------------------------------------
 
 export function PracticeClient(): ReactNode {
-  const [mode, setMode] = useState<InputMode>('type')
+  const [mode, setMode] = useState<InputMode>('tap')
   const prefersReducedMotion = useReducedMotion()
   const { counters, incrementCorrect } = usePracticeCounters()
 
