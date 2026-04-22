@@ -30,6 +30,43 @@ Format per entry:
 
 ---
 
+## [2026-04-22] - Session 46
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Write auth screens spec
+**Status:** Done
+
+### Changes made
+- `components/ui/log-in-card.tsx`: Rebuilt as two-step card. Step 1: method picker with Email/Google/Apple tiles. Step 2: email/password form. Pure state-driven (no router). X close and back arrow as absolute-positioned circular buttons with `text-text-secondary` colour.
+- `components/ui/sign-up-card.tsx`: Same two-step architecture as log-in. Username, email, password with strength indicator. Removed username helper text.
+- `components/ui/auth-modal.tsx`: Rewritten as pure state-driven overlay. Accepts `onClose` prop instead of using `router.push`. Backdrop click, Escape key, and X button all call `onClose`.
+- `components/ui/input.tsx`: Added `w-full` to the input element so it stretches to fill parent width.
+- `components/layout/landing-client.tsx`: Added `authModal` state management. Auth modals render inline as overlays. Leaderboard "Start practising" button opens sign-up modal. Responsive hero: smaller heading and button on mobile, tighter gap.
+- `components/layout/landing-nav.tsx`: Auth buttons now accept `onOpenLogIn`/`onOpenSignUp` callbacks instead of Link hrefs. Mobile menu buttons also use callbacks.
+- `components/layout/landing-scene.tsx`: Adjusted hero content positioning (`pt-[16svh]` mobile, `pt-[15svh]` desktop).
+- `app/layout.tsx`: Removed `modal` parallel route prop from root layout.
+- `app/(auth)/layout.tsx`: Added `max-w-[440px]` wrapper for full-page fallback.
+- `app/(auth)/log-in/page.tsx`: Rewritten as client component with mode state for switching between log-in and sign-up.
+- `app/(auth)/sign-up/page.tsx`: Same pattern as log-in fallback.
+- `app/@modal/` (DELETED): Removed parallel route directory and all intercepting routes. Replaced by state-driven modals on the landing page.
+- `components/ui/logo-full.tsx`: Adjusted viewBox to reduce trailing whitespace.
+- `docs/UX_DESIGN.md`: Rewrote Section 4 (Auth Screens Spec) to document the new two-step state-driven modal architecture, responsive behaviour, and full-page fallback pattern.
+- `LangTap_Sprints.md`: Marked "Write auth screens spec" as Done.
+
+### Tests
+- 271 tests passing (17 suites, 7 skipped placeholder suites)
+- One pre-existing lint warning in `game-window.tsx` (unrelated to this session)
+
+### Next task
+Write onboarding flow spec (Sprint 2B)
+
+### Notes
+- The Next.js `@modal` parallel routes approach caused multiple issues: "initialTree is not iterable" errors, laggy route transitions, double-back-click to dismiss, stuttery switching between sign-up/log-in. Replaced entirely with state-driven modals on the landing page for instant open/close/switch with zero route navigation.
+- Full-page auth routes at `/log-in` and `/sign-up` are preserved as fallbacks for direct URL access (bookmarks, shared links, refresh).
+- Google and Apple sign-in tiles are present but disabled with "coming soon" labels.
+
+---
+
 ## [2026-04-21] - Session 45
 
 **Sprint:** Sprint 2B - UX/UI Design and Screen Specification

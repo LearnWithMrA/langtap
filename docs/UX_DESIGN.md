@@ -298,47 +298,75 @@ Footer text: Zen Maru Gothic text-sm, warm-600.
 
 ## 4. Auth Screens Spec
 
-**Status:** To Do
-**Routes:** `/sign-up`, `/log-in`
+**Status:** Done
+**Primary flow:** State-driven modal overlay on the landing page
+**Fallback routes:** `/sign-up`, `/log-in` (full-page, for direct URL access)
 **Scrollable:** No
-**Layout:** Single centred card on a plain background
+**Layout:** Two-step card: method picker then email form
 
-### 4.1 Background
+### 4.1 Architecture
 
-A plain gradient, not the landscape scene.
-Gradient: `from-blue-900 via-blue-700 to-blue-500`, diagonal, covering the full viewport.
-No clouds, no mascot, no parallax.
+Auth modals are rendered inline on the landing page as state-driven overlays.
+No Next.js parallel routes or intercepting routes. Clicking Log In or Sign Up
+in the nav sets a state variable; the modal appears instantly with no route
+navigation. Switching between log-in and sign-up within the modal is also a
+state swap (no stutter). Closing the modal (backdrop click, Escape, or X button)
+resets the state to null.
 
-### 4.2 Sign-Up Screen
+Full-page fallbacks at `(auth)/log-in` and `(auth)/sign-up` exist for direct
+URL navigation (bookmarks, refresh, shared links). These use the same card
+components with `router.push('/')` for the close action.
 
-Centred card (`bg-surface-raised rounded-2xl p-8 shadow-xl max-w-sm w-full`):
+### 4.2 Modal overlay
 
-- LangTap logo at top, centred
-- Heading: "Create your account" (text-xl, warm-800)
-- Username field (label: "Username") - helper text: "This is what appears on the leaderboard. No real name needed."
-- Email field
-- Password field with strength indicator below (four-segment bar, grey to mint-500)
-- Sign Up button (mint-500 key style, full-width)
-- Divider: "or"
-- Google sign-in button (white key style, charcoal text, Google icon) - Phase 1 stub, disabled with "Coming soon" tooltip
-- Apple sign-in button (black key style, white text, Apple icon) - Phase 1 stub, disabled with "Coming soon" tooltip
-- Footer link: "Already have an account? Log in"
+- Blue haze backdrop: `bg-blue-900/55 backdrop-blur-sm`
+- Card wrapper: `max-w-[440px]`, centred
+- Clicking backdrop or pressing Escape closes the modal
+- `fadeIn` and `scaleIn` CSS animations on open
 
-### 4.3 Log-In Screen
+### 4.3 Step 1: Method picker
 
-Same card style as sign-up.
+Both sign-up and log-in share the same layout:
 
-- LangTap logo at top, centred
-- Heading: "Welcome back" (text-xl, warm-800)
-- Email field
-- Password field
-- "Forgot your password?" link below password field (text-sm, mint-500)
-- Log In button (navy-deep key style, full-width)
-- Divider: "or"
-- Google and Apple buttons (same stub state as sign-up)
-- Footer link: "No account? Sign up for free"
+- X close button: absolute top-right corner, `rounded-full`, `text-text-secondary`, `hover:bg-warm-100`
+- LangTap logo: centred, `h-8 sm:h-10`
+- Heading: "Log In" or "Sign Up" (`text-xl`, `font-bold`)
+- Three method tiles in a flex row (not grid, so they don't stretch):
+  - Email: active, clickable, accent-coloured icon circle
+  - Google: disabled, `opacity-50`, "coming soon"
+  - Apple: disabled, `opacity-50`, "coming soon"
+- "Google and Apple sign-in coming soon." muted text
+- Footer: "No account? Sign up for free" / "Already have an account? Log in"
+  (triggers state swap, no navigation)
 
-### 4.4 Guest Mode Entry
+### 4.4 Step 2: Email form
+
+Clicking the Email tile transitions to the form step:
+
+- Back arrow: absolute top-left, same style as X (`rounded-full`, `text-text-secondary`, `hover:bg-warm-100`)
+- X close button: absolute top-right (same position as picker step)
+- No heading (Back arrow and form labels provide enough context)
+- Sign-up fields: Username, Email, Password (with four-segment strength bar)
+- Log-in fields: Email, Password, "Forgot your password?" link
+- Submit button: full-width key style (mint-500 for sign-up, navy-deep for log-in)
+- Footer: same cross-link as picker step
+
+### 4.5 Responsive behaviour
+
+- Card: `px-4 pt-4 pb-3` on mobile, `px-8 pt-8 pb-5` on desktop
+- Method tiles: `p-4` mobile, `p-6` desktop; icon circles `h-12 w-12` / `h-16 w-16`
+- Form gaps: `gap-3` throughout
+- Button: `py-2.5 text-base` mobile, `py-3.5 text-lg` desktop
+- Logo scales to `h-8` on mobile
+- Spacer below back/close buttons: `h-5` mobile, `h-3` desktop
+
+### 4.6 Full-page fallback
+
+`(auth)/layout.tsx` provides a blue diagonal gradient background for direct
+URL access. The card is wrapped in a `max-w-[440px]` container. Mode switching
+(log-in to sign-up) works via local state, same as the modal.
+
+### 4.7 Guest Mode Entry
 
 Not a screen. A text link on the landing page hero: "Continue without an account".
 Routes to `/practice?guest=true`.

@@ -3,13 +3,14 @@
 // Purpose: Keyboard-key-style button with 3D press-down effect
 //          and optional key-click sound. Used for CTAs, nav buttons,
 //          and tap grid buttons per UX_DESIGN.md Section 2.3.
-// Depends on: nothing
+// Depends on: next/link
 // ------------------------------------------------------------
 
 'use client'
 
 import { useCallback } from 'react'
 import type { ReactNode } from 'react'
+import Link from 'next/link'
 
 // -- Types --------------------------------------------------
 
@@ -67,15 +68,25 @@ export function KeyButton({
   ].join(' ')
 
   if (href && !disabled) {
+    const isInternal = href.startsWith('/') || href.startsWith('#')
+    const linkProps = {
+      className: baseClasses,
+      'aria-label': ariaLabel,
+      onClick: (): void => {
+        if (sound !== 'none') playKeySound(sound)
+      },
+    }
+
+    if (isInternal) {
+      return (
+        <Link href={href} {...linkProps}>
+          {children}
+        </Link>
+      )
+    }
+
     return (
-      <a
-        href={href}
-        className={baseClasses}
-        aria-label={ariaLabel}
-        onClick={() => {
-          if (sound !== 'none') playKeySound(sound)
-        }}
-      >
+      <a href={href} {...linkProps}>
         {children}
       </a>
     )

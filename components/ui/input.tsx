@@ -19,6 +19,7 @@ import type { ReactNode } from 'react'
 type InputProps = {
   value: string
   onChange: (value: string) => void
+  type?: 'text' | 'email' | 'password'
   placeholder?: string
   label?: string
   disabled?: boolean
@@ -32,6 +33,7 @@ type InputProps = {
 export function Input({
   value,
   onChange,
+  type = 'text',
   placeholder,
   label,
   disabled = false,
@@ -55,7 +57,7 @@ export function Input({
       )}
       <input
         id={inputId}
-        type="text"
+        type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -64,7 +66,7 @@ export function Input({
         aria-invalid={hasError}
         aria-describedby={hasError ? errorId : undefined}
         className={[
-          'border rounded-xl px-4 py-3 bg-surface-raised',
+          'w-full border rounded-xl px-4 py-3 bg-surface-raised',
           'text-base text-text-primary placeholder:text-text-muted',
           'focus:outline-none focus:ring-2',
           'disabled:opacity-50 disabled:cursor-not-allowed',

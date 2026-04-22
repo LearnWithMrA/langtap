@@ -14,22 +14,35 @@
 
 'use client'
 
+import { useState, useCallback } from 'react'
 import type { ReactNode } from 'react'
 import { LandingNav } from '@/components/layout/landing-nav'
 import { LandingScene } from '@/components/layout/landing-scene'
 import { LandingFooter } from '@/components/layout/landing-footer'
 import { PricingSection } from '@/components/ui/pricing-card'
 import { KeyButton } from '@/components/ui/key-button'
+import { AuthModal } from '@/components/ui/auth-modal'
+import { LogInCard } from '@/components/ui/log-in-card'
+import { SignUpCard } from '@/components/ui/sign-up-card'
 import { useEasterEgg } from '@/hooks/useEasterEgg'
+
+// -- Types --------------------------------------------------
+
+type AuthModal_ = 'log-in' | 'sign-up' | null
 
 // -- Component ----------------------------------------------
 
 export function LandingClient(): ReactNode {
   const { isActive: easterEggActive } = useEasterEgg()
+  const [authModal, setAuthModal] = useState<AuthModal_>(null)
+
+  const closeAuth = useCallback((): void => setAuthModal(null), [])
+  const openLogIn = useCallback((): void => setAuthModal('log-in'), [])
+  const openSignUp = useCallback((): void => setAuthModal('sign-up'), [])
 
   return (
     <div className="min-h-svh">
-      <LandingNav />
+      <LandingNav onOpenLogIn={openLogIn} onOpenSignUp={openSignUp} />
 
       {/* Easter egg indicator (visually subtle, wired for future logo swap) */}
       {easterEggActive && (
@@ -40,13 +53,13 @@ export function LandingClient(): ReactNode {
 
       {/* Hero section with parallax landscape */}
       <LandingScene>
-        <div className="flex flex-col items-center gap-6 md:gap-[14svh] text-center max-w-lg">
-          <h1 className="text-4xl md:text-5xl font-bold text-warm-800 leading-tight">
+        <div className="flex flex-col items-center gap-4 md:gap-6 text-center max-w-lg">
+          <h1 className="text-[2rem] leading-snug sm:text-4xl md:text-5xl font-bold text-warm-800 sm:leading-tight">
             A journey of a thousand miles begins with a single tap.
           </h1>
           <KeyButton
             href="/home"
-            className="bg-[#4a90c4] text-white px-8 py-2 text-xl shadow-[0_4px_0_0_#3570a0]"
+            className="bg-[#4a90c4] text-white px-6 py-1.5 text-lg sm:px-8 sm:py-2 sm:text-xl shadow-[0_4px_0_0_#3570a0]"
             aria-label="Try LangTap now as a guest"
           >
             Try it now
@@ -119,7 +132,7 @@ export function LandingClient(): ReactNode {
               </p>
               <div className="flex justify-center mt-4">
                 <KeyButton
-                  href="/sign-up"
+                  onClick={openSignUp}
                   className="bg-mint-500 text-white px-6 py-3 text-sm shadow-[0_4px_0_0_#2a8a6a]"
                   aria-label="Sign up to start practising"
                 >
@@ -132,6 +145,17 @@ export function LandingClient(): ReactNode {
       </div>
 
       <LandingFooter />
+
+      {/* Auth modal overlay */}
+      {authModal !== null && (
+        <AuthModal onClose={closeAuth}>
+          {authModal === 'log-in' ? (
+            <LogInCard onClose={closeAuth} onSwitchToSignUp={openSignUp} />
+          ) : (
+            <SignUpCard onClose={closeAuth} onSwitchToLogIn={openLogIn} />
+          )}
+        </AuthModal>
+      )}
     </div>
   )
 }

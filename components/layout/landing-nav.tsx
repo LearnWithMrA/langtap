@@ -3,7 +3,7 @@
 // Purpose: Sticky top navigation for the landing page.
 //          Transparent at top, frosted white after 80px scroll.
 //          Full SVG logo on desktop, compact LT logo on mobile.
-//          Key-style nav buttons for auth links.
+//          Key-style nav buttons for auth (callbacks, not links).
 // Depends on: components/ui/key-button.tsx,
 //             components/ui/logo-full.tsx,
 //             components/ui/logo-lt.tsx
@@ -17,6 +17,13 @@ import { KeyButton } from '@/components/ui/key-button'
 import { LogoFull } from '@/components/ui/logo-full'
 import { LogoLt } from '@/components/ui/logo-lt'
 
+// -- Types --------------------------------------------------
+
+type LandingNavProps = {
+  onOpenLogIn: () => void
+  onOpenSignUp: () => void
+}
+
 // -- Constants ----------------------------------------------
 
 const SCROLL_THRESHOLD = 80
@@ -28,7 +35,6 @@ const NAV_LINKS = [
 
 // -- Logo helpers -------------------------------------------
 
-// Plays key click on logo press
 function playLogoClick(): void {
   const audio = new Audio('/sounds/Keyboard%20Click.mp3')
   audio.volume = 0.6
@@ -37,7 +43,7 @@ function playLogoClick(): void {
 
 // -- Component ----------------------------------------------
 
-export function LandingNav(): ReactNode {
+export function LandingNav({ onOpenLogIn, onOpenSignUp }: LandingNavProps): ReactNode {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -91,14 +97,14 @@ export function LandingNav(): ReactNode {
           {/* Desktop right: auth buttons */}
           <div className="hidden md:flex items-center gap-3">
             <KeyButton
-              href="/log-in"
+              onClick={onOpenLogIn}
               className="bg-navy-deep text-white px-4 py-1.5 text-base shadow-[0_3px_0_0_#5088aa]"
               aria-label="Log in to LangTap"
             >
               Log In
             </KeyButton>
             <KeyButton
-              href="/sign-up"
+              onClick={onOpenSignUp}
               className="bg-mint-500 text-white px-4 py-1.5 text-base shadow-[0_3px_0_0_#2a8a6a]"
               aria-label="Sign up for LangTap"
             >
@@ -158,22 +164,28 @@ export function LandingNav(): ReactNode {
               {link.label}
             </a>
           ))}
-          <a
-            href="/sign-up"
-            onClick={closeMenu}
+          <button
+            type="button"
+            onClick={() => {
+              closeMenu()
+              onOpenSignUp()
+            }}
             className="text-2xl font-medium text-text-primary hover:text-sage-500 transition-colors duration-150"
             aria-label="Sign up for LangTap"
           >
             Sign Up
-          </a>
-          <a
-            href="/log-in"
-            onClick={closeMenu}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              closeMenu()
+              onOpenLogIn()
+            }}
             className="text-2xl font-medium text-text-primary hover:text-sage-500 transition-colors duration-150"
             aria-label="Log in to LangTap"
           >
             Log In
-          </a>
+          </button>
         </div>
       )}
     </>

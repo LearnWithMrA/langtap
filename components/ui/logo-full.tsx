@@ -19,7 +19,7 @@ type LogoFullProps = SVGProps<SVGSVGElement>
 export function LogoFull(props: LogoFullProps): ReactElement {
   return (
     <svg
-      viewBox="160 143 3090 757"
+      viewBox="140 143 3080 757"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-label="LangTap logo"

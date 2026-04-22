@@ -46,7 +46,7 @@ export function LandingScene({ children }: LandingSceneProps): ReactNode {
         </div>
 
         {/* Content overlay (hero copy, etc.) - positioned in the sky above the hills */}
-        <div className="relative z-20 flex h-svh flex-col items-center px-4 pt-[19svh] md:pt-[12svh]">
+        <div className="relative z-20 flex h-svh flex-col items-center px-4 pt-[16svh] md:pt-[15svh]">
           {children}
         </div>
       </section>
