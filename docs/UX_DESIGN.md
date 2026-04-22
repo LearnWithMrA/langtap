@@ -376,77 +376,294 @@ Guest banner is shown persistently on all screens once in guest mode (see FRONTE
 
 ## 5. Onboarding Flow Spec
 
-**Status:** To Do
-**Routes:** `/onboarding/step-1` through `/step-4`
-**Scrollable:** No per step
+**Status:** In Progress
+**Routes:** `/onboarding/step-1` through `/onboarding/step-3`
+**Scrollable:** Step 2 only (kana chart may exceed card height)
 **Layout:** Same blue gradient background as auth screens
 
-A persistent step indicator at the top of the card shows: Step 1 of 4, Step 2 of 4, etc.
-Progress dots, not numbers. Four dots, the current step filled in mint-500.
+### 5.0 Flow Architecture
 
-Back button (text link, top-left of card) on steps 2 onwards.
-Skip button (text link, top-right of card) on steps where skipping is valid.
+Three steps, not four. The original Step 3 (notification preferences) is deferred
+to a contextual prompt after the user's first successful practice session. This
+reduces time-to-first-practice and follows the just-in-time permission pattern:
+ask for engagement commitment after the user has experienced value, not before.
+
+**Revised flow:**
+- Step 1 (required): JLPT self-assessment
+- Step 2 (optional, prominent): Early character unlock (seion only)
+- Step 3 (required): Input mode selection, then immediately into `/practice`
+
+**UX KPI target:** median time from Step 1 render to `/practice` route under
+90 seconds. Step 2 (kana chart) is the risk; seion-only scope (92 chars) and a
+prominent Skip keep it fast.
+
+**Deferred notification prompt:** after the user completes their first practice
+session, a single interstitial card appears: "Want daily practice reminders?"
+with a toggle, a brief benefit line, and a Continue button. This is specced
+here for completeness but built in Sprint 10 alongside the notification wiring.
+
+### 5.0.1 Shared Visual Shell
+
+All three steps share a single layout:
+
+- **Background:** blue diagonal gradient matching the auth screens
+  (`from-blue-900 via-blue-700 to-blue-500`), full viewport.
+- **Card:** `max-w-[440px]`, centred vertically and horizontally,
+  `bg-surface-raised`, `rounded-2xl`, `shadow-lg`.
+- **Card padding:** `px-4 pt-4 pb-3` on mobile, `px-8 pt-6 pb-5` at `sm:`.
+- **Step indicator:** three dots centred at the top of the card. Each dot:
+  `h-2 w-2 rounded-full`. Active step: `bg-mint-500`. Completed steps:
+  `bg-sage-400`. Future steps: `bg-warm-300`. `gap-2` between dots.
+  `aria-label="Step [n] of 3"` on the container.
+- **Back button:** top-left of card, steps 2-3 only. Same style as auth
+  back arrow: `rounded-full p-2 text-text-secondary hover:bg-warm-100`.
+  Navigates to the previous step via `router.push`.
+- **Skip button:** top-right of card, Step 2 only. Text link: `text-sm
+  text-warm-600 hover:text-warm-800`. Navigates to the next step.
+- **Transitions:** step-to-step uses a 150ms opacity fade. Reduced motion:
+  instant.
+
+### 5.0.2 State Management and Persistence
+
+All step selections are held in a Zustand store (`stores/onboarding.store.ts`)
+with `persist` middleware writing to localStorage (key: `langtap-onboarding`).
+
+**Store shape:**
+```ts
+{
+  jlptLevel: 'N5' | 'N4' | 'N3' | 'N2' | 'N1'  // default 'N5'
+  selectedCharacterIds: string[]                   // default []
+  inputMode: 'type' | 'tap' | 'swipe'             // default 'type'
+  onboardingComplete: boolean                      // default false
+}
+```
+
+**Hydration:** `skipHydration: true` on the store. The onboarding layout calls
+`useOnboardingStore.persist.rehydrate()` on mount. This prevents a flash of
+default state on refresh.
+
+**Back navigation:** selections persist in the store across steps. Going back
+restores the user's previous choices. Skipping Step 2 leaves
+`selectedCharacterIds` as `[]`.
+
+**Sprint 3 migration contract:**
+- On sign-up completion, read the localStorage store and write all fields to
+  the Supabase `profiles` table in a single `upsert`.
+- `selectedCharacterIds` maps to `manual_unlocks` rows (one per character).
+- On successful write, clear the `langtap-onboarding` localStorage key.
+- Priority: Supabase is source of truth for logged-in users. localStorage is
+  source of truth for guests and the Sprint 2B visual shell.
+- `onboarding_complete` in Supabase is the final authority once auth is wired.
+
+### 5.0.3 Instrumentation Schema (wired Sprint 3)
+
+Events follow the Firebase recommended event naming convention:
+
+```ts
+type OnboardingEvent =
+  | { event: 'tutorial_begin' }
+  | { event: 'onboarding_step_view'; step: 1 | 2 | 3 }
+  | { event: 'onboarding_step_complete'; step: 1 | 2 | 3; skipped: boolean }
+  | { event: 'onboarding_skip'; step: 2 }
+  | { event: 'tutorial_complete'; jlptLevel: string; inputMode: string;
+      selectedCharacterCount: number }
+```
+
+No analytics provider is chosen yet. The event schema is defined now so
+Sprint 3 can wire it without a design pass.
+
+### 5.0.4 Back/Skip State Transition Table
+
+| From | Back goes to | Skip goes to | State on back |
+|---|---|---|---|
+| Step 1 | n/a (no back) | n/a (no skip) | n/a |
+| Step 2 | Step 1 | Step 3 | Step 1 selection preserved |
+| Step 3 | Step 2 | n/a (no skip) | Step 2 selections preserved |
+
+Completing Step 3 sets `onboardingComplete: true` and navigates to `/practice`.
+Re-entering `/onboarding/*` after completion redirects to `/practice` (enforced
+by middleware in Sprint 3; in Sprint 2B the store flag gates it client-side).
 
 ### 5.1 Step 1 - JLPT Self-Assessment
 
-Heading: "How much Japanese do you know?"
-Subheading: "This helps us choose the right vocabulary for you. You can change this later in Settings."
+**Heading:** "How much Japanese do you know?"
+**Subheading:** "This helps us choose the right words for you. You can change
+this later in Settings."
 
 Five buttons stacked vertically, each describing a JLPT level:
-- N5: "I'm just starting out"
+- N5: "I am just starting out"
 - N4: "I know some basics"
-- N3: "I'm getting comfortable"
-- N2: "I'm approaching fluency"
-- N1: "I'm near native level"
+- N3: "I am getting comfortable"
+- N2: "I am approaching fluency"
+- N1: "I am near native level"
 
-Selecting one highlights it in sage-200 and enables the Next button (mint-500 key style).
-Default: N5 is pre-selected.
+**Selection behaviour:**
+- Default: N5 is pre-selected on first render.
+- Selecting a level highlights it: `bg-sage-200 border border-sage-400
+  rounded-xl`. Unselected buttons: `bg-surface-raised border border-border
+  rounded-xl`.
+- Each button: `min-h-11 py-3 px-4`, full-width inside the card.
+- Level label (`text-base font-bold text-warm-800`) left-aligned.
+  Description (`text-sm text-warm-600`) below the label.
+- `gap-2` between buttons.
 
-This single selection (`kotoba_jlpt_level`) controls word selection in both Kotoba Mode
-(hard filter) and Kana Mode (soft preference for word draws). Words below the selected
-level are marked as mastered. The user is shown: "Words below this level will be marked
-as mastered. To reset, change your level in Profile settings."
+**Warning text:** below the button stack, `text-xs text-warm-500`:
+"Words below this level will be marked as mastered. To reset, change your
+level in Settings."
+
+**Next button:** full-width, mint-500 key style (keyboard-key 3D effect per
+Section 2.3), `shadow-[0_4px_0_0_#2e9a73]`. Always enabled (N5 is always
+selected). Label: "Next".
+
+**Data flow:** selection writes `jlptLevel` to the onboarding store.
+This maps to `kotoba_jlpt_level` on the profile. The old `kanji_jlpt_level`
+field is vestigial (kanji removed from scope per Sprint Board v1.1) and is
+not set during onboarding.
 
 ### 5.2 Step 2 - Early Character Unlock
 
-Heading: "Which characters do you already know?"
-Subheading: "Tap any character you can already recognise. These will be unlocked immediately so you can get straight to practising them."
+**Heading:** "Which characters do you already know?"
+**Subheading:** "Tap any you recognise to unlock them now, or skip to start
+from scratch."
 
-Displays the full kana chart: hiragana seion, then katakana seion, as a scrollable grid inside the card.
-Each character is a small tap button. Tapped = selected (sage-300 background with a tick).
-All characters start unselected.
+**Scope:** seion characters only (92 total: 46 hiragana + 46 katakana).
+Dakuon and yoon are excluded. Rationale: they are Stage 2 and 3 in the
+guided progression. Showing all 208 characters to a new user is overwhelming
+and contradicts the progressive unlock design. The Dojo handles individual
+and bulk unlock for later stages.
 
-At the bottom:
-- Character count: "12 characters selected"
-- "Unlock these" button (mint-500 key style, enabled when at least 1 selected)
-- "Skip" link (no early unlock, start from the beginning of the sequence)
+**Chart layout:**
+Two sections inside a scrollable area (`overflow-y-auto`, max height
+capped so the footer stays visible):
 
-Confirmation before applying: a modal with "Unlock 12 characters?" and Confirm / Cancel.
+1. **Hiragana** heading (`text-base font-bold text-warm-800`), then a
+   `grid-cols-5` grid of hiragana seion characters. Rows follow the gojuon
+   order: a, ka, sa, ta, na, ha, ma, ya, ra, wa/n. Row labels in the left
+   gutter (`text-xs text-warm-400`, 20px wide) are optional on mobile and
+   shown at `sm:`.
+2. **Katakana** heading, then the same grid for katakana seion.
 
-### 5.3 Step 3 - Notification Preferences
+**Tile sizing:**
+- Mobile: `clamp(40px, calc(18vw - 8px), 56px)` square. Minimum 40px meets
+  the 44pt touch target with `gap-1.5` padding contribution.
+- Desktop (`sm:` and above): 56px fixed.
+- Rounded: `rounded-lg`.
+- Content: kana character centred, `text-base` scaling via container query.
+  Romaji below in `text-[10px] text-warm-400`.
 
-Heading: "Practice reminders"
-Subheading: "We can remind you to practise. You can change this any time."
+**Tile states:**
+- Unselected: `bg-surface-raised border border-border`.
+- Selected: `bg-sage-300 border border-sage-500`. A small checkmark SVG
+  (`h-3 w-3`) appears top-right of the tile at `absolute top-0.5 right-0.5`.
+- Toggling: tap toggles selection. All characters start unselected.
 
-Single toggle: "Send me practice reminders" - off by default.
-If toggled on: "Great - we will remind you to practise each day." (placeholder text, actual push notification wiring is Phase 1 later sprint).
+**Footer (sticky at card bottom):**
+- Character count: "[n] selected" (`text-sm text-warm-600`). Shows "None
+  selected" when count is 0.
+- Two actions side by side:
+  - "Skip" text link (`text-sm text-warm-600 hover:text-warm-800`). Always
+    visible. Navigates to Step 3 with `selectedCharacterIds: []`.
+  - "Unlock these" button (mint-500 key style, `text-sm`). Disabled
+    (`opacity-50 cursor-not-allowed`) when count is 0. Enabled when >= 1.
 
-Next button always enabled.
+**Confirmation modal (on "Unlock these"):**
+Reuses the shared `Modal` component. Single step (not two-step; per
+GAME_DESIGN.md Section 4.4, early unlock is less destructive than bulk
+unlock in the Dojo because it is additive, not a reset).
+- Title: "Unlock [n] characters?"
+- Body: "These characters will be available for practice straight away.
+  You can unlock more from the Dojo at any time."
+- Buttons: "Unlock" (mint-500 key style) and "Cancel" (`bg-warm-100`).
+- On confirm: write `selectedCharacterIds` to store, navigate to Step 3.
 
-### 5.4 Step 4 - Input Mode Selection
+**Data flow:** `selectedCharacterIds` stores the `id` values from
+`data/kana/characters.ts` (e.g. `['h-a', 'h-ka', 'k-a']`). These map to
+`manual_unlocks` rows in Sprint 3.
 
-Heading: "How do you want to practise?"
-Subheading: "Choose the input style that suits you. You can switch at any time."
+### 5.3 Step 3 - Input Mode Selection
 
-Three large option cards stacked vertically:
-- Type: "Type the romaji on your keyboard" - shows a keyboard icon
-- Tap: "Tap the correct character on screen" - shows a tap/touch icon
-- Swipe: "Use your phone's swipe keyboard" - shows a swipe gesture icon
+**Heading:** "How do you want to practise?"
+**Subheading:** "Choose the input style that suits you. You can switch any time."
 
-Selecting one highlights the card (sage-100 border + sage-500 left accent bar).
-Default: Type is pre-selected.
+Three large option cards stacked vertically, `gap-3`:
 
-"Start practising" button (mint-500 key style) completes onboarding and routes to `/practice`.
+| Mode | Label | Description | Icon |
+|---|---|---|---|
+| Type | "Type" | "Use your keyboard to type romaji" | Keyboard icon (inline SVG) |
+| Tap | "Tap" | "Tap the correct character on screen" | Tap/touch icon (inline SVG) |
+| Swipe | "Swipe" | "Use your phone's swipe keyboard" | Swipe gesture icon (inline SVG) |
+
+**Card styling:**
+- Each card: `rounded-xl border-2 py-4 px-4`, full-width.
+- Unselected: `border-border bg-surface-raised`.
+- Selected: `border-sage-500 bg-sage-50` with a `border-l-4 border-l-sage-500`
+  left accent bar (total left border = 4px accent + 2px card border, visually
+  reads as a bold sage stripe).
+- Icon: `h-8 w-8 text-warm-600` left-aligned. Selected: `text-sage-500`.
+- Label: `text-base font-bold text-warm-800` next to icon.
+- Description: `text-sm text-warm-600` below the label.
+- Minimum tap area: entire card is the touch target.
+
+**Default:** Type is pre-selected.
+
+**"Start practising" button:** full-width, mint-500 key style. Label: "Start
+practising". On tap:
+1. Write `inputMode` to the onboarding store.
+2. Set `onboardingComplete: true` in the store.
+3. Navigate to `/practice`.
+
+### 5.4 Responsive Behaviour (All Steps)
+
+- Card: `max-w-[440px] w-full mx-4 sm:mx-auto`.
+- Card padding: `px-4 pt-4 pb-3` under `sm:`, `px-8 pt-6 pb-5` at `sm:`.
+- Step indicator dots: `gap-2`, centred. No size change across breakpoints.
+- JLPT buttons (Step 1): full-width, `gap-2`. Label and description stack
+  vertically at all sizes. No horizontal layout variant.
+- Kana chart (Step 2): `grid-cols-5` at all breakpoints (5 vowel columns
+  is the natural grouping). Tile size scales via `clamp()`. Scrollable area
+  height: `max-h-[50vh]` on mobile, `max-h-[60vh]` at `sm:`.
+- Mode cards (Step 3): full-width, stacked vertically at all breakpoints.
+  Icon and label sit in a `flex-row gap-3` with description below.
+- All interactive elements: minimum 44x44pt touch target.
+- Font size minimum: 16px for body text (prevents iOS auto-zoom on focus).
+
+### 5.5 Accessibility
+
+- Step indicator: `role="group"` with `aria-label="Onboarding progress,
+  step [n] of 3"`. Each dot is decorative (`aria-hidden="true"`); the
+  group label provides the semantic information.
+- JLPT buttons (Step 1): `role="radiogroup"` with `aria-label="JLPT level
+  selection"`. Each button: `role="radio"`, `aria-checked`.
+- Kana chart (Step 2): `role="group"` with `aria-label="Hiragana characters"`
+  and `aria-label="Katakana characters"` for each section. Each tile:
+  `role="checkbox"`, `aria-checked`, `aria-label="[kana], [romaji]"`.
+- Mode cards (Step 3): `role="radiogroup"` with `aria-label="Input mode
+  selection"`. Each card: `role="radio"`, `aria-checked`.
+- Back and Skip buttons: `aria-label="Go back to step [n]"` and
+  `aria-label="Skip this step"`.
+- Focus management: on step transition, focus moves to the card heading.
+  Tab order within each step follows visual order.
+- Keyboard navigation: arrow keys cycle within radio groups (Steps 1, 3).
+  Space/Enter toggles kana tiles (Step 2). Tab moves between sections.
+- Confirmation modal (Step 2): focus trap, `aria-modal="true"`, focus
+  returns to the "Unlock these" button on cancel.
+
+### 5.6 Deferred: Post-Practice Notification Prompt
+
+Specced here for forward reference. Not built until Sprint 10.
+
+After the user's first completed practice session (at least one word fully
+answered), a card appears as an interstitial before returning to the game
+home or practice screen:
+
+- Heading: "Want daily practice reminders?"
+- Toggle: "Send me reminders" (off by default).
+- Helper text: "A short nudge each day to keep your streak going."
+- Button: "Continue" (always enabled, closes the interstitial).
+- If toggled on: writes `notifications_enabled: true` to the profile.
+- If dismissed without toggling: `notifications_enabled` stays `false`.
+- The interstitial appears once. A `notification_prompt_shown` flag on the
+  profile (or localStorage for guests) prevents repeat display.
 
 ---
 
@@ -1771,7 +1988,7 @@ File naming: lowercase, hyphens, descriptive. No spaces.
 | Dojo - Kotoba | Built and iterating | No |
 | Sign-up | To Do | No |
 | Log-in | To Do | No |
-| Onboarding steps 1-4 | To Do | No |
+| Onboarding steps 1-3 | In Progress | No |
 | Profile | To Do | No |
 | Settings | To Do | No |
 | Leaderboard | To Do | No |

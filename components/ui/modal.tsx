@@ -41,6 +41,7 @@ type ModalProps = {
   onNextStep?: () => void
   isDanger?: boolean
   secondaryAction?: ModalSecondaryAction
+  confirmClassName?: string
 }
 
 // -- Constants ---------------------------------------------------
@@ -140,6 +141,7 @@ export function Modal({
   onNextStep,
   isDanger = false,
   secondaryAction,
+  confirmClassName,
 }: ModalProps): ReactNode {
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -200,7 +202,7 @@ export function Modal({
             </Button>
           )}
           <Button
-            className="flex-1"
+            className={`flex-1 ${confirmClassName ?? ''}`}
             variant={isDanger && isFinalStep ? 'danger' : 'primary'}
             size="sm"
             onClick={handleConfirm}

@@ -296,37 +296,50 @@ migration flow.
 Shown once after sign-up. Never shown again after completion.
 Tracked by `onboarding_complete: boolean` on the user's profile.
 
+Three steps. The original notification preferences step was deferred to a
+contextual prompt after the user's first practice session (Sprint 10). This
+reduces time-to-first-practice and follows the just-in-time permission
+pattern. Full visual and interaction spec: UX_DESIGN.md Section 5.
+
 ### Step 1 - JLPT Self-Assessment (`/onboarding/step-1`)
 
 - Show N5 through N1 with a short description of each level.
-- User selects two levels: Kotoba JLPT level and Kanji JLPT level. Both default to N5.
-- Sets `kotoba_jlpt_level` and `kanji_jlpt_level` on their profile.
-- Message shown: "Words below your selected level will be marked as mastered. To reset, change your level in Profile settings."
-- Continue button saves both selections and navigates to step 2.
-- Both can be changed later in Profile settings.
+- User selects one level. This sets `kotoba_jlpt_level` on the profile.
+  The `kanji_jlpt_level` field is vestigial (kanji removed from scope per
+  Sprint Board v1.1) and is not set during onboarding.
+- Default: N5 pre-selected.
+- Message shown: "Words below this level will be marked as mastered. To
+  reset, change your level in Settings."
+- Next button saves the selection and navigates to Step 2.
+- Can be changed later in Settings.
 
 ### Step 2 - Early Character Unlock (`/onboarding/step-2`)
 
-- Show the full kana chart with all characters.
+- Show seion characters only (46 hiragana + 46 katakana = 92 total).
+  Dakuon and yoon are excluded; the Dojo handles those stages.
 - User taps characters they already know to unlock them immediately.
-- A "Skip" button is always visible and prominent.
-- Selections are saved as `manual_unlocks` rows in Supabase.
-- A note: "You can also do this later from the Dojo."
+- A "Skip" link is always visible and prominent.
+- Selections are stored as character IDs in the onboarding store (Sprint
+  2B: localStorage via Zustand persist). Sprint 3 migrates these to
+  `manual_unlocks` rows in Supabase.
+- Confirmation modal before applying: "Unlock [n] characters?"
 
-### Step 3 - Notification Preferences (`/onboarding/step-3`)
+### Step 3 - Input Mode Selection (`/onboarding/step-3`)
 
-- Minimal in Phase 1. Notifications are not yet active.
-- Show a single toggle: "Notify me when new features are available."
-- Save to `notifications_enabled` on the profile.
-- This screen can be skipped with a "Skip" button.
-
-### Step 4 - Input Mode Selection (`/onboarding/step-4`)
-
-- Show three options: Tap, Type, Swipe.
+- Show three options: Type, Tap, Swipe.
 - Each option has an icon and a one-line description.
+- Default: Type pre-selected.
 - Selection saves `input_mode` to the profile.
-- Continue navigates to `/practice`.
+- "Start practising" button completes onboarding and navigates to
+  `/practice`.
 - After this step, `onboarding_complete` is set to `true`.
+
+### Deferred: Notification Prompt (Sprint 10)
+
+After the user's first completed practice session, a contextual interstitial
+prompts: "Want daily practice reminders?" with a toggle. If enabled, sets
+`notifications_enabled: true` on the profile. Appears once per user. See
+UX_DESIGN.md Section 5.6 for full spec.
 
 ---
 

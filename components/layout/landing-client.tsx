@@ -58,7 +58,7 @@ export function LandingClient(): ReactNode {
             A journey of a thousand miles begins with a single tap.
           </h1>
           <KeyButton
-            href="/home"
+            href="/onboarding/step-1"
             className="bg-[#4a90c4] text-white px-6 py-1.5 text-lg sm:px-8 sm:py-2 sm:text-xl shadow-[0_4px_0_0_#3570a0]"
             aria-label="Try LangTap now as a guest"
           >

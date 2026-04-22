@@ -30,7 +30,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 // Routes that require a full account. Guests are redirected to /log-in.
 // Source of truth: docs/AUTH.md Section 4.
-const AUTHED_ONLY_ROUTES = ['/leaderboard', '/profile', '/onboarding']
+// TODO: restore '/onboarding' before Sprint 3 auth wiring
+const AUTHED_ONLY_ROUTES = ['/leaderboard', '/profile']
 
 // Auth pages. Authenticated users are redirected to /practice.
 const AUTH_PAGES = ['/sign-up', '/log-in']
