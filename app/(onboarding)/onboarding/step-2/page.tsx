@@ -29,9 +29,7 @@ type KnowledgeLevel = 'none' | 'some' | 'all'
 // -- Helpers -----------------------------------------------------
 
 function getAllIds(script: 'hiragana' | 'katakana'): string[] {
-  return KANA_CHARACTERS
-    .filter((c) => c.script === script)
-    .map((c) => c.id)
+  return KANA_CHARACTERS.filter((c) => c.script === script).map((c) => c.id)
 }
 
 // -- Component ---------------------------------------------------
@@ -94,11 +92,6 @@ export default function OnboardingStep2Page(): ReactNode {
 
   const handleBack = (): void => {
     router.push('/onboarding/step-1')
-  }
-
-  const handleSkip = (): void => {
-    clearCharacters()
-    router.push('/onboarding/step-3')
   }
 
   return (

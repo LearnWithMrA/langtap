@@ -102,7 +102,7 @@ const MODE_OPTIONS: readonly ModeOption[] = [
   {
     mode: 'swipe',
     label: 'Swipe',
-    description: 'Use your phone\'s swipe keyboard',
+    description: "Use your phone's swipe keyboard",
     icon: <SwipeIcon />,
   },
 ] as const
@@ -136,9 +136,7 @@ export function InputModePicker(): ReactNode {
             ].join(' ')}
           >
             <div className="flex items-center gap-3">
-              <span className={isSelected ? 'text-[#9b7bb0]' : 'text-text-secondary'}>
-                {icon}
-              </span>
+              <span className={isSelected ? 'text-[#9b7bb0]' : 'text-text-secondary'}>{icon}</span>
               <div>
                 <span className="text-base font-bold text-text-primary">{label}</span>
                 <span className="block text-sm text-text-secondary mt-0.5">{description}</span>

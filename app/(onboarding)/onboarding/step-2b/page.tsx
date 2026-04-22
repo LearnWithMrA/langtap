@@ -96,11 +96,13 @@ export default function OnboardingStep2BPage(): ReactNode {
         </div>
 
         <div className="py-3 flex items-center justify-between gap-3">
-          {(() => {
+          {((): ReactNode => {
             const anyGroupSelected = activeGroupIds.some((id) => selectedIds.includes(id))
             return (
               <KeyButton
-                onClick={(): void => anyGroupSelected ? removeGroup(activeGroupIds) : toggleGroup(activeGroupIds)}
+                onClick={(): void =>
+                  anyGroupSelected ? removeGroup(activeGroupIds) : toggleGroup(activeGroupIds)
+                }
                 className="bg-[#e4d8ec] text-[#6b4d82] px-5 py-2.5 text-sm font-bold shadow-[0_4px_0_0_#d4c6db] focus:!ring-[#c4b0d0]"
               >
                 {anyGroupSelected ? 'Clear' : 'Select all'}
@@ -119,20 +121,20 @@ export default function OnboardingStep2BPage(): ReactNode {
           </div>
         </div>
 
-      <Modal
-        isOpen={showModal}
-        onClose={(): void => setShowModal(false)}
-        onConfirm={handleConfirmUnlock}
-        confirmClassName="!bg-[#c4b0d0] !text-white hover:!bg-[#a68fb8]"
-        steps={[
-          {
-            title: `Unlock ${count} character${count !== 1 ? 's' : ''}?`,
-            body: 'These characters will be available for practice straight away. You can unlock more from the Dojo at any time.',
-            confirmLabel: 'Unlock',
-            cancelLabel: 'Cancel',
-          },
-        ]}
-      />
+        <Modal
+          isOpen={showModal}
+          onClose={(): void => setShowModal(false)}
+          onConfirm={handleConfirmUnlock}
+          confirmClassName="!bg-[#c4b0d0] !text-white hover:!bg-[#a68fb8]"
+          steps={[
+            {
+              title: `Unlock ${count} character${count !== 1 ? 's' : ''}?`,
+              body: 'These characters will be available for practice straight away. You can unlock more from the Dojo at any time.',
+              confirmLabel: 'Unlock',
+              cancelLabel: 'Cancel',
+            },
+          ]}
+        />
       </div>
     </div>
   )

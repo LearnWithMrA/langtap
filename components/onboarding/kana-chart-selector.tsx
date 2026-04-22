@@ -21,7 +21,19 @@ import type { OnboardingStore } from '@/stores/onboarding.store'
 
 const SEION_ROWS = ['a', 'ka', 'sa', 'ta', 'na', 'ha', 'ma', 'ya', 'ra', 'wa'] as const
 const DAKUON_ROWS = ['ga', 'za', 'da', 'ba', 'pa'] as const
-const YOON_ROWS = ['kya', 'sha', 'cha', 'nya', 'hya', 'mya', 'rya', 'gya', 'ja', 'bya', 'pya'] as const
+const YOON_ROWS = [
+  'kya',
+  'sha',
+  'cha',
+  'nya',
+  'hya',
+  'mya',
+  'rya',
+  'gya',
+  'ja',
+  'bya',
+  'pya',
+] as const
 
 const SEION_COLS = ['a', 'i', 'u', 'e', 'o'] as const
 const YOON_COLS = ['a', 'u', 'o'] as const
@@ -86,7 +98,11 @@ function CharacterCell({
       aria-label={`${character.kana}, ${character.romaji}`}
       onClick={onToggle}
       className={`flex flex-col items-center justify-center focus:outline-none ${shapeClass}`}
-      style={{ width: isYoon ? 'clamp(40px, calc(16vw - 2px), 52px)' : 'clamp(32px, calc(13vw - 2px), 36px)' }}
+      style={{
+        width: isYoon
+          ? 'clamp(40px, calc(16vw - 2px), 52px)'
+          : 'clamp(32px, calc(13vw - 2px), 36px)',
+      }}
     >
       <div
         className={[
@@ -94,8 +110,12 @@ function CharacterCell({
           isSelected ? 'bg-[#d8c8e2]' : '',
         ].join(' ')}
         style={{
-          width: isYoon ? 'clamp(36px, calc(14vw - 2px), 46px)' : 'clamp(27px, calc(11vw - 2px), 32px)',
-          height: isYoon ? 'clamp(22px, calc(8vw - 2px), 28px)' : 'clamp(27px, calc(11vw - 2px), 32px)',
+          width: isYoon
+            ? 'clamp(36px, calc(14vw - 2px), 46px)'
+            : 'clamp(27px, calc(11vw - 2px), 32px)',
+          height: isYoon
+            ? 'clamp(22px, calc(8vw - 2px), 28px)'
+            : 'clamp(27px, calc(11vw - 2px), 32px)',
         }}
       >
         {isSelected && (
@@ -171,9 +191,11 @@ function RowCheckbox({
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            {allSelected
-              ? <polyline points="3 8.5 6.5 12 13 4" />
-              : <line x1="4" y1="8" x2="12" y2="8" />}
+            {allSelected ? (
+              <polyline points="3 8.5 6.5 12 13 4" />
+            ) : (
+              <line x1="4" y1="8" x2="12" y2="8" />
+            )}
           </svg>
         )}
       </div>
@@ -275,10 +297,22 @@ export function KanaChartSelector({ onActiveGroupChange }: KanaChartSelectorProp
               const allSel = rowIds.length > 0 && rowIds.every((id) => selectedSet.has(id))
               const someSel = !allSel && rowIds.some((id) => selectedSet.has(id))
               return [
-                <RowCheckbox key={`cb-${rowKey}`} allSelected={allSel} someSelected={someSel} onToggle={(): void => toggleGroup(rowIds)} label={rowKey} />,
+                <RowCheckbox
+                  key={`cb-${rowKey}`}
+                  allSelected={allSel}
+                  someSelected={someSel}
+                  onToggle={(): void => toggleGroup(rowIds)}
+                  label={rowKey}
+                />,
                 ...cells.map((char, colIdx) =>
                   char ? (
-                    <CharacterCell key={char.id} character={char} isSelected={selectedSet.has(char.id)} onToggle={(): void => toggleCharacter(char.id)} stage={activeStage} />
+                    <CharacterCell
+                      key={char.id}
+                      character={char}
+                      isSelected={selectedSet.has(char.id)}
+                      onToggle={(): void => toggleCharacter(char.id)}
+                      stage={activeStage}
+                    />
                   ) : (
                     <div key={`empty-${rowKey}-${colIdx}`} />
                   ),
@@ -301,7 +335,13 @@ export function KanaChartSelector({ onActiveGroupChange }: KanaChartSelectorProp
               const allSel = rowIds.length > 0 && rowIds.every((id) => selectedSet.has(id))
               const someSel = !allSel && rowIds.some((id) => selectedSet.has(id))
               return (
-                <RowCheckbox key={`cb-${rowKey}`} allSelected={allSel} someSelected={someSel} onToggle={(): void => toggleGroup(rowIds)} label={rowKey} />
+                <RowCheckbox
+                  key={`cb-${rowKey}`}
+                  allSelected={allSel}
+                  someSelected={someSel}
+                  onToggle={(): void => toggleGroup(rowIds)}
+                  label={rowKey}
+                />
               )
             })}
             {/* Characters */}
@@ -310,7 +350,13 @@ export function KanaChartSelector({ onActiveGroupChange }: KanaChartSelectorProp
                 const colIdx = activeCols.indexOf(vowel)
                 const char = cells[colIdx]
                 return char ? (
-                  <CharacterCell key={char.id} character={char} isSelected={selectedSet.has(char.id)} onToggle={(): void => toggleCharacter(char.id)} stage={activeStage} />
+                  <CharacterCell
+                    key={char.id}
+                    character={char}
+                    isSelected={selectedSet.has(char.id)}
+                    onToggle={(): void => toggleCharacter(char.id)}
+                    stage={activeStage}
+                  />
                 ) : (
                   <div key={`empty-${rowKey}-${vowel}`} />
                 )
@@ -324,8 +370,9 @@ export function KanaChartSelector({ onActiveGroupChange }: KanaChartSelectorProp
   )
 
   function renderStandaloneN(): ReactNode {
-    const nChar = getCharsByStageAndScript('seion', activeScript)
-      .find((c) => c.romaji === 'n' && c.row === 'wa')
+    const nChar = getCharsByStageAndScript('seion', activeScript).find(
+      (c) => c.romaji === 'n' && c.row === 'wa',
+    )
     if (!nChar) return null
     return (
       <div className="flex justify-center mt-0">

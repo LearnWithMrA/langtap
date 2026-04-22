@@ -55,7 +55,8 @@ export default function OnboardingStep1Page(): ReactNode {
       <JlptPicker />
 
       <p className="text-xs text-text-muted text-center mt-4 mb-4">
-        Words below this level will be marked as mastered. To reset, change your level in Settings or in Kotoba Dojo.
+        Words below this level will be marked as mastered. To reset, change your level in Settings
+        or in Kotoba Dojo.
       </p>
 
       <KeyButton
