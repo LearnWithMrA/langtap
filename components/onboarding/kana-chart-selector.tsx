@@ -100,8 +100,8 @@ function CharacterCell({
       className={`flex flex-col items-center justify-center focus:outline-none ${shapeClass}`}
       style={{
         width: isYoon
-          ? 'clamp(40px, calc(16vw - 2px), 52px)'
-          : 'clamp(32px, calc(13vw - 2px), 36px)',
+          ? 'clamp(40px, calc(16vw - 8px), 62px)'
+          : 'clamp(32px, calc(13vw - 8px), 52px)',
       }}
     >
       <div
@@ -111,11 +111,11 @@ function CharacterCell({
         ].join(' ')}
         style={{
           width: isYoon
-            ? 'clamp(36px, calc(14vw - 2px), 46px)'
-            : 'clamp(27px, calc(11vw - 2px), 32px)',
+            ? 'clamp(36px, calc(14vw - 6px), 54px)'
+            : 'clamp(27px, calc(11vw - 6px), 44px)',
           height: isYoon
-            ? 'clamp(22px, calc(8vw - 2px), 28px)'
-            : 'clamp(27px, calc(11vw - 2px), 32px)',
+            ? 'clamp(22px, calc(8vw - 3px), 34px)'
+            : 'clamp(27px, calc(11vw - 6px), 44px)',
         }}
       >
         {isSelected && (
@@ -143,7 +143,7 @@ function CharacterCell({
             'font-medium leading-none whitespace-nowrap',
             isSelected ? 'text-[#6b4d82]' : 'text-warm-400',
           ].join(' ')}
-          style={{ fontSize: 'clamp(16px, 4vw, 18px)' }}
+          style={{ fontSize: 'clamp(16px, calc(5vw - 2px), 24px)' }}
         >
           {character.kana}
         </span>
@@ -249,14 +249,16 @@ export function KanaChartSelector({ onActiveGroupChange }: KanaChartSelectorProp
             type="button"
             onClick={(): void => setActiveScript(script)}
             className={[
-              'px-4 py-0.5 text-base font-bold rounded-full transition-colors duration-150',
+              'px-4 py-1 font-bold rounded-full transition-colors duration-150 flex items-center justify-center',
               'focus:outline-none',
               activeScript === script
                 ? 'bg-[#c4b0d0] text-white'
                 : 'text-warm-400 hover:text-warm-600',
             ].join(' ')}
           >
-            {script === 'hiragana' ? 'Hiragana' : 'Katakana'}
+            <span style={{ fontSize: 'clamp(16px, calc(4vw - 1px), 20px)' }}>
+              {script === 'hiragana' ? 'Hiragana' : 'Katakana'}
+            </span>
           </button>
         ))}
       </div>
@@ -269,14 +271,14 @@ export function KanaChartSelector({ onActiveGroupChange }: KanaChartSelectorProp
             type="button"
             onClick={(): void => setActiveStage(key)}
             className={[
-              'px-3 py-0.5 text-xs font-medium rounded-full transition-colors duration-150',
+              'px-3 py-0.5 font-medium rounded-full transition-colors duration-150 flex items-center justify-center',
               'focus:outline-none',
               activeStage === key
                 ? 'bg-[#d8c8e2] text-[#6b4d82]'
                 : 'text-warm-400 hover:text-warm-600',
             ].join(' ')}
           >
-            {label}
+            <span style={{ fontSize: 'clamp(12px, calc(3vw - 1px), 16px)' }}>{label}</span>
           </button>
         ))}
       </div>
