@@ -30,6 +30,48 @@ Format per entry:
 
 ---
 
+## [2026-04-22] - Session 47
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Write onboarding flow spec
+**Status:** Done
+
+### Changes made
+- `docs/UX_DESIGN.md` Section 5: Full rewrite. Reduced from 4 steps to 3 (notifications deferred to post-first-practice per just-in-time permission pattern). Added implementation-grade detail: shared visual shell, persistence strategy (Zustand + localStorage), instrumentation schema, back/skip state transitions, responsive rules, accessibility spec, deferred notification prompt spec.
+- `docs/AUTH.md` Section 9: Updated from dual-JLPT 4-step to single-JLPT 3-step. Aligned with Sprint Board v1.1 kanji removal.
+- `app/globals.css`: Added `--color-onboarding-bg: #ede6f0` (lavender) token for onboarding page backgrounds.
+- `app/(onboarding)/layout.tsx`: Built from placeholder. Solid lavender background, centred card, responsive alignment.
+- `stores/onboarding.store.ts`: New Zustand store with persist middleware. Fields: jlptLevel, selectedCharacterIds, inputMode, onboardingComplete. Actions: toggle, bulk set, remove group, clear.
+- `components/onboarding/step-indicator.tsx`: Three-dot progress indicator, purple theme.
+- `components/onboarding/jlpt-picker.tsx`: Five JLPT level radio buttons, single-line layout.
+- `components/onboarding/kana-chart-selector.tsx`: Full kana chart with Hiragana/Katakana script tabs, Seion/Dakuon/Yoon stage tabs, per-row checkboxes, select all/clear per group, purple selection circles (rounded squares for yoon), responsive grid (vertical mobile, horizontal desktop).
+- `components/onboarding/input-mode-picker.tsx`: Three mode cards (Tap, Type, Swipe), purple selected state.
+- `app/(onboarding)/onboarding/step-1/page.tsx`: JLPT self-assessment with warning text.
+- `app/(onboarding)/onboarding/step-2/page.tsx`: Knowledge gate with None/Some/All sliders per script.
+- `app/(onboarding)/onboarding/step-2b/page.tsx`: Character picker with stripped-down chart, confirmation modal.
+- `app/(onboarding)/onboarding/step-3/page.tsx`: Input mode selection, completes onboarding.
+- `components/ui/modal.tsx`: Added optional `confirmClassName` prop for button colour override.
+- `components/layout/landing-client.tsx`: "Try it now" routes to `/onboarding/step-1` for testing.
+- `middleware.ts`: Temporarily removed `/onboarding` from protected routes for visual shell testing.
+- `package.json`: Added `zustand` dependency (approved tech stack).
+- Old placeholder pages at `app/(onboarding)/step-1/` through `step-4/` deleted by owner (wrong URL structure).
+
+### Tests
+- All 271 existing tests pass. No regressions.
+- Onboarding-specific tests deferred to Sprint 3 (auth wiring).
+
+### Next task
+Write Profile screen spec
+
+### Notes
+- Codex-reviewed plan before implementation. Seven blind spots identified and resolved: route structure, single vs dual JLPT, deferred notifications, completion-state strategy, back/skip transitions, chart scope, blast radius.
+- Purple colour theme (`#c4b0d0` family) for all onboarding screens, distinct from Kana Dojo (blue) and Kotoba Dojo (green).
+- "Try it now" on landing page temporarily routes to onboarding for Vercel testing. Revert to `/home` when auth is wired in Sprint 3.
+- Middleware `/onboarding` protection temporarily removed. Restore in Sprint 3.
+- `LangTap_Sprints.md` was accidentally deleted in the previous commit. Restored from 68e7062.
+
+---
+
 ## [2026-04-22] - Session 46
 
 **Sprint:** Sprint 2B - UX/UI Design and Screen Specification

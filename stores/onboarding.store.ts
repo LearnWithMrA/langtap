@@ -77,7 +77,9 @@ export const useOnboardingStore = create<OnboardingState & OnboardingActions>()(
       removeGroup: (groupIds: string[]): void => {
         set((state) => {
           const toRemove = new Set(groupIds)
-          return { selectedCharacterIds: state.selectedCharacterIds.filter((id) => !toRemove.has(id)) }
+          return {
+            selectedCharacterIds: state.selectedCharacterIds.filter((id) => !toRemove.has(id)),
+          }
         })
       },
 
