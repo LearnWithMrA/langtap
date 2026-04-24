@@ -30,6 +30,92 @@ Format per entry:
 
 ---
 
+## [2026-04-24] - Session 49
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Write Profile screen spec + Game Home dashboard redesign
+**Status:** Done
+
+### Changes made
+
+**Profile screen (new):**
+- `docs/UX_DESIGN.md` Section 10: Full profile spec with header card, membership, account settings, delete account, responsive behaviour, accessibility, states
+- `app/(main)/profile/page.tsx`: Replaced placeholder with ProfileClient import
+- `components/profile/profile-client.tsx`: Orchestrator with yellow theme (`bg-profile-bg`), modals for email/password/sign-out, typed delete confirmation
+- `components/profile/header-card.tsx`: Avatar (initial-based), username, member since, tier badge, sign out button (blush pink key style)
+- `components/profile/membership-card.tsx`: Free plan display, "Notify me" CTA
+- `components/profile/account-settings.tsx`: Username (inline edit, 30-day limit), email, password, distance units toggle. ModalType exported.
+- `components/profile/guest-banner.tsx`: Yellow-themed CTA for guest users
+- `components/profile/profile-helpers.ts`: Date formatting, username change cooldown helpers
+- `components/profile/profile-icons.tsx`: Pencil, chevron, shield SVG icons
+- `samples/profile-fixtures.ts`: Three fixtures (free_user, guest, recently_changed)
+- `app/globals.css`: Added `--color-profile-bg`, `--color-profile-accent`, `--color-profile-accent-dark` tokens
+- `middleware.ts`: Temporarily removed `/profile` from auth-only routes for visual shell testing
+
+**Game Home dashboard (redesign):**
+- `docs/UX_DESIGN.md` Section 6: Rewritten with dashboard layout, streak system (3-day start, save mechanic, timezone contract), heatmap calendar, stage progress, stats, leaderboard glance, practice CTA, analytics events
+- `components/layout/game-home-client.tsx`: Rebuilt as responsive dashboard. Streak calendar left, Kana + Kotoba mode panels right. Fixed landscape background, scrollable content.
+- `components/dashboard/streak-calendar.tsx`: Figma-inspired calendar widget. Gold circles for practiced days, blue circles for save days, orange/blue flame SVGs, rounded highlight bands for current streak only, month navigation arrows, streak count below. Proper streak engine derives all flames from practice data.
+- `components/dashboard/mode-panel.tsx`: Kana (blue) and Kotoba (green) panels. Collapsible progress bars with "Show progress" toggle. Leaderboard glance per mode. Practice CTA with integrated mode dropdown (independent press animation, click-outside-to-close). Auto-collapses below lg breakpoint.
+- `components/dashboard/dashboard-helpers.ts`: Formatting utilities (score, distance, time, heat classes)
+- `components/dashboard/dashboard-icons.tsx`: Star, lock, clock, road SVG icons
+- `samples/dashboard-fixtures.ts`: Rebuilt with streak engine. `buildHeatmap` derives flames from practice counts. `computeStreak` calculates chain/practice days. Three deterministic fixtures (zero, mid with past+current streak, advanced with saves).
+
+**Other components updated:**
+- `components/layout/landing-footer.tsx`: Used as shared footer on profile page
+- Removed old unused dashboard components: `heatmap-calendar.tsx`, `streak-display.tsx`, `stats-grid.tsx`, `leaderboard-glance.tsx`, `practice-cta.tsx`, `stage-progress-bars.tsx` (replaced by `streak-calendar.tsx` and `mode-panel.tsx`)
+
+### Tests
+- All 271 existing tests pass. No regressions.
+- Pre-existing warning in `game-window.tsx` (missing useCallback dependency) flagged but not in scope.
+
+### Next task
+Write Settings screen spec
+
+### Notes
+- Codex reviewed the combined Home + Profile plan before implementation. Six findings addressed: timezone semantics for streaks, heatmap compression on mobile, username change server enforcement, membership section "Notify me" approach, missing dashboard elements, schema additions flagged for Sprint 3.
+- Streak mechanic fully defined: 3 consecutive active days starts a streak, 1 missed day is saved (blue flame) if allowed, must practice after a save before another save is available, 2 misses in a row breaks the streak. Engine derives all flame assignments from raw practice data.
+- Schema additions flagged for Sprint 3: `profiles.username_changed_at`, `practice_sessions` table with `event_at_utc` + `user_tz` + `local_date`.
+- Profile page temporarily accessible without auth (middleware change). Restore `/profile` to `AUTHED_ONLY_ROUTES` before Sprint 3.
+
+---
+
+## [2026-04-22] - Session 48
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Onboarding flow iteration
+**Status:** Done
+
+### Changes made
+- `components/onboarding/kana-chart-selector.tsx`: Added Seion/Dakuon/Yoon stage sub-tabs. Added per-row checkboxes for group selection. Yoon uses rounded squares instead of circles. Fluid scaling with clamp() so characters grow on larger phones (Pro Max) and scale down on 320px. Hiragana/Katakana and stage tab text scales with viewport. Select all/clear scoped per active stage+script.
+- `components/onboarding/input-mode-picker.tsx`: Reordered to Tap, Type, Swipe. Reduced card padding. Removed "romaji" from Type description.
+- `app/(onboarding)/onboarding/step-2/page.tsx`: Converted to knowledge gate (Step 2A) with None/Some/All sliders per script. "I know all" unlocks all characters (seion+dakuon+yoon). Removed skip button. Added description mentioning seion, dakuon and yoon.
+- `app/(onboarding)/onboarding/step-2b/page.tsx`: New stripped-down chart picker page. Card resizes to fit content on desktop (w-fit). Full-height mobile layout with scrollable chart and pinned footer. Select all/Clear button scoped to active group.
+- `app/(onboarding)/onboarding/step-1/page.tsx`: Updated warning text to mention Kotoba Dojo. Reduced heading margin.
+- `app/(onboarding)/onboarding/step-3/page.tsx`: Reduced heading margin.
+- `app/(onboarding)/layout.tsx`: Removed max-width constraint so step-2b can resize freely on desktop.
+- `stores/onboarding.store.ts`: Added setSelectedBulk, toggleGroup, and removeGroup actions.
+- `components/ui/modal.tsx`: Added confirmClassName prop for button colour override.
+- `components/layout/practice-client.tsx`: Default mode changed from Type to Tap.
+- `components/layout/landing-client.tsx`: "Try it now" routes to /onboarding/step-1.
+- `middleware.ts`: Temporarily removed /onboarding from protected routes for testing.
+- `app/apple-icon.png`: Replaced old black icon with light blue version matching icon.png.
+- `app/globals.css`: Added --color-onboarding-bg lavender token.
+
+### Tests
+- All 271 existing tests pass. No regressions.
+
+### Next task
+Write Profile screen spec
+
+### Notes
+- Purple colour theme fully applied across all onboarding screens including modal confirmation buttons.
+- Step 2 split into 2A (knowledge gate) and 2B (character picker) for better UX flow.
+- Kana chart supports all three stages (seion, dakuon, yoon) with script and stage tab switching.
+- Fluid scaling validated across 320px, 375px, 430px (Pro Max), 768px (tablet), and desktop.
+
+---
+
 ## [2026-04-22] - Session 47
 
 **Sprint:** Sprint 2B - UX/UI Design and Screen Specification

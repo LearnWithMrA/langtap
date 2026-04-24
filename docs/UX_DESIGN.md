@@ -669,21 +669,59 @@ home or practice screen:
 
 ## 6. Game Home Screen Spec
 
-**Status:** Done
+**Status:** In Progress (dashboard redesign, Sprint 2B)
 **Route:** `/home` (logged-in users only)
-**Scrollable:** No
-**Layout:** Full-screen landscape scene
+**Scrollable:** Yes (page scrolls, landscape background is fixed)
+**Layout:** Parallax landscape background with dashboard card overlay
 
-This is the mode selection hub for logged-in users. Guests are redirected
-to `/practice` (see Section 6.5).
+The home screen is the user's dashboard. It answers three questions at a
+glance: "How am I doing?", "How do I compare?", and "What should I do
+next?" The parallax scene remains as the atmospheric background. A
+translucent dashboard card floats over the scene with all progress data
+and a clear path to practice.
 
 ### 6.1 Layout
 
-The full parallax landscape fills the viewport (`overflow: hidden`, no scroll).
-The user's selected scene theme class is applied to the scene root. Default: `theme-day`.
-Clouds drift continuously. The mascot cycles at idle speed on the ground strip.
+The full parallax landscape fills the viewport as a **fixed** background.
+The user's selected scene theme class is applied to the scene root.
+Default: `theme-day`. Clouds drift continuously. The mascot cycles at
+idle speed on the ground strip. The dashboard card sits in the normal
+document flow and scrolls over the fixed landscape.
 
-No distance counter on this screen. The counter appears only on the practice screen.
+```
++--------------------------------------------------+
+| AppTopBar (56px, fixed, transparent/frosted)      |
++--------------------------------------------------+
+|                                                   |
+|  [Parallax landscape - FIXED behind card]         |
+|                                                   |
+|  +--------------------------------------------+   |
+|  | Dashboard Card (translucent, scrollable)    |   |
+|  |                                             |   |
+|  |  [Streak flame + count]                     |   |
+|  |  [Heatmap calendar]                         |   |
+|  |  [Stage progress bars]                      |   |
+|  |  [Stats grid 2x2]                           |   |
+|  |  [Leaderboard glance]                       |   |
+|  |  [Practice Kana CTA + mode indicator]       |   |
+|  +--------------------------------------------+   |
+|                                                   |
+|  [Mascot cycling on ground strip]                 |
++--------------------------------------------------+
+```
+
+**Dashboard card:**
+- Position: centred horizontally, top margin clears the top bar
+  (`mt-[72px]`, gives 16px breathing room below the 56px bar)
+- Max width: `max-w-md` (448px), matching practice screen
+- Background: `bg-white/85 backdrop-blur-md`
+- Border: `border border-white/40`
+- Radius: `rounded-2xl`
+- Shadow: `shadow-lg`
+- Padding: `px-4 py-5` mobile, `px-6 py-6` at `sm:`
+- Bottom margin: `mb-8` so content does not butt against the ground strip
+- The card is part of normal page flow. The page scrolls, not the card.
+  No nested scroll contexts.
 
 ### 6.2 In-App Top Bar (All Game Screens)
 
@@ -711,39 +749,321 @@ Height: 56px (`h-14`), fixed, `z-50`.
 All icons are inline SVGs using `currentColor` for theme support.
 Minimum touch target 44x44pt. No labels on mobile.
 
-### 6.3 Mode Selection Buttons
+### 6.3 Streak System
 
-Two large keyboard-key-style buttons in the sky area. 180x100px at all breakpoints.
-Stacked vertically on mobile, side-by-side on desktop (`flex-col md:flex-row`).
+**Core mechanic:**
+A streak counts consecutive days with at least one practice session (at
+least one character answered). A grace day rule prevents a single missed
+day from breaking the streak.
 
-**Practice Kana button:**
-- `bg-sage-500`, white text "Practice Kana"
-- Shadow: `shadow-[0_6px_0_0_#456e3d]`
-- Hover: `brightness-110`. Active: translateY + shadow collapse.
-- Click: plays `ui-mode-kana` sound, navigates to `/practice?mode=kana`
+**Grace day rule:**
+- Missing one day does not break the streak. Missing two consecutive
+  days does.
+- A grace day is displayed with a blue flame. A practiced day shows a
+  red/orange flame. A missed day (no grace) shows no flame.
 
-**Practice Kotoba button (locked state):**
-- `bg-warm-200`, `text-warm-400`
-- Shadow: `shadow-[0_6px_0_0_#b8a898]`
-- Inline lock SVG (`strokeWidth={3}`, `currentColor`) positioned at bottom-quarter
-  of button via absolute positioning (does not affect text centering)
-- `aria-disabled="true"`, `cursor-not-allowed`
-- On click: shows tooltip "Complete Kana to unlock" (3s auto-dismiss)
+**State machine:**
 
-**Practice Kotoba button (unlocked state):**
-- `bg-blush-300`, `text-warm-800`
-- Same interaction as Kana button, navigates to `/practice?mode=kotoba`
+```
+States: ACTIVE | GRACE | BROKEN
 
-### 6.4 Guest Behaviour
+On day end:
+  if user practiced today:
+    state = ACTIVE, streak continues
 
-Guests bypass this screen entirely. Middleware redirects `/home` to `/practice?mode=kana`.
+  if user did NOT practice today:
+    if previous day state == ACTIVE:
+      state = GRACE (streak preserved, blue flame)
+    if previous day state == GRACE:
+      state = BROKEN (streak resets to 0)
+    if previous day state == BROKEN:
+      state = BROKEN (remains broken)
+```
 
-### 6.5 Accessibility
+**Two tracked values:**
+- `streakChainDays`: consecutive days including grace days (the number
+  shown to the user)
+- `practiceDays`: days with actual practice within the chain (used for
+  analytics and potential future rewards)
 
-- Mode buttons: `aria-label` describes mode and state
-- Top bar icons: each has `aria-label`
-- Mascot and clouds: `aria-hidden="true"`
-- `prefers-reduced-motion`: `speed="stopped"` passed to landscape and cyclist
+**Timezone contract (implementation Sprint 3+):**
+- Canonical streak date = user-local calendar date at event time, not
+  UTC date.
+- Schema stores `event_at_utc` (timestamptz) + `user_tz` (text, IANA
+  identifier) + `local_date` (date, derived).
+- Streak evaluation runs server-side from derived local dates. Client
+  never computes streak state.
+- Grace day is a derived property, not user-editable state.
+
+**Display on dashboard:**
+- Flame icon (inline SVG, ~24px) + streak count number
+  (`text-2xl font-bold text-warm-800`)
+- Flame colour:
+  - Red/orange (`text-feedback-wrong`): current day is practiced
+  - Blue (`text-blue-400`): today is a grace day
+  - Grey (`text-warm-300`): streak is 0
+- Label below: "[N] day streak" (`text-xs text-warm-400`) or "Start a
+  streak!" when 0
+- Position: top-left of the dashboard card, above the heatmap
+
+### 6.4 Heatmap Calendar
+
+A contribution-grid-style calendar showing practice activity. Each cell
+represents one day. Cell fill colour reflects practice volume. Flame
+icons overlay on streak days.
+
+**Mobile layout (below 375px): 14-day trailing strip**
+- Two rows of 7 cells, most recent day on the right
+- Day labels (S, M, T, W, T, F, S) across the top in
+  `text-xs text-warm-400`
+- "View month" text link below (`text-xs text-sage-500`), expands to
+  full month grid with a 150ms slide-down transition
+- Collapsed by default
+
+**375px+ layout: full month calendar**
+- 7 columns (Sun-Sat), 4-6 rows depending on month
+- Month and year label above: "April 2026"
+  (`text-sm font-medium text-warm-600`)
+- Day labels row: `text-xs text-warm-400`
+- Shown by default, no collapse toggle needed
+
+**Cell sizing:**
+- `clamp(28px, calc(12vw - 8px), 40px)` square
+- At 320px: ~30px cells. At 448px (max-w-md): 40px cells
+- Gap: `gap-1`
+- Radius: `rounded-sm`
+
+**Cell colouring (practice volume):**
+
+| Volume | Colour |
+|---|---|
+| No practice | `bg-warm-100` |
+| 1-10 characters | `bg-heat-1` |
+| 11-30 characters | `bg-heat-2` |
+| 31-60 characters | `bg-heat-3` |
+| 61-100 characters | `bg-heat-4` |
+| 100+ characters | `bg-heat-5` |
+
+**Flame overlay:**
+- On days that are part of the current streak: a small flame icon (12px)
+  positioned `absolute top-0 right-0` inside the cell
+- Red flame: user practiced that day
+- Blue flame: grace day (user did not practice but streak was preserved)
+- No flame: day is not part of the current streak
+
+**Cell states:**
+- Future days: `bg-warm-50 opacity-40`, not interactive
+- Today: `ring-2 ring-sage-400` highlight ring
+- Past days: coloured by practice volume
+
+**Heatmap does not count grace days** in practice volume. A grace day
+cell is coloured `bg-warm-100` (no practice) but has a blue flame
+overlay from the streak system.
+
+**Interactions:**
+- Non-interactive in Sprint 2B (visual only)
+- Future sprint: tapping a day could show a mini summary popover
+
+**Accessibility:**
+- Container: `role="img"` with `aria-label="Practice activity for
+  [Month Year]. Practiced [N] of last [M] days."`
+- Individual cells: `aria-hidden="true"` (decorative; the container
+  label provides the semantic information)
+
+### 6.5 Stage Progress Bars
+
+Three bars showing kana mastery completion by stage.
+
+| Bar | Label | Character count |
+|---|---|---|
+| Seion | "Seion" | 92 (46 hiragana + 46 katakana) |
+| Dakuon | "Dakuon" | 50 (25 hiragana + 25 katakana) |
+| Yoon | "Yoon" | 66 (33 hiragana + 33 katakana) |
+
+**Per bar:**
+- Label left (`text-sm font-medium text-warm-700`), percentage right
+  (`text-sm text-warm-500`)
+- Track: `h-2 rounded-full bg-warm-100`
+- Fill: heatmap colour based on the average mastery of that stage's
+  characters. Transition: `transition-all duration-300 ease-out`.
+- Gap between bars: `gap-2`
+
+**Summary line below bars:**
+"Characters mastered: [N] / 208" (`text-xs text-warm-400`)
+
+**Mastered threshold:** a character counts as mastered when its score
+reaches the `MASTERY_THRESHOLD` constant from `engine/mastery.ts`
+(currently 40, maps to heat-5).
+
+**Tap interaction:** non-interactive in Sprint 2B. Future: tapping a
+bar navigates to `/dojo/kana` filtered to the relevant stage.
+
+**Zero state:** all bars at 0%, full grey track visible.
+"Characters mastered: 0 / 208".
+
+### 6.6 Stats Grid
+
+A 2x2 grid of compact stat cards.
+
+| Position | Stat | Label | Value format | Icon |
+|---|---|---|---|---|
+| Top-left | Total mastery | "Total Score" | Integer with commas, e.g. "1,247" | Star (inline SVG) |
+| Top-right | Characters unlocked | "Unlocked" | "46 / 208" | Lock-open (inline SVG) |
+| Bottom-left | Last practiced | "Last Practiced" | Relative time: "2h ago", "Yesterday" | Clock (inline SVG) |
+| Bottom-right | Total distance | "Distance" | "2.4 km" or "1.5 mi" | Road (inline SVG) |
+
+**Card styling:**
+- Each card: `bg-white/60 rounded-xl px-3 py-2`, `flex-1`
+- Grid: `grid grid-cols-2 gap-2`
+- Icon: 16px, `text-sage-400`, top-left of card
+- Value: `text-lg font-bold text-warm-800`, centred
+- Label: `text-xs text-warm-400`, below value, centred
+- At 320px: each card ~140px wide (320 - 32px padding - 8px gap =
+  280px / 2 = 140px). Comfortable fit.
+
+**Distance display:**
+- Stored in metres internally
+- Below 1km: show metres ("847 m")
+- 1km+: show km with one decimal ("2.4 km")
+- US locale: show miles ("1.5 mi"), conversion: 1m = 3.281ft
+- Locale detection at app start (Sprint 8)
+
+**High scores:** values above 9,999 abbreviate to "10.0k" to avoid
+card overflow.
+
+### 6.7 Leaderboard Glance
+
+A compact section showing the user's leaderboard position.
+
+**Section label:** "Leaderboard" (`text-sm font-medium text-warm-600`)
+
+**User's row:**
+- `bg-sage-50 rounded-lg px-3 py-2`
+- Left accent bar: `border-l-4 border-sage-500`
+- Rank: "#42" (`text-base font-bold text-warm-800`), left
+- Username: their username (`text-sm text-warm-600`), centre
+- Score: total mastery score (`text-sm font-medium text-sage-500`), right
+
+**Not ranked state:**
+"Practice to get on the board" (`text-sm text-warm-400 italic`),
+displayed instead of the user row.
+
+**Link below:** "View full leaderboard" (`text-sm text-sage-500`),
+navigates to `/leaderboard`.
+
+**Data note:** the dashboard rank is a cached value (acceptable
+staleness: up to 5 minutes). "View full leaderboard" goes to the live
+page with current data.
+
+### 6.8 Practice CTA
+
+The single primary action on the dashboard.
+
+- Button: full-width within the dashboard card, mint-500 key style
+  (keyboard-key 3D effect per Section 2.3)
+- Label: "Practice Kana"
+- Shadow: `shadow-[0_4px_0_0_#2e9a73]`
+- Press: `active:translate-y-[2px] active:shadow-none`
+- Sound: plays `key-click.wav` on press (respects global mute state
+  from `settings.store.ts` and OS silent mode)
+- Navigates to `/practice`
+
+**Mode indicator below button:**
+- Current mode: "Tap mode" / "Type mode" / "Swipe mode"
+  (`text-xs text-warm-400 text-center`)
+- Tapping the mode text cycles through modes (same behaviour as the
+  practice screen mode switcher)
+- Phase 1: no "Practice Kotoba" or "Practice Kanji" buttons on the
+  dashboard. Those modes appear in Phase 2+.
+
+### 6.9 Guest Behaviour
+
+Guests bypass this screen entirely. Middleware redirects `/home` to
+`/practice?mode=kana`.
+
+### 6.10 Responsive Behaviour (320px Baseline)
+
+Full layout stack at 320px (single column):
+
+```
+[Streak flame + count]          ~40px
+[14-day heatmap strip]          ~80px (2 rows x 30px + labels)
+[View month link]               ~20px
+[Seion progress bar]            ~28px
+[Dakuon progress bar]           ~28px
+[Yoon progress bar]             ~28px
+[Characters mastered line]      ~16px
+[Stats grid 2x2]               ~120px (2 rows x ~52px + gap)
+[Leaderboard glance]            ~56px
+[Practice Kana button]          ~48px
+[Mode indicator]                ~20px
+```
+
+Total content height: ~484px. With the 72px top margin (clearing top
+bar), the card starts at 72px. At 568px viewport height (iPhone SE),
+the card has ~496px of visible space. Content fits without scrolling
+on most small phones. If the "View month" expansion is open, the page
+scrolls naturally.
+
+At 375px+: full month calendar renders by default (~180px instead of
+80px). More breathing room in stats grid.
+
+At 768px+ (tablet/desktop): dashboard card sits centred in the sky
+with generous padding. Heatmap cells grow to 40px. Stats cards wider.
+
+**Scene interaction:** the landscape is visible around the edges of
+the dashboard card. Clouds drift behind it. The mascot cycles below.
+The card's translucency lets the sky colour bleed through subtly.
+
+### 6.11 Dashboard Accessibility
+
+- Streak: `aria-label="Current streak: [N] days"`
+- Heatmap: see Section 6.4 Accessibility
+- Progress bars: each has `role="progressbar"`, `aria-valuenow`,
+  `aria-valuemin="0"`, `aria-valuemax="100"`,
+  `aria-label="Seion progress: 45%"`
+- Stats: each card has `aria-label` describing the stat,
+  e.g. `aria-label="Total score: 1,247"`
+- Leaderboard glance: `aria-label="Your leaderboard position: rank 42"`
+- Practice button: `aria-label="Start practising kana"`
+- Mode indicator: `aria-label="Current input mode: Tap. Tap to change."`
+- `prefers-reduced-motion`: `speed="stopped"` on landscape and mascot,
+  no cloud drift, static background
+
+### 6.12 Dashboard States
+
+**Loading:**
+Skeleton card matching dashboard layout. Pulse-animated blocks for
+streak, calendar, bars, stats, leaderboard row, and CTA button. The
+landscape background renders immediately (no loading state for scene).
+`animate-pulse bg-warm-200 rounded-lg`.
+
+**Error:**
+"Could not load your progress." + "Try again" button (secondary
+variant) inside the dashboard card area. The Practice Kana button still
+renders below the error message so the user can always get into
+practice.
+
+**Zero progress (new user):**
+- Streak: "0 days" with grey flame, "Start a streak!" label
+- Heatmap: all cells `bg-warm-100`, today highlighted with ring
+- Progress bars: 0% on all three, full grey track visible
+- Stats: "0", "0 / 208", "Never", "0 m"
+- Leaderboard: "Practice to get on the board"
+- CTA: "Practice Kana" (always available, always prominent)
+- Nothing is hidden. The structure is fully visible. The user sees
+  the journey ahead.
+
+### 6.13 Analytics Events (Wired Sprint 3)
+
+```ts
+type DashboardEvent =
+  | { event: 'dashboard_view' }
+  | { event: 'dashboard_cta_tap'; mode: string }
+  | { event: 'dashboard_mode_change'; from: string; to: string }
+  | { event: 'dashboard_heatmap_expand' }
+  | { event: 'dashboard_leaderboard_tap' }
+```
 
 ---
 
@@ -1778,39 +2098,333 @@ changes.
 
 ## 10. Profile Screen Spec
 
-**Status:** To Do
+**Status:** In Progress (Sprint 2B)
 **Route:** `/profile`
 **Scrollable:** Yes
-**Layout:** Standard in-app layout
+**Layout:** Standard in-app layout (cream background, top bar, no landscape)
 
-### 10.1 Content
+The profile screen is about identity and account management. It answers:
+"Who am I in this app, and how do I manage my account?" All progress and
+stats live on the Home dashboard. Profile is lean, functional, and calm.
 
-**Header section:**
-- Avatar: a simple generated icon based on username initial (no photo upload in Phase 1)
-- Username (text-xl, warm-800)
-- "Member since [date]" (text-sm, warm-400)
-- For guests: "Playing as guest" with a prominent "Save your progress" CTA button (mint-500 key style)
+### 10.1 Layout
 
-**Stats section:**
-- Total mastery score (large number, sage-600)
-- Total characters practised
-- Total distance travelled (odometer-style display, metres or feet)
-- Current streak (days in a row with at least one practice session) - Phase 1 later sprint
+- Background: `bg-surface` (cream)
+- Content max-width: `max-w-2xl` (672px), centred with `mx-auto`
+- Padding: `px-4` mobile, `px-8` at `sm:`
+- Top padding: `pt-20` (clears the 56px fixed top bar with 24px space)
+- Gap between sections: `gap-6`
+- Top bar: `AppTopBar` (Section 6.2), frosted after 16px scroll
 
-**Settings shortcuts:**
-- Input mode (shows current, tap to change - routes to Settings)
-- Notifications (shows on/off, tap to change - routes to Settings)
-- Font size linked to mastery (toggle, directly editable here)
+### 10.2 Guest Conversion Banner
 
-**Account actions:**
-- "Change password" link
-- "Sign out" link (text-sm, feedback-wrong colour to signal destructive)
+Shown only for guest users. First element in the content flow.
 
-### 10.2 Guest Conversion
+- Background: `bg-warm-100 border border-border rounded-xl`
+- Padding: `px-4 py-3`
+- Icon: shield icon, 20px, `text-sage-400`, inline left of text
+- Text: "Your progress lives only in this browser. Create a free
+  account to save it forever." (`text-sm text-warm-600`)
+- Button: "Create account" (mint-500 key style, `text-sm`).
+  Desktop: right-aligned inline. Mobile: full-width below text, `mt-2`.
+- Not dismissible. Persists on profile for guests (unlike the thin
+  global guest banner which is dismissible per session).
 
-Guests see a full-width banner at the top of the profile content area (below the guest banner):
-"Your progress lives only in this browser. Create a free account to save it forever."
-Button: "Create account" (mint-500 key style).
+### 10.3 Header Card
+
+**Card:** `bg-surface-raised rounded-2xl border border-border`
+Padding: `px-4 py-5` mobile, `px-6 py-6` at `sm:`
+
+**Mobile layout (below sm):**
+- Avatar centred
+- Username centred below avatar
+- Member-since and tier badge centred below username, inline
+
+**Desktop layout (sm+):**
+- Avatar left, text content right in a `flex-row gap-4 items-center`
+
+**Avatar:**
+- Circle: `h-16 w-16 rounded-full bg-sage-200`
+- Content: first letter of username, uppercase,
+  `text-2xl font-bold text-sage-600`, centred vertically and
+  horizontally
+- No photo upload in Phase 1
+
+**Username:**
+- `text-xl font-bold text-warm-800`
+- Display only here (editing is in Account Settings, Section 10.5)
+
+**Member since:**
+- `text-sm text-warm-400`
+- Format: "Member since April 2026" (month and year only, from
+  `profiles.created_at`)
+- For guests: "Playing as guest" (`text-warm-400 italic`)
+
+**Tier badge:**
+- Pill shape: `rounded-full px-3 py-0.5 text-xs font-medium`
+- Inline next to member-since text, `ml-2`
+- Free: `bg-warm-100 text-warm-600` label "Free"
+- Regular: `bg-sage-100 text-sage-600` label "Regular"
+- Unlimited: `bg-warm-800 text-white` label "Unlimited"
+- Phase 1: all users see "Free"
+
+### 10.4 Membership Card
+
+**Card:** `bg-surface-raised rounded-2xl border border-border`
+Padding: `px-4 py-5`
+
+**Section label:** "Membership" (`text-xs font-medium text-warm-400
+uppercase tracking-wider mb-3`)
+
+**Free user state (Phase 1 default):**
+- Plan display: "Free" (`text-lg font-bold text-warm-800`) + "$0 / month"
+  (`text-sm text-warm-400`)
+- Info line: "Paid plans coming soon"
+  (`text-sm text-warm-500 mt-1`)
+- CTA: "Notify me when plans are available" (sage-200 secondary style,
+  `bg-sage-200 text-sage-700`, full-width, `rounded-xl py-2.5`).
+  In Sprint 2B this is non-functional.
+- No concrete tier comparison or pricing in this card. Full tier
+  comparison lives on the landing page pricing section only.
+
+**Paid user state (Phase 2+, specced for completeness):**
+- Plan display: "Regular" or "Unlimited" + price
+- Next billing date: "Renews May 24, 2026" (`text-sm text-warm-500`)
+- Payment method: card brand icon (Visa/Mastercard inline SVG, 24px) +
+  "ending in 4242" (`text-sm text-warm-600`)
+- "Manage billing" text link (`text-sm text-sage-500`). Opens Stripe
+  Customer Portal via server action. In Sprint 2B: non-functional stub.
+
+**Feature flag:** the entire membership card can be hidden via a
+`SHOW_MEMBERSHIP_CARD` environment variable if priorities shift before
+Stripe is wired in Sprint 11.
+
+### 10.5 Account Settings
+
+**Card:** `bg-surface-raised rounded-2xl border border-border`
+No card padding (rows handle their own padding).
+
+**Section label:** "Account" (`text-xs font-medium text-warm-400
+uppercase tracking-wider`), inside the card top with `px-4 pt-4 pb-0`.
+
+**Row anatomy (shared across all rows):**
+- Full-width, `px-4 py-3`
+- `border-b border-border` between rows (last row: no bottom border)
+- Label: `text-sm font-medium text-warm-700`, left
+- Value: `text-sm text-warm-500`, right
+- Action icon: pencil (editable) or chevron (navigation),
+  `text-warm-300 h-4 w-4`, far right
+- Minimum row height: 48px (exceeds 44pt touch target)
+
+**Row 1: Username**
+- Label: "Username"
+- Value: current username, e.g. "tanuki42"
+- Action: pencil icon
+- On tap: row expands inline to show:
+  - Text input pre-filled with current username,
+    `border border-border rounded-lg px-3 py-2`, full-width
+  - Character count: "[N] / 20" (`text-xs text-warm-400`).
+    Max 20 characters.
+  - Validation: alphanumeric + underscores only, 3-20 characters,
+    must be unique (uniqueness checked server-side in Sprint 3)
+  - Two buttons below input: "Save" (`bg-sage-500 text-white`,
+    small, `rounded-lg px-3 py-1.5`) and "Cancel" (ghost, same size)
+  - On save: collapses back to display mode with updated value
+- **30-day rate limit:**
+  - If username was changed within the last 30 days: pencil icon is
+    `opacity-30 cursor-not-allowed`, row is not expandable
+  - Helper text below the row value: "Next change available [date]"
+    (`text-xs text-warm-400`)
+  - Requires `profiles.username_changed_at` column (flagged for
+    Sprint 3 schema addition)
+  - Must be enforced server-side. Client disabled state is UX only.
+  - In Sprint 2B visual shell: always editable (mock data)
+
+**Row 2: Email**
+- Label: "Email"
+- Value: current email, e.g. "user@example.com"
+- Action: pencil icon
+- On tap: opens a modal (not inline, because email change requires
+  re-authentication in Supabase):
+  - Modal title: "Change email"
+  - Current email displayed (non-editable, `text-sm text-warm-400`,
+    for reference)
+  - New email input field, `border border-border rounded-lg px-3 py-2`
+  - Helper: "We will send a confirmation link to your new email."
+    (`text-xs text-warm-400`)
+  - Buttons: "Update email" (`bg-sage-500 text-white`) and "Cancel"
+  - In Sprint 2B: modal opens but submit is non-functional
+- For guests: row shows "No email" with "Add email" link that
+  navigates to sign-up
+
+**Row 3: Password**
+- Label: "Password"
+- Value: "Change password" as text link (`text-sage-500`)
+- Action: chevron icon
+- On tap: opens a modal:
+  - Modal title: "Change password"
+  - Current password input
+  - New password input with four-segment strength bar (same component
+    as sign-up form, Section 4.4)
+  - Confirm new password input
+  - Buttons: "Update password" (`bg-sage-500 text-white`) and "Cancel"
+  - In Sprint 2B: modal opens but submit is non-functional
+- For guests: row is hidden (guests have no password)
+
+**Row 4: Units**
+- Label: "Distance units"
+- Value: "Metric (km)" or "Imperial (mi)"
+- Action: chevron icon
+- On tap: toggles between metric and imperial. No modal needed.
+- Persists to `settings.store.ts` (Sprint 8). In Sprint 2B: toggles
+  in local component state only.
+
+### 10.6 Support and Legal
+
+Positioned below account settings, no card wrapper. Simple link list.
+
+- Links are stacked vertically, `gap-1`
+- Each link: `text-sm text-warm-500 hover:text-warm-700 py-2`
+- Minimum tap height: 44px
+- Links:
+  - "Help and FAQ" (routes to external URL or `/help`, TBD)
+  - "Credits and attributions" (routes to `/credits`)
+  - "Privacy Policy" (routes to `/privacy`)
+  - "Terms of Service" (routes to `/terms`)
+- Version number below links: "LangTap v1.0" (`text-xs text-warm-300`)
+
+### 10.7 Danger Zone
+
+Visually separated from account settings with `mt-6`.
+
+- No card wrapper. Standalone button.
+- "Sign out" button: full-width, ghost variant,
+  `text-feedback-wrong border border-blush-100 rounded-xl py-3`
+- `aria-label="Sign out of your account"`
+- On tap: confirmation modal. "Are you sure you want to sign out?"
+  with "Sign out" (danger variant button) and "Cancel"
+- In Sprint 2B: non-functional stub
+- "Delete account" is NOT on the profile screen. Per the Settings
+  spec (Section 11), it lives in Settings under the Account section.
+  Not duplicated here.
+- Bottom margin: `mb-8` for scroll clearance
+
+### 10.8 Responsive Behaviour (320px Baseline)
+
+Full layout at 320px (single column, 288px content area):
+
+```
+[Guest banner - if guest]         ~72px (text wraps, button below)
+[Header card]                     ~120px (avatar stacked above text)
+  Avatar: centred, h-16 w-16
+  Username: centred below, text-xl
+  Member since + badge: centred, may wrap to two lines
+[Membership card]                 ~120px (plan + info + CTA)
+  Plan name: left-aligned
+  Info text: wraps naturally
+  CTA: full-width button
+[Account settings card]           ~192px (4 rows x 48px)
+  Label and value share row; value truncates with ellipsis
+  Inline edit (username): input goes full-width, buttons below
+[Support links]                   ~180px (4 links x 44px + version)
+[Sign out button]                 ~48px
+```
+
+Total: ~732px content + 80px top padding = ~812px. Page scrolls on
+all screen sizes. This is expected and correct for a settings-style
+page.
+
+At 375px+: header card switches to horizontal avatar-left layout at
+`sm:`. Slightly more padding. Values have room to display fully.
+
+At 768px+: `max-w-2xl` centred. Cards use `px-6`. Generous whitespace
+around the content. Feels spacious.
+
+No horizontal scrolling at any width. All touch targets 48px height
+(exceeds 44pt minimum). Body text minimum 16px (prevents iOS
+auto-zoom on input focus).
+
+### 10.9 Profile Accessibility
+
+- Avatar: `aria-label="Profile avatar for [username]"`
+- Header card: `role="region"` with `aria-label="Profile header"`
+- Membership card: `role="region"` with
+  `aria-label="Membership information"`
+- Account settings: `role="region"` with
+  `aria-label="Account settings"`
+- Inline username edit: on expand, focus moves to the input. On
+  collapse (save or cancel), focus returns to the row.
+- Email/password modals: focus trap, `aria-modal="true"`, focus
+  returns to the triggering row on close.
+- Sign out: `aria-label="Sign out of your account"`
+- Guest banner: `role="status"` (informational, not urgent)
+- All interactive elements: visible focus ring
+  `focus:ring-2 focus:ring-sage-300`
+- Tab order: guest banner (if present) > header (non-interactive) >
+  membership CTA > account rows top to bottom > support links >
+  sign out
+
+### 10.10 Profile States
+
+**Loading:**
+- Skeleton cards matching the layout structure
+- Header: circle skeleton (avatar) + two line skeletons (name, date)
+- Membership: two line skeletons + button skeleton
+- Account: four row skeletons
+- `animate-pulse bg-warm-200 rounded-lg`
+
+**Error:**
+- "Something went wrong loading your profile." + "Try again" button
+  (secondary variant)
+- Displayed inside a single centred card at `max-w-md`
+
+**Empty / new user:**
+- Avatar shows first letter of auto-generated username (e.g. "U" for
+  "user_a1b2c3d4")
+- Membership shows "Free" (all users start free)
+- Account settings show the auto-generated username and sign-up email
+- No special empty state. Every field has a value from account creation.
+
+### 10.11 Analytics Events (Wired Sprint 3)
+
+```ts
+type ProfileEvent =
+  | { event: 'profile_view' }
+  | { event: 'profile_edit_intent'; field: 'username' | 'email' | 'password' | 'units' }
+  | { event: 'profile_edit_complete'; field: 'username' | 'email' | 'password' | 'units' }
+  | { event: 'profile_membership_notify_tap' }
+  | { event: 'profile_sign_out_tap' }
+```
+
+### 10.12 Schema Additions (Flagged for Sprint 3)
+
+These columns/tables are implied by the profile design but are not
+created in Sprint 2B. Recorded here so Sprint 3 picks them up.
+
+1. **`profiles.username_changed_at`** - `timestamptz`, nullable,
+   default null. Set to `now()` on username update. Server checks
+   `now() >= username_changed_at + interval '30 days'` before allowing
+   change. Returns structured error with exact next-allowed timestamp.
+
+2. **`practice_sessions` table** - tracks daily practice activity for
+   the streak mechanic and heatmap calendar (see Section 6.3 and 6.4).
+   Minimum schema:
+   ```sql
+   create table public.practice_sessions (
+     id                bigint generated always as identity primary key,
+     user_id           uuid not null references auth.users(id)
+                         on delete cascade,
+     event_at_utc      timestamptz not null default now(),
+     user_tz           text not null default 'UTC',
+     local_date        date not null,
+     characters_practiced integer not null default 0,
+     unique (user_id, local_date)
+   );
+   ```
+
+3. **Streak calculation** - derived from `practice_sessions`. Could be
+   computed on read or maintained as a materialised value on `profiles`.
+   Decision deferred to Sprint 3/4.
 
 ---
 

@@ -1,10 +1,14 @@
 // ------------------------------------------------------------
 // File: app/(main)/profile/page.tsx
-// Purpose: Profile screen. Authenticated only.
-//          Placeholder - to be implemented in Sprint 8.
-// Depends on: services/profile.service.ts, hooks/useAuth.ts
+// Purpose: Profile screen route. Renders ProfileClient as a
+//          client island. Identity, account management, and
+//          membership. No game stats (those live on /home).
+// Depends on: components/profile/profile-client.tsx
 // ------------------------------------------------------------
 
-export default function ProfilePage(): null {
-  return null
+import type { ReactNode } from 'react'
+import { ProfileClient } from '@/components/profile/profile-client'
+
+export default function ProfilePage(): ReactNode {
+  return <ProfileClient />
 }
