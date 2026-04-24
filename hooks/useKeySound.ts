@@ -7,13 +7,15 @@
 //          page load is not blocked by a large audio sprite.
 //          Lazy init: AudioContext is created on first playSound
 //          call to comply with browser autoplay policies.
-// Depends on: data/audio/key-sound-map.ts
+//          Respects the keyClicks setting from settings.store.ts.
+// Depends on: data/audio/key-sound-map.ts, stores/settings.store.ts
 // ------------------------------------------------------------
 
 'use client'
 
 import { useCallback, useEffect, useRef } from 'react'
 import { KEY_SOUND_MAP } from '@/data/audio/key-sound-map'
+import { useSettingsStore } from '@/stores/settings.store'
 
 // -- Module-level singletons --------------------------------
 
@@ -45,7 +47,6 @@ async function loadSound(id: string): Promise<AudioBuffer | null> {
       bufferCache.set(id, buffer)
       return buffer
     } catch {
-      // Sound is optional. Keep UI interactive if loading fails.
       return null
     } finally {
       loadingPromises.delete(id)
@@ -60,6 +61,7 @@ async function loadSound(id: string): Promise<AudioBuffer | null> {
 
 export function useKeySound(): { playSound: (id: string) => void } {
   const mountedRef = useRef(true)
+  const keyClicks = useSettingsStore((s) => s.keyClicks)
 
   useEffect((): (() => void) => {
     mountedRef.current = true
@@ -69,14 +71,14 @@ export function useKeySound(): { playSound: (id: string) => void } {
   }, [])
 
   const playSound = useCallback((): void => {
-    // Alternate between two sounds on every call
+    if (!keyClicks) return
+
     const soundId = ALTERNATE_SOUNDS[alternateIndex % ALTERNATE_SOUNDS.length]
     alternateIndex++
 
     const ctx = sharedContext
     const buf = bufferCache.get(soundId)
     if (!ctx || !buf) {
-      // Not loaded yet. Kick off the fetch so the next call can play it.
       void loadSound(soundId)
       return
     }
@@ -89,7 +91,7 @@ export function useKeySound(): { playSound: (id: string) => void } {
     source.buffer = buf
     source.connect(ctx.destination)
     source.start(0)
-  }, [])
+  }, [keyClicks])
 
   return { playSound }
 }

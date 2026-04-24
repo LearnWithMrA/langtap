@@ -2304,9 +2304,9 @@ Visually separated from account settings with `mt-6`.
 - On tap: confirmation modal. "Are you sure you want to sign out?"
   with "Sign out" (danger variant button) and "Cancel"
 - In Sprint 2B: non-functional stub
-- "Delete account" is NOT on the profile screen. Per the Settings
-  spec (Section 11), it lives in Settings under the Account section.
-  Not duplicated here.
+- "Delete account" button is below the sign out button. Red-800
+  background, typed-confirmation modal. See Section 10.5 for the
+  full delete flow (already built in the visual shell).
 - Bottom margin: `mb-8` for scroll clearance
 
 ### 10.8 Responsive Behaviour (320px Baseline)
@@ -2426,44 +2426,222 @@ created in Sprint 2B. Recorded here so Sprint 3 picks them up.
    computed on read or maintained as a materialised value on `profiles`.
    Decision deferred to Sprint 3/4.
 
+### 10.13 Preferences Card (Added Sprint 2B)
+
+Positioned between Membership Card (10.4) and Account Settings (10.5)
+in the page layout. Contains appearance and gameplay preferences that
+were moved here from the Settings dialog so that Settings stays focused
+on practice session behaviour.
+
+**Card:** `bg-surface-raised rounded-2xl border border-border`
+Padding: `px-4 py-5`
+
+**Section label:** "Preferences" (`text-xs font-medium text-warm-400
+uppercase tracking-wider mb-3`)
+
+**Row anatomy:** same as Account Settings (10.5) rows: full-width,
+`px-4 py-3`, `border-b border-border` between rows, label left,
+value right, action icon far right, minimum row height 48px.
+
+**Row 1: JLPT Level**
+- Label: "JLPT level"
+- Value: current level, e.g. "N5" (`text-sm text-warm-500`)
+- Action: chevron icon
+- On tap: row expands inline to show five radio options (N5-N1),
+  horizontal pill layout: `rounded-full px-3 py-1.5 text-sm`,
+  active `bg-sage-500 text-white`, inactive `bg-warm-100 text-warm-500`
+- Mastery pre-set warning shown below when changing level:
+  "Words below this level will be marked as mastered."
+  (`text-xs text-feedback-wrong`)
+- Persists to `settings.store.ts`. In Sprint 2B: local state only.
+
+**Row 2: Scene Theme**
+- Label: "Scene theme"
+- Value: current theme name, e.g. "Day"
+- Action: chevron icon
+- On tap: row expands to show four theme options as colour swatches.
+  Each swatch: `h-8 w-8 rounded-full border-2`, active
+  `border-sage-500 ring-2 ring-sage-300`, inactive `border-border`.
+  Swatch colours: Day `#c9e8f5`, Sunrise `#fde9c9`, Sunset `#f4a261`,
+  Night `#0d1b2a`.
+  Theme name label below each swatch, `text-xs text-warm-400`.
+- Persists to `settings.store.ts`. In Sprint 2B: local state only.
+
+**Row 3: Font Family**
+- Label: "Font"
+- Value: current font name, e.g. "Zen Maru Gothic"
+- Action: chevron icon
+- On tap: toggles between "Noto Sans JP" and "Zen Maru Gothic".
+  No expansion needed, just toggles the value on each tap.
+- Persists to `settings.store.ts`. In Sprint 2B: local state only.
+
+**Row 4: Font Size Linked to Mastery**
+- Label: "Shrinking text"
+- Sublabel: "Characters shrink as mastery grows"
+  (`text-xs text-warm-400`)
+- Control: toggle (same pill style as Settings dialog toggles)
+- Default: off
+- Persists to `settings.store.ts`. In Sprint 2B: local state only.
+
+**Row 5: Leaderboard Visibility**
+- Label: "Leaderboard"
+- Value: current visibility, e.g. "Public"
+- Action: chevron icon
+- On tap: row expands to show three options as horizontal pills:
+  "Public" / "Friends" / "Hidden", same pill style as JLPT.
+  "Friends" shown with "(coming soon)" sublabel in Sprint 2B.
+- Default: Public
+- Persists to `settings.store.ts`. In Sprint 2B: local state only.
+
 ---
 
-## 11. Settings Screen Spec
+## 11. Settings Dialog Spec
 
-**Status:** To Do
-**Route:** `/settings`
-**Scrollable:** Yes
-**Layout:** Standard in-app layout
+**Status:** In Progress (Sprint 2B)
+**Trigger:** Gear icon in the top bar (`AppTopBar`)
+**Type:** Centered dialog overlay (not a route)
+**Scrollable:** Yes (content scrolls within the dialog)
 
-### 11.1 Content
+Settings is a game management dialog. It controls how practice sessions
+behave. Account management, appearance customisation (theme, font), JLPT
+level, leaderboard visibility, and delete account all live on the Profile
+screen (Section 10). Settings has no route of its own; it opens as a
+dialog overlay from the gear icon in the top bar, so the user never
+loses their place.
 
-Settings are grouped into sections with subtle section headers (text-sm, warm-400, uppercase letter-spacing).
+The gear icon in `AppTopBar` is a `<button>` (not a `<Link>`). It
+toggles the dialog open state stored in `stores/settings.store.ts`.
+The `SettingsDialog` component is rendered at the main layout level
+(`app/(main)/layout.tsx`) and reads the open state from the store.
 
-**Practice:**
-- Input mode: Type / Tap / Swipe (segmented control or three small key buttons)
-- JLPT level: N5 / N4 / N3 / N2 / N1 (same segmented control style)
-- Mnemonics: toggle on/off - "Show memory hints on wrong answers"
+### 11.1 Dialog Anatomy
 
-**Display:**
-- Scene theme: Day / Sunrise / Sunset / Night (four option selector, shows a colour swatch per option)
-- Font size linked to mastery: toggle on/off
-- Font family: Noto Sans JP / Zen Maru Gothic (toggle or select)
+- **Backdrop:** translucent overlay, `bg-warm-800/40 backdrop-blur-sm`,
+  covers the full viewport, `fixed inset-0 z-50`
+- **Card:** `bg-surface-raised rounded-2xl border border-border
+  shadow-lg`, centred vertically and horizontally,
+  `max-w-sm w-full mx-4`
+- **Max height:** `max-h-[85vh]`, content scrolls if it overflows
+- **Header:** "Settings" title (`text-lg font-bold text-warm-800`),
+  close button (X icon, `h-5 w-5 text-warm-400 hover:text-warm-600`),
+  `flex justify-between items-center px-5 pt-5 pb-3`
+- **Content area:** `px-5 pb-5 overflow-y-auto`, sections separated
+  by `border-b border-border` with `py-4` per section (last section:
+  no bottom border)
+- **Close:** X button, backdrop click, or Escape key
+- **Animation:** fade-in backdrop (150ms) + scale-up card from 95% to
+  100% (150ms ease-out). Reverse on close.
+- **Scroll lock:** `document.body.style.overflow = 'hidden'` while open
 
-**Audio:**
-- Lo-fi background music: toggle on/off
-- Key click sounds: toggle on/off
+### 11.2 Content
 
-**Account:**
-- Username (display only, with an "Edit" link)
-- Email (display only)
-- Change password link
-- Delete account link (text-xs, feedback-wrong, requires confirmation modal)
+Settings are grouped with subtle section labels (`text-xs font-medium
+text-warm-400 uppercase tracking-wider mb-3`).
 
-**About:**
-- Credits and attributions link (routes to `/credits`)
-- Privacy Policy link
-- Terms of Service link
-- Version number (text-xs, warm-400)
+**Input**
+
+Practice direction controls what the user sees and what they type.
+
+- Control: three-option segmented selector
+- Options:
+  - "Kana to Romaji": shown a kana character, type the romaji
+  - "Alternate": alternates between both directions each prompt.
+    Shown with a small "Recommended" badge (`text-xs text-sage-500
+    font-medium ml-1`)
+  - "Romaji to Kana": shown romaji, type/tap/swipe the kana
+- Default: Alternate
+- Segmented control style: `rounded-xl bg-warm-100 p-1`, each option
+  `rounded-lg px-3 py-2 text-sm`, active option `bg-surface-raised
+  text-warm-800 shadow-sm font-medium`, inactive `text-warm-500`
+- Persists to `settings.store.ts`
+
+**Hints**
+
+- **Mnemonics:** toggle
+  - Label: "Memory hints" (`text-sm text-warm-700`)
+  - Sublabel: "Show hints on wrong answers" (`text-xs text-warm-400`)
+  - Toggle: pill-shaped, `w-10 h-6 rounded-full`, on: `bg-sage-500`,
+    off: `bg-warm-200`, thumb `h-5 w-5 bg-white rounded-full shadow-sm
+    transition-transform duration-150`
+  - Default: on
+
+**Audio**
+
+- **Word audio:** toggle
+  - Label: "Pronunciation" (`text-sm text-warm-700`)
+  - Sublabel: "Play word audio on wrong answers"
+    (`text-xs text-warm-400`)
+  - Default: on
+- **Key clicks:** toggle
+  - Label: "Key click sounds" (`text-sm text-warm-700`)
+  - Sublabel: "Mechanical click on button presses"
+    (`text-xs text-warm-400`)
+  - Default: on
+
+**Pacing**
+
+- **Auto-advance:** two-option segmented selector
+  - Label: "After correct answer" (`text-sm text-warm-700`)
+  - Options: "Instant" / "Delayed"
+  - Instant: advance immediately on correct answer (tap/key to
+    advance still works as an alternative)
+  - Delayed: show meaning for `MEANING_DISPLAY_MS` (1500ms), then
+    auto-advance
+  - Control style: same segmented style as Input but with two options
+  - Default: Delayed
+
+### 11.3 Responsive Behaviour
+
+The dialog is viewport-aware but does not change structure:
+
+- **320px:** dialog fills `w-[calc(100%-32px)]`, `max-h-[85vh]`,
+  centred. Segmented control labels use `text-xs` to fit. All touch
+  targets remain at 44px minimum height.
+- **375px+:** comfortable fit, segmented labels at `text-sm`
+- **768px+:** `max-w-sm` (384px) centred with generous backdrop space
+
+No horizontal scrolling. Body text minimum 16px. All interactive
+elements at or above 44pt touch target.
+
+### 11.4 Accessibility
+
+- Dialog: `role="dialog"`, `aria-modal="true"`,
+  `aria-label="Game settings"`
+- Focus trap: focus cycles within the dialog while open
+- On open: focus moves to the close button
+- On close: focus returns to the gear icon that triggered the dialog
+- Escape key closes the dialog
+- All toggles: `role="switch"`, `aria-checked`, `aria-label`
+- All segmented controls: `role="radiogroup"`, each option
+  `role="radio"`, `aria-checked`
+- Close button: `aria-label="Close settings"`
+- Visible focus rings: `focus:ring-2 focus:ring-sage-300`
+- Tab order: close button > input direction > mnemonics > pronunciation
+  > key clicks > auto-advance
+
+### 11.5 Guest Behaviour
+
+All settings function identically for guests. Values persist to
+localStorage via Zustand persist middleware. No guest-specific UI
+differences in this dialog.
+
+### 11.6 Analytics Events (Wired Sprint 3)
+
+```ts
+type SettingsEvent =
+  | { event: 'settings_open' }
+  | { event: 'settings_change';
+      setting: 'input_direction' | 'mnemonics' | 'word_audio'
+             | 'key_clicks' | 'auto_advance';
+      value: string }
+```
+
+### 11.7 Route Cleanup
+
+The `/settings` route (`app/(main)/settings/page.tsx`) is no longer a
+destination. It should render a redirect to `/home` or render null. The
+bottom nav does not include Settings (gear icon is in the top bar only).
+The `AppTopBar` gear icon is a button, not a link.
 
 ---
 
@@ -2604,7 +2782,7 @@ File naming: lowercase, hyphens, descriptive. No spaces.
 | Log-in | To Do | No |
 | Onboarding steps 1-3 | In Progress | No |
 | Profile | To Do | No |
-| Settings | To Do | No |
+| Settings (dialog) | In Progress | No |
 | Leaderboard | To Do | No |
 
 ---

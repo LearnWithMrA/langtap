@@ -1,10 +1,13 @@
-// ------------------------------------------------------------
+// ─────────────────────────────────────────────
 // File: app/(main)/settings/page.tsx
-// Purpose: Settings screen. Guest or authenticated.
-//          Placeholder - to be implemented in Sprint 8.
-// Depends on: stores/settings.store.ts, hooks/useSettings.ts
-// ------------------------------------------------------------
+// Purpose: Settings is now a dialog overlay (not a route).
+//          This page redirects to /home. The settings dialog is
+//          triggered from the gear icon in the top bar.
+// Depends on: next/navigation
+// ─────────────────────────────────────────────
 
-export default function SettingsPage(): null {
-  return null
+import { redirect } from 'next/navigation'
+
+export default function SettingsPage(): never {
+  redirect('/home')
 }

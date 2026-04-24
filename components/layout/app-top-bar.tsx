@@ -24,6 +24,7 @@ import { LogoFull } from '@/components/ui/logo-full'
 import { LogoLt } from '@/components/ui/logo-lt'
 import { useEasterEgg } from '@/hooks/useEasterEgg'
 import { useKeySound } from '@/hooks/useKeySound'
+import { useSettingsStore } from '@/stores/settings.store'
 
 // -- Inline SVG icons (use currentColor for theme support) ---
 
@@ -114,6 +115,7 @@ export function AppTopBar(): ReactNode {
   const pathname = usePathname() ?? ''
   const { isActive: easterEggActive } = useEasterEgg()
   const { playSound } = useKeySound()
+  const openSettings = useSettingsStore((s) => s.openSettings)
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
@@ -152,13 +154,17 @@ export function AppTopBar(): ReactNode {
           <LogoLt className={['h-7 w-7 transition-all duration-300', logoColour].join(' ')} />
         </button>
         <div className="flex items-center gap-1">
-          <Link
-            href="/settings"
+          <button
+            type="button"
+            onClick={(): void => {
+              playSound('ui-nav-click')
+              openSettings()
+            }}
             className={[ICON_LINK, 'text-warm-800 hover:text-sage-400 hover:bg-white/10'].join(' ')}
             aria-label="Settings"
           >
             <IconSettings />
-          </Link>
+          </button>
           <button
             type="button"
             onClick={(): void => {
@@ -312,13 +318,17 @@ export function AppTopBar(): ReactNode {
         >
           <IconTrophy />
         </Link>
-        <Link
-          href="/settings"
+        <button
+          type="button"
+          onClick={(): void => {
+            playSound('ui-nav-click')
+            openSettings()
+          }}
           className={[ICON_LINK, 'text-warm-800 hover:text-sage-400 hover:bg-white/10'].join(' ')}
           aria-label="Settings"
         >
           <IconSettings />
-        </Link>
+        </button>
         <Link
           href="/profile"
           className={[ICON_LINK, 'text-warm-800 hover:text-sage-400 hover:bg-white/10'].join(' ')}
@@ -385,13 +395,17 @@ export function AppTopBar(): ReactNode {
         </nav>
 
         <div className="flex-none flex gap-2">
-          <Link
-            href="/settings"
+          <button
+            type="button"
+            onClick={(): void => {
+              playSound('ui-nav-click')
+              openSettings()
+            }}
             className={[ICON_LINK, 'text-warm-800 hover:text-sage-400 hover:bg-white/10'].join(' ')}
             aria-label="Settings"
           >
             <IconSettings />
-          </Link>
+          </button>
           <Link
             href="/profile"
             className={[ICON_LINK, 'text-warm-800 hover:text-sage-400 hover:bg-white/10'].join(' ')}

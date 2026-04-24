@@ -29,6 +29,7 @@ import { HeaderCard } from '@/components/profile/header-card'
 import { MembershipCard } from '@/components/profile/membership-card'
 import { AccountSettings } from '@/components/profile/account-settings'
 import type { ModalType } from '@/components/profile/account-settings'
+import { PreferencesCard } from '@/components/profile/preferences-card'
 import { LandingFooter } from '@/components/layout/landing-footer'
 
 // ── Main component ────────────────────────────
@@ -51,26 +52,7 @@ export function ProfileClient(): ReactNode {
     <div className="min-h-svh bg-profile-bg flex flex-col">
       <AppTopBar />
 
-      <main className="max-w-2xl mx-auto px-4 sm:px-8 pt-20 pb-4 flex-1 w-full">
-        {/* Fixture selector (dev only) */}
-        <div className="mb-4 flex items-center gap-2">
-          <span className="text-xs text-warm-400">Fixture:</span>
-          {(['free_user', 'guest', 'recently_changed'] as const).map((key) => (
-            <button
-              key={key}
-              type="button"
-              onClick={(): void => setFixtureKey(key)}
-              className={`text-xs px-2 py-1 rounded-lg transition-colors duration-150 ${
-                fixtureKey === key
-                  ? 'bg-profile-accent/25 text-profile-accent-dark font-medium'
-                  : 'text-warm-400 hover:bg-warm-100'
-              }`}
-            >
-              {key.replace('_', ' ')}
-            </button>
-          ))}
-        </div>
-
+      <main className="max-w-2xl mx-auto px-4 sm:px-8 pt-20 pb-16 flex-1 w-full">
         <div className="flex flex-col gap-6">
           {/* Guest conversion banner */}
           {profile.isGuest && <GuestBanner />}
@@ -80,6 +62,9 @@ export function ProfileClient(): ReactNode {
 
           {/* Membership card */}
           <MembershipCard />
+
+          {/* Preferences card */}
+          <PreferencesCard />
 
           {/* Account settings */}
           <AccountSettings profile={profile} onOpenModal={setActiveModal} />
@@ -202,6 +187,25 @@ export function ProfileClient(): ReactNode {
           },
         ]}
       />
+
+      {/* Fixture selector (dev only, pinned to bottom) */}
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-4 py-2">
+        <span className="text-xs text-white/70">Fixture:</span>
+        {(['free_user', 'guest', 'recently_changed'] as const).map((key) => (
+          <button
+            key={key}
+            type="button"
+            onClick={(): void => setFixtureKey(key)}
+            className={`text-xs px-2 py-1 rounded-lg transition-colors duration-150 ${
+              fixtureKey === key
+                ? 'bg-white/80 text-warm-700 font-medium'
+                : 'text-white/60 hover:bg-white/30'
+            }`}
+          >
+            {key.replace(/_/g, ' ')}
+          </button>
+        ))}
+      </div>
 
       {/* Delete account confirmation dialog */}
       {activeModal === 'delete' && (

@@ -30,6 +30,49 @@ Format per entry:
 
 ---
 
+## [2026-04-24] - Session 50
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Write Settings screen spec
+**Status:** Done
+
+### Changes made
+- `docs/UX_DESIGN.md` Section 11: Rewrote from stub into full Settings Dialog spec. Settings is now a centered dialog overlay triggered from the gear icon, not a route. Contains input direction, mnemonics, pronunciation audio, key clicks, and auto-advance settings. Account management, JLPT level, theme, font, and delete account moved to Profile.
+- `docs/UX_DESIGN.md` Section 10.7: Fixed stale delete-account cross-reference (was pointing to Settings, now correctly notes it lives on Profile).
+- `docs/UX_DESIGN.md` Section 10.13: Added Preferences Card spec for Profile (JLPT level, scene theme, font family, leaderboard visibility).
+- `docs/UX_DESIGN.md` Screen status table: Updated Settings entry.
+- `types/settings.types.ts`: New file. InputDirection and AutoAdvance type definitions.
+- `stores/settings.store.ts`: Rewritten from empty placeholder. Zustand store with dialog open/close state and all five game settings. localStorage persist via middleware. Key clicks default off.
+- `components/settings/settings-dialog.tsx`: New file. Full settings dialog with segmented controls (input direction, auto-advance), toggle switches (mnemonics, pronunciation, key clicks), focus trap, Escape/backdrop close, scroll lock.
+- `components/layout/app-top-bar.tsx`: Gear icon changed from Link to button that opens the settings dialog (all three breakpoints: mobile, medium, desktop). Imports settings store.
+- `app/(main)/layout.tsx`: Renders SettingsDialog at layout level so it is available on all in-app pages.
+- `app/(main)/settings/page.tsx`: Changed from null placeholder to redirect to /home (settings is no longer a route).
+- `hooks/useKeySound.ts`: Wired to settings store. playSound now checks keyClicks setting and returns early if disabled.
+- `components/profile/preferences-card.tsx`: New file. Preferences card with JLPT level (expandable picker with confirmation modal on change), scene theme and font (visible but locked with padlock icon), leaderboard visibility (public/hidden, friends disabled). Yellow profile theme throughout.
+- `components/profile/membership-card.tsx`: Restructured layout to inline the "Notify me" CTA to the right of the plan info. Added key-style shadow to the button.
+- `components/profile/profile-client.tsx`: Added PreferencesCard between Membership and Account Settings. Moved fixture selector from inline to floating pill at page bottom (matching home page pattern). Increased bottom padding for clearance.
+
+### Tests
+- All 271 existing tests pass (17 suites, 7 skipped placeholder suites)
+- Prettier: clean
+- ESLint: clean (1 pre-existing warning in game-window.tsx, not touched this session)
+- TypeScript: clean
+
+### Next task
+Write Leaderboard screen spec
+
+### Notes
+- Settings is now purely game management. Profile owns identity, account, appearance, and JLPT level.
+- Input mode (Type/Tap/Swipe) removed from settings entirely. Changed via the game window and home screen.
+- Practice direction renamed to "Input" with three options: Kana to Romaji, Alternate (recommended), Romaji to Kana.
+- Key clicks default changed to off and wired to the useKeySound hook so the toggle takes effect immediately across the entire app.
+- Scene theme and font rows are visible on Profile but locked (padlock icon, greyed out, not interactive). To be unlocked in a future sprint.
+- JLPT level change triggers a confirmation modal warning about mastery reset before applying.
+- Friends leaderboard visibility option is visible but disabled with "(coming soon)" label.
+- Existing localStorage key `langtap-settings` may have stale `keyClicks: true` from before the default change. Users can toggle it off in the dialog or clear localStorage.
+
+---
+
 ## [2026-04-24] - Session 49
 
 **Sprint:** Sprint 2B - UX/UI Design and Screen Specification
