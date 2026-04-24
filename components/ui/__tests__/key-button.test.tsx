@@ -11,6 +11,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { KeyButton } from '../key-button'
+import { useSettingsStore } from '@/stores/settings.store'
 
 // -- Mocks --------------------------------------------------
 
@@ -66,20 +67,30 @@ describe('KeyButton', () => {
     expect(onClick).not.toHaveBeenCalled()
   })
 
-  it('plays key-click sound on click by default', () => {
+  it('plays key-click sound on click when keyClicks is enabled', () => {
+    useSettingsStore.setState({ keyClicks: true })
     render(<KeyButton>Sound</KeyButton>)
     fireEvent.click(screen.getByRole('button'))
     expect(playMock).toHaveBeenCalledOnce()
   })
 
-  it('plays soft sound when sound="soft"', () => {
+  it('plays soft sound when sound="soft" and keyClicks is enabled', () => {
+    useSettingsStore.setState({ keyClicks: true })
     render(<KeyButton sound="soft">Soft</KeyButton>)
     fireEvent.click(screen.getByRole('button'))
     expect(playMock).toHaveBeenCalledOnce()
   })
 
   it('does not play sound when sound="none"', () => {
+    useSettingsStore.setState({ keyClicks: true })
     render(<KeyButton sound="none">Silent</KeyButton>)
+    fireEvent.click(screen.getByRole('button'))
+    expect(playMock).not.toHaveBeenCalled()
+  })
+
+  it('does not play sound when keyClicks is disabled', () => {
+    useSettingsStore.setState({ keyClicks: false })
+    render(<KeyButton>Silent</KeyButton>)
     fireEvent.click(screen.getByRole('button'))
     expect(playMock).not.toHaveBeenCalled()
   })
