@@ -289,8 +289,9 @@ main screen and applies this structure consistently.
 - Position: `fixed top-0 left-0 right-0 z-50`.
 - Left: LangTap logo. LogoLt on compact viewports, LogoFull on desktop.
 - Centre (desktop 768px+): in-app nav links (Home, Kana Dojo, Kotoba Dojo, Leaderboard).
-- Right: Settings and Profile icons. On viewports under 425px the nav
-  collapses behind a hamburger.
+- Right: Settings gear button (opens Settings dialog overlay, not a
+  link) and Profile icon. On viewports under 425px the nav collapses
+  behind a hamburger.
 - Background: transparent at the top of the page, frosted
   `bg-white/80 backdrop-blur-sm border-b border-border` once the user has
   scrolled past a small threshold (16px in-app, 80px on the landing page).

@@ -2109,12 +2109,19 @@ stats live on the Home dashboard. Profile is lean, functional, and calm.
 
 ### 10.1 Layout
 
-- Background: `bg-surface` (cream)
+- Background: `bg-profile-bg` (yellow pastel)
 - Content max-width: `max-w-2xl` (672px), centred with `mx-auto`
-- Padding: `px-4` mobile, `px-8` at `sm:`
+- Padding: `px-4` mobile, `px-8` at `sm:`, `pb-16` (clearance for
+  floating fixture selector)
 - Top padding: `pt-20` (clears the 56px fixed top bar with 24px space)
 - Gap between sections: `gap-6`
 - Top bar: `AppTopBar` (Section 6.2), frosted after 16px scroll
+- Card order: Guest Banner (if guest) > Header Card > Membership Card
+  > Preferences Card (10.13) > Account Settings > Delete Account
+- Fixture selector (dev only): floating pill pinned to bottom centre,
+  `fixed bottom-4 left-1/2 -translate-x-1/2 z-20`, dark translucent
+  `bg-black/50 backdrop-blur-sm rounded-full`, matching the home page
+  pattern
 
 ### 10.2 Guest Conversion Banner
 
@@ -2177,12 +2184,16 @@ Padding: `px-4 py-5`
 uppercase tracking-wider mb-3`)
 
 **Free user state (Phase 1 default):**
+- Layout: `flex items-center justify-between gap-4`. Plan info left,
+  CTA button right.
 - Plan display: "Free" (`text-lg font-bold text-warm-800`) + "$0 / month"
   (`text-sm text-warm-400`)
 - Info line: "Paid plans coming soon"
   (`text-sm text-warm-500 mt-1`)
-- CTA: "Notify me when plans are available" (sage-200 secondary style,
-  `bg-sage-200 text-sage-700`, full-width, `rounded-xl py-2.5`).
+- CTA: "Notify me" (`bg-profile-accent/20 text-profile-accent-dark`,
+  `text-sm font-medium rounded-xl px-4 py-2.5`, key-style shadow
+  `shadow-[0_4px_0_0_rgba(180,140,50,0.25)]`,
+  `active:translate-y-[2px] active:shadow-none`).
   In Sprint 2B this is non-functional.
 - No concrete tier comparison or pricing in this card. Full tier
   comparison lives on the landing page pricing section only.
@@ -2443,55 +2454,57 @@ uppercase tracking-wider mb-3`)
 `px-4 py-3`, `border-b border-border` between rows, label left,
 value right, action icon far right, minimum row height 48px.
 
+All active/selected states use the yellow profile theme
+(`bg-profile-accent`, `ring-profile-accent/50`) rather than sage.
+
 **Row 1: JLPT Level**
 - Label: "JLPT level"
 - Value: current level, e.g. "N5" (`text-sm text-warm-500`)
 - Action: chevron icon
 - On tap: row expands inline to show five radio options (N5-N1),
   horizontal pill layout: `rounded-full px-3 py-1.5 text-sm`,
-  active `bg-sage-500 text-white`, inactive `bg-warm-100 text-warm-500`
-- Mastery pre-set warning shown below when changing level:
-  "Words below this level will be marked as mastered."
-  (`text-xs text-feedback-wrong`)
+  active `bg-profile-accent text-white`, inactive
+  `bg-warm-100 text-warm-500`
+- Selecting the same level closes the picker. Selecting a different
+  level opens a confirmation modal (using the `Modal` component):
+  title "Change JLPT level?", body warns that words below the
+  selected level will be marked as mastered and progress will be
+  lost. Confirm button: `!bg-profile-accent !text-white`. Cancel
+  returns to the picker without changing.
 - Persists to `settings.store.ts`. In Sprint 2B: local state only.
 
-**Row 2: Scene Theme**
+**Row 2: Scene Theme (locked)**
 - Label: "Scene theme"
-- Value: current theme name, e.g. "Day"
-- Action: chevron icon
-- On tap: row expands to show four theme options as colour swatches.
-  Each swatch: `h-8 w-8 rounded-full border-2`, active
-  `border-sage-500 ring-2 ring-sage-300`, inactive `border-border`.
-  Swatch colours: Day `#c9e8f5`, Sunrise `#fde9c9`, Sunset `#f4a261`,
-  Night `#0d1b2a`.
-  Theme name label below each swatch, `text-xs text-warm-400`.
+- Value: current theme name, e.g. "Day" (`text-sm text-warm-500`)
+- Action: padlock icon (`IconLock`, 14px)
+- Row is `opacity-50 cursor-not-allowed`, not interactive
+- Visible but not clickable in Sprint 2B. Unlocked in a future sprint.
 - Persists to `settings.store.ts`. In Sprint 2B: local state only.
 
-**Row 3: Font Family**
+**Row 3: Font Family (locked)**
 - Label: "Font"
 - Value: current font name, e.g. "Zen Maru Gothic"
-- Action: chevron icon
-- On tap: toggles between "Noto Sans JP" and "Zen Maru Gothic".
-  No expansion needed, just toggles the value on each tap.
+  (`text-sm text-warm-500`)
+- Action: padlock icon (`IconLock`, 14px)
+- Row is `opacity-50 cursor-not-allowed`, not interactive
+- Visible but not clickable in Sprint 2B. Unlocked in a future sprint.
 - Persists to `settings.store.ts`. In Sprint 2B: local state only.
 
-**Row 4: Font Size Linked to Mastery**
-- Label: "Shrinking text"
-- Sublabel: "Characters shrink as mastery grows"
-  (`text-xs text-warm-400`)
-- Control: toggle (same pill style as Settings dialog toggles)
-- Default: off
-- Persists to `settings.store.ts`. In Sprint 2B: local state only.
-
-**Row 5: Leaderboard Visibility**
+**Row 4: Leaderboard Visibility**
 - Label: "Leaderboard"
 - Value: current visibility, e.g. "Public"
 - Action: chevron icon
-- On tap: row expands to show three options as horizontal pills:
-  "Public" / "Friends" / "Hidden", same pill style as JLPT.
-  "Friends" shown with "(coming soon)" sublabel in Sprint 2B.
+- On tap: row expands to show three options as horizontal pills.
+  "Public" and "Hidden" are active buttons using `bg-profile-accent
+  text-white` when selected. "Friends" is a non-interactive `<span>`
+  with `text-warm-300 cursor-not-allowed` and "(coming soon)" sublabel
+  in `text-[10px]`. Friends cannot be selected.
 - Default: Public
 - Persists to `settings.store.ts`. In Sprint 2B: local state only.
+
+**Note:** "Shrinking text" (font-size-linked-to-mastery) is hidden
+from the Preferences card in Sprint 2B. It will be added back when
+the feature is implemented.
 
 ---
 
@@ -2538,7 +2551,7 @@ The `SettingsDialog` component is rendered at the main layout level
 Settings are grouped with subtle section labels (`text-xs font-medium
 text-warm-400 uppercase tracking-wider mb-3`).
 
-**Input**
+**Kana Input**
 
 Practice direction controls what the user sees and what they type.
 
@@ -2546,42 +2559,63 @@ Practice direction controls what the user sees and what they type.
 - Options:
   - "Kana to Romaji": shown a kana character, type the romaji
   - "Alternate": alternates between both directions each prompt.
-    Shown with a small "Recommended" badge (`text-xs text-sage-500
-    font-medium ml-1`)
+    Shown with a small "Recommended" badge (`text-[10px] font-medium`,
+    `text-white/70` when active, `text-sage-500` when inactive)
   - "Romaji to Kana": shown romaji, type/tap/swipe the kana
 - Default: Alternate
 - Segmented control style: `rounded-xl bg-warm-100 p-1`, each option
-  `rounded-lg px-3 py-2 text-sm`, active option `bg-surface-raised
-  text-warm-800 shadow-sm font-medium`, inactive `text-warm-500`
+  `rounded-lg px-2 py-0.5 text-sm`, active option `bg-sage-500
+  text-white shadow-sm font-medium`, inactive `text-warm-500`
 - Persists to `settings.store.ts`
+
+**Kotoba Input** (Phase 2, shown when Kotoba Mode is unlocked)
+
+Controls what the user produces when practising vocabulary.
+
+- Control: two-option segmented selector (same style as Kana Input)
+- Options:
+  - "Readings": type/tap/swipe the kana reading (1x scoring)
+  - "Kanji": type the kanji form using keyboard auto-suggestion
+    (4x scoring). Shown with a small "4x" badge
+    (`text-xs text-sage-500 font-medium`)
+- Default: Readings
+- In Tap mode, selecting Kanji adds a second stage after the kana
+  tap where the user selects the correct kanji. This stage is hidden
+  when Readings is selected.
+- Persists to `settings.store.ts`
+- Not rendered in Settings until Kotoba Mode is unlocked
 
 **Hints**
 
 - **Mnemonics:** toggle
   - Label: "Memory hints" (`text-sm text-warm-700`)
   - Sublabel: "Show hints on wrong answers" (`text-xs text-warm-400`)
-  - Toggle: pill-shaped, `w-10 h-6 rounded-full`, on: `bg-sage-500`,
-    off: `bg-warm-200`, thumb `h-5 w-5 bg-white rounded-full shadow-sm
-    transition-transform duration-150`
+  - Toggle: pill-shaped, inline `style` for fixed 40x24px dimensions,
+    `rounded-full overflow-hidden`, on: `bg-sage-500`, off: `bg-warm-200`,
+    thumb 20x20px `bg-white rounded-full shadow-sm`, positioned with
+    `left` property (2px off, 18px on), `transition-all duration-150`
   - Default: on
 
 **Audio**
 
 - **Word audio:** toggle
   - Label: "Pronunciation" (`text-sm text-warm-700`)
-  - Sublabel: "Play word audio on wrong answers"
+  - Sublabel: "Play audio after answers"
     (`text-xs text-warm-400`)
   - Default: on
 - **Key clicks:** toggle
   - Label: "Key click sounds" (`text-sm text-warm-700`)
   - Sublabel: "Mechanical click on button presses"
     (`text-xs text-warm-400`)
-  - Default: on
+  - Default: off
+  - Wired to `useKeySound` hook: when off, all key click sounds
+    across the app are silenced
 
 **Pacing**
 
 - **Auto-advance:** two-option segmented selector
-  - Label: "After correct answer" (`text-sm text-warm-700`)
+  - Sublabel: "When to move on to new word"
+    (`text-xs text-warm-400`)
   - Options: "Instant" / "Delayed"
   - Instant: advance immediately on correct answer (tap/key to
     advance still works as an alternative)
@@ -2616,8 +2650,9 @@ elements at or above 44pt touch target.
   `role="radio"`, `aria-checked`
 - Close button: `aria-label="Close settings"`
 - Visible focus rings: `focus:ring-2 focus:ring-sage-300`
-- Tab order: close button > input direction > mnemonics > pronunciation
-  > key clicks > auto-advance
+- Tab order: close button > kana input direction > kotoba input
+  (when visible) > mnemonics > pronunciation > key clicks >
+  auto-advance
 
 ### 11.5 Guest Behaviour
 
@@ -2631,8 +2666,8 @@ differences in this dialog.
 type SettingsEvent =
   | { event: 'settings_open' }
   | { event: 'settings_change';
-      setting: 'input_direction' | 'mnemonics' | 'word_audio'
-             | 'key_clicks' | 'auto_advance';
+      setting: 'input_direction' | 'kotoba_input' | 'mnemonics'
+             | 'word_audio' | 'key_clicks' | 'auto_advance';
       value: string }
 ```
 

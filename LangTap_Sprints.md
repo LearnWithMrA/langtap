@@ -113,6 +113,9 @@ Gemini is used for image generation only when photographic or painted assets are
 | Build SVG assets | Medium | To Do | All SVGs listed in UX_DESIGN.md Section 14.1. Mascot, clouds, hills, icons, logos. Claude builds these. |
 | Source sound assets | Small | To Do | Three WAV files listed in UX_DESIGN.md Section 14.2. Source from freesound.org (CC0) or generate. |
 | Build sample data files | Small | To Do | Claude builds samples/ folder with mock game state, leaderboard, and N5 words. |
+| Write Kotoba practice screen spec (Readings input) | Medium | To Do | UX_DESIGN.md new section. Spec the Kotoba game screen for Readings input across all three modes (Tap/Type/Swipe). Same input system as Kana screens. English word shown, user produces kana reading. |
+| Write Kotoba practice screen spec (Kanji input) | Medium | To Do | UX_DESIGN.md new section. Spec the Kotoba game screen for Kanji input. Type/Swipe: plain input with IME kanji suggestions. Tap: two-stage flow (kana tap then kanji selection). 4x scoring. |
+| Build Kotoba practice screen visual shells | Large | To Do | Build the visual shells for Kotoba Readings and Kanji input modes. Tap two-stage flow, Type/Swipe single field. Mock data. |
 | Consolidate approved designs into FRONTEND.md and UX_DESIGN.md | Medium | To Do | Update both docs with any decisions made during the spec writing process. |
 
 ---
@@ -290,8 +293,11 @@ Not assigned to a sprint. Pulled in once Phase 1 is complete and stable.
 | Design word mastery schema in Supabase | **Medium** | **To Do** | Separate from character mastery. Table: word_mastery. Fields: user_id, word_id, score, counter, updated_at. |
 | Build word mastery store (Zustand) | **Medium** | **To Do** | Same logic as character mastery but for words. Frequency-weighted selection. Counter cap at 5. |
 | Build Library screen | **Large** | **To Do** | JLPT N5-N1 word banks. Organised by level and set. Heatmap colouring per word. Remove "Under Construction" placeholder. |
-| Build Kotoba Mode game loop | **Large** | **To Do** | Show English word. User types kana. Correct: word mastery increments. Wrong: silent, try again. |
-| Build Kotoba leaderboards | **Medium** | **To Do** | Kotoba board. Separate from the main Kana boards. Same ranking logic. |
+| Build Kotoba Mode game loop (Readings input) | **Large** | **To Do** | Show English word. User types/taps/swipes kana reading. Uses same input system as Kana game screens. Correct: word mastery increments at 1x. Wrong: same feedback as Kana mode. |
+| Build Kotoba Mode game loop (Kanji input) | **Large** | **To Do** | Same as Readings but user produces kanji via keyboard auto-suggestion. Scoring at 4x multiplier (`KANJI_INPUT_MULTIPLIER`). Type/Swipe: single plain input field (no zero-width-space). Tap: two-stage flow (kana tap first, then kanji selection). |
+| Build Kotoba Tap mode two-stage flow | **Medium** | **To Do** | Tap mode only. Stage 1: select correct kana from tap grid. Stage 2 (Kanji input only): select correct kanji from options. Stage 2 skipped when Readings input is selected. |
+| Add Kotoba Input setting to Settings dialog | **Small** | **To Do** | Two-option segmented control: Readings (1x) / Kanji (4x). Only shown when Kotoba Mode is unlocked. Persists to settings.store.ts. |
+| Build Kotoba leaderboards | **Medium** | **To Do** | Kotoba board. Separate from the main Kana boards. Same ranking logic. Kanji input users accumulate faster due to 4x. |
 | Gate Kotoba Mode behind full Kana mastery | **Small** | **To Do** | Check mastery threshold before allowing access. Show friendly message if not yet unlocked. |
 | Activate Stripe membership | **Epic** | **To Do** | Break into smaller tasks at the time. Define pricing model first. |
 

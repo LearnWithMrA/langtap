@@ -453,9 +453,15 @@ On "session end" (or equivalent), in order:
    flag the failures to the owner and stop rather than auto-fixing.
 2. Update `LangTap_Sprints.md` for the task the owner has approved (status
    and notes column).
-3. Write the session entry to the top of `CHANGELOG.md` (after the format
+3. Update all relevant sub-documents (`docs/`) to reflect any design,
+   layout, interaction, or architectural changes made during the session.
+   Compare what the spec says against what was actually built. Fix any
+   discrepancies: renamed labels, changed defaults, new components,
+   removed features, reordered layouts, changed styling. The docs must
+   match the code, not the plan from the start of the session.
+4. Write the session entry to the top of `CHANGELOG.md` (after the format
    preamble, before the previous session). Use the format below.
-4. Provide the commit-and-push block for the owner to run:
+5. Provide the commit-and-push block for the owner to run:
 
    ```
    git add .
@@ -466,7 +472,7 @@ On "session end" (or equivalent), in order:
    Fill in the sprint number and a one-line description. The owner
    runs these commands manually; the AI does not execute git on its
    own initiative.
-5. State clearly what the next task is (the owner will confirm at the
+6. State clearly what the next task is (the owner will confirm at the
    start of the next session).
 
 ### CHANGELOG.md entry format

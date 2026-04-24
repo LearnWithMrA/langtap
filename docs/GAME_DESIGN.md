@@ -599,33 +599,104 @@ N5 vocabulary and a user practising N1 vocabulary are on the same leaderboard.
 
 ---
 
-## 11. Kotoba Mode (Phase 2 - do not build in Phase 1)
+## 11. Kotoba Mode (Phase 2)
 
-This section is documented here for architectural awareness only.
-Do not implement any of this during Phase 1.
+### 11.1 Overview
 
-In Kotoba Mode:
-- An English word is shown.
-- The user types the correct kana representation of that word.
-- Correct answer: word mastery score increments.
-- Wrong answer: no change to score, same feedback pattern as kana mode.
-- Word frequency is weighted by word mastery score (same formula: 1 / (score + 1)).
-- Word counter system applies identically.
-- Kotoba Mode has its own leaderboard (Kana Kotoba board). Separate from main Kana boards.
-- Kotoba Mode is gated behind full Kana mastery (all characters unlocked and practised).
+In Kotoba Mode, the user practises vocabulary rather than individual
+kana characters. An English word is shown and the user provides the
+Japanese equivalent. The input system varies by input mode and by
+the Kotoba input setting.
 
-**Kotoba JLPT level (`kotoba_jlpt_level`):**
-- The user selects a Kotoba JLPT level during onboarding (and can change it in Profile).
-- Word selection in Kotoba Mode is strictly filtered to the selected level and above.
-  Unlike Kana Mode, this is a hard filter, not a preference.
-- When the user sets or changes their Kotoba JLPT level, all words at levels below
-  the selected level are automatically set to mastered (score set to a high value).
-  This allows experienced users to skip vocabulary they already know.
+Kotoba Mode is gated behind full Kana mastery (all characters unlocked
+and practised). It has its own leaderboard, separate from the Kana
+boards.
+
+### 11.2 Kotoba Input Setting
+
+A "Kotoba Input" section in the Settings dialog controls what the user
+is expected to produce. Two options:
+
+- **Readings**: the user types/taps/swipes the kana reading of the word.
+  This uses the same input system as the Kana game screens. Scoring is
+  at the standard 1x rate.
+- **Kanji**: the user types the kanji form of the word. They use their
+  keyboard's auto-suggestion to select the correct kanji (the same
+  process as natural Japanese typing). Scoring is at a 4x multiplier
+  because kanji recall is significantly harder.
+
+Default: Readings.
+The multiplier constant is defined in `engine/constants.ts`:
+
+```ts
+export const KANJI_INPUT_MULTIPLIER = 4
+```
+
+### 11.3 Kotoba Game Flow by Input Mode
+
+**Tap mode (two-stage flow):**
+1. Stage 1: English word shown. The user selects the correct kana
+   reading from the on-screen tap grid (same grid as Kana mode).
+2. Stage 2 (Kanji input only): if Kanji input is selected, a second
+   prompt appears showing kanji options. The user taps the correct
+   kanji. This stage is skipped entirely when Readings input is
+   selected.
+3. Scoring: Stage 1 awards standard points. Stage 2 awards points
+   at the 4x multiplier. Both stages must be correct for the word
+   to count as mastered.
+
+**Type mode:**
+- Single input field.
+- Readings input: user types romaji, the app converts to kana (same
+  IME handling as Kana mode with zero-width-space trick).
+- Kanji input: user types romaji, uses the keyboard's kanji
+  auto-suggestion to select the correct kanji. Plain text input with
+  no zero-width-space manipulation (the IME needs to offer kanji
+  candidates naturally).
+- Scoring: Readings at 1x, Kanji at 4x.
+
+**Swipe mode:**
+- Single input field, same as Type mode.
+- Readings input: user swipes kana on the mobile keyboard.
+- Kanji input: user swipes and selects kanji from suggestions.
+- Scoring: Readings at 1x, Kanji at 4x.
+
+### 11.4 Kotoba Scoring
+
+- Correct first-attempt answer: word mastery score increments by 1
+  (Readings) or 4 (Kanji).
+- Wrong first-attempt answer: no points. Same feedback pattern as
+  Kana mode (orange highlight, audio, mnemonic if enabled).
+- Reattempt: awards no points regardless of input type.
+- Word frequency is weighted by word mastery score using the same
+  formula: `weight = 1 / (score + 1)`.
+- Word counter system applies identically to Kana mode.
+- Distance mechanic applies identically: base increment per correct
+  answer, speed bonus, no penalty for wrong.
+
+### 11.5 Kotoba JLPT Level
+
+- The user selects a Kotoba JLPT level during onboarding (and can
+  change it in Profile).
+- Word selection in Kotoba Mode is strictly filtered to the selected
+  level and above. Unlike Kana Mode, this is a hard filter, not a
+  preference.
+- When the user sets or changes their Kotoba JLPT level, all words
+  at levels below the selected level are automatically set to mastered
+  (score set to a high value). This allows experienced users to skip
+  vocabulary they already know.
 - The user is shown a clear message when setting this level:
-  "Words below this level will be marked as mastered. To reset, change your level
-  in Profile settings."
-- Changing the level to a lower value does not un-master previously mastered words.
-  Resetting progress from Profile is the only way to clear mastery scores.
+  "Words below this level will be marked as mastered. To reset,
+  change your level in Profile settings."
+- Changing the level to a lower value does not un-master previously
+  mastered words. Resetting progress from Profile is the only way to
+  clear mastery scores.
+
+### 11.6 Kotoba Leaderboard
+
+Kotoba has its own leaderboard, separate from the Kana boards. The
+same ranking logic applies. Kanji input players accumulate points
+faster due to the 4x multiplier, which reflects the higher difficulty.
 
 ---
 
@@ -646,6 +717,7 @@ export const MEANING_DISPLAY_MS = 1500     // ms meaning is shown after correct 
 export const TAP_REMINDER_THRESHOLD = 5    // correct answers before reminder is hidden
 export const ANIMATION_WINDOW_SIZE = 10    // recent answers used for animation speed
 export const METRES_TO_FEET = 3.281        // conversion factor for US locale display
+export const KANJI_INPUT_MULTIPLIER = 4   // scoring multiplier for Kotoba kanji input
 ```
 
 ---
