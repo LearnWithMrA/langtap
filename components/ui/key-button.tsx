@@ -11,6 +11,7 @@
 import { useCallback } from 'react'
 import type { ReactNode } from 'react'
 import Link from 'next/link'
+import { useSettingsStore } from '@/stores/settings.store'
 
 // -- Types --------------------------------------------------
 
@@ -26,14 +27,12 @@ type KeyButtonProps = {
 
 // -- Helpers ------------------------------------------------
 
-// Plays a key-click sound. Volume varies by variant. Fails silently if missing.
 function playKeySound(variant: 'click' | 'soft'): void {
+  if (!useSettingsStore.getState().keyClicks) return
   const file = '/sounds/Keyboard%20Click.mp3'
   const audio = new Audio(file)
   audio.volume = variant === 'click' ? 0.5 : 0.3
-  audio.play().catch(() => {
-    // Sound file may not exist yet; fail silently
-  })
+  audio.play().catch(() => {})
 }
 
 // -- Component ----------------------------------------------

@@ -8,15 +8,15 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { useSettingsStore } from '@/stores/settings.store'
 
 // -- Helpers ------------------------------------------------
 
 function playSoftClick(): void {
+  if (!useSettingsStore.getState().keyClicks) return
   const audio = new Audio('/sounds/Keyboard%20Click.mp3')
   audio.volume = 0.3
-  audio.play().catch(() => {
-    // Sound file may not exist yet
-  })
+  audio.play().catch(() => {})
 }
 
 // -- Social icon SVGs (inline, charcoal, 24px) ---------------

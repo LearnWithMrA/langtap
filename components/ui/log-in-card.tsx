@@ -77,7 +77,7 @@ export function LogInCard({ onClose, onSwitchToSignUp }: LogInCardProps): ReactN
               label="Password"
               placeholder="Enter your password"
             />
-            <a href="#" className="text-sm text-mint-500 hover:underline mt-1 inline-block">
+            <a href="#" className="text-sm text-navy-deep hover:underline mt-1 inline-block">
               Forgot your password?
             </a>
           </div>
@@ -95,7 +95,7 @@ export function LogInCard({ onClose, onSwitchToSignUp }: LogInCardProps): ReactN
           <button
             type="button"
             onClick={onSwitchToSignUp}
-            className="text-mint-500 font-medium hover:underline"
+            className="text-navy-deep font-medium hover:underline"
           >
             Sign up for free
           </button>
@@ -163,7 +163,7 @@ export function LogInCard({ onClose, onSwitchToSignUp }: LogInCardProps): ReactN
         <button
           type="button"
           onClick={onSwitchToSignUp}
-          className="text-mint-500 font-medium hover:underline"
+          className="text-navy-deep font-medium hover:underline"
         >
           Sign up for free
         </button>

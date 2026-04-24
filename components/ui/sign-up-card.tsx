@@ -52,7 +52,7 @@ function getStrengthColor(index: number, strength: number): string {
   if (index >= strength) return 'bg-warm-200'
   if (strength <= 1) return 'bg-feedback-wrong'
   if (strength <= 2) return 'bg-heat-3'
-  return 'bg-mint-500'
+  return 'bg-[#4a7faa]'
 }
 
 // -- Component ------------------------------------------------
@@ -134,7 +134,7 @@ export function SignUpCard({ onClose, onSwitchToLogIn }: SignUpCardProps): React
           </div>
 
           <KeyButton
-            className="w-full justify-center px-4 py-2.5 sm:py-3.5 text-base sm:text-lg font-medium mt-1 bg-mint-500 text-white shadow-[0_4px_0_0_#2a8a6a]"
+            className="w-full justify-center px-4 py-2.5 sm:py-3.5 text-base sm:text-lg font-medium mt-1 bg-[#4a7faa] text-white shadow-[0_4px_0_0_#3a6488]"
             aria-label="Sign up"
           >
             Sign Up
@@ -146,7 +146,7 @@ export function SignUpCard({ onClose, onSwitchToLogIn }: SignUpCardProps): React
           <button
             type="button"
             onClick={onSwitchToLogIn}
-            className="text-mint-500 font-medium hover:underline"
+            className="text-[#4a7faa] font-medium hover:underline"
           >
             Log in
           </button>
@@ -171,10 +171,10 @@ export function SignUpCard({ onClose, onSwitchToLogIn }: SignUpCardProps): React
         <button
           type="button"
           onClick={() => setStep('email')}
-          className="flex flex-col items-center gap-2 sm:gap-3 rounded-xl border border-border bg-white p-4 sm:p-6 hover:border-mint-500 hover:shadow-md transition-all cursor-pointer"
+          className="flex flex-col items-center gap-2 sm:gap-3 rounded-xl border border-border bg-white p-4 sm:p-6 hover:border-[#4a7faa] hover:shadow-md transition-all cursor-pointer"
           aria-label="Sign up with Email"
         >
-          <div className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-mint-500/10">
+          <div className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-[#4a7faa]/10">
             <EmailIcon />
           </div>
           <span className="text-sm sm:text-base font-medium text-text-primary">Email</span>
@@ -214,7 +214,7 @@ export function SignUpCard({ onClose, onSwitchToLogIn }: SignUpCardProps): React
         <button
           type="button"
           onClick={onSwitchToLogIn}
-          className="text-mint-500 font-medium hover:underline"
+          className="text-[#4a7faa] font-medium hover:underline"
         >
           Log in
         </button>
@@ -263,7 +263,7 @@ function EmailIcon(): ReactNode {
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
-      className="text-mint-500"
+      className="text-[#4a7faa]"
     >
       <rect x="2" y="4" width="20" height="16" rx="2" />
       <path d="M22 4L12 13 2 4" />

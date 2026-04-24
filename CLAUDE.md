@@ -365,21 +365,22 @@ The owner opens the session with the phrase "start session". On that cue the
 AI runs the start-of-session protocol below. Do not run these steps on other
 openings (one-off questions, mid-session resumes, ad-hoc edits).
 
-1. Read this file in full.
-2. Read `LangTap_Sprints.md` and identify the current active sprint and the
+1. Start the dev server: run `npx next dev --port 3000` in the background.
+2. Read this file in full.
+3. Read `LangTap_Sprints.md` and identify the current active sprint and the
    next task on the board.
-3. Read the relevant sub-document(s) for the domain the next task touches
+4. Read the relevant sub-document(s) for the domain the next task touches
    (see §4 for the domain-to-document map). Re-read these for every task,
    not just the first one in a session.
-4. State clearly: what sprint is active, what task is being proposed, and
+5. State clearly: what sprint is active, what task is being proposed, and
    what files will be affected.
-5. Show a plan before writing any code. Do not start edits until the owner
+6. Show a plan before writing any code. Do not start edits until the owner
    approves the plan.
-6. If the task is Large or larger, state the token estimate and wait for
+7. If the task is Large or larger, state the token estimate and wait for
    approval as part of the plan (§10).
-7. If the task is Large or Epic, prefix the message with `ultrathink`. For
+8. If the task is Large or Epic, prefix the message with `ultrathink`. For
    Small and Medium tasks, use the default thinking budget.
-8. Run the pre-task checklist as part of the plan, before writing any code:
+9. Run the pre-task checklist as part of the plan, before writing any code:
 
 **Pre-task checklist (inspired by production SaaS Claude Code configs):**
 - What is the blast radius of this change? Which files and systems does it touch?
@@ -474,6 +475,8 @@ On "session end" (or equivalent), in order:
    own initiative.
 6. State clearly what the next task is (the owner will confirm at the
    start of the next session).
+7. Kill the dev server: run `lsof -ti:3000 | xargs kill` to stop the
+   background Next.js process started at session open.
 
 ### CHANGELOG.md entry format
 

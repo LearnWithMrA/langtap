@@ -13,6 +13,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import type { ReactNode } from 'react'
+import { useSettingsStore } from '@/stores/settings.store'
 import { KeyButton } from '@/components/ui/key-button'
 import { LogoFull } from '@/components/ui/logo-full'
 import { LogoLt } from '@/components/ui/logo-lt'
@@ -36,6 +37,7 @@ const NAV_LINKS = [
 // -- Logo helpers -------------------------------------------
 
 function playLogoClick(): void {
+  if (!useSettingsStore.getState().keyClicks) return
   const audio = new Audio('/sounds/Keyboard%20Click.mp3')
   audio.volume = 0.6
   audio.play().catch(() => {})

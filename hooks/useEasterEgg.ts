@@ -5,12 +5,13 @@
 //          when focus is inside an input, textarea, or
 //          contenteditable element. Plays easter-egg-click.wav
 //          and returns isActive state for logo animation.
-// Depends on: nothing
+// Depends on: stores/settings.store.ts
 // ------------------------------------------------------------
 
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useSettingsStore } from '@/stores/settings.store'
 
 // -- Constants ----------------------------------------------
 
@@ -26,11 +27,11 @@ export function useEasterEgg(): { isActive: boolean } {
 
   const activate = useCallback((): void => {
     setIsActive(true)
-    const audio = new Audio('/sounds/Keyboard%20Click.mp3')
-    audio.volume = 0.7
-    audio.play().catch(() => {
-      // Sound file may not exist yet
-    })
+    if (useSettingsStore.getState().keyClicks) {
+      const audio = new Audio('/sounds/Keyboard%20Click.mp3')
+      audio.volume = 0.7
+      audio.play().catch(() => {})
+    }
     timeoutRef.current = setTimeout(() => {
       setIsActive(false)
     }, HOLD_DURATION_MS)
