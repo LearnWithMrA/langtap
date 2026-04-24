@@ -214,7 +214,8 @@ Never trust client-supplied data.
 
 | Field | Rule |
 |---|---|
-| Username | 3-20 chars, `^[a-zA-Z0-9_]+$`, no spaces |
+| Username | 3-20 chars, `^[a-zA-Z0-9_]+$`, no spaces, unique |
+| Username change | Server enforces 30-day cooldown via `username_changed_at` |
 | Email | Valid email format |
 | Password | Minimum 8 characters |
 | JLPT level | Must be one of: N5, N4, N3, N2, N1 |
@@ -248,6 +249,16 @@ with check ((select auth.uid()) = user_id)
 -- Never do this: trusts client-provided user_id
 with check (user_id = current_setting('app.current_user_id'))
 ```
+
+### 5.4 Account Deletion Safety
+
+The delete account flow on the Profile screen requires the user to type
+`delete-[username]` as confirmation. This prevents accidental deletion.
+Server-side validation must confirm:
+- The authenticated user's session is valid
+- The typed confirmation matches the account being deleted
+- All user data is cascade-deleted via the `on delete cascade` foreign
+  key constraints on all tables
 
 ---
 

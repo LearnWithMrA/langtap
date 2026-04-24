@@ -84,6 +84,11 @@ variables in `app/globals.css` using the `@theme` directive.
   --color-heat-4:  #5a8a50;  /* score 20-39 */
   --color-heat-5:  #456e3d;  /* score 40+ */
 
+  /* Profile page theme (sunny yellow) */
+  --color-profile-bg:          #f5edd4;
+  --color-profile-accent:      #d4b85a;
+  --color-profile-accent-dark: #b89c3e;
+
   /* Surface and text */
   --color-surface:       var(--color-cream);
   --color-surface-raised: #ffffff;

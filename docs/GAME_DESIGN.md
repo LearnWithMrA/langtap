@@ -485,6 +485,83 @@ Store the raw value in metres internally. Convert for display only.
 
 ---
 
+## 8.5 Streak Mechanic
+
+### 8.5.1 Overview
+
+A streak represents consecutive days of practice. It is a motivational
+metric, not a scoring mechanism. Streaks are independent of mastery
+scores. A grace-day rule prevents a single missed day from breaking a
+streak.
+
+### 8.5.2 3-Day Start Rule
+
+A streak does not begin until 3 consecutive days of practice have been
+completed. Until then, the streak counter shows 0. Practiced days before
+the streak starts are shown as gold circles on the calendar but without
+flame icons.
+
+### 8.5.3 Grace Day Rule
+
+Once a streak is active, missing one day does not break it. That day
+becomes a "grace day" shown with a blue flame. However, after using a
+grace day, the user must practice on the following day before another
+grace day can be used. Missing two consecutive days, or missing the day
+immediately after a grace day, breaks the streak.
+
+### 8.5.4 State Machine
+
+```
+States: ACTIVE | GRACE | BROKEN
+
+On day end:
+  if user practiced today (>= 1 character answered):
+    state = ACTIVE, streak continues, grace re-enabled
+
+  if user did NOT practice today:
+    if previous day state == ACTIVE:
+      state = GRACE (streak preserved, grace consumed)
+    if previous day state == GRACE:
+      state = BROKEN (streak resets to 0)
+    if previous day state == BROKEN:
+      state = BROKEN (remains broken)
+```
+
+### 8.5.5 Tracked Values
+
+```ts
+type StreakState = {
+  streakChainDays: number   // consecutive days including grace days
+  practiceDays: number      // days with actual practice within the chain
+  todayState: 'active' | 'grace' | 'broken'
+}
+```
+
+`streakChainDays` is the number shown to the user. `practiceDays` is
+used for analytics and potential future rewards.
+
+### 8.5.6 Display
+
+- Red/orange flame: user practiced that day
+- Blue flame: grace day (user did not practice, streak preserved)
+- Gold circle (no flame): practiced but not part of a streak
+- Grey circle: no practice
+- Highlight band: wraps consecutive current-streak days only (not
+  past streaks)
+
+See UX_DESIGN.md Section 6.3 for the dashboard streak display and
+Section 6.4 for the calendar widget.
+
+### 8.5.7 Schema and Persistence
+
+Streak state is derived from the `practice_sessions` table (see
+docs/BACKEND.md Section 2.7). Canonical date is user-local, not UTC.
+Server stores `event_at_utc`, `user_tz` (IANA identifier), and
+`local_date` (derived). Streak evaluation runs server-side from
+derived local dates. Client never computes streak state.
+
+---
+
 ## 9. Session Score
 
 A session score tracks the current session's statistics.

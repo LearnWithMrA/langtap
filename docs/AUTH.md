@@ -183,7 +183,7 @@ serves sensitive data. Never rely on middleware alone to protect data.
 | `/(main)/dojo` | Guest or authenticated. |
 | `/(main)/library` | Guest or authenticated. Shows under-construction in Phase 1. |
 | `/(main)/leaderboard` | Authenticated only. Guests see a sign-up prompt. |
-| `/(main)/profile` | Authenticated only. |
+| `/(main)/profile` | Authenticated only. **Temporarily unprotected in Sprint 2B for visual shell testing. Restore to auth-only before Sprint 3.** |
 | `/(main)/settings` | Guest or authenticated. |
 | `/(main)/credits` | Public. |
 

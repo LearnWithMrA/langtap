@@ -138,6 +138,21 @@ langtap/
 |  |  |- kotoba-bulk-unlock-prompt.tsx # Kotoba: single-step bulk unlock
 |  |  |- kotoba-bulk-reset-prompt.tsx  # Kotoba: two-option bulk reset/mark-mastered
 |  |
+|  |- dashboard/                 # Game Home dashboard components
+|  |  |- streak-calendar.tsx    # Streak calendar widget with flames
+|  |  |- mode-panel.tsx         # Kana/Kotoba practice panel
+|  |  |- dashboard-helpers.ts   # Formatting utilities
+|  |  |- dashboard-icons.tsx    # Star, lock, clock, road SVGs
+|  |
+|  |- profile/                   # Profile screen components
+|  |  |- profile-client.tsx     # Orchestrator with modals
+|  |  |- header-card.tsx        # Avatar, username, sign out
+|  |  |- membership-card.tsx    # Plan display, notify CTA
+|  |  |- account-settings.tsx   # Username, email, password, units
+|  |  |- guest-banner.tsx       # Guest conversion banner
+|  |  |- profile-helpers.ts     # Date and cooldown helpers
+|  |  |- profile-icons.tsx      # Pencil, chevron, shield SVGs
+|  |
 |  |- animation/
 |  |  |- cycling-character.tsx  # Looping cycling girl animation
 |  |

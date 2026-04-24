@@ -39,6 +39,7 @@ Every table created in this project follows this rule without exception.
 | `word_counters` | Per-word show counters per user |
 | `leaderboard` | Cumulative mastery scores for global ranking |
 | `unlock_state` | Which characters each user has unlocked |
+| `practice_sessions` | Daily practice activity for streak mechanic and heatmap calendar |
 
 All tables are in the `public` schema. All have RLS enabled.
 
@@ -63,6 +64,9 @@ create table public.profiles (
   lofi_enabled          boolean not null default true,
   tap_reminder_count    integer not null default 0,
   onboarding_complete   boolean not null default false,
+  username_changed_at   timestamptz,  -- last username change, null if never changed
+  distance_unit         text not null default 'metric'
+                          check (distance_unit in ('metric','imperial')),
   created_at            timestamptz not null default now(),
   updated_at            timestamptz not null default now()
 );
@@ -228,6 +232,49 @@ RLS policies: user reads and writes only their own rows.
 The effective unlock state is computed client-side by the `unlock.store.ts` by
 combining mastery scores >= threshold with the manual_unlocks set. No separate
 unlock_state table is needed.
+
+### 2.7 practice_sessions
+
+Tracks daily practice activity per user. Used for the streak mechanic
+(see docs/GAME_DESIGN.md Section 8.5) and the heatmap calendar on the
+home dashboard. One row per user per local date.
+
+```sql
+create table public.practice_sessions (
+  id                   bigint generated always as identity primary key,
+  user_id              uuid not null references auth.users(id) on delete cascade,
+  event_at_utc         timestamptz not null default now(),
+  user_tz              text not null default 'UTC',
+  local_date           date not null,
+  characters_practiced integer not null default 0
+                         check (characters_practiced >= 0),
+  unique (user_id, local_date)
+);
+
+create index practice_sessions_user_id_idx
+  on public.practice_sessions using btree (user_id);
+create index practice_sessions_local_date_idx
+  on public.practice_sessions using btree (local_date);
+
+alter table public.practice_sessions enable row level security;
+alter table public.practice_sessions force row level security;
+```
+
+RLS policies: same pattern as `mastery`. User reads and writes only
+their own rows.
+
+**Timezone contract:** the canonical streak date is the user-local
+calendar date, not UTC. `event_at_utc` stores the raw timestamp,
+`user_tz` stores the IANA timezone identifier (e.g. `Asia/Tokyo`),
+and `local_date` is the derived date in that timezone. Streak
+evaluation runs server-side from `local_date` values. The client
+never computes streak state.
+
+**Username change rate limit:** the `profiles.username_changed_at`
+column tracks the last username change. Server enforces
+`now() >= username_changed_at + interval '30 days'` before allowing
+a change. Returns a structured error with the exact next-allowed
+timestamp if the cooldown has not elapsed.
 
 ---
 

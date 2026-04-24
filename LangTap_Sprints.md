@@ -100,7 +100,7 @@ Gemini is used for image generation only when photographic or painted assets are
 | Task | Size | Status | Notes |
 |---|---|---|---|
 | Write landing page spec | Medium | Done | See UX_DESIGN.md Section 3. Parallax landscape, nav, hero, footer. |
-| Write game home screen spec | Small | Done | See UX_DESIGN.md Section 6. Redesigned as dashboard in Session 49: streak calendar (Figma-inspired, proper streak engine with 3-day start + save mechanic + blue flames), Kana + Kotoba mode panels with collapsible progress bars, leaderboard glance, integrated mode selector on practice buttons. Responsive: stacked mobile, calendar-left + panels-right tablet, full layout desktop. |
+| Write game home screen spec | Small | Done | See UX_DESIGN.md Section 6. Redesigned as dashboard in Session 49: streak calendar (Figma-inspired, proper streak engine with 3-day start + grace mechanic + blue flames), Kana + Kotoba mode panels with collapsible progress bars, leaderboard glance, integrated mode selector on practice buttons. Responsive: stacked mobile, calendar-left + panels-right tablet, full layout desktop. |
 | Write practice screen spec (all three input modes) | Medium | Done | See UX_DESIGN.md Section 7. Spec written and screen built with all three modes, audio sprite sound system, IME handling, and direction alternation. |
 | Write Dojo screen spec - Kana | Medium | Done | See UX_DESIGN.md Section 8. Visual shell built at /dojo/kana with mid-progress mock fixture. Spec revised to match existing heat contract. Session 42 iteration: fluid mobile scaling (clamp + container queries) validated down to 320px, tiered unlock buttons (dark/medium/light blue, grey reset swap when all unlocked), translucent-on-scroll top bar, bulk-reset flow. |
 | Write Dojo screen spec - Kotoba | Medium | Done | See UX_DESIGN.md Section 9. Visual shell built and iterated at `/dojo/kotoba` with the `variety` fixture. JLPT tab row with roving tabindex, WaniKani-style unit cards (active / completed / locked variants), single-open unit accordion, multi-open level-group accordion, three-row word tile with auto-scaling text (Range API + ResizeObserver), progress pill at 80% tile width, scoped unlock buttons that swap to grey reset/mark-mastered prompts when all unlocked, Modal-backed word popover with Reset/Mark as mastered, parity `state` prop on both dojo clients, bare `/dojo` falls through to `not-found`. Mark-as-mastered added to both Kana and Kotoba dojos (individual tiles and bulk). |
@@ -134,6 +134,9 @@ Gemini is used for image generation only when photographic or painted assets are
 | Build onboarding step 4 - input mode selection | **Small** | **To Do** | Choose Tap, Type, or Swipe. Save to user profile. Show mode icon preview. |
 | Build user profile record in Supabase | **Medium** | **To Do** | Schema: user_id, username, kotoba_jlpt_level, kanji_jlpt_level, input_mode, notification_prefs, created_at. RLS: user can only read and write their own row. |
 | Write auth tests | **Medium** | **To Do** | Sign up, log in, guest mode, onboarding flow. Happy path, loading, and error states for each screen. |
+| Add `practice_sessions` table to Supabase | **Small** | **To Do** | Schema: user_id, event_at_utc, user_tz, local_date, characters_practiced. Unique (user_id, local_date). RLS user read/write own rows. See BACKEND.md Section 2.7. Flagged in Session 49. |
+| Add `username_changed_at` to profiles | **Small** | **To Do** | timestamptz nullable. Server enforces 30-day cooldown. See BACKEND.md Section 2.7, SECURITY.md Section 5.1. Flagged in Session 49. |
+| Restore `/profile` to auth-only routes | **Small** | **To Do** | Undo temporary middleware change from Session 49. Add '/profile' back to AUTHED_ONLY_ROUTES in middleware.ts. |
 
 ---
 
@@ -152,7 +155,8 @@ No UI yet. This is pure logic.
 | Build unlocking progression sequence | **Medium** | **To Do** | Seion: first 10 hiragana, then first 10 katakana, alternating. Then dakuon. Then yoon. Logic that determines which characters are currently in the active unlocking set. |
 | Build distance/progress mechanic | **Small** | **To Do** | A counter that accumulates metres (or feet based on locale) per correct answer. Rate tied to answer speed. Pure function - no UI. |
 | Build session score tracker | **Small** | **To Do** | Tracks correct answers, wrong answers, and distance for the current session. Resets on new session. |
-| Write game engine tests | **Large** | **To Do** | Full test coverage for: mastery scoring, word counter, selection algorithm, unlock sequence, distance counter. Edge cases: all characters at max mastery, all words at counter 5, single character unlocked. |
+| Build streak engine | **Medium** | **To Do** | Pure functions in engine/streak.ts. 3-day start rule, grace-day mechanic, streak state derivation from practice_sessions. See GAME_DESIGN.md Section 8.5. Flagged in Session 49. |
+| Write game engine tests | **Large** | **To Do** | Full test coverage for: mastery scoring, word counter, selection algorithm, unlock sequence, distance counter, streak engine. Edge cases: all characters at max mastery, all words at counter 5, single character unlocked, grace day after grace day. |
 
 ---
 
@@ -223,6 +227,9 @@ No UI yet. This is pure logic.
 | Build reset progress flow | **Small** | **To Do** | Two-step confirmation. Clear warning that this cannot be undone. Resets all mastery, counters, and unlocks. |
 | Build Settings screen | **Medium** | **To Do** | Input mode selector, mode-specific sub-settings (Type/Swipe: romaji-to-kana or kana-to-romaji), mnemonic toggle. |
 | Connect Profile and Settings to Supabase | **Medium** | **To Do** | All preferences saved to the user profile record. Loaded on app start. Guest users: saved to localStorage. |
+| Build delete account flow | **Medium** | **To Do** | Server-side account deletion. Typed confirmation (`delete-username`). Cascade deletes all user data. See SECURITY.md Section 5.4. Flagged in Session 49. |
+| Build username change with 30-day cooldown | **Small** | **To Do** | Server validates cooldown via `username_changed_at`. Returns structured error with next-allowed timestamp. Client shows disabled state. Flagged in Session 49. |
+| Wire membership card to Stripe Customer Portal | **Small** | **To Do** | "Manage billing" link opens Stripe portal session. "Notify me" button captures demand. Feature flag `SHOW_MEMBERSHIP_CARD`. Flagged in Session 49. |
 | Write Profile and Settings tests | **Small** | **To Do** | Each setting saved and loaded correctly. Reset flow. Guest vs logged-in behaviour. |
 
 ---
