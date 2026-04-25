@@ -174,7 +174,7 @@ export function ModePanel({
 
           {/* Leaderboard position */}
           <div>
-            <p className="text-xs font-medium text-warm-500 mb-1.5">Leaderboard</p>
+            <p className="text-xs font-medium text-warm-500 mb-1.5">{modeLabels[currentMode]?.split(' ')[0]} Leaderboard</p>
             {leaderboard.rank ? (
               <div
                 className={`${theme.leaderboardBg} rounded-lg px-3 py-2 border-l-4 ${theme.leaderboardBorder} flex items-center justify-between`}

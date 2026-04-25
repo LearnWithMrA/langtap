@@ -84,6 +84,11 @@
   --color-heat-5: #7eb560;
   --color-heat-gold: #ffc72c;
 
+  /* Leaderboard medal colours */
+  --color-medal-gold: #d4a853;
+  --color-medal-silver: #a8a8b0;
+  --color-medal-bronze: #cd7f32;
+
   /* Surface and text */
   --color-surface: var(--color-cream);
   --color-surface-raised: #ffffff;

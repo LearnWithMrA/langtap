@@ -1,10 +1,12 @@
-// ------------------------------------------------------------
+// ─────────────────────────────────────────────
 // File: app/(main)/leaderboard/page.tsx
-// Purpose: Global leaderboard screen. Authenticated only.
-//          Placeholder - to be implemented in Sprint 9.
-// Depends on: services/leaderboard.service.ts, hooks/useAuth.ts
-// ------------------------------------------------------------
+// Purpose: Leaderboard screen route. Visual shell with fixture
+//          data (Sprint 2B). Real Supabase data wired in Sprint 9.
+// Depends on: components/leaderboard/leaderboard-client.tsx
+// ─────────────────────────────────────────────
 
-export default function LeaderboardPage(): null {
-  return null
+import { LeaderboardClient } from '@/components/leaderboard/leaderboard-client'
+
+export default function LeaderboardPage(): React.ReactNode {
+  return <LeaderboardClient />
 }

@@ -935,7 +935,10 @@ card overflow.
 
 A compact section showing the user's leaderboard position.
 
-**Section label:** "Leaderboard" (`text-sm font-medium text-warm-600`)
+**Section label:** "{Mode} Leaderboard" (`text-xs font-medium text-warm-500`),
+where {Mode} is the currently selected input mode in that panel's dropdown
+(e.g. "Tap Leaderboard", "Type Leaderboard"). Updates when the user
+switches modes via the practice CTA dropdown.
 
 **User's row:**
 - `bg-sage-50 rounded-lg px-3 py-2`
@@ -2682,44 +2685,129 @@ The `AppTopBar` gear icon is a button, not a link.
 
 ## 12. Leaderboard Screen Spec
 
-**Status:** To Do
+**Status:** Done
 **Route:** `/leaderboard`
-**Scrollable:** Yes within tabs
-**Layout:** Standard in-app layout
+**Theme:** Cream surface background (`bg-surface`)
+**Max width:** `max-w-4xl` (side-by-side columns on desktop)
+**Scrollable:** Yes
+**Style:** Duolingo-inspired flat list. No podium, no hero section.
 
-### 12.1 Tabs
+### 12.1 Page Layout
 
-Three tabs at the top of the content area (below the top bar):
-1. Kana - global leaderboard by total kana mastery score
-2. Kotoba - global leaderboard by total Kotoba mastery score (Phase 2, shown but empty in Phase 1)
-3. Friends - not in Phase 1, shown as "Coming soon"
+**Desktop (lg+):** Two leaderboard columns side by side. Kana on the left,
+Kotoba on the right. Both visible at all times. Kotoba column shows a locked
+state in Phase 1 with a lock icon and "Complete Kana to unlock" message.
 
-Tab style: bottom-border active indicator in sage-500. Inactive tabs: warm-400 text.
+**Mobile/Tablet (below lg):** Single column with a Kana/Kotoba pill switcher
+at the top. Defaults to Kana. Only the selected game type is rendered.
 
-### 12.2 Leaderboard List
+### 12.2 Controls
 
-Each row:
-- Rank number (text-lg, warm-800) - left
-- Username (text-base, warm-800)
-- Total mastery score (text-base, sage-600) - right
-- Rows are separated by a 1px border-border line
+Three control groups at the top of the page, below the title:
 
-Current user row: highlighted with a sage-50 background and a left accent bar in sage-500.
-If the current user is not in the top visible range, their row is pinned at the bottom of
-the list with a separator above it.
+**Mode selector:** `[Tap | Type | Swipe]` pill bar. Defaults to the user's
+current input mode from their settings. Each mode has its own leaderboard.
+The page title reflects the selected mode: "Tap Leaderboard".
 
-**Empty state:**
-"No scores yet. Start practising to appear here."
-With a "Start practising" button (mint-500 key style).
+**Time period selector:** `[All Time | This Week]` pill bar. Defaults to
+All Time. Filters the displayed entries.
 
-**Loading state:**
-Skeleton rows (animate-pulse warm-200 bars) matching the row layout.
+**Game type switcher (mobile only):** `[Kana | Kotoba]` pill bar. Hidden
+on lg+ breakpoint where both columns are visible. Defaults to Kana.
 
-### 12.3 Leaderboard on Landing Page
+All pill bars use `role="tablist"` with `role="tab"` and `aria-selected`.
+Pill style: `bg-warm-100 rounded-xl p-1` container, active pill gets
+`bg-surface-raised text-warm-800 shadow-sm`, inactive gets `text-warm-500`.
+Minimum touch target: `min-h-[44px]`.
 
-The Pricing nav link on the landing page scrolls to Section C (see Section 3.4).
-The Leaderboard nav link scrolls to Section C which shows a live or static top 10 preview.
-The full leaderboard is only accessible after logging in.
+### 12.3 Column Header
+
+Each column card has a header with:
+- Game type label: "Kana" or "Kotoba" in accent colour (`text-sky-600`
+  for Kana, `text-sage-600` for Kotoba), `text-lg font-bold`
+- Subtitle: "{Mode} Leaderboard" in `text-xs text-warm-400`
+
+### 12.4 Leaderboard List
+
+**Top 3 rows:**
+- Rank badge: circular medal (`w-8 h-8 rounded-full`) in gold
+  (`bg-medal-gold`), silver (`bg-medal-silver`), or bronze
+  (`bg-medal-bronze`) with rank number inside (`text-xs font-bold text-white`)
+- Avatar: initial-based circle (`w-10 h-10`), colour derived from username hash
+- Username: `text-base font-medium text-warm-800`, truncated
+- Score: `text-base font-medium`, coloured by game type (`text-sky-600`
+  for Kana, `text-sage-600` for Kotoba)
+
+**Rows 4+:**
+- Rank: plain number in `text-sm font-bold text-warm-500`
+- Avatar: initial-based circle (`w-9 h-9`)
+- Username: `text-sm text-warm-800`
+- Score: `text-sm font-medium`
+
+**Row styling:**
+- Rows separated by `border-t border-border` dividers (inset with `mx-4`)
+- Each row: `px-4 py-3 flex items-center gap-3`
+- `border-l-4 border-transparent` by default (keeps alignment uniform)
+
+**Current user row:**
+- `bg-sage-50 border-l-4 border-sage-500`
+- Username rendered in `font-bold`
+- `aria-current="true"` for accessibility
+
+**Pinned row:** If the current user is not in the visible entries, their
+row is pinned at the bottom with a dashed separator
+(`border-t-2 border-dashed border-warm-300`) above it.
+
+**Score formatting:**
+- Scores above 9,999 abbreviate to "10.0k" format
+- Below that: locale-formatted number with commas
+
+### 12.5 Locked State (Kotoba in Phase 1)
+
+The Kotoba column renders as a card with:
+- Same header as the unlocked version
+- Centre content: lock SVG icon (`w-8 h-8 text-warm-400`), "Complete
+  Kana to unlock" (`text-sm font-medium text-warm-600`), and a subtitle
+  ("Kotoba leaderboard opens after Kana mastery") at reduced opacity
+
+### 12.6 States
+
+**Loading:** Skeleton card with header placeholder and 7 skeleton rows
+(circle + bars pattern, `animate-pulse bg-warm-200`).
+
+**Empty:** "No scores yet. Start practising to appear here." with a mint-500
+key-style "Start practising" button.
+
+**Error:** "Something went wrong loading the leaderboard." with a retry button.
+
+### 12.7 Responsive Behaviour
+
+| Breakpoint | Layout |
+|---|---|
+| 320px+ | Single column, stacked controls, Kana/Kotoba pill visible |
+| 768px+ | Same layout, slightly more padding |
+| 1024px+ | Side-by-side Kana and Kotoba columns, game pill hidden |
+
+### 12.8 Accessibility
+
+- Pill selectors: `role="tablist"` with `role="tab"` + `aria-selected`
+- Leaderboard entries: `role="list"` container, `role="listitem"` rows
+- Current user row: `aria-current="true"`
+- All interactive pills: `min-h-[44px]` touch targets
+- Locked Kotoba: lock icon is `aria-hidden="true"`, text carries meaning
+
+### 12.9 Leaderboard on Landing Page
+
+The Leaderboard nav link on the landing page scrolls to Section C
+(see Section 3.4) which shows a static top-10 preview. The full
+leaderboard is only accessible after logging in.
+
+### 12.10 Home Page Leaderboard Glance
+
+The mode panel on the home dashboard (Section 6.7) shows the user's
+leaderboard position with a mode-specific label: "{Mode} Leaderboard"
+(e.g. "Tap Leaderboard"). The label updates when the user switches
+modes via the practice CTA dropdown.
 
 ---
 
@@ -2818,7 +2906,7 @@ File naming: lowercase, hyphens, descriptive. No spaces.
 | Onboarding steps 1-3 | In Progress | No |
 | Profile | To Do | No |
 | Settings (dialog) | In Progress | No |
-| Leaderboard | To Do | No |
+| Leaderboard | Done | Yes |
 
 ---
 

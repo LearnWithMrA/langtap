@@ -32,7 +32,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 // Source of truth: docs/AUTH.md Section 4.
 // TODO: restore '/onboarding' before Sprint 3 auth wiring
 // TODO: restore '/profile' before Sprint 3 auth wiring
-const AUTHED_ONLY_ROUTES = ['/leaderboard']
+// TODO: restore '/leaderboard' before Sprint 3 auth wiring
+const AUTHED_ONLY_ROUTES: string[] = []
 
 // Auth pages. Authenticated users are redirected to /practice.
 const AUTH_PAGES = ['/sign-up', '/log-in']
