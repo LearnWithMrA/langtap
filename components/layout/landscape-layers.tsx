@@ -8,7 +8,15 @@
 
 import type { ReactNode } from 'react'
 
-export function DistantTree({ cx, cy, scale = 1 }: { cx: number; cy: number; scale?: number }): ReactNode {
+export function DistantTree({
+  cx,
+  cy,
+  scale = 1,
+}: {
+  cx: number
+  cy: number
+  scale?: number
+}): ReactNode {
   return (
     <g transform={`translate(${cx}, ${cy}) scale(${scale})`}>
       <rect x="-1" y="0" width="2" height="12" style={{ fill: 'var(--scene-tree-trunk)' }} />
@@ -272,4 +280,3 @@ export function GroundBlendEdge(): ReactNode {
 }
 
 // -- Main export --------------------------------------------
-

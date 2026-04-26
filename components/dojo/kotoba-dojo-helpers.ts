@@ -32,7 +32,10 @@ export function lockedIdsInUnit(unit: KotobaUnit, lockedWordIds: ReadonlySet<str
   return unit.groups.flatMap((g) => g.wordIds.filter((id) => lockedWordIds.has(id)))
 }
 
-export function lockedIdsInGroup(group: KotobaLevelGroup, lockedWordIds: ReadonlySet<string>): string[] {
+export function lockedIdsInGroup(
+  group: KotobaLevelGroup,
+  lockedWordIds: ReadonlySet<string>,
+): string[] {
   return group.wordIds.filter((id) => lockedWordIds.has(id))
 }
 

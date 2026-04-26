@@ -57,7 +57,8 @@ function PillSelector<T extends string>({
   ariaLabel: string
   size?: 'default' | 'small'
 }): ReactNode {
-  const padding = size === 'small' ? 'px-3 py-1.5 text-xs min-h-[36px]' : 'px-4 py-2 text-sm min-h-[44px]'
+  const padding =
+    size === 'small' ? 'px-3 py-1.5 text-xs min-h-[36px]' : 'px-4 py-2 text-sm min-h-[44px]'
 
   return (
     <div
@@ -113,9 +114,7 @@ function GameTypeSelector({
           aria-selected={value === opt.value}
           onClick={(): void => onChange(opt.value)}
           className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 min-h-[44px] ${
-            value === opt.value
-              ? GAME_COLORS[opt.value]
-              : 'text-warm-500 hover:text-warm-700'
+            value === opt.value ? GAME_COLORS[opt.value] : 'text-warm-500 hover:text-warm-700'
           }`}
         >
           {opt.label}

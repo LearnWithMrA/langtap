@@ -124,7 +124,9 @@ function LeaderboardRow({
         {entry.username}
       </span>
 
-      <span className={`${isTop3 ? 'text-base' : 'text-sm'} font-medium ${scoreColor} shrink-0 w-16 text-right`}>
+      <span
+        className={`${isTop3 ? 'text-base' : 'text-sm'} font-medium ${scoreColor} shrink-0 w-16 text-right`}
+      >
         {formatLeaderboardScore(entry.score)}
       </span>
     </div>

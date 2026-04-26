@@ -13,7 +13,18 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { DistantTree, Tree, BushCluster1, Furthest1, Furthest2, Furthest3, Furthest4, GroundBase, GroundFoliage, GroundBlendEdge } from '@/components/layout/landscape-layers'
+import {
+  DistantTree,
+  Tree,
+  BushCluster1,
+  Furthest1,
+  Furthest2,
+  Furthest3,
+  Furthest4,
+  GroundBase,
+  GroundFoliage,
+  GroundBlendEdge,
+} from '@/components/layout/landscape-layers'
 import Image from 'next/image'
 import { motion } from 'motion/react'
 

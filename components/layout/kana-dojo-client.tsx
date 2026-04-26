@@ -42,8 +42,19 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { AppTopBar } from '@/components/layout/app-top-bar'
-import { KanaLoadingShell, KanaErrorShell, KanaEmptyShell } from '@/components/dojo/kana-dojo-shells'
-import { buildLockedSet, hasLockedCharacter, hasAnyUnlock, CHARACTERS_BY_SCRIPT_STAGE, scriptCharacters, lockedInScope } from '@/components/dojo/kana-dojo-helpers'
+import {
+  KanaLoadingShell,
+  KanaErrorShell,
+  KanaEmptyShell,
+} from '@/components/dojo/kana-dojo-shells'
+import {
+  buildLockedSet,
+  hasLockedCharacter,
+  hasAnyUnlock,
+  CHARACTERS_BY_SCRIPT_STAGE,
+  scriptCharacters,
+  lockedInScope,
+} from '@/components/dojo/kana-dojo-helpers'
 import { CharacterGroup } from '@/components/dojo/character-group'
 import { TileDetailPopover } from '@/components/dojo/tile-detail-popover'
 import { UnlockPrompt } from '@/components/dojo/unlock-prompt'
@@ -89,8 +100,6 @@ const STAGE_LABELS: Readonly<Record<Stage, string>> = {
   dakuon: 'Dakuon',
   yoon: 'Yoon',
 }
-
-
 
 // ── Ready shell (hooks live here) ─────────────
 // Kept as its own component so the dispatcher below can early-return

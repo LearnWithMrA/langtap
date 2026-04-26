@@ -42,9 +42,16 @@ export function TapInput({
 }: TapInputProps): ReactNode {
   const { playSound } = useKeySound()
 
-  const colours = variant === 'sky'
-    ? { idle: 'bg-sky-100 shadow-[0_3px_0_0_var(--color-sky-300)]', correct: 'bg-sky-400 shadow-[0_3px_0_0_var(--color-sky-600)]' }
-    : { idle: 'bg-sage-100 shadow-[0_3px_0_0_var(--color-sage-300)]', correct: 'bg-sage-400 shadow-[0_3px_0_0_var(--color-sage-500)]' }
+  const colours =
+    variant === 'sky'
+      ? {
+          idle: 'bg-sky-100 shadow-[0_3px_0_0_var(--color-sky-300)]',
+          correct: 'bg-sky-400 shadow-[0_3px_0_0_var(--color-sky-600)]',
+        }
+      : {
+          idle: 'bg-sage-100 shadow-[0_3px_0_0_var(--color-sage-300)]',
+          correct: 'bg-sage-400 shadow-[0_3px_0_0_var(--color-sage-500)]',
+        }
 
   const handleTap = useCallback(
     (id: string, value: string, soundId: string): void => {

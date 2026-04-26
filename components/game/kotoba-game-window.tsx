@@ -24,7 +24,11 @@ import { TapInput } from '@/components/game/tap-input'
 import { FEEDBACK_FLASH_MS, KOTOBA_DISPLAY_MS, MEANING_FADE_MS } from '@/engine/constants'
 import { getMockKotobaWords, generateKanjiDistractors } from '@/samples/kotoba-practice-fixtures'
 import type { MockKotobaWord } from '@/samples/kotoba-practice-fixtures'
-import { isKatakanaChar, KOTOBA_HIRAGANA_TAP, KOTOBA_KATAKANA_TAP } from '@/components/game/tap-grids'
+import {
+  isKatakanaChar,
+  KOTOBA_HIRAGANA_TAP,
+  KOTOBA_KATAKANA_TAP,
+} from '@/components/game/tap-grids'
 import { useKeySound } from '@/hooks/useKeySound'
 import { useSettingsStore } from '@/stores/settings.store'
 
@@ -57,7 +61,12 @@ function isHiraganaWord(word: MockKotobaWord): boolean {
 
 // ── Main export ──────────────────────────────
 
-export function KotobaGameWindow({ mode, kotobaInput, children, onCharacterCorrect }: Props): ReactNode {
+export function KotobaGameWindow({
+  mode,
+  kotobaInput,
+  children,
+  onCharacterCorrect,
+}: Props): ReactNode {
   const childArray = Array.isArray(children) ? children : children ? [children] : []
   const topLeft = childArray[0] ?? null
   const topRight = childArray[1] ?? null
@@ -176,7 +185,9 @@ export function KotobaGameWindow({ mode, kotobaInput, children, onCharacterCorre
     setWordIndex((prev) => (prev + 1) % MOCK_WORDS.length)
   }, [resetAll])
 
-  useEffect((): void => { resetAll() }, [mode, kotobaInput, resetAll])
+  useEffect((): void => {
+    resetAll()
+  }, [mode, kotobaInput, resetAll])
   useEffect((): (() => void) => clearTimers, [clearTimers])
 
   // ── Complete handlers ─────────────────────
@@ -247,10 +258,18 @@ export function KotobaGameWindow({ mode, kotobaInput, children, onCharacterCorre
       }
     },
     [
-      currentChar.kana, currentCharIndex, completedCount,
-      currentWord.characters.length, wordDone, readingDone,
-      wrongAttemptsMap, onCharacterCorrect, handleReadingDone,
-      handleWrong, clearTimers, schedule,
+      currentChar.kana,
+      currentCharIndex,
+      completedCount,
+      currentWord.characters.length,
+      wordDone,
+      readingDone,
+      wrongAttemptsMap,
+      onCharacterCorrect,
+      handleReadingDone,
+      handleWrong,
+      clearTimers,
+      schedule,
     ],
   )
 
@@ -307,9 +326,20 @@ export function KotobaGameWindow({ mode, kotobaInput, children, onCharacterCorre
       if (compare === fullKanaAnswer) handleReadingDone()
     },
     [
-      fullKanaAnswer, kanaBreakpoints, feedbackState, wordDone, readingDone,
-      currentWord, completedCount, wrongAttemptsMap, onCharacterCorrect,
-      handleWrong, handleWordComplete, handleReadingDone, isKanjiMode, hasKanji,
+      fullKanaAnswer,
+      kanaBreakpoints,
+      feedbackState,
+      wordDone,
+      readingDone,
+      currentWord,
+      completedCount,
+      wrongAttemptsMap,
+      onCharacterCorrect,
+      handleWrong,
+      handleWordComplete,
+      handleReadingDone,
+      isKanjiMode,
+      hasKanji,
     ],
   )
 
@@ -333,7 +363,15 @@ export function KotobaGameWindow({ mode, kotobaInput, children, onCharacterCorre
         }, FEEDBACK_FLASH_MS)
       }
     },
-    [readingDone, wordDone, currentWord.kanji, onCharacterCorrect, handleWordComplete, schedule, playSound],
+    [
+      readingDone,
+      wordDone,
+      currentWord.kanji,
+      onCharacterCorrect,
+      handleWordComplete,
+      schedule,
+      playSound,
+    ],
   )
 
   // ── Furigana colour ───────────────────────
@@ -348,9 +386,12 @@ export function KotobaGameWindow({ mode, kotobaInput, children, onCharacterCorre
   // ── Kanji option style ────────────────────
 
   function kanjiOptionClass(kanji: string): string {
-    if (wordDone && kanji === currentWord.kanji) return 'bg-feedback-correct shadow-[0_3px_0_0_#2e9a73]'
-    if (selectedKanji === kanji && kanjiFeedback === 'correct') return 'bg-sky-400 shadow-[0_3px_0_0_var(--color-sky-600)]'
-    if (selectedKanji === kanji && kanjiFeedback === 'wrong') return 'bg-feedback-wrong shadow-[0_3px_0_0_#c47a3a]'
+    if (wordDone && kanji === currentWord.kanji)
+      return 'bg-feedback-correct shadow-[0_3px_0_0_#2e9a73]'
+    if (selectedKanji === kanji && kanjiFeedback === 'correct')
+      return 'bg-sky-400 shadow-[0_3px_0_0_var(--color-sky-600)]'
+    if (selectedKanji === kanji && kanjiFeedback === 'wrong')
+      return 'bg-feedback-wrong shadow-[0_3px_0_0_#c47a3a]'
     if (readingDone) return 'bg-sky-100 shadow-[0_3px_0_0_var(--color-sky-300)]'
     return 'bg-warm-100 shadow-[0_2px_0_0_var(--color-warm-200)] opacity-50'
   }
@@ -378,7 +419,9 @@ export function KotobaGameWindow({ mode, kotobaInput, children, onCharacterCorre
           {/* Kanji words: kanji prompt with furigana above */}
           {hasKanji && (
             <div className="text-center mb-4">
-              <ruby className={`text-3xl md:text-4xl font-bold transition-colors duration-150 ${wordDone ? 'text-feedback-correct' : 'text-warm-800'}`}>
+              <ruby
+                className={`text-3xl md:text-4xl font-bold transition-colors duration-150 ${wordDone ? 'text-feedback-correct' : 'text-warm-800'}`}
+              >
                 {currentWord.kanji}
                 <rp>(</rp>
                 <rt className="text-base font-medium tracking-wider">
@@ -494,7 +537,6 @@ export function KotobaGameWindow({ mode, kotobaInput, children, onCharacterCorre
               </div>
             </div>
           )}
-
         </>
       )}
 

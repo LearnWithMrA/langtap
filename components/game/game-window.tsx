@@ -22,7 +22,13 @@ import { SwipeInput } from '@/components/game/swipe-input'
 import { TapInput } from '@/components/game/tap-input'
 import { MeaningReveal } from '@/components/game/meaning-reveal'
 import { FEEDBACK_FLASH_MS, MEANING_DISPLAY_MS, MEANING_FADE_MS } from '@/engine/constants'
-import { MOCK_WORDS, HIRAGANA_TAP, KATAKANA_TAP, isKatakanaWord, toKatakana } from '@/components/game/kana-practice-data'
+import {
+  MOCK_WORDS,
+  HIRAGANA_TAP,
+  KATAKANA_TAP,
+  isKatakanaWord,
+  toKatakana,
+} from '@/components/game/kana-practice-data'
 import type { MockWord } from '@/components/game/kana-practice-data'
 
 const MAX_WRONG_ATTEMPTS = 3
@@ -36,8 +42,6 @@ type GameWindowProps = {
   children?: ReactNode
   onCharacterCorrect?: () => void
 }
-
-
 
 // -- Component ----------------------------------------------
 

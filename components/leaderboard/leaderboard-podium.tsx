@@ -92,11 +92,15 @@ function PodiumEntry({
   }
 
   const avatarOuter = isFirst ? 'w-16 h-16 sm:w-20 sm:h-20' : 'w-11 h-11 sm:w-14 sm:h-14'
-  const avatarInner = isFirst ? 'w-14 h-14 sm:w-[72px] sm:h-[72px] text-xl sm:text-2xl' : 'w-9 h-9 sm:w-12 sm:h-12 text-sm sm:text-base'
+  const avatarInner = isFirst
+    ? 'w-14 h-14 sm:w-[72px] sm:h-[72px] text-xl sm:text-2xl'
+    : 'w-9 h-9 sm:w-12 sm:h-12 text-sm sm:text-base'
   const ringWidth = 'ring-[3px]'
 
   return (
-    <div className={`flex flex-col items-center gap-1 sm:gap-1.5 ${isFirst ? 'w-[72px] sm:w-24' : 'w-16 sm:w-20 mt-4 sm:mt-6'}`}>
+    <div
+      className={`flex flex-col items-center gap-1 sm:gap-1.5 ${isFirst ? 'w-[72px] sm:w-24' : 'w-16 sm:w-20 mt-4 sm:mt-6'}`}
+    >
       {/* Avatar with ring and rank badge */}
       <div className={`relative ${avatarOuter} flex items-center justify-center`}>
         {isFirst && (
@@ -123,14 +127,18 @@ function PodiumEntry({
       {/* Username */}
       <span
         className={`${
-          isFirst ? 'text-xs sm:text-sm font-bold text-warm-800' : 'text-[10px] sm:text-xs font-medium text-warm-600'
+          isFirst
+            ? 'text-xs sm:text-sm font-bold text-warm-800'
+            : 'text-[10px] sm:text-xs font-medium text-warm-600'
         } truncate w-full text-center`}
       >
         {entry.username}
       </span>
 
       {/* Score */}
-      <span className={`${isFirst ? 'text-sm sm:text-base' : 'text-xs sm:text-sm'} font-bold ${scoreColor} w-full text-center`}>
+      <span
+        className={`${isFirst ? 'text-sm sm:text-base' : 'text-xs sm:text-sm'} font-bold ${scoreColor} w-full text-center`}
+      >
         {formatLeaderboardScore(entry.score)}
       </span>
     </div>

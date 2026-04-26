@@ -10,11 +10,7 @@
 import type { ReactNode } from 'react'
 import { KotobaUnitCard } from '@/components/dojo/kotoba-unit-card'
 import { KotobaLevelGroupRow } from '@/components/dojo/kotoba-level-group'
-import type {
-  KotobaLevelGroup,
-  KotobaUnit,
-  KotobaWord,
-} from '@/types/kotoba.types'
+import type { KotobaLevelGroup, KotobaUnit, KotobaWord } from '@/types/kotoba.types'
 
 // ── Types ─────────────────────────────────────
 

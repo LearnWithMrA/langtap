@@ -44,11 +44,12 @@ export function KanjiSelector({
       >
         {options.map((kanji) => {
           const isFeedbackTarget = feedbackId === kanji
-          const bgClass = isFeedbackTarget && feedbackState === 'correct'
-            ? 'bg-sage-400'
-            : isFeedbackTarget && feedbackState === 'wrong'
-              ? 'bg-feedback-wrong'
-              : 'bg-sage-100'
+          const bgClass =
+            isFeedbackTarget && feedbackState === 'correct'
+              ? 'bg-sage-400'
+              : isFeedbackTarget && feedbackState === 'wrong'
+                ? 'bg-feedback-wrong'
+                : 'bg-sage-100'
 
           return (
             <button

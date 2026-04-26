@@ -133,9 +133,7 @@ const KOTOBA_WORDS: readonly MockKotobaWord[] = [
     jlpt: 'n5',
     isKanaOnly: false,
     acceptedAnswers: ['火'],
-    characters: [
-      { kana: 'ひ', romaji: 'hi' },
-    ],
+    characters: [{ kana: 'ひ', romaji: 'hi' }],
     similarKanji: ['灰', '炎', '水'],
   },
   {
@@ -269,18 +267,16 @@ export function getMockKotobaWords(): readonly MockKotobaWord[] {
   return KOTOBA_WORDS
 }
 
-export function generateKanjiDistractors(
-  correctKanji: string,
-  count: number,
-): string[] {
+export function generateKanjiDistractors(correctKanji: string, count: number): string[] {
   const word = KOTOBA_WORDS.find((w) => w.kanji === correctKanji)
   const similar = word?.similarKanji ?? []
   const shuffledSimilar = [...similar].sort(() => Math.random() - 0.5)
 
   if (shuffledSimilar.length >= count) return shuffledSimilar.slice(0, count)
 
-  const fallbackPool = KOTOBA_WORDS
-    .filter((w) => w.kanji !== null && w.kanji !== correctKanji && !similar.includes(w.kanji as string))
+  const fallbackPool = KOTOBA_WORDS.filter(
+    (w) => w.kanji !== null && w.kanji !== correctKanji && !similar.includes(w.kanji as string),
+  )
     .map((w) => w.kanji as string)
     .sort(() => Math.random() - 0.5)
 

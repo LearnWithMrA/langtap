@@ -27,7 +27,7 @@ describe('KanjiSelector', () => {
         onSelect={vi.fn()}
         feedbackId={null}
         feedbackState="idle"
-      />
+      />,
     )
     expect(screen.getByText('犬')).toBeTruthy()
     expect(screen.getByText('猫')).toBeTruthy()
@@ -43,7 +43,7 @@ describe('KanjiSelector', () => {
         onSelect={vi.fn()}
         feedbackId={null}
         feedbackState="idle"
-      />
+      />,
     )
     expect(screen.getByText('Kanji')).toBeTruthy()
   })
@@ -57,7 +57,7 @@ describe('KanjiSelector', () => {
         onSelect={onSelect}
         feedbackId={null}
         feedbackState="idle"
-      />
+      />,
     )
     fireEvent.click(screen.getByLabelText('Select 猫'))
     expect(onSelect).toHaveBeenCalledWith('猫')
@@ -71,7 +71,7 @@ describe('KanjiSelector', () => {
         onSelect={vi.fn()}
         feedbackId={null}
         feedbackState="idle"
-      />
+      />,
     )
     for (const kanji of OPTIONS) {
       expect(screen.getByLabelText(`Select ${kanji}`)).toBeTruthy()
@@ -86,7 +86,7 @@ describe('KanjiSelector', () => {
         onSelect={vi.fn()}
         feedbackId="犬"
         feedbackState="correct"
-      />
+      />,
     )
     const btn = container.querySelector('[aria-label="Select 犬"]')
     expect(btn?.getAttribute('class')).toContain('bg-sage-400')
@@ -100,7 +100,7 @@ describe('KanjiSelector', () => {
         onSelect={vi.fn()}
         feedbackId="猫"
         feedbackState="wrong"
-      />
+      />,
     )
     const btn = container.querySelector('[aria-label="Select 猫"]')
     expect(btn?.getAttribute('class')).toContain('bg-feedback-wrong')
@@ -114,7 +114,7 @@ describe('KanjiSelector', () => {
         onSelect={vi.fn()}
         feedbackId={null}
         feedbackState="idle"
-      />
+      />,
     )
     const grid = container.querySelector('[role="group"]')
     expect(grid?.getAttribute('class')).toContain('grid-cols-2')

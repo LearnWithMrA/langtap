@@ -133,13 +133,19 @@ export function LandingClient(): ReactNode {
             </h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <LeaderboardList
-                board={{ ...getLeaderboardFixture('kana', kanaMode, 'all-time'), currentUserPinned: null }}
+                board={{
+                  ...getLeaderboardFixture('kana', kanaMode, 'all-time'),
+                  currentUserPinned: null,
+                }}
                 variant="kana"
                 mode={kanaMode}
                 onModeChange={setKanaMode}
               />
               <LeaderboardList
-                board={{ ...getLeaderboardFixture('kotoba', kotobaMode, 'all-time'), currentUserPinned: null }}
+                board={{
+                  ...getLeaderboardFixture('kotoba', kotobaMode, 'all-time'),
+                  currentUserPinned: null,
+                }}
                 variant="kotoba"
                 mode={kotobaMode}
                 onModeChange={setKotobaMode}

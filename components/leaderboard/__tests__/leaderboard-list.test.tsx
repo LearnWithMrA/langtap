@@ -45,12 +45,7 @@ describe('LeaderboardList header', () => {
   it('renders mode selector when mode and onModeChange provided', () => {
     const onModeChange = vi.fn()
     render(
-      <LeaderboardList
-        board={FULL_BOARD}
-        variant="kana"
-        mode="tap"
-        onModeChange={onModeChange}
-      />
+      <LeaderboardList board={FULL_BOARD} variant="kana" mode="tap" onModeChange={onModeChange} />,
     )
     expect(screen.getByText('Tap')).toBeTruthy()
     expect(screen.getByText('Type')).toBeTruthy()
@@ -65,12 +60,7 @@ describe('LeaderboardList header', () => {
   it('calls onModeChange when mode pill is clicked', () => {
     const onModeChange = vi.fn()
     render(
-      <LeaderboardList
-        board={FULL_BOARD}
-        variant="kana"
-        mode="tap"
-        onModeChange={onModeChange}
-      />
+      <LeaderboardList board={FULL_BOARD} variant="kana" mode="tap" onModeChange={onModeChange} />,
     )
     fireEvent.click(screen.getByText('Type'))
     expect(onModeChange).toHaveBeenCalledWith('type')
@@ -109,9 +99,7 @@ describe('LeaderboardList rows', () => {
 
   it('does not show pinned user if already in list', () => {
     const board: LeaderboardBoard = {
-      entries: [
-        { rank: 1, username: 'me', score: 5000, isCurrentUser: true },
-      ],
+      entries: [{ rank: 1, username: 'me', score: 5000, isCurrentUser: true }],
       currentUserPinned: { rank: 1, username: 'me', score: 5000, isCurrentUser: true },
     }
     render(<LeaderboardList board={board} variant="kana" />)
@@ -155,7 +143,7 @@ describe('LeaderboardList locked state', () => {
         locked
         mode="tap"
         onModeChange={vi.fn()}
-      />
+      />,
     )
     expect(screen.getByText('Tap')).toBeTruthy()
   })

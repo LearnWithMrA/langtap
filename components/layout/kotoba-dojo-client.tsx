@@ -47,8 +47,17 @@ import type { KotobaBulkUnlockScope } from '@/components/dojo/kotoba-bulk-unlock
 import { KotobaBulkResetPrompt } from '@/components/dojo/kotoba-bulk-reset-prompt'
 import type { KotobaBulkResetScope } from '@/components/dojo/kotoba-bulk-reset-prompt'
 import { UnlockButton } from '@/components/dojo/group-bar'
-import { KotobaLoadingShell, KotobaErrorShell, KotobaEmptyShell } from '@/components/dojo/kotoba-dojo-shells'
-import { buildLockedWordSet, lockedIdsInUnit, lockedIdsInGroup, lockedIdsAtLevel } from '@/components/dojo/kotoba-dojo-helpers'
+import {
+  KotobaLoadingShell,
+  KotobaErrorShell,
+  KotobaEmptyShell,
+} from '@/components/dojo/kotoba-dojo-shells'
+import {
+  buildLockedWordSet,
+  lockedIdsInUnit,
+  lockedIdsInGroup,
+  lockedIdsAtLevel,
+} from '@/components/dojo/kotoba-dojo-helpers'
 import { MASTERY_THRESHOLD } from '@/engine/mastery'
 import { getKotobaFixture } from '@/samples/kotoba-dojo-fixtures'
 import { JLPT_LABELS } from '@/types/kotoba.types'
