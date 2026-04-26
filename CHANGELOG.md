@@ -30,6 +30,76 @@ Format per entry:
 
 ---
 
+## [2026-04-26] - Session 53
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Kotoba practice screens (Readings spec + Kanji spec + visual shells)
+**Status:** Done
+
+### Changes made
+- `docs/UX_DESIGN.md`: Added Section 13 (Kotoba Practice - Readings Input) and Section 14 (Kotoba Practice - Kanji Input). Renumbered Sections 15-17. Updated screen status table. Readings: kanji prompt, kana production, one-way direction. Kanji: English prompt, two-stage Tap, IME kanji selection for Type/Swipe, 2x/4x scoring, answer normalization policy, instrumentation schema.
+- `components/game/kotoba-game-window.tsx`: New file. Built from scratch for Kotoba flows. Readings mode: kanji with ruby furigana, characters hidden until correct. Kanji mode: English prompt, furigana + kanji option row (Tap), persistent kanji area (Type/Swipe). Dynamic tap grids with required + random filler characters. 3-wrong hint system (furigana for readings, kanji with ruby for kanji mode). Kanji input ignores kana (waits for actual kanji characters). Kana-only words handled identically in both modes. Blue variant buttons. Separate KOTOBA_DISPLAY_MS timing.
+- `components/game/kanji-selector.tsx`: New file. 2x2 kanji selection grid for Tap Stage 2 (no longer used directly, integrated into kotoba-game-window).
+- `components/game/tap-grids.ts`: New file. Shared tap grid data, isKatakanaChar, toKatakana, toHiragana helpers.
+- `components/game/tap-input.tsx`: Added `variant` prop (sage/sky) for blue Kotoba buttons.
+- `components/game/type-input.tsx`: Added `preventKanjiSuggestions` prop (default true). When false, skips ZWSP insertion so IME can suggest kanji.
+- `components/layout/practice-client.tsx`: Reads `?mode=kana|kotoba` from URL. Renders KotobaGameWindow for Kotoba. ModeDropdown shows game type prefix. Position adjusted to top-[34%].
+- `stores/settings.store.ts`: Added inputMode, kotobaInput, furigana fields with setters and localStorage persistence.
+- `types/settings.types.ts`: Added InputMode, KotobaInput types.
+- `components/settings/settings-dialog.tsx`: Added Kotoba Input control (Readings / Kanji with "4x points" badge). Removed "Recommended" from Alternate. Standardised segmented control heights.
+- `samples/kotoba-practice-fixtures.ts`: New file. 16 mock words (12 kanji + 4 kana-only including hiragana and katakana). similarKanji for plausible distractors. acceptedAnswers: kanji-only for kanji words, kana for kana-only words.
+- `engine/constants.ts`: Added KOTOBA_DISPLAY_MS (3000ms).
+- `docs/ARCHITECTURE.md`: Added Section 1B (SOLID principles) and expanded Section 13 (Testing Rules with TDD workflow).
+- `CLAUDE.md`: Added Section 5B (SOLID) and Section 5C (TDD).
+- `app/(onboarding)/onboarding/step-3/page.tsx`: Changed post-onboarding route from /practice to /home.
+- Leaderboard updates from earlier in session (AppTopBar, podium redesign, independent modes, landing page preview, fixture data, settings dialog Kotoba Input).
+
+### Tests
+- `samples/__tests__/kotoba-practice-fixtures.test.ts`: 12 tests (data integrity, distractors, acceptedAnswers)
+- `components/game/__tests__/kanji-selector.test.tsx`: 7 tests (rendering, selection, feedback, accessibility)
+- `samples/__tests__/leaderboard-fixtures.test.ts`: 21 tests
+- `components/leaderboard/__tests__/`: 42 tests across 3 files
+- All 354 tests passing
+
+### Next task
+Consolidate approved designs into FRONTEND.md and UX_DESIGN.md
+
+### Notes
+- Codex staff-engineer review incorporated: no mode selector in game window (user selects from home page), two-stage Tap scoring rebalanced (2x recognition vs 4x production), kana-only fallback is implicit (no label), answer normalization policy documented, IME composition handling specified.
+- The shared usePracticeLoop hook extraction (Codex recommendation) is deferred to Sprint 4 when the real engine replaces mock loops. Both game windows exceed 300 lines - tracked as tech debt.
+- SOLID principles and TDD added to CLAUDE.md and ARCHITECTURE.md per peer recommendation.
+
+---
+
+## [2026-04-26] - Session 52
+
+**Sprint:** Sprint 2B - UX/UI Design and Screen Specification
+**Task completed:** Write Leaderboard screen spec
+**Status:** Done
+
+### Changes made
+- `components/leaderboard/leaderboard-client.tsx`: Added AppTopBar. Restructured layout: desktop has title + All Time/This Week on same row, mobile has title then controls row with smaller time period pill (left) and coloured Kana/Kotoba game type switcher (right, blue for Kana, green for Kotoba). Independent mode state per card (kanaMode/kotobaMode). Removed locked prop from Kotoba.
+- `components/leaderboard/leaderboard-list.tsx`: Moved Tap/Type/Swipe pill selector into each card header next to title. Removed "Tap Leaderboard" subtitle. Made mode/onModeChange optional so landing page can use the list without mode controls. Podium used for both desktop and mobile (not mobile-only). Fixed score column width (w-16 text-right) to prevent layout shift when switching time periods.
+- `components/leaderboard/leaderboard-podium.tsx`: New file. Complete redesign of top-3 display. Circular avatars with coloured rings (gold/silver/bronze). Rank number badges overlapping top-left of avatar. Rank 1 has floating animation and four sparkle stars with staggered timing. Responsive scaling: smaller avatars, gaps, badges, and text at 320px (sm breakpoint). Fixed-width entries (w-[72px]/w-16 small, w-24/w-20 larger) to prevent layout shift.
+- `samples/leaderboard-fixtures.ts`: Unlocked Kotoba with full fixture data. All four boards (Kana all-time, Kana this-week, Kotoba all-time, Kotoba this-week) now have 10 entries each plus a pinned current user (tanuki42) ranked outside top 10.
+- `app/globals.css`: Added three keyframe animations for leaderboard podium: trophy-float (3s vertical bob), trophy-glow (pulsing gold drop-shadow), sparkle (fade-in/rotate/scale with staggered delays).
+- `components/layout/landing-client.tsx`: Replaced leaderboard placeholder with real LeaderboardList components. Shows Kana and Kotoba side by side (desktop) or stacked (mobile) using all-time fixture data with currentUserPinned nulled out. Independent Tap/Type/Swipe mode switchers per card.
+- `LangTap_Sprints.md`: Marked "Write Leaderboard screen spec" as Done.
+
+### Tests
+- TypeScript: clean (no errors)
+- No new test files (visual shell, tests deferred to Sprint 9)
+
+### Next task
+Write Kotoba practice screen spec (Readings input)
+
+### Notes
+- Kotoba leaderboard unlocked with fixture data for visual shell purposes. The locked state still exists in the component for when real data is wired in Sprint 9.
+- Landing page leaderboard is a preview: all-time only, no time period switcher, no pinned user row.
+- Layout shift fix: score column uses fixed w-16 with text-right; podium entries use fixed widths at each breakpoint.
+
+---
+
 ## [2026-04-25] - Session 51
 
 **Sprint:** Sprint 2B - UX/UI Design and Screen Specification

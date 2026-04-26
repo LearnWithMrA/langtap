@@ -3,7 +3,7 @@
 Version 1.0 | April 2026
 Domain: Folder structure, module boundaries, decoupling rules, naming conventions,
 patterns, and conventions that apply across the entire codebase.
-Reference: CLAUDE.md Section 3, Section 5, Section 6, Section 8.
+Reference: CLAUDE.md Section 3, Section 5, Section 5B, Section 5C, Section 6, Section 8.
 Owner document: CLAUDE.md
 
 Read this document at the start of any session that involves creating new files,
@@ -39,6 +39,74 @@ easier to read, test, and change.
 mastery scoring formula should touch one file in `engine/`. Changing a button
 style should touch one file in `components/ui/`. Nothing is so entangled that a
 small change requires touching many files.
+
+---
+
+## 1B. SOLID Principles
+
+Reference: CLAUDE.md Section 5B (condensed rules). This section provides the full
+rationale and project-specific examples.
+
+### Single Responsibility Principle (SRP)
+
+Every file, component, hook, store, and function has one reason to change. When a
+unit does two things, it becomes two units.
+
+Examples in this codebase:
+- `engine/mastery.ts` handles scoring logic only. It does not read from Supabase.
+- `services/mastery.service.ts` handles syncing mastery scores to the database only.
+  It does not compute scores.
+- `stores/mastery.store.ts` holds mastery state for the UI. It calls the service to
+  persist and the engine to compute, but does neither itself.
+- A page component in `app/` is a thin route wrapper. It imports and renders a client
+  component. It does not contain business logic.
+
+### Open/Closed Principle (OCP)
+
+Modules are open for extension but closed for modification. Add new behaviour by
+composing with existing code, not by editing stable code.
+
+Examples in this codebase:
+- Adding a new input mode: create a new component in `components/game/`, register it
+  in the mode map. Do not modify `TypeInput` or `SwipeInput`.
+- Adding a new kana group: add a new data file in `data/kana/`. The selection
+  algorithm picks it up without changes to `engine/selection.ts`.
+
+### Liskov Substitution Principle (LSP)
+
+Any component or function that accepts a contract (props type, function signature)
+must work correctly with any value satisfying that contract. A specialised variant
+must not break callers that depend on the base interface.
+
+Examples in this codebase:
+- `LeaderboardList` accepts an optional `mode` prop. Callers that omit it (landing
+  page) and callers that provide it (leaderboard page) both work correctly.
+- Any `LeaderboardEntry` can be passed to `LeaderboardRow` regardless of rank or
+  whether it is the current user.
+
+### Interface Segregation Principle (ISP)
+
+Types, props, and store slices stay small and focused. No consumer is forced to
+depend on data it does not use.
+
+Examples in this codebase:
+- Zustand stores are split by domain: `mastery.store.ts`, `settings.store.ts`,
+  `onboarding.store.ts`. A component that needs settings does not pull in mastery
+  state.
+- Component props are narrow. `Avatar` takes `username` and `size`, not the full
+  `LeaderboardEntry`.
+
+### Dependency Inversion Principle (DIP)
+
+High-level modules depend on abstractions, not concrete implementations. The
+dependency direction flows inward: UI depends on stores and hooks, stores depend
+on services and engine, engine depends on nothing.
+
+Examples in this codebase:
+- Components call hooks (`useMasteryStore`), never `supabase.from('mastery')`.
+- Engine functions in `engine/` import only types and other engine modules. They
+  never import React, Zustand, or Supabase.
+- Services abstract the database. If Supabase is replaced, only `services/` changes.
 
 ---
 
@@ -502,13 +570,77 @@ Rules:
 
 ## 13. Testing Rules
 
-- Every engine function has a test in `engine/__tests__/`.
-- Every service has a test file.
-- Every non-trivial hook has a test file.
-- Every screen covers at minimum: happy path, loading state, error state.
+Reference: CLAUDE.md Section 5C (TDD principle).
+
+### TDD workflow
+
+This project follows test-driven development. The cycle for every new unit of work:
+
+1. **Red:** Write a test that describes the expected behaviour. Run it. It fails.
+2. **Green:** Write the minimum code to make the test pass. No more.
+3. **Refactor:** Clean up both the test and the production code. Tests stay green.
+4. **Repeat:** Move to the next behaviour.
+
+For legacy code (files that exist without tests), write characterisation tests for
+the current behaviour before making any changes. This protects against regressions.
+
+### Coverage requirements by layer
+
+| Layer | Rule | Test location |
+|---|---|---|
+| Engine (`engine/`) | Every exported function has a test | `engine/__tests__/` |
+| Services (`services/`) | Every service file has a test | `services/__tests__/` |
+| Hooks (`hooks/`) | Every non-trivial hook has a test | `hooks/__tests__/` |
+| Stores (`stores/`) | Every store with derived state or actions has a test | `stores/__tests__/` |
+| UI primitives (`components/ui/`) | Every interactive component has a test | `components/ui/__tests__/` |
+| Screen clients (`components/*/`) | Every page client covers happy path, loading, error, empty | `components/*/__tests__/` |
+| Data (`data/`) | Data integrity tests for static datasets | `data/*/__tests__/` |
+
+### What to test per component type
+
+**UI primitives (Button, Input, Modal, etc.):**
+- Renders correct content and variants
+- ARIA attributes (roles, labels, states)
+- Keyboard accessibility (Enter, Space, Escape, Tab)
+- Minimum touch target (44px)
+- Disabled and loading states
+- Event handlers fire correctly
+
+**Screen clients (page-level orchestrators):**
+- Happy path renders expected content
+- Loading state shows skeleton or spinner
+- Error state shows message and retry action
+- Empty state shows CTA
+- User interactions trigger correct state changes
+- Responsive layout differences (when testable)
+
+**Engine functions (pure logic):**
+- Input/output mapping for all branches
+- Edge cases (zero, negative, NaN, empty arrays)
+- Boundary values (thresholds, caps, wraparounds)
+
+**Services (Supabase wrappers):**
+- Input validation before API calls
+- Error mapping to user-friendly messages
+- Retry logic where applicable
+- Mock Supabase client, never hit real database
+
+**Hooks:**
+- State initialisation
+- State transitions on actions
+- Cleanup on unmount
+- Side effect timing (debounce, timeout)
+
+### General test rules
+
 - Tests use Vitest and React Testing Library.
-- Test files live adjacent to the file they test or in a `__tests__/` folder.
+- Test files live in a `__tests__/` folder adjacent to the source.
 - No snapshot tests for game logic. Use explicit assertions.
+- Test names describe behaviour, not implementation ("shows error when email is
+  empty", not "calls setError with string").
+- Prefer `userEvent` over `fireEvent` for user interactions.
+- Use fake timers for time-dependent tests. Never use real `setTimeout` in tests.
+- Mock at the boundary (Supabase client, Audio API), not internal functions.
 
 ---
 

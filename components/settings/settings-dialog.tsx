@@ -12,14 +12,19 @@
 import { useEffect, useRef, useCallback } from 'react'
 import type { ReactNode } from 'react'
 import { useSettingsStore } from '@/stores/settings.store'
-import type { InputDirection, AutoAdvance } from '@/types/settings.types'
+import type { InputDirection, KotobaInput, AutoAdvance } from '@/types/settings.types'
 
 // ── Constants ─────────────────────────────────
 
 const INPUT_DIRECTION_OPTIONS: { value: InputDirection; label: string; recommended?: boolean }[] = [
   { value: 'kana-to-romaji', label: 'Kana to Romaji' },
-  { value: 'alternate', label: 'Alternate', recommended: true },
+  { value: 'alternate', label: 'Alternate' },
   { value: 'romaji-to-kana', label: 'Romaji to Kana' },
+]
+
+const KOTOBA_INPUT_OPTIONS: { value: KotobaInput; label: string; badge?: string }[] = [
+  { value: 'readings', label: 'Readings' },
+  { value: 'kanji', label: 'Kanji', badge: '4x points' },
 ]
 
 const AUTO_ADVANCE_OPTIONS: { value: AutoAdvance; label: string }[] = [
@@ -109,7 +114,7 @@ function SegmentedControl<T extends string>({
           aria-checked={value === option.value}
           onClick={(): void => onChange(option.value)}
           className={[
-            'flex-1 rounded-lg px-2 py-0.5 text-sm transition-all duration-150',
+            'flex-1 rounded-lg px-2 py-0.5 text-sm flex items-center justify-center transition-all duration-150',
             'focus:outline-none focus:ring-2 focus:ring-sage-300',
             value === option.value
               ? 'bg-sage-500 text-white shadow-sm font-medium'
@@ -117,16 +122,6 @@ function SegmentedControl<T extends string>({
           ].join(' ')}
         >
           {option.label}
-          {option.recommended && (
-            <span
-              className={[
-                'block text-[10px] font-medium leading-tight',
-                value === option.value ? 'text-white/70' : 'text-sage-500',
-              ].join(' ')}
-            >
-              Recommended
-            </span>
-          )}
         </button>
       ))}
     </div>
@@ -141,8 +136,11 @@ export function SettingsDialog(): ReactNode {
   const closeSettings = useSettingsStore((s) => s.closeSettings)
   const inputDirection = useSettingsStore((s) => s.inputDirection)
   const setInputDirection = useSettingsStore((s) => s.setInputDirection)
+  const kotobaInput = useSettingsStore((s) => s.kotobaInput)
+  const setKotobaInput = useSettingsStore((s) => s.setKotobaInput)
   const mnemonics = useSettingsStore((s) => s.mnemonics)
   const setMnemonics = useSettingsStore((s) => s.setMnemonics)
+
   const wordAudio = useSettingsStore((s) => s.wordAudio)
   const setWordAudio = useSettingsStore((s) => s.setWordAudio)
   const keyClicks = useSettingsStore((s) => s.keyClicks)
@@ -262,6 +260,47 @@ export function SettingsDialog(): ReactNode {
               onChange={setInputDirection}
               ariaLabel="Practice direction"
             />
+          </div>
+
+          {/* Kotoba Input section */}
+          <div className="py-2.5 border-b border-border">
+            <SectionLabel>Kotoba Input</SectionLabel>
+            <div
+              role="radiogroup"
+              aria-label="Kotoba input mode"
+              className="rounded-xl bg-warm-100 p-1 flex gap-0.5"
+            >
+              {KOTOBA_INPUT_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={kotobaInput === option.value}
+                  onClick={(): void => setKotobaInput(option.value)}
+                  className={[
+                    'flex-1 rounded-lg px-2 py-0.5 text-sm transition-all duration-150',
+                    'focus:outline-none focus:ring-2 focus:ring-sage-300',
+                    kotobaInput === option.value
+                      ? 'bg-sage-500 text-white shadow-sm font-medium'
+                      : 'text-warm-500 hover:text-warm-600',
+                  ].join(' ')}
+                >
+                  <span className="flex items-center justify-center gap-1.5">
+                    {option.label}
+                    {option.badge && (
+                      <span
+                        className={[
+                          'text-xs font-medium',
+                          kotobaInput === option.value ? 'text-white/70' : 'text-sage-500',
+                        ].join(' ')}
+                      >
+                        {option.badge}
+                      </span>
+                    )}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Hints section */}

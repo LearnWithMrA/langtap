@@ -17,19 +17,23 @@
 
 import { useCallback, useState } from 'react'
 import type { ReactNode } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useReducedMotion } from 'motion/react'
 import { LandscapeBackgroundV2 } from '@/components/layout/LandscapeBackgroundV2'
 import { CyclingCharacter } from '@/components/animation/cycling-character'
 import { AppTopBar } from '@/components/layout/app-top-bar'
 import { GameWindow } from '@/components/game/game-window'
+import { KotobaGameWindow } from '@/components/game/kotoba-game-window'
 import { DistanceCounter } from '@/components/game/distance-counter'
 import { AudioPlayer } from '@/components/audio/audio-player'
 import { useKeySound } from '@/hooks/useKeySound'
 import { usePracticeCounters } from '@/hooks/usePracticeCounters'
+import { useSettingsStore } from '@/stores/settings.store'
 
 // -- Types --------------------------------------------------
 
 type InputMode = 'type' | 'tap' | 'swipe'
+type GameType = 'kana' | 'kotoba'
 
 const ALL_MODES: InputMode[] = ['tap', 'type', 'swipe']
 
@@ -44,12 +48,15 @@ const MODE_LABELS: Record<InputMode, string> = {
 function ModeDropdown({
   mode,
   onModeChange,
+  gameType,
 }: {
   mode: InputMode
   onModeChange: (m: InputMode) => void
+  gameType: GameType
 }): ReactNode {
   const [isOpen, setIsOpen] = useState(false)
   const { playSound } = useKeySound()
+  const label = gameType === 'kana' ? 'Kana' : 'Kotoba'
 
   return (
     <div className="relative">
@@ -60,10 +67,10 @@ function ModeDropdown({
           setIsOpen(!isOpen)
         }}
         className="text-sm font-bold text-warm-800 hover:text-sage-400 transition-colors duration-150 cursor-pointer translate-y-0"
-        aria-label={`Current mode: Kana ${MODE_LABELS[mode]}. Click to change.`}
+        aria-label={`Current mode: ${label} ${MODE_LABELS[mode]}. Click to change.`}
         aria-expanded={isOpen}
       >
-        Kana {MODE_LABELS[mode]} ▾
+        {label} {MODE_LABELS[mode]} ▾
       </button>
 
       {isOpen && (
@@ -96,7 +103,10 @@ function ModeDropdown({
 // -- Component ----------------------------------------------
 
 export function PracticeClient(): ReactNode {
+  const searchParams = useSearchParams()
+  const gameType = (searchParams.get('mode') === 'kotoba' ? 'kotoba' : 'kana') as GameType
   const [mode, setMode] = useState<InputMode>('tap')
+  const kotobaInput = useSettingsStore((s) => s.kotobaInput)
   const prefersReducedMotion = useReducedMotion()
   const { counters, incrementCorrect } = usePracticeCounters()
 
@@ -111,10 +121,6 @@ export function PracticeClient(): ReactNode {
       {/* Parallax landscape */}
       <LandscapeBackgroundV2 speed={sceneSpeed} staticHills={prefersReducedMotion ?? false} />
 
-      {/* Mascot. Bottom offset compensates for the PNG's transparent bottom
-          padding (~22% of container height, scales with viewport width) so
-          her wheels sit on the dirt path regardless of screen size. Matches
-          landing-scene. */}
       <div
         className="absolute bottom-[calc(12svh-max(7.73vw,62.7px))] left-[3%] md:left-[8%] z-[3]"
         aria-hidden="true"
@@ -131,11 +137,22 @@ export function PracticeClient(): ReactNode {
       </div>
 
       {/* Game window: centred, raised 40% */}
-      <div className="absolute left-1/2 -translate-x-1/2 top-[30%] -translate-y-1/2 z-10 w-full max-w-lg px-4">
-        <GameWindow mode={mode} onCharacterCorrect={handleCharacterCorrect}>
-          <ModeDropdown mode={mode} onModeChange={setMode} />
-          <DistanceCounter value={counters[mode]} />
-        </GameWindow>
+      <div className="absolute left-1/2 -translate-x-1/2 top-[34%] -translate-y-1/2 z-10 w-full max-w-lg px-4">
+        {gameType === 'kotoba' ? (
+          <KotobaGameWindow
+            mode={mode}
+            kotobaInput={kotobaInput}
+            onCharacterCorrect={handleCharacterCorrect}
+          >
+            <ModeDropdown mode={mode} onModeChange={setMode} gameType="kotoba" />
+            <DistanceCounter value={counters[mode]} />
+          </KotobaGameWindow>
+        ) : (
+          <GameWindow mode={mode} onCharacterCorrect={handleCharacterCorrect}>
+            <ModeDropdown mode={mode} onModeChange={setMode} gameType="kana" />
+            <DistanceCounter value={counters[mode]} />
+          </GameWindow>
+        )}
       </div>
     </div>
   )

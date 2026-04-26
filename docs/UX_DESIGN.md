@@ -2811,7 +2811,220 @@ modes via the practice CTA dropdown.
 
 ---
 
-## 13. Global Layout and Scaling Rules
+## 13. Kotoba Practice Screen - Readings Input
+
+**Status:** Done
+**Route:** `/practice?mode=kotoba`
+**Scrollable:** No
+**Layout:** Same full-screen landscape scene as Kana practice (Section 7)
+
+### 13.1 Overview
+
+Kotoba Readings practice shows an English word and the user produces the
+kana reading. This uses the same input system as Kana practice (Type, Tap,
+Swipe) with the same feedback patterns. The input mode is selected from the
+mode dropdown in the game window header or persisted from Settings.
+
+The user reaches this screen by tapping "Practice Kotoba" on the home page,
+which navigates to `/practice?mode=kotoba`. The practice screen reads the
+query parameter to determine game type.
+
+Direction is always one-way: English prompt, kana answer. There is no
+direction alternation for Kotoba. Research confirms one-way production
+practice produces better typing fluency retention than alternating.
+
+### 13.2 Game Window Content
+
+The game window card is identical to Section 7.2 (warm paper yellow,
+rounded-2xl, keyboard-key shadow).
+
+**Header row (inside the card):**
+- Top left: Mode dropdown showing "Kotoba Tap", "Kotoba Type", or
+  "Kotoba Swipe". Same dropdown as Kana but with "Kotoba" prefix.
+  Switches input mode (Tap/Type/Swipe) only, not game type.
+- Top right: Distance counter showing `0m`
+
+**Prompt (centred):**
+- English word at `text-3xl md:text-4xl font-bold text-warm-800`
+- Below: target kana reading as individual character `<span>` elements
+  at `text-4xl md:text-5xl font-bold`
+- Initial character state: `text-warm-300` (faded, serves as length hint)
+- Characters follow the same colour state system as Kana practice:
+
+| Character state | Colour |
+|---|---|
+| Upcoming (faded hint) | `text-warm-300` |
+| Completed correctly | `text-feedback-correct` (green) |
+| Current, wrong attempt 1 | `text-[#f5c490]` (light orange) |
+| Current, wrong attempt 2 | `text-[#f5ac6a]` (medium orange) |
+| Current, wrong attempt 3+ | `text-feedback-wrong` (full orange) |
+| All complete | `text-feedback-correct` (all green) |
+
+**Answer hint:** Same as Section 7 (floating above current character after
+3 wrong attempts). Shows the expected kana character.
+
+**Word complete:** All characters turn green. No separate meaning reveal
+(the English prompt is already visible). Brief pause, then next word loads.
+
+### 13.3 Type Mode
+
+Same TypeInput component as Section 7.3. Zero-width-space IME handling
+applies. Katakana overlay applies for katakana target words. User types
+romaji on English keyboard (converted to kana) or types hiragana directly
+on Japanese keyboard.
+
+### 13.4 Tap Mode
+
+Same TapInput grid as Section 7.4. Single stage only (no kanji stage).
+Grid shows hiragana or katakana buttons based on the target word's script.
+Character-by-character tapping with the same feedback.
+
+### 13.5 Swipe Mode
+
+Same SwipeInput as Section 7.5. Raw input, no zero-width-space. Katakana
+overlay for katakana words.
+
+### 13.6 Scoring
+
+1x per correct first-attempt character. Same as Kana practice. Word
+frequency weighted by word mastery score using `weight = 1 / (score + 1)`.
+
+### 13.7 Instrumentation (Sprint 4)
+
+```ts
+type KotobaReadingsEvent =
+  | { event: 'kotoba_item_complete'; wordId: string; mode: InputMode }
+  | { event: 'kotoba_wrong_attempt'; wordId: string; charIndex: number }
+  | { event: 'kotoba_hint_shown'; wordId: string; charIndex: number }
+```
+
+---
+
+## 14. Kotoba Practice Screen - Kanji Input
+
+**Status:** Done
+**Route:** `/practice?mode=kotoba` (same route, behaviour changes based on
+Settings > Kotoba Input = "Kanji")
+**Scrollable:** No
+**Layout:** Same full-screen landscape scene
+
+### 14.1 Overview
+
+When the user's Kotoba Input setting is "Kanji", the practice behaviour
+changes. Instead of producing the kana reading, the user produces the
+kanji form of the word. Type and Swipe modes use the native IME for kanji
+candidate selection. Tap mode uses a two-stage flow: first tap the kana
+reading, then select the correct kanji from a 2x2 grid.
+
+For kana-only words (words with no kanji form, e.g. コーヒー, テレビ),
+the practice falls back to Readings behaviour automatically. An inline
+note "This word is written in kana" appears below the prompt so the user
+understands why the kanji stage was skipped.
+
+### 14.2 Game Window Content
+
+**Prompt (centred):**
+- English word at `text-3xl md:text-4xl font-bold text-warm-800`
+- Below: target kanji shown faded at `text-4xl md:text-5xl font-bold
+  text-warm-300`
+- For kana-only words: kana reading shown instead (same as Readings mode)
+  with note below: "This word is written in kana"
+  (`text-xs text-warm-400 mt-1`)
+
+### 14.3 Type Mode (Kanji)
+
+Single input field. No zero-width-space IME handling. The IME must be
+allowed to offer kanji candidates naturally.
+
+**Composition handling:**
+- Input respects `compositionstart` and `compositionend` events
+- No evaluation occurs while `isComposing` is true
+- Submit on Enter is ignored during composition
+- Only the committed string after `compositionend` is evaluated
+- Backspace behaviour preserved during composition
+
+**Evaluation:** Compare the committed text against the expected kanji
+string after normalization:
+- Full-width/half-width normalization
+- Whitespace trimming
+- If the user types the kana reading instead of kanji, accept as partial
+  credit (1x scoring instead of 4x)
+
+### 14.4 Tap Mode (Kanji, two-stage flow)
+
+**Stage 1: Reading**
+- Label above input area: "Reading" (`text-xs font-medium text-warm-400
+  uppercase tracking-wider`)
+- Same kana tap grid as Readings mode (Section 13.4)
+- Character-by-character tapping through the kana reading
+- Standard feedback (green/orange)
+- Scoring: 1x per correct first-attempt character
+- On completion: Stage 1 clears, Stage 2 appears
+
+**Stage 2: Kanji**
+- Label: "Kanji" (`text-xs font-medium text-warm-400 uppercase
+  tracking-wider`)
+- `KanjiSelector` component: `grid-cols-2 gap-3` layout with 4 buttons
+- One correct kanji, three distractors from same JLPT level
+- Button style: keyboard-key 3D, `rounded-xl`, `min-w-[72px]
+  min-h-[72px]`, `text-3xl font-bold`
+- Shadow: `shadow-[0_3px_0_0_var(--color-sage-300)]`
+- Correct tap: face flashes sage-400
+- Wrong tap: face flashes feedback-wrong. No score awarded.
+- Scoring: 2x on first-try correct (recognition, not production).
+  Type/Swipe kanji production retains the full 4x multiplier.
+- Stage skipped entirely for kana-only words
+
+**Distractor generation:**
+- 3 random kanji from words in the same JLPT level
+- Must not be identical to the correct answer
+- Must not be homographs of each other
+- Positions randomised each time
+
+### 14.5 Swipe Mode (Kanji)
+
+Same as Type kanji mode (Section 14.3). User swipes, IME offers kanji
+suggestions, user selects. No zero-width-space. `compositionAware` mode
+active.
+
+### 14.6 Scoring Summary
+
+| Mode | Input type | Multiplier |
+|---|---|---|
+| Type/Swipe | Kanji production (user types and selects from IME) | 4x |
+| Tap Stage 1 | Kana reading (character-by-character) | 1x |
+| Tap Stage 2 | Kanji recognition (1-of-4 MCQ) | 2x |
+| Any mode | Kana-only word fallback | 1x |
+| Type/Swipe | User types kana instead of kanji (partial credit) | 1x |
+
+### 14.7 Answer Normalization Policy
+
+Before comparing user input against expected answer:
+1. Trim whitespace
+2. Normalize full-width Latin characters to half-width
+3. Normalize half-width katakana to full-width
+4. Strip zero-width spaces and other invisible Unicode
+
+Accepted answer forms:
+- Primary: exact kanji match (full score)
+- Partial: kana reading match (1x instead of 4x for Type/Swipe)
+- Variant kanji mapping (e.g. 旧字体/新字体) deferred to Sprint 4
+
+Fixture words include `acceptedAnswers: string[]` for testing flexibility.
+
+### 14.8 Instrumentation (Sprint 4)
+
+```ts
+type KotobaKanjiEvent =
+  | { event: 'kanji_stage_reached'; wordId: string }
+  | { event: 'kanji_stage_accuracy'; wordId: string; firstTry: boolean }
+  | { event: 'kana_only_fallback'; wordId: string }
+  | { event: 'partial_credit_kana'; wordId: string }
+```
+
+---
+
+## 15. Global Layout and Scaling Rules
 
 These rules apply to every screen that uses the scene background (landing page,
 game home, practice screen). Violating these rules is a bug, not a style choice.
@@ -2842,7 +3055,7 @@ game home, practice screen). Violating these rules is a bug, not a style choice.
 
 ---
 
-## 14. Asset Production Notes
+## 16. Asset Production Notes
 
 This section documents every asset that needs to be created before implementation begins.
 Claude builds all SVG and code-based assets. Gemini is used for image generation only
@@ -2890,7 +3103,7 @@ File naming: lowercase, hyphens, descriptive. No spaces.
 
 ---
 
-## 15. Screen Status Summary
+## 17. Screen Status Summary
 
 | Screen | Spec status | Approved |
 |---|---|---|
@@ -2907,6 +3120,8 @@ File naming: lowercase, hyphens, descriptive. No spaces.
 | Profile | To Do | No |
 | Settings (dialog) | In Progress | No |
 | Leaderboard | Done | Yes |
+| Kotoba Practice - Readings | Done | No |
+| Kotoba Practice - Kanji | Done | No |
 
 ---
 

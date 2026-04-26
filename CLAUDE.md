@@ -149,6 +149,47 @@ Do not assume. Do not guess.
 
 ---
 
+## 5B. SOLID Principles
+
+All code in this project follows SOLID. Full rationale in `docs/ARCHITECTURE.md`.
+
+- **Single Responsibility:** Every file, component, hook, and function does one thing.
+  If a component handles fetching, state, and rendering, split it. If a function has
+  two reasons to change, it is two functions.
+- **Open/Closed:** Extend behaviour through composition, new components, or new
+  functions. Do not modify working code to add a feature when you can add a new
+  file that composes with the existing one.
+- **Liskov Substitution:** Any component that accepts a prop contract must work
+  correctly with any value that satisfies that contract. A more specific variant
+  must not break callers that rely on the base interface.
+- **Interface Segregation:** Props, types, and store slices stay small and focused.
+  Do not force a consumer to depend on data it does not use. Prefer multiple narrow
+  types over one wide type.
+- **Dependency Inversion:** Components depend on abstractions (hooks, stores, service
+  interfaces), not on concrete implementations. Engine logic never imports React or
+  Supabase. UI never calls the database directly.
+
+---
+
+## 5C. Test-Driven Development
+
+This project follows TDD. Tests are not an afterthought. They are written alongside
+the code, not after it. Full testing rules in `docs/ARCHITECTURE.md` Section 13.
+
+- **Write the test first.** Before implementing a new function, hook, service, or
+  component, write a failing test that describes the expected behaviour.
+- **Write just enough code to pass.** Do not over-engineer. Make the test green,
+  then move on to the next test.
+- **Refactor with confidence.** Once tests pass, clean up the code. The tests
+  guarantee nothing broke.
+- **Every new file gets a test file.** No component, hook, service, or engine
+  function ships without a corresponding test. Visual-only shells may defer tests
+  with a documented reason, but the debt is tracked.
+- **Legacy code gets tests before changes.** Before modifying an untested file,
+  write tests for its current behaviour first. Then make the change.
+
+---
+
 ## 6. Code Quality Rules
 
 - TypeScript strict mode is always on. No `any`. No `@ts-ignore` without a written

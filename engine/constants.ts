@@ -17,6 +17,9 @@ export const WRONG_ANSWER_DELAY_MS = 800
 /** Duration the English meaning stays visible after correct answer (ms) */
 export const MEANING_DISPLAY_MS = 1500
 
+/** Duration the result stays visible after correct answer in Kotoba mode (ms) */
+export const KOTOBA_DISPLAY_MS = 3000
+
 /** Fade-in duration for meaning reveal (ms) */
 export const MEANING_FADE_MS = 150
 

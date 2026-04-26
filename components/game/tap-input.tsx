@@ -27,6 +27,7 @@ type TapInputProps = {
   onTap: (id: string, value: string) => void
   feedbackId: string | null
   feedbackState: 'correct' | 'wrong' | null
+  variant?: 'sage' | 'sky'
 }
 
 // -- Component ----------------------------------------------
@@ -37,8 +38,13 @@ export function TapInput({
   onTap,
   feedbackId,
   feedbackState,
+  variant = 'sage',
 }: TapInputProps): ReactNode {
   const { playSound } = useKeySound()
+
+  const colours = variant === 'sky'
+    ? { idle: 'bg-sky-100 shadow-[0_3px_0_0_var(--color-sky-300)]', correct: 'bg-sky-400 shadow-[0_3px_0_0_var(--color-sky-600)]' }
+    : { idle: 'bg-sage-100 shadow-[0_3px_0_0_var(--color-sage-300)]', correct: 'bg-sage-400 shadow-[0_3px_0_0_var(--color-sage-500)]' }
 
   const handleTap = useCallback(
     (id: string, value: string, soundId: string): void => {
@@ -55,9 +61,9 @@ export function TapInput({
         const displayText = displayField === 'romaji' ? char.romaji : char.kana
         const tapValue = displayField === 'romaji' ? char.romaji : char.kana
         const isFeedback = feedbackId === char.id
-        let bgClass = 'bg-sage-100 shadow-[0_3px_0_0_var(--color-sage-300)]'
+        let bgClass = colours.idle
         if (isFeedback && feedbackState === 'correct') {
-          bgClass = 'bg-sage-400 shadow-[0_3px_0_0_var(--color-sage-500)]'
+          bgClass = colours.correct
         } else if (isFeedback && feedbackState === 'wrong') {
           bgClass = 'bg-feedback-wrong shadow-[0_3px_0_0_#c47a3a]'
         }

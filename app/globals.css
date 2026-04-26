@@ -244,6 +244,37 @@
   --scene-pebble: #5a4a38;
 }
 
+/* -- Leaderboard podium animations ---------------------------------- */
+
+@keyframes trophy-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes trophy-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 6px rgba(212, 168, 83, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 14px rgba(212, 168, 83, 0.7));
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.6) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(180deg);
+  }
+}
+
 /* -- Modal animations ----------------------------------------------- */
 
 @keyframes fadeIn {

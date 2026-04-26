@@ -44,7 +44,7 @@ export default function OnboardingStep3Page(): ReactNode {
 
   const handleStart = (): void => {
     completeOnboarding()
-    router.push('/practice')
+    router.push('/home')
   }
 
   return (

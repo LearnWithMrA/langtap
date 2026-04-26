@@ -80,18 +80,65 @@ const KANA_ALL_TIME_PINNED: LeaderboardEntry = {
 const KANA_THIS_WEEK_ENTRIES: readonly LeaderboardEntry[] = [
   { rank: 1, username: 'zentyper', score: 1840, isCurrentUser: false },
   { rank: 2, username: 'nihongo_nerd', score: 1520, isCurrentUser: false },
-  { rank: 3, username: 'tanuki42', score: 1247, isCurrentUser: true },
+  { rank: 3, username: 'kana_queen', score: 1390, isCurrentUser: false },
   { rank: 4, username: 'sakura_wind', score: 980, isCurrentUser: false },
   { rank: 5, username: 'matcha_fox', score: 760, isCurrentUser: false },
   { rank: 6, username: 'ramen_rider', score: 540, isCurrentUser: false },
-  { rank: 7, username: 'fuji_flyer', score: 320, isCurrentUser: false },
+  { rank: 7, username: 'hiragana_hero', score: 480, isCurrentUser: false },
+  { rank: 8, username: 'fuji_flyer', score: 320, isCurrentUser: false },
+  { rank: 9, username: 'tokyodrift', score: 290, isCurrentUser: false },
+  { rank: 10, username: 'mochi_monk', score: 210, isCurrentUser: false },
 ]
 
-// ── Kotoba data (locked in Phase 1) ───────────
+const KANA_THIS_WEEK_PINNED: LeaderboardEntry = {
+  rank: 18,
+  username: 'tanuki42',
+  score: 85,
+  isCurrentUser: true,
+}
 
-const KOTOBA_EMPTY: LeaderboardBoard = {
-  entries: [],
-  currentUserPinned: null,
+// ── All Time Kotoba data ─────────────────────
+
+const KOTOBA_ALL_TIME_ENTRIES: readonly LeaderboardEntry[] = [
+  { rank: 1, username: 'word_wizard', score: 9820, isCurrentUser: false },
+  { rank: 2, username: 'kanji_king', score: 8740, isCurrentUser: false },
+  { rank: 3, username: 'nihongo_nerd', score: 7650, isCurrentUser: false },
+  { rank: 4, username: 'tokyodrift', score: 6380, isCurrentUser: false },
+  { rank: 5, username: 'sakura_wind', score: 5920, isCurrentUser: false },
+  { rank: 6, username: 'matcha_fox', score: 4810, isCurrentUser: false },
+  { rank: 7, username: 'ramen_rider', score: 3670, isCurrentUser: false },
+  { rank: 8, username: 'fuji_flyer', score: 2950, isCurrentUser: false },
+  { rank: 9, username: 'zentyper', score: 2340, isCurrentUser: false },
+  { rank: 10, username: 'hiragana_hero', score: 1890, isCurrentUser: false },
+]
+
+const KOTOBA_ALL_TIME_PINNED: LeaderboardEntry = {
+  rank: 58,
+  username: 'tanuki42',
+  score: 890,
+  isCurrentUser: true,
+}
+
+// ── This Week Kotoba data ────────────────────
+
+const KOTOBA_THIS_WEEK_ENTRIES: readonly LeaderboardEntry[] = [
+  { rank: 1, username: 'kanji_king', score: 1420, isCurrentUser: false },
+  { rank: 2, username: 'word_wizard', score: 1180, isCurrentUser: false },
+  { rank: 3, username: 'sakura_wind', score: 940, isCurrentUser: false },
+  { rank: 4, username: 'nihongo_nerd', score: 830, isCurrentUser: false },
+  { rank: 5, username: 'matcha_fox', score: 580, isCurrentUser: false },
+  { rank: 6, username: 'ramen_rider', score: 460, isCurrentUser: false },
+  { rank: 7, username: 'fuji_flyer', score: 310, isCurrentUser: false },
+  { rank: 8, username: 'tokyodrift', score: 270, isCurrentUser: false },
+  { rank: 9, username: 'zentyper', score: 190, isCurrentUser: false },
+  { rank: 10, username: 'hiragana_hero', score: 140, isCurrentUser: false },
+]
+
+const KOTOBA_THIS_WEEK_PINNED: LeaderboardEntry = {
+  rank: 24,
+  username: 'tanuki42',
+  score: 65,
+  isCurrentUser: true,
 }
 
 // ── Fixture accessor ──────────────────────────
@@ -101,12 +148,23 @@ export function getLeaderboardFixture(
   _mode: InputMode,
   timePeriod: TimePeriod,
 ): LeaderboardBoard {
-  if (gameType === 'kotoba') return KOTOBA_EMPTY
+  if (gameType === 'kotoba') {
+    if (timePeriod === 'this-week') {
+      return {
+        entries: KOTOBA_THIS_WEEK_ENTRIES,
+        currentUserPinned: KOTOBA_THIS_WEEK_PINNED,
+      }
+    }
+    return {
+      entries: KOTOBA_ALL_TIME_ENTRIES,
+      currentUserPinned: KOTOBA_ALL_TIME_PINNED,
+    }
+  }
 
   if (timePeriod === 'this-week') {
     return {
       entries: KANA_THIS_WEEK_ENTRIES,
-      currentUserPinned: null,
+      currentUserPinned: KANA_THIS_WEEK_PINNED,
     }
   }
 

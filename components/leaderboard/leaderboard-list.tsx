@@ -8,38 +8,67 @@
 // ─────────────────────────────────────────────
 
 import type { ReactNode } from 'react'
-import type { LeaderboardEntry, LeaderboardBoard } from '@/samples/leaderboard-fixtures'
+import type { LeaderboardEntry, LeaderboardBoard, InputMode } from '@/samples/leaderboard-fixtures'
 import { getAvatarColor, formatLeaderboardScore } from '@/samples/leaderboard-fixtures'
+import { RankBadge, Podium } from '@/components/leaderboard/leaderboard-podium'
 
 // ── Types ─────────────────────────────────────
+
+type PillOption<T extends string> = {
+  value: T
+  label: string
+}
 
 type LeaderboardListProps = {
   board: LeaderboardBoard
   variant: 'kana' | 'kotoba'
-  modeName: string
+  modeName?: string
+  mode?: InputMode
+  onModeChange?: (v: InputMode) => void
   locked?: boolean
 }
 
-// ── Medal component ───────────────────────────
+const MODE_OPTIONS: readonly PillOption<InputMode>[] = [
+  { value: 'tap', label: 'Tap' },
+  { value: 'type', label: 'Type' },
+  { value: 'swipe', label: 'Swipe' },
+]
 
-function MedalBadge({ rank }: { rank: number }): ReactNode {
-  const colors: Record<number, string> = {
-    1: 'bg-medal-gold',
-    2: 'bg-medal-silver',
-    3: 'bg-medal-bronze',
-  }
-  const textColors: Record<number, string> = {
-    1: 'text-white',
-    2: 'text-white',
-    3: 'text-white',
-  }
+// ── Pill selector ─────────────────────────────
 
+function PillSelector<T extends string>({
+  options,
+  value,
+  onChange,
+  ariaLabel,
+}: {
+  options: readonly PillOption<T>[]
+  value: T
+  onChange: (v: T) => void
+  ariaLabel: string
+}): ReactNode {
   return (
     <div
-      className={`w-8 h-8 rounded-full ${colors[rank]} ${textColors[rank]} flex items-center justify-center shrink-0`}
-      aria-label={`Rank ${rank}`}
+      role="tablist"
+      aria-label={ariaLabel}
+      className="inline-flex bg-warm-100 rounded-xl p-1 gap-0.5"
     >
-      <span className="text-xs font-bold">{rank}</span>
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          role="tab"
+          aria-selected={value === opt.value}
+          onClick={(): void => onChange(opt.value)}
+          className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-150 min-h-[36px] ${
+            value === opt.value
+              ? 'bg-surface-raised text-warm-800 shadow-sm'
+              : 'text-warm-500 hover:text-warm-700'
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
     </div>
   )
 }
@@ -83,13 +112,7 @@ function LeaderboardRow({
           : 'border-l-4 border-transparent'
       }`}
     >
-      {isTop3 ? (
-        <MedalBadge rank={entry.rank} />
-      ) : (
-        <div className="w-8 h-8 flex items-center justify-center shrink-0">
-          <span className="text-sm font-bold text-warm-500">{entry.rank}</span>
-        </div>
-      )}
+      <RankBadge rank={entry.rank} />
 
       <Avatar username={entry.username} size={isTop3 ? 'md' : 'sm'} />
 
@@ -101,7 +124,7 @@ function LeaderboardRow({
         {entry.username}
       </span>
 
-      <span className={`${isTop3 ? 'text-base' : 'text-sm'} font-medium ${scoreColor} shrink-0`}>
+      <span className={`${isTop3 ? 'text-base' : 'text-sm'} font-medium ${scoreColor} shrink-0 w-16 text-right`}>
         {formatLeaderboardScore(entry.score)}
       </span>
     </div>
@@ -130,18 +153,30 @@ function SkeletonRows(): ReactNode {
 export function LeaderboardList({
   board,
   variant,
-  modeName,
+  modeName = 'Tap',
+  mode,
+  onModeChange,
   locked = false,
 }: LeaderboardListProps): ReactNode {
   const accentColor = variant === 'kana' ? 'text-sky-600' : 'text-sage-600'
   const label = variant === 'kana' ? 'Kana' : 'Kotoba'
+  const showModeSelector = mode !== undefined && onModeChange !== undefined
 
   if (locked) {
     return (
       <div className="bg-surface-raised rounded-2xl border border-border overflow-hidden">
         <div className="px-4 py-3 border-b border-border">
-          <h2 className={`text-lg font-bold ${accentColor}`}>{label}</h2>
-          <p className="text-xs text-warm-400">{modeName} Leaderboard</p>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className={`text-lg font-bold ${accentColor}`}>{label}</h2>
+            {showModeSelector && (
+              <PillSelector
+                options={MODE_OPTIONS}
+                value={mode}
+                onChange={onModeChange}
+                ariaLabel={`${label} input mode`}
+              />
+            )}
+          </div>
         </div>
         <div className="flex flex-col items-center justify-center py-16 px-6 text-center opacity-60">
           <svg
@@ -168,33 +203,65 @@ export function LeaderboardList({
 
   const hasEntries = board.entries.length > 0
   const currentUserInList = board.entries.some((e) => e.isCurrentUser)
+  const top3 = board.entries.filter((e) => e.rank <= 3)
+  const remaining = board.entries.filter((e) => e.rank > 3)
 
   return (
     <div className="bg-surface-raised rounded-2xl border border-border overflow-hidden">
       {/* Column header */}
       <div className="px-4 py-3 border-b border-border">
-        <h2 className={`text-lg font-bold ${accentColor}`}>{label}</h2>
-        <p className="text-xs text-warm-400">{modeName} Leaderboard</p>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className={`text-lg font-bold ${accentColor}`}>{label}</h2>
+          {showModeSelector && (
+            <PillSelector
+              options={MODE_OPTIONS}
+              value={mode}
+              onChange={onModeChange}
+              ariaLabel={`${label} input mode`}
+            />
+          )}
+        </div>
       </div>
 
       {/* List */}
       {hasEntries ? (
-        <div role="list" aria-label={`${label} ${modeName} leaderboard`}>
-          {board.entries.map((entry, i) => (
-            <div key={entry.username}>
-              {i > 0 && <div className="mx-4 border-t border-border" />}
-              <LeaderboardRow entry={entry} variant={variant} />
-            </div>
-          ))}
+        <>
+          <Podium entries={top3} variant={variant} />
 
-          {/* Pinned current user row */}
-          {board.currentUserPinned && !currentUserInList && (
-            <>
-              <div className="mx-4 border-t-2 border-dashed border-warm-300 my-1" />
-              <LeaderboardRow entry={board.currentUserPinned} variant={variant} />
-            </>
+          {remaining.length > 0 && (
+            <div role="list" aria-label={`${label} ${modeName} leaderboard`}>
+              <div className="mx-4 border-t border-border" />
+              {remaining.map((entry, i) => (
+                <div key={entry.username}>
+                  {i > 0 && <div className="mx-4 border-t border-border" />}
+                  <LeaderboardRow entry={entry} variant={variant} />
+                </div>
+              ))}
+
+              {board.currentUserPinned && !currentUserInList && (
+                <>
+                  <div className="flex justify-center gap-1 py-2" aria-hidden="true">
+                    <span className="w-1 h-1 rounded-full bg-warm-300" />
+                    <span className="w-1 h-1 rounded-full bg-warm-300" />
+                    <span className="w-1 h-1 rounded-full bg-warm-300" />
+                  </div>
+                  <LeaderboardRow entry={board.currentUserPinned} variant={variant} />
+                </>
+              )}
+            </div>
           )}
-        </div>
+
+          {remaining.length === 0 && board.currentUserPinned && !currentUserInList && (
+            <div role="list" aria-label={`${label} ${modeName} leaderboard`}>
+              <div className="flex justify-center gap-1 py-2" aria-hidden="true">
+                <span className="w-1 h-1 rounded-full bg-warm-300" />
+                <span className="w-1 h-1 rounded-full bg-warm-300" />
+                <span className="w-1 h-1 rounded-full bg-warm-300" />
+              </div>
+              <LeaderboardRow entry={board.currentUserPinned} variant={variant} />
+            </div>
+          )}
+        </>
       ) : (
         <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
           <p className="text-sm text-warm-500">No scores yet. Start practising to appear here.</p>

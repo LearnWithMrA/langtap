@@ -25,6 +25,7 @@ type TypeInputProps = {
   feedbackState: FeedbackState
   disabled: boolean
   showKatakana?: boolean
+  preventKanjiSuggestions?: boolean
 }
 
 // -- Helpers ------------------------------------------------
@@ -50,6 +51,7 @@ export function TypeInput({
   feedbackState,
   disabled,
   showKatakana = false,
+  preventKanjiSuggestions = true,
 }: TypeInputProps): ReactNode {
   // Display value: convert hiragana to katakana if showKatakana is on.
   // Strip zero-width spaces for display, then convert.
@@ -89,7 +91,7 @@ export function TypeInput({
 
     // If last character is hiragana, append a zero-width space
     // so the IME treats each kana as separate (no kanji suggestion)
-    if (lastChar) {
+    if (preventKanjiSuggestions && lastChar) {
       const isHiragana = lastChar.charCodeAt(0) >= 0x3040 && lastChar.charCodeAt(0) <= 0x309f
       if (isHiragana && newVal.length > value.replace(/\u200B+$/, '').length) {
         newVal = newVal.replace(/\u200B+$/, '') + '\u200B'

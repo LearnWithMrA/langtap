@@ -25,6 +25,9 @@ import { AuthModal } from '@/components/ui/auth-modal'
 import { LogInCard } from '@/components/ui/log-in-card'
 import { SignUpCard } from '@/components/ui/sign-up-card'
 import { useEasterEgg } from '@/hooks/useEasterEgg'
+import { LeaderboardList } from '@/components/leaderboard/leaderboard-list'
+import { getLeaderboardFixture } from '@/samples/leaderboard-fixtures'
+import type { InputMode } from '@/samples/leaderboard-fixtures'
 
 // -- Types --------------------------------------------------
 
@@ -35,6 +38,8 @@ type AuthModal_ = 'log-in' | 'sign-up' | null
 export function LandingClient(): ReactNode {
   const { isActive: easterEggActive } = useEasterEgg()
   const [authModal, setAuthModal] = useState<AuthModal_>(null)
+  const [kanaMode, setKanaMode] = useState<InputMode>('tap')
+  const [kotobaMode, setKotobaMode] = useState<InputMode>('tap')
 
   const closeAuth = useCallback((): void => setAuthModal(null), [])
   const openLogIn = useCallback((): void => setAuthModal('log-in'), [])
@@ -122,23 +127,23 @@ export function LandingClient(): ReactNode {
 
         {/* Section C: Leaderboard preview */}
         <section id="leaderboard" className="px-4 py-16 md:py-24">
-          <div className="mx-auto max-w-2xl">
+          <div className="mx-auto max-w-4xl">
             <h2 className="text-2xl md:text-3xl font-bold text-warm-800 text-center mb-12">
               Leaderboard
             </h2>
-            <div className="rounded-2xl bg-surface-raised p-6 shadow-sm border border-border">
-              <p className="text-center text-text-secondary text-sm">
-                No scores yet. Start practising to appear here.
-              </p>
-              <div className="flex justify-center mt-4">
-                <KeyButton
-                  onClick={openSignUp}
-                  className="bg-mint-500 text-white px-6 py-3 text-sm shadow-[0_4px_0_0_#2a8a6a]"
-                  aria-label="Sign up to start practising"
-                >
-                  Start practising
-                </KeyButton>
-              </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <LeaderboardList
+                board={{ ...getLeaderboardFixture('kana', kanaMode, 'all-time'), currentUserPinned: null }}
+                variant="kana"
+                mode={kanaMode}
+                onModeChange={setKanaMode}
+              />
+              <LeaderboardList
+                board={{ ...getLeaderboardFixture('kotoba', kotobaMode, 'all-time'), currentUserPinned: null }}
+                variant="kotoba"
+                mode={kotobaMode}
+                onModeChange={setKotobaMode}
+              />
             </div>
           </div>
         </section>

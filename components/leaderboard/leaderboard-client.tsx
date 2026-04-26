@@ -12,6 +12,7 @@
 
 import { useState } from 'react'
 import type { ReactNode } from 'react'
+import { AppTopBar } from '@/components/layout/app-top-bar'
 import { LeaderboardList, SkeletonRows } from '@/components/leaderboard/leaderboard-list'
 import type { InputMode, TimePeriod, GameType } from '@/samples/leaderboard-fixtures'
 import { getLeaderboardFixture } from '@/samples/leaderboard-fixtures'
@@ -24,12 +25,6 @@ type PillOption<T extends string> = {
 }
 
 // ── Constants ─────────────────────────────────
-
-const MODE_OPTIONS: readonly PillOption<InputMode>[] = [
-  { value: 'tap', label: 'Tap' },
-  { value: 'type', label: 'Type' },
-  { value: 'swipe', label: 'Swipe' },
-]
 
 const TIME_OPTIONS: readonly PillOption<TimePeriod>[] = [
   { value: 'all-time', label: 'All Time' },
@@ -54,12 +49,16 @@ function PillSelector<T extends string>({
   value,
   onChange,
   ariaLabel,
+  size = 'default',
 }: {
   options: readonly PillOption<T>[]
   value: T
   onChange: (v: T) => void
   ariaLabel: string
+  size?: 'default' | 'small'
 }): ReactNode {
+  const padding = size === 'small' ? 'px-3 py-1.5 text-xs min-h-[36px]' : 'px-4 py-2 text-sm min-h-[44px]'
+
   return (
     <div
       role="tablist"
@@ -73,9 +72,49 @@ function PillSelector<T extends string>({
           role="tab"
           aria-selected={value === opt.value}
           onClick={(): void => onChange(opt.value)}
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 min-h-[44px] ${
+          className={`${padding} font-medium rounded-lg transition-all duration-150 ${
             value === opt.value
               ? 'bg-surface-raised text-warm-800 shadow-sm'
+              : 'text-warm-500 hover:text-warm-700'
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// ── Game type selector (colored) ─────────────
+
+const GAME_COLORS: Record<GameType, string> = {
+  kana: 'bg-sky-600 text-white shadow-sm',
+  kotoba: 'bg-sage-500 text-white shadow-sm',
+}
+
+function GameTypeSelector({
+  value,
+  onChange,
+}: {
+  value: GameType
+  onChange: (v: GameType) => void
+}): ReactNode {
+  return (
+    <div
+      role="tablist"
+      aria-label="Game type"
+      className="inline-flex bg-warm-100 rounded-xl p-1 gap-0.5"
+    >
+      {GAME_OPTIONS.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          role="tab"
+          aria-selected={value === opt.value}
+          onClick={(): void => onChange(opt.value)}
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 min-h-[44px] ${
+            value === opt.value
+              ? GAME_COLORS[opt.value]
               : 'text-warm-500 hover:text-warm-700'
           }`}
         >
@@ -103,45 +142,45 @@ function LoadingState(): ReactNode {
 // ── Main export ───────────────────────────────
 
 export function LeaderboardClient(): ReactNode {
-  const [mode, setMode] = useState<InputMode>('tap')
+  const [kanaMode, setKanaMode] = useState<InputMode>('tap')
+  const [kotobaMode, setKotobaMode] = useState<InputMode>('tap')
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('all-time')
   const [mobileGame, setMobileGame] = useState<GameType>('kana')
   const [isLoading] = useState(false)
 
-  const modeName = MODE_LABELS[mode]
+  const kanaModeName = MODE_LABELS[kanaMode]
+  const kotobaModeName = MODE_LABELS[kotobaMode]
 
-  const kanaBoard = getLeaderboardFixture('kana', mode, timePeriod)
-  const kotobaBoard = getLeaderboardFixture('kotoba', mode, timePeriod)
+  const kanaBoard = getLeaderboardFixture('kana', kanaMode, timePeriod)
+  const kotobaBoard = getLeaderboardFixture('kotoba', kotobaMode, timePeriod)
 
   return (
     <div className="min-h-svh bg-surface">
+      <AppTopBar />
       <div className="max-w-4xl mx-auto px-4 pt-20 pb-8">
-        {/* Page title */}
-        <h1 className="text-2xl font-bold text-warm-800 mb-5">{modeName} Leaderboard</h1>
-
-        {/* Controls row */}
-        <div className="flex flex-wrap items-center gap-3 mb-6">
-          <PillSelector
-            options={MODE_OPTIONS}
-            value={mode}
-            onChange={setMode}
-            ariaLabel="Input mode"
-          />
+        {/* Desktop: title + time period on same row */}
+        <div className="hidden lg:flex items-center justify-between gap-3 mb-6">
+          <h1 className="text-2xl font-bold text-warm-800">Leaderboard</h1>
           <PillSelector
             options={TIME_OPTIONS}
             value={timePeriod}
             onChange={setTimePeriod}
             ariaLabel="Time period"
           />
+        </div>
 
-          {/* Mobile-only game type switcher */}
-          <div className="lg:hidden">
+        {/* Mobile: title, then controls row below */}
+        <div className="lg:hidden mb-6">
+          <h1 className="text-2xl font-bold text-warm-800 mb-4">Leaderboard</h1>
+          <div className="flex items-center justify-between gap-3">
             <PillSelector
-              options={GAME_OPTIONS}
-              value={mobileGame}
-              onChange={setMobileGame}
-              ariaLabel="Game type"
+              options={TIME_OPTIONS}
+              value={timePeriod}
+              onChange={setTimePeriod}
+              ariaLabel="Time period"
+              size="small"
             />
+            <GameTypeSelector value={mobileGame} onChange={setMobileGame} />
           </div>
         </div>
 
@@ -159,13 +198,16 @@ export function LeaderboardClient(): ReactNode {
               <LeaderboardList
                 board={kanaBoard}
                 variant="kana"
-                modeName={modeName}
+                modeName={kanaModeName}
+                mode={kanaMode}
+                onModeChange={setKanaMode}
               />
               <LeaderboardList
                 board={kotobaBoard}
                 variant="kotoba"
-                modeName={modeName}
-                locked
+                modeName={kotobaModeName}
+                mode={kotobaMode}
+                onModeChange={setKotobaMode}
               />
             </div>
 
@@ -175,14 +217,17 @@ export function LeaderboardClient(): ReactNode {
                 <LeaderboardList
                   board={kanaBoard}
                   variant="kana"
-                  modeName={modeName}
+                  modeName={kanaModeName}
+                  mode={kanaMode}
+                  onModeChange={setKanaMode}
                 />
               ) : (
                 <LeaderboardList
                   board={kotobaBoard}
                   variant="kotoba"
-                  modeName={modeName}
-                  locked
+                  modeName={kotobaModeName}
+                  mode={kotobaMode}
+                  onModeChange={setKotobaMode}
                 />
               )}
             </div>
