@@ -5,7 +5,7 @@
 //          distance counter with mode selector, game window, and
 //          audio player into a full-viewport scene. Swipe mode
 //          uses a compact layout preset (hides mascot and top bar).
-// Depends on: components/layout/LandscapeBackgroundV2.tsx,
+// Depends on: components/layout/LandscapeBackground.tsx,
 //             components/animation/cycling-character.tsx,
 //             components/layout/app-top-bar.tsx,
 //             components/game/game-window.tsx,
@@ -19,7 +19,7 @@ import { useCallback, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useReducedMotion } from 'motion/react'
-import { LandscapeBackgroundV2 } from '@/components/layout/LandscapeBackgroundV2'
+import { LandscapeBackground } from '@/components/layout/landscape-background'
 import { CyclingCharacter } from '@/components/animation/cycling-character'
 import { AppTopBar } from '@/components/layout/app-top-bar'
 import { GameWindow } from '@/components/game/game-window'
@@ -119,7 +119,7 @@ export function PracticeClient(): ReactNode {
   return (
     <div className="theme-day relative w-full h-svh overflow-hidden">
       {/* Parallax landscape */}
-      <LandscapeBackgroundV2 speed={sceneSpeed} staticHills={prefersReducedMotion ?? false} />
+      <LandscapeBackground speed={sceneSpeed} staticHills={prefersReducedMotion ?? false} />
 
       <div
         className="absolute bottom-[calc(12svh-max(7.73vw,62.7px))] left-[3%] md:left-[8%] z-[3]"

@@ -396,7 +396,9 @@ getOverallLeaderboard(): Promise<ServiceResult<LeaderboardEntry[]>>
 upsertScore(userId: string, entry: LeaderboardEntry): Promise<ServiceResult<void>>
 ```
 
-### 4.5 services/unlock.service.ts
+### 4.5 services/unlock.service.ts (Sprint 4)
+
+Not yet implemented. Interface planned:
 
 ```ts
 loadManualUnlocks(userId: string): Promise<ServiceResult<string[]>>

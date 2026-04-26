@@ -84,13 +84,13 @@ Rules:
 
 ---
 
-## Sprint 2B - UX/UI Design and Screen Specification
+## Sprint 2B - UX/UI Design and Screen Specification ✅ COMPLETE
 
 **Goal:** Define the full user experience before any further functional development.
 Every screen is specced and approved before Sprint 3 resumes.
 This sprint produces the design source of truth that all future sprints build from.
 Full specs live in UX_DESIGN.md. This board tracks status only.
-**Status:** Active
+**Status:** Complete
 
 Sprint 3 (auth implementation) is on hold until this sprint is complete.
 Specs are written in UX_DESIGN.md. Claude builds all SVG assets.
@@ -116,7 +116,7 @@ Gemini is used for image generation only when photographic or painted assets are
 | Write Kotoba practice screen spec (Readings input) | Medium | Done | UX_DESIGN.md Section 13. Show kanji, user produces kana reading. Tap: kana grid with furigana. Type/Swipe: kana input with ZWSP. One-way direction (no alternation). |
 | Write Kotoba practice screen spec (Kanji input) | Medium | Done | UX_DESIGN.md Section 14. Show English, user produces kanji. Tap: two-stage (kana then kanji selection from 4 options). Type/Swipe: native IME kanji selection. 2x Tap / 4x Type+Swipe scoring. Answer normalization policy. |
 | Build Kotoba practice screen visual shells | Large | Done | KotobaGameWindow built from scratch. Readings mode: kanji prompt with ruby furigana. Kanji mode: English prompt, furigana + kanji option buttons (Tap), persistent kanji area (Type/Swipe). Settings: inputMode, kotobaInput (Readings/Kanji with 4x badge) added to store and dialog. Practice route reads ?mode=kana/kotoba. Dynamic tap grids. Similar kanji distractors. 16 fixture words. Kana-only word handling. Hint system (3 wrong). Onboarding routes to /home. |
-| Consolidate approved designs into FRONTEND.md and UX_DESIGN.md | Medium | To Do | Update both docs with any decisions made during the spec writing process. |
+| Consolidate approved designs into FRONTEND.md and UX_DESIGN.md | Medium | Done | Full audit of all 9 MD files against codebase. 27 discrepancies found and fixed. Heatmap colours, font sizes, file names, route structure, onboarding steps, constants, leaderboard spec all updated. LandscapeBackgroundV2 renamed to landscape-background.tsx (kebab-case). |
 
 ---
 

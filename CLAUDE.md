@@ -53,7 +53,7 @@ Do not swap one library for another without explicit approval.
 ```
 app/                    # Pages and routes (Next.js App Router)
   (auth)/               # Auth routes: sign-up, log-in
-  (onboarding)/         # Onboarding flow: steps 1-4
+  (onboarding)/         # Onboarding flow: steps 1-3 (plus step-2b kana chart)
   (main)/               # Main app routes: practice, dojo, profile, settings, leaderboard
   layout.tsx            # Root layout
   page.tsx              # Landing page
@@ -246,8 +246,13 @@ Each helper must have a single, clear purpose stated in a comment above it.
 
 ### Chunk size
 
-No file should exceed 300 lines. If a file grows beyond this, split it into
-logically named sub-files and re-export from an index file in that folder.
+Aim for 300 lines per file. The hard ceiling is 500 lines. If a file grows
+beyond 500, split it into logically named sub-files and re-export from an
+index file in that folder. Files between 300 and 500 are acceptable when the
+logic is genuinely cohesive and splitting would create artificial fragmentation.
+When a file crosses 300 lines, review whether splitting improves readability
+and maintainability. If splitting would scatter tightly coupled logic across
+multiple files with no clear benefit, leave it as one file.
 
 ---
 

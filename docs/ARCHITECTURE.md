@@ -138,7 +138,10 @@ langtap/
 |  |  |- practice/
 |  |  |  |- page.tsx            # Core practice screen
 |  |  |- dojo/
-|  |  |  |- page.tsx            # Character progress screen
+|  |  |  |- kana/
+|  |  |  |  |- page.tsx         # Kana character progress screen
+|  |  |  |- kotoba/
+|  |  |  |  |- page.tsx         # Kotoba vocabulary progress screen
 |  |  |- library/
 |  |  |  |- page.tsx            # Word bank (Phase 2 - stub in Phase 1)
 |  |  |- leaderboard/
@@ -423,8 +426,14 @@ one logical grouping:
 
 ### 4.3 File Size Limit
 
-No file should exceed 300 lines. If a file grows beyond this, split it into
-logically named sub-files and re-export from an `index.ts` in that folder.
+Aim for 300 lines per file. The hard ceiling is 500 lines. Files between 300
+and 500 are acceptable when the logic is genuinely cohesive and splitting would
+create artificial fragmentation (e.g. complex orchestrators with tightly coupled
+state). When a file crosses 300 lines, review whether splitting improves
+readability and maintainability. If splitting would scatter tightly coupled
+logic across multiple files with no clear benefit, leave it as one file. If a
+file exceeds 500, it must be split into logically named sub-files and
+re-exported from an `index.ts` in that folder.
 
 ### 4.4 Function Size Limit
 

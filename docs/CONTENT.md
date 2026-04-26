@@ -122,8 +122,8 @@ data/
   kana/
     characters.ts         # Full kana character dataset (see Section 4)
     mnemonics.ts          # Mnemonic string per character (see Section 6)
-    romajiVariants.ts     # All accepted romaji inputs per character (see Section 5)
-    progressionGroups.ts  # Unlocking group definitions (see GAME_DESIGN.md Section 4.3)
+    romaji-variants.ts     # All accepted romaji inputs per character (see Section 5)
+    progression-groups.ts  # Unlocking group definitions (see GAME_DESIGN.md Section 4.3)
   words/
     n5.ts                 # N5 word bank
     n4.ts                 # N4 word bank
@@ -233,10 +233,10 @@ already knows which character is being targeted and can look up exactly which ro
 strings are valid for that specific character. There is no ambiguity: the kana is
 always known when the input is being evaluated, and vice versa.
 
-The full variant map lives in `data/kana/romajiVariants.ts`.
+The full variant map lives in `data/kana/romaji-variants.ts`.
 
 ```ts
-// data/kana/romajiVariants.ts
+// data/kana/romaji-variants.ts
 
 // Key: character ID (from data/kana/characters.ts)
 // Value: all accepted romaji strings for that character, primary first

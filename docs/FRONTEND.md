@@ -76,13 +76,13 @@ variables in `app/globals.css` using the `@theme` directive.
   --color-feedback-wrong:   #f59e60;  /* orange - wrong answer highlight */
   --color-feedback-correct: #7da873;  /* sage-400 - correct answer confirm */
 
-  /* Heatmap colours (mastery progress) */
-  --color-heat-0:  #e6ede3;  /* score 0 - same as sage-100, cool and pale */
-  --color-heat-1:  #ccdcc6;  /* score 1-4 */
-  --color-heat-2:  #a8c4a0;  /* score 5-9 */
-  --color-heat-3:  #7da873;  /* score 10-19 */
-  --color-heat-4:  #5a8a50;  /* score 20-39 */
-  --color-heat-5:  #456e3d;  /* score 40+ */
+  /* Heatmap colours (mastery progress, traffic-light palette) */
+  --color-heat-0:  #ebe2da;  /* score 0 - warm beige, untouched */
+  --color-heat-1:  #e38782;  /* score 1-4 - rose/red, just starting */
+  --color-heat-2:  #f0a166;  /* score 5-9 - amber */
+  --color-heat-3:  #dfca5e;  /* score 10-19 - yellow */
+  --color-heat-4:  #a9d178;  /* score 20-39 - light green */
+  --color-heat-5:  #7eb560;  /* score 40+ - solid green */
 
   /* Profile page theme (sunny yellow) */
   --color-profile-bg:          #f5edd4;
@@ -117,7 +117,7 @@ The parallax landscape has four selectable themes. Each theme defines a set of
 CSS custom properties applied to the root scene container. All scene layers
 (sky, hills, ground, clouds) read from these properties.
 
-Themes are defined in `theme/scene-themes.ts` and applied as a class on the
+Themes are defined inline in `app/globals.css` and applied as a class on the
 scene root element: `theme-day`, `theme-sunrise`, `theme-sunset`, `theme-night`.
 
 ```css
@@ -432,9 +432,11 @@ Never show both steps at once.
 
 **CharacterDisplay**
 
-Shows the kana character being practised. The largest element on the practice
-screen. Font size is either fixed (`text-4xl`) or linked to mastery score if
-that setting is enabled.
+Shows the word being practised. The largest element on the practice screen.
+Kana practice uses `text-5xl md:text-6xl`. Kotoba practice uses
+`text-3xl md:text-4xl` for kanji prompts and `text-4xl md:text-5xl` for
+kana display. Font-size-linked-to-mastery is a future setting (Phase 1
+later sprint).
 
 ```tsx
 type CharacterDisplayProps = {
@@ -466,7 +468,8 @@ On-screen character button grid for Tap mode. Shows only unlocked characters.
 Buttons are sized for touch. The correct button highlights green on correct tap.
 The wrong button highlights orange briefly before resetting.
 
-Layout: CSS Grid, responsive columns. On mobile: `grid-cols-5`. On desktop: `grid-cols-8`.
+Layout: CSS Grid, `grid-cols-5` at all breakpoints. 10 buttons per grid.
+Supports a `variant` prop: `sage` (green, Kana) or `sky` (blue, Kotoba).
 
 Each tap button: minimum `h-11 w-11`, `rounded-lg`, `text-base`.
 
@@ -552,9 +555,9 @@ larger screens receive more breathing room around the same layout. This is
 industry-standard practice and the correct approach for an app where the primary
 use case is mobile swipe input.
 
-**Design baseline:** 320px wide, 568px tall. This is a hard floor, not an
-aspiration. It covers the narrowest viewports still in the wild (iPhone 5/SE,
-older Android compacts, folded foldables mid-unfold) as well as the standard
+**Design baseline:** 360px wide, 667px tall (base design target per
+`theme/breakpoints.ts`). **Hard floor:** 320px wide (must not break; covers
+iPhone 5/SE, older Android compacts, folded foldables mid-unfold) as well as the standard
 360x640 and 375x667 profiles. Every page must render cleanly at 320px with no
 horizontal scroll and every touch target still at or above 44x44pt. If the
 layout works here, it works on every device. The Kana Dojo is the reference

@@ -1,96 +1,128 @@
 // ------------------------------------------------------------
 // File: components/layout/landscape-background.tsx
-// Purpose: Parallax landscape background with rolling hills,
-//          animated ground details, and scene theme support.
-//          Three hill layers use distinct colour variables
-//          (--scene-hill-far, --scene-hill-mid, --scene-hill)
-//          for opaque back-to-front depth. Ground details scroll
-//          continuously via motion/react.
-// Depends on: motion/react
+// Purpose: Parallax landscape background with layered hills,
+//          vector shrubbery, drifting clouds, and a ground bleed
+//          that flows into the section beneath it.
+//          Clouds drift continuously right-to-left via the
+//          cloud-drift keyframe defined in globals.css.
+// Depends on: motion/react, next/image,
+//             public/images/cloud-large.svg,
+//             public/images/cloud-small.svg
 // ------------------------------------------------------------
 
 'use client'
 
 import type { ReactNode } from 'react'
+import { DistantTree, Tree, BushCluster1, Furthest1, Furthest2, Furthest3, Furthest4, GroundBase, GroundFoliage, GroundBlendEdge } from '@/components/layout/landscape-layers'
+import Image from 'next/image'
 import { motion } from 'motion/react'
 
 // -- Types --------------------------------------------------
 
+type SceneSpeed = 'idle' | 'slow' | 'medium' | 'fast' | 'stopped'
+
+const SPEED_MULTIPLIERS: Record<SceneSpeed, number> = {
+  stopped: 0,
+  idle: 0.3,
+  slow: 0.5,
+  medium: 1,
+  fast: 2,
+}
+
 type LandscapeBackgroundProps = {
-  speed?: number
+  speed?: SceneSpeed
+  staticHills?: boolean
+}
+
+// -- Clouds -------------------------------------------------
+
+function CloudSet(): ReactNode {
+  return (
+    <div className="relative w-1/2 h-full">
+      <div className="absolute top-[10%] left-[5%] w-[10vw] min-w-20 max-w-40 aspect-[2/1] opacity-80">
+        <Image
+          src="/images/cloud-large.svg"
+          alt=""
+          width={160}
+          height={80}
+          className="w-full h-full"
+        />
+      </div>
+      <div className="absolute top-[25%] left-[30%] w-[6vw] min-w-14 max-w-24 aspect-[2/1] opacity-60">
+        <Image
+          src="/images/cloud-small.svg"
+          alt=""
+          width={100}
+          height={50}
+          className="w-full h-full"
+        />
+      </div>
+      <div className="absolute top-[8%] left-[55%] w-[9vw] min-w-20 max-w-36 aspect-[2.25/1] opacity-70">
+        <Image
+          src="/images/cloud-large.svg"
+          alt=""
+          width={160}
+          height={80}
+          className="w-full h-full"
+        />
+      </div>
+      <div className="absolute top-[30%] left-[75%] w-[5vw] min-w-12 max-w-20 aspect-[2/1] opacity-50">
+        <Image
+          src="/images/cloud-small.svg"
+          alt=""
+          width={100}
+          height={50}
+          className="w-full h-full"
+        />
+      </div>
+      <div className="absolute top-[15%] left-[90%] w-[8vw] min-w-20 max-w-32 aspect-[2.3/1] opacity-75 hidden md:block">
+        <Image
+          src="/images/cloud-large.svg"
+          alt=""
+          width={160}
+          height={80}
+          className="w-full h-full"
+        />
+      </div>
+    </div>
+  )
+}
+
+function CloudsLayer(): ReactNode {
+  return (
+    <div
+      className="absolute top-14 left-0 right-0 h-[45vh] overflow-hidden pointer-events-none z-[1]"
+      aria-hidden="true"
+    >
+      <div
+        className="flex w-[200%] h-full"
+        style={{ animation: 'cloud-drift 60s linear infinite' }}
+      >
+        <CloudSet />
+        <CloudSet />
+      </div>
+    </div>
+  )
 }
 
 // -- Helpers ------------------------------------------------
 
-// Ground detail SVG: grass tufts, rocks, speed lines.
-function GroundDetails(): ReactNode {
-  return (
-    <svg
-      width="100%"
-      height="100%"
-      viewBox="0 0 1400 200"
-      preserveAspectRatio="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      {/* Grass tufts */}
-      <path d="M 100 180 L 110 140 L 115 180 L 125 150 L 130 180 Z" fill="rgba(0,0,0,0.15)" />
-      <path d="M 400 120 L 405 90 L 410 120 L 415 100 L 420 120 Z" fill="rgba(0,0,0,0.15)" />
-      <path d="M 700 190 L 715 140 L 725 190 L 740 160 L 750 190 Z" fill="rgba(0,0,0,0.15)" />
-      <path d="M 1000 130 L 1010 90 L 1015 130 L 1025 100 L 1030 130 Z" fill="rgba(0,0,0,0.15)" />
-      <path d="M 1250 170 L 1265 120 L 1275 170 L 1290 140 L 1300 170 Z" fill="rgba(0,0,0,0.15)" />
-      <path d="M 200 140 L 210 110 L 220 140 Z" fill="rgba(0,0,0,0.15)" />
-      <path d="M 850 160 L 860 130 L 870 160 Z" fill="rgba(0,0,0,0.15)" />
-
-      {/* Rocks */}
-      <path d="M 250 185 Q 260 170 270 185 Z" fill="rgba(255,255,255,0.4)" />
-      <path d="M 600 135 Q 608 125 615 135 Z" fill="rgba(255,255,255,0.4)" />
-      <path d="M 880 195 Q 895 175 910 195 Z" fill="rgba(255,255,255,0.4)" />
-      <path d="M 1150 125 Q 1158 115 1165 125 Z" fill="rgba(255,255,255,0.4)" />
-      <path d="M 1350 185 Q 1360 170 1370 185 Z" fill="rgba(255,255,255,0.4)" />
-
-      {/* Speed lines */}
-      <line
-        x1="50"
-        y1="110"
-        x2="150"
-        y2="110"
-        stroke="rgba(0,0,0,0.08)"
-        strokeWidth="3"
-        strokeLinecap="round"
-      />
-      <line
-        x1="300"
-        y1="160"
-        x2="450"
-        y2="160"
-        stroke="rgba(0,0,0,0.08)"
-        strokeWidth="3"
-        strokeLinecap="round"
-      />
-      <line
-        x1="800"
-        y1="115"
-        x2="900"
-        y2="115"
-        stroke="rgba(0,0,0,0.08)"
-        strokeWidth="3"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
-}
-
-// -- Main export --------------------------------------------
-
-export function LandscapeBackground({ speed = 1 }: LandscapeBackgroundProps): ReactNode {
-  const groundDuration = speed === 0 ? 999999 : 2.5 / speed
+export function LandscapeBackground({
+  speed = 'idle',
+  staticHills = false,
+}: LandscapeBackgroundProps): ReactNode {
+  const multiplier = SPEED_MULTIPLIERS[speed]
+  const groundDuration = multiplier === 0 ? 999999 : 2.5 / multiplier
+  const midFrontDuration = groundDuration * 6
+  const midBackDuration = groundDuration * 12
+  const farHillDuration = groundDuration * 24
 
   return (
     <div
-      className="absolute inset-0 overflow-hidden"
+      className="absolute inset-0 overflow-visible"
       style={{ backgroundColor: 'var(--scene-sky-bottom)' }}
     >
-      {/* Sky gradient overlay */}
+      {/* Sky Gradient */}
       <div
         className="absolute inset-0"
         style={{
@@ -98,84 +130,166 @@ export function LandscapeBackground({ speed = 1 }: LandscapeBackgroundProps): Re
         }}
       />
 
-      {/* Back hills (lightest, furthest) */}
-      <div className="absolute bottom-[20vh] left-0 right-0 h-[35vh]">
-        <svg
-          width="100%"
-          height="100%"
-          viewBox="0 0 1400 400"
-          preserveAspectRatio="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M 0 400 L 0 200 Q 200 100 450 250 T 1000 150 T 1400 250 L 1400 400 Z"
-            style={{ fill: 'var(--scene-hill-far)' }}
-          />
-          <path
-            d="M 0 400 L 0 280 Q 300 150 700 280 T 1400 180 L 1400 400 Z"
-            style={{ fill: 'var(--scene-hill-mid)' }}
-          />
-        </svg>
+      {/* Drifting clouds layer */}
+      <CloudsLayer />
+
+      {/* Far Hills Back Ridge (Slowest) */}
+      <div className="absolute bottom-[27%] left-0 right-0 h-[40%]">
+        {staticHills ? (
+          <div className="absolute inset-0">
+            <Furthest1 />
+          </div>
+        ) : (
+          <motion.div
+            className="absolute inset-0 flex"
+            animate={{ x: ['0%', '-50%'] }}
+            transition={{ duration: farHillDuration, repeat: Infinity, ease: 'linear' }}
+            style={{ width: '200%' }}
+          >
+            <div className="w-1/2 h-full relative">
+              <Furthest1 />
+            </div>
+            <div className="w-1/2 h-full relative">
+              <Furthest1 />
+            </div>
+            <div
+              className="absolute left-[50%] top-[35%] w-1 h-[65%] -ml-px"
+              style={{ backgroundColor: 'var(--scene-hill-far-pale)' }}
+            />
+          </motion.div>
+        )}
       </div>
 
-      {/* Mid hills with bushes (darkest, closest) */}
-      <div className="absolute bottom-[10vh] left-0 right-0 h-[25vh]">
-        <svg
-          width="100%"
-          height="100%"
-          viewBox="0 0 1400 250"
-          preserveAspectRatio="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M -50 250 L -50 180 Q 150 50 350 180 T 800 100 T 1200 180 T 1450 120 L 1450 250 Z"
-            style={{ fill: 'var(--scene-hill)' }}
-          />
-          {/* Bushes on mid hills */}
-          <g style={{ fill: 'var(--scene-hill)' }}>
-            <circle cx="150" cy="140" r="40" />
-            <circle cx="190" cy="150" r="30" />
-            <circle cx="120" cy="150" r="25" />
-            <circle cx="850" cy="150" r="50" />
-            <circle cx="910" cy="160" r="35" />
-            <circle cx="800" cy="165" r="30" />
-            <circle cx="1300" cy="120" r="60" />
-            <circle cx="1370" cy="140" r="45" />
-            <circle cx="1240" cy="145" r="40" />
-          </g>
-        </svg>
+      {/* Far Hills Front Ridge */}
+      <div className="absolute bottom-[27%] left-0 right-0 h-[40%]">
+        {staticHills ? (
+          <div className="absolute inset-0">
+            <Furthest2 />
+          </div>
+        ) : (
+          <motion.div
+            className="absolute inset-0 flex"
+            animate={{ x: ['0%', '-50%'] }}
+            transition={{ duration: farHillDuration * 0.9, repeat: Infinity, ease: 'linear' }}
+            style={{ width: '200%' }}
+          >
+            <div className="w-1/2 h-full relative">
+              <Furthest2 />
+            </div>
+            <div className="w-1/2 h-full relative">
+              <Furthest2 />
+            </div>
+            <div
+              className="absolute left-[50%] top-[45%] w-1 h-[55%] -ml-px"
+              style={{ backgroundColor: 'var(--scene-hill-far)' }}
+            />
+          </motion.div>
+        )}
       </div>
 
-      {/* Foreground ground */}
+      {/* Mid Back Hills */}
+      <div className="absolute bottom-[20%] left-0 right-0 h-[35%]">
+        {staticHills ? (
+          <div className="absolute inset-0">
+            <Furthest3 />
+          </div>
+        ) : (
+          <motion.div
+            className="absolute inset-0 flex"
+            animate={{ x: ['0%', '-50%'] }}
+            transition={{ duration: midBackDuration, repeat: Infinity, ease: 'linear' }}
+            style={{ width: '200%' }}
+          >
+            <div className="w-1/2 h-full relative">
+              <Furthest3 />
+            </div>
+            <div className="w-1/2 h-full relative">
+              <Furthest3 />
+            </div>
+            <div
+              className="absolute left-[50%] top-[55%] w-1 h-[45%] -ml-px"
+              style={{ backgroundColor: 'var(--scene-hill-mid)' }}
+            />
+          </motion.div>
+        )}
+      </div>
+
+      {/* Mid Front Hills */}
+      <div className="absolute bottom-[14%] left-0 right-0 h-[30%]">
+        {staticHills ? (
+          <div className="absolute inset-0">
+            <Furthest4 />
+          </div>
+        ) : (
+          <motion.div
+            className="absolute inset-0 flex"
+            animate={{ x: ['0%', '-50%'] }}
+            transition={{ duration: midFrontDuration, repeat: Infinity, ease: 'linear' }}
+            style={{ width: '200%' }}
+          >
+            <div className="w-1/2 h-full relative">
+              <Furthest4 />
+            </div>
+            <div className="w-1/2 h-full relative">
+              <Furthest4 />
+            </div>
+            <div
+              className="absolute left-[50%] top-[65%] w-1 h-[35%] -ml-px"
+              style={{ backgroundColor: 'var(--scene-hill-front)' }}
+            />
+          </motion.div>
+        )}
+      </div>
+
+      {/* Ground Base Layer (behind cyclist, z-[2]) */}
       <div
-        className="absolute bottom-0 left-0 right-0 h-[25vh]"
+        className="absolute bottom-0 left-0 right-0 h-[25%] z-[2]"
         style={{ backgroundColor: 'var(--scene-ground)' }}
       >
-        {/* Lighter ground band */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-[50%]"
-          style={{ backgroundColor: 'var(--scene-ground)', filter: 'brightness(1.15)' }}
-        />
-
-        {/* Continuously scrolling ground details */}
         <motion.div
           className="absolute inset-0 flex"
           animate={{ x: ['0%', '-50%'] }}
-          transition={{
-            duration: groundDuration,
-            repeat: Infinity,
-            ease: 'linear',
-          }}
+          transition={{ duration: groundDuration, repeat: Infinity, ease: 'linear' }}
           style={{ width: '200%' }}
         >
           <div className="w-1/2 h-full relative">
-            <GroundDetails />
+            <GroundBase />
           </div>
           <div className="w-1/2 h-full relative">
-            <GroundDetails />
+            <GroundBase />
           </div>
+          {/* Seam cover: dirt path zone */}
+          <div
+            className="absolute left-[50%] top-[17%] w-1 h-[43%] -ml-px"
+            style={{ backgroundColor: 'var(--scene-path)' }}
+          />
         </motion.div>
       </div>
+
+      {/* Ground Foliage Layer (in front of cyclist, z-[4]) */}
+      <div className="absolute bottom-0 left-0 right-0 h-[25%] z-[4] pointer-events-none">
+        <motion.div
+          className="absolute inset-0 flex"
+          animate={{ x: ['0%', '-50%'] }}
+          transition={{ duration: groundDuration, repeat: Infinity, ease: 'linear' }}
+          style={{ width: '200%' }}
+        >
+          <div className="w-1/2 h-full relative">
+            <GroundFoliage />
+          </div>
+          <div className="w-1/2 h-full relative">
+            <GroundFoliage />
+          </div>
+          {/* Seam cover: dark grass zone */}
+          <div
+            className="absolute left-[50%] top-[60%] w-1 h-[40%] -ml-px"
+            style={{ backgroundColor: 'var(--scene-grass-dark)' }}
+          />
+        </motion.div>
+      </div>
+
+      {/* Massive downward green swoop extending over the #about section! */}
+      <GroundBlendEdge />
     </div>
   )
 }

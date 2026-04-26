@@ -6,7 +6,7 @@
 //          stacks on mobile, side-by-side on tablet+, fixed positions
 //          on xl+ screens. Reduced-motion support.
 //          All data from mock fixtures (Sprint 2B visual shell).
-// Depends on: components/layout/LandscapeBackgroundV2.tsx,
+// Depends on: components/layout/LandscapeBackground.tsx,
 //             components/animation/cycling-character.tsx,
 //             components/layout/app-top-bar.tsx,
 //             components/dashboard/streak-calendar.tsx,
@@ -19,7 +19,7 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { useReducedMotion } from 'motion/react'
-import { LandscapeBackgroundV2 } from '@/components/layout/LandscapeBackgroundV2'
+import { LandscapeBackground } from '@/components/layout/landscape-background'
 import { CyclingCharacter } from '@/components/animation/cycling-character'
 import { AppTopBar } from '@/components/layout/app-top-bar'
 import { StreakCalendar } from '@/components/dashboard/streak-calendar'
@@ -41,7 +41,7 @@ export function GameHomeClient(): ReactNode {
     <div className="theme-day relative w-full min-h-svh overflow-y-auto">
       {/* Fixed parallax landscape background */}
       <div className="fixed inset-0 z-0">
-        <LandscapeBackgroundV2 speed={sceneSpeed} staticHills={prefersReducedMotion ?? false} />
+        <LandscapeBackground speed={sceneSpeed} staticHills={prefersReducedMotion ?? false} />
         <div
           className="absolute bottom-[calc(12svh-max(7.73vw,62.7px))] -left-[1%] md:left-[3%] z-[3]"
           aria-hidden="true"

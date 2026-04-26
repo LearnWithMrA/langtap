@@ -4,16 +4,16 @@
 //          LandscapeBackground and CyclingCharacter into a
 //          full-viewport scene. All elements animate continuously
 //          on load (ground scrolls, character pedals). Clouds are
-//          rendered by LandscapeBackgroundV2 automatically.
+//          rendered by LandscapeBackground automatically.
 //          Supports four scene themes via CSS custom properties.
-// Depends on: components/layout/LandscapeBackgroundV2.tsx,
+// Depends on: components/layout/LandscapeBackground.tsx,
 //             components/animation/cycling-character.tsx
 // ------------------------------------------------------------
 
 'use client'
 
 import type { ReactNode } from 'react'
-import { LandscapeBackgroundV2 as LandscapeBackground } from '@/components/layout/LandscapeBackgroundV2'
+import { LandscapeBackground } from '@/components/layout/landscape-background'
 import { CyclingCharacter } from '@/components/animation/cycling-character'
 
 // -- Types --------------------------------------------------

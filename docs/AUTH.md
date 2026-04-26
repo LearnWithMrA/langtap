@@ -313,16 +313,24 @@ pattern. Full visual and interaction spec: UX_DESIGN.md Section 5.
 - Next button saves the selection and navigates to Step 2.
 - Can be changed later in Settings.
 
-### Step 2 - Early Character Unlock (`/onboarding/step-2`)
+### Step 2 - Knowledge Gate (`/onboarding/step-2`)
 
-- Show seion characters only (46 hiragana + 46 katakana = 92 total).
-  Dakuon and yoon are excluded; the Dojo handles those stages.
-- User taps characters they already know to unlock them immediately.
-- A "Skip" link is always visible and prominent.
-- Selections are stored as character IDs in the onboarding store (Sprint
+- Three sliders per script (Hiragana, Katakana): None / Some / All.
+- "None" for both: skip straight to Step 3.
+- "All" for both: skip straight to Step 3 (all characters pre-unlocked).
+- "Some" for either: navigates to Step 2B (kana chart selector).
+- Back button returns to Step 1.
+
+### Step 2B - Kana Chart Selector (`/onboarding/step-2b`)
+
+- Tabbed view: Seion, Dakuon, Yoon.
+- Row checkboxes for bulk select. Select All / Clear buttons.
+- User picks specific characters they already know.
+- Selections stored as character IDs in the onboarding store (Sprint
   2B: localStorage via Zustand persist). Sprint 3 migrates these to
   `manual_unlocks` rows in Supabase.
-- Confirmation modal before applying: "Unlock [n] characters?"
+- Back button returns to Step 2.
+- Next button navigates to Step 3.
 
 ### Step 3 - Input Mode Selection (`/onboarding/step-3`)
 

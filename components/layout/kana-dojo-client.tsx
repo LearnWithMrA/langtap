@@ -40,9 +40,10 @@
 'use client'
 
 import { useCallback, useMemo, useState } from 'react'
-import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { AppTopBar } from '@/components/layout/app-top-bar'
+import { KanaLoadingShell, KanaErrorShell, KanaEmptyShell } from '@/components/dojo/kana-dojo-shells'
+import { buildLockedSet, hasLockedCharacter, hasAnyUnlock, CHARACTERS_BY_SCRIPT_STAGE, scriptCharacters, lockedInScope } from '@/components/dojo/kana-dojo-helpers'
 import { CharacterGroup } from '@/components/dojo/character-group'
 import { TileDetailPopover } from '@/components/dojo/tile-detail-popover'
 import { UnlockPrompt } from '@/components/dojo/unlock-prompt'
@@ -89,140 +90,7 @@ const STAGE_LABELS: Readonly<Record<Stage, string>> = {
   yoon: 'Yoon',
 }
 
-// ── Helpers ───────────────────────────────────
 
-function buildLockedSet(state: MasteryState): Set<string> {
-  const manual = new Set(state.manuallyUnlocked)
-  const locked = new Set<string>()
-  for (const c of KANA_CHARACTERS) {
-    if (manual.has(c.id)) continue
-    if ((state.scores[c.id] ?? 0) >= UNLOCK_THRESHOLD) continue
-    locked.add(c.id)
-  }
-  return locked
-}
-
-function hasLockedCharacter(
-  characters: readonly KanaCharacter[],
-  lockedIds: ReadonlySet<string>,
-): boolean {
-  return characters.some((c) => lockedIds.has(c.id))
-}
-
-function hasAnyUnlock(
-  characters: readonly KanaCharacter[],
-  scores: Readonly<Record<string, number>>,
-  manualUnlocks: ReadonlySet<string>,
-): boolean {
-  return characters.some((c) => manualUnlocks.has(c.id) || (scores[c.id] ?? 0) >= UNLOCK_THRESHOLD)
-}
-
-// Build the per-script map of characters grouped by stage.
-function groupCharactersByStage(): Readonly<
-  Record<Script, Readonly<Record<Stage, readonly KanaCharacter[]>>>
-> {
-  const out: Record<Script, Record<Stage, KanaCharacter[]>> = {
-    hiragana: { seion: [], dakuon: [], yoon: [] },
-    katakana: { seion: [], dakuon: [], yoon: [] },
-  }
-  for (const c of KANA_CHARACTERS) {
-    out[c.script][c.stage].push(c)
-  }
-  return out
-}
-
-const CHARACTERS_BY_SCRIPT_STAGE = groupCharactersByStage()
-
-function scriptCharacters(script: Script): readonly KanaCharacter[] {
-  return KANA_CHARACTERS.filter((c) => c.script === script)
-}
-
-function lockedInScope(
-  characters: readonly KanaCharacter[],
-  lockedIds: ReadonlySet<string>,
-): string[] {
-  return characters.filter((c) => lockedIds.has(c.id)).map((c) => c.id)
-}
-
-// ── Non-ready shells ──────────────────────────
-// Deterministic triggers for design review and tests. Parity contract
-// with KotobaDojoClient — same state values, same visual grammar so
-// the two dojos read as siblings.
-
-function LoadingShell(): ReactNode {
-  const skeletons = Array.from({ length: 5 }, (_, i) => i)
-  return (
-    <div className="min-h-svh text-[#3e312e]" style={{ backgroundColor: 'var(--color-dojo-bg)' }}>
-      <AppTopBar />
-      <div className="pt-20 pb-16 px-5">
-        <main className="mx-auto max-w-[988px]">
-          <div className="h-8 w-40 rounded-lg bg-warm-100 animate-pulse mb-6" />
-          {skeletons.map((i) => (
-            <div
-              key={i}
-              className="h-14 w-full rounded-lg bg-warm-100 animate-pulse mb-2"
-              aria-hidden="true"
-            />
-          ))}
-        </main>
-      </div>
-    </div>
-  )
-}
-
-function ErrorShell(): ReactNode {
-  return (
-    <div className="min-h-svh text-[#3e312e]" style={{ backgroundColor: 'var(--color-dojo-bg)' }}>
-      <AppTopBar />
-      <div className="pt-20 pb-16 px-5">
-        <main className="mx-auto max-w-[988px]">
-          <div
-            role="alert"
-            className="rounded-xl bg-blush-100 text-warm-800 p-4 flex flex-col gap-3"
-          >
-            <p className="text-base font-medium">
-              We could not load your progress. Check your connection and try again.
-            </p>
-            <div>
-              <button
-                type="button"
-                onClick={(): void => window.location.reload()}
-                className="bg-sage-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-sage-600 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-500"
-              >
-                Retry
-              </button>
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
-  )
-}
-
-function EmptyShell(): ReactNode {
-  return (
-    <div className="min-h-svh text-[#3e312e]" style={{ backgroundColor: 'var(--color-dojo-bg)' }}>
-      <AppTopBar />
-      <div className="pt-20 pb-16 px-5">
-        <main className="mx-auto max-w-[988px]">
-          <h1 className="text-2xl font-bold mb-6">Kana Dojo</h1>
-          <div className="rounded-xl bg-surface-raised border border-border p-6 text-center">
-            <h2 className="text-lg font-semibold text-warm-800 mb-2">Start your journey</h2>
-            <p className="text-sm text-warm-600 mb-4">
-              Tap any character to unlock it, or jump into practice and unlock as you go.
-            </p>
-            <Link
-              href="/practice?mode=kana"
-              className="inline-block bg-sage-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-sage-600 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-500"
-            >
-              Start practice
-            </Link>
-          </div>
-        </main>
-      </div>
-    </div>
-  )
-}
 
 // ── Ready shell (hooks live here) ─────────────
 // Kept as its own component so the dispatcher below can early-return
@@ -599,8 +467,8 @@ export function KanaDojoClient({
   fixture = 'variety',
   state = 'ready',
 }: KanaDojoClientProps): ReactNode {
-  if (state === 'loading') return <LoadingShell />
-  if (state === 'error') return <ErrorShell />
-  if (state === 'empty') return <EmptyShell />
+  if (state === 'loading') return <KanaLoadingShell />
+  if (state === 'error') return <KanaErrorShell />
+  if (state === 'empty') return <KanaEmptyShell />
   return <KanaDojoReadyShell fixture={fixture} />
 }

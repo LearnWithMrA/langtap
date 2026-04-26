@@ -36,12 +36,10 @@
 'use client'
 
 import { useCallback, useMemo, useState } from 'react'
-import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { AppTopBar } from '@/components/layout/app-top-bar'
 import { KotobaLevelTabs } from '@/components/dojo/kotoba-level-tabs'
-import { KotobaUnitCard } from '@/components/dojo/kotoba-unit-card'
-import { KotobaLevelGroupRow } from '@/components/dojo/kotoba-level-group'
+import { KotobaUnitGrid } from '@/components/dojo/kotoba-unit-grid'
 import { KotobaWordPopover } from '@/components/dojo/kotoba-word-popover'
 import { KotobaUnlockPrompt } from '@/components/dojo/kotoba-unlock-prompt'
 import { KotobaBulkUnlockPrompt } from '@/components/dojo/kotoba-bulk-unlock-prompt'
@@ -49,7 +47,8 @@ import type { KotobaBulkUnlockScope } from '@/components/dojo/kotoba-bulk-unlock
 import { KotobaBulkResetPrompt } from '@/components/dojo/kotoba-bulk-reset-prompt'
 import type { KotobaBulkResetScope } from '@/components/dojo/kotoba-bulk-reset-prompt'
 import { UnlockButton } from '@/components/dojo/group-bar'
-import { UNLOCK_THRESHOLD } from '@/engine/constants'
+import { KotobaLoadingShell, KotobaErrorShell, KotobaEmptyShell } from '@/components/dojo/kotoba-dojo-shells'
+import { buildLockedWordSet, lockedIdsInUnit, lockedIdsInGroup, lockedIdsAtLevel } from '@/components/dojo/kotoba-dojo-helpers'
 import { MASTERY_THRESHOLD } from '@/engine/mastery'
 import { getKotobaFixture } from '@/samples/kotoba-dojo-fixtures'
 import { JLPT_LABELS } from '@/types/kotoba.types'
@@ -68,134 +67,6 @@ import type {
 type KotobaDojoClientProps = {
   fixture?: KotobaFixtureKey
   state?: KotobaClientState
-}
-
-// ── Helpers ───────────────────────────────────
-
-// Builds the set of word ids currently considered locked. A word is
-// unlocked when its score passes UNLOCK_THRESHOLD OR it has been added
-// to manuallyUnlockedWords. Mirrors the Kana buildLockedSet helper.
-function buildLockedWordSet(
-  words: Readonly<Record<string, KotobaWord>>,
-  mastery: KotobaMasteryState,
-): Set<string> {
-  const manual = new Set(mastery.manuallyUnlockedWords)
-  const locked = new Set<string>()
-  for (const id of Object.keys(words)) {
-    if (manual.has(id)) continue
-    if ((mastery.scores[id] ?? 0) >= UNLOCK_THRESHOLD) continue
-    locked.add(id)
-  }
-  return locked
-}
-
-function lockedIdsInUnit(unit: KotobaUnit, lockedWordIds: ReadonlySet<string>): string[] {
-  return unit.groups.flatMap((g) => g.wordIds.filter((id) => lockedWordIds.has(id)))
-}
-
-function lockedIdsInGroup(group: KotobaLevelGroup, lockedWordIds: ReadonlySet<string>): string[] {
-  return group.wordIds.filter((id) => lockedWordIds.has(id))
-}
-
-function lockedIdsAtLevel(
-  units: readonly KotobaUnit[],
-  lockedWordIds: ReadonlySet<string>,
-): string[] {
-  return units.flatMap((u) => lockedIdsInUnit(u, lockedWordIds))
-}
-
-// ── Non-ready screens ─────────────────────────
-
-function LoadingShell(): ReactNode {
-  const skeletonTiles = Array.from({ length: 6 }, (_, i) => i)
-  return (
-    <div
-      className="min-h-svh text-warm-800"
-      style={{ backgroundColor: 'var(--color-kotoba-dojo-bg)' }}
-    >
-      <AppTopBar />
-      <div className="pt-20 pb-16 px-5">
-        <main className="mx-auto max-w-[988px]">
-          <div className="h-8 w-40 rounded-lg bg-warm-100 animate-pulse mb-6" />
-          <div className="h-11 w-full max-w-sm rounded-lg bg-warm-100 animate-pulse mb-6" />
-          <div
-            className="grid gap-4"
-            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}
-          >
-            {skeletonTiles.map((i) => (
-              <div
-                key={i}
-                className="h-32 rounded-xl bg-warm-100 animate-pulse"
-                aria-hidden="true"
-              />
-            ))}
-          </div>
-        </main>
-      </div>
-    </div>
-  )
-}
-
-function ErrorShell(): ReactNode {
-  return (
-    <div
-      className="min-h-svh text-warm-800"
-      style={{ backgroundColor: 'var(--color-kotoba-dojo-bg)' }}
-    >
-      <AppTopBar />
-      <div className="pt-20 pb-16 px-5">
-        <main className="mx-auto max-w-[988px]">
-          <div
-            role="alert"
-            className="rounded-xl bg-blush-100 text-warm-800 p-4 flex flex-col gap-3"
-          >
-            <p className="text-base font-medium">
-              We could not load your Kotoba progress. Check your connection and try again.
-            </p>
-            <div>
-              <button
-                type="button"
-                onClick={(): void => window.location.reload()}
-                className="bg-sage-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-sage-600 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-500"
-              >
-                Retry
-              </button>
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
-  )
-}
-
-function EmptyShell(): ReactNode {
-  return (
-    <div
-      className="min-h-svh text-warm-800"
-      style={{ backgroundColor: 'var(--color-kotoba-dojo-bg)' }}
-    >
-      <AppTopBar />
-      <div className="pt-20 pb-16 px-5">
-        <main className="mx-auto max-w-[988px]">
-          <h1 className="text-2xl font-bold mb-6">Kotoba Dojo</h1>
-          <div className="rounded-xl bg-surface-raised border border-border p-6 text-center">
-            <h2 className="text-lg font-semibold text-warm-800 mb-2">
-              Start building your vocabulary
-            </h2>
-            <p className="text-sm text-warm-600 mb-4">
-              Pick a unit to see the words inside, or jump straight into Kotoba practice.
-            </p>
-            <Link
-              href="/practice?mode=kotoba"
-              className="inline-block bg-sage-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-sage-600 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-500"
-            >
-              Start practice
-            </Link>
-          </div>
-        </main>
-      </div>
-    </div>
-  )
 }
 
 // ── Ready screen ──────────────────────────────
@@ -467,7 +338,7 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
             aria-label={`${activeLevel.toUpperCase()} units`}
             className="mt-5"
           >
-            <UnitGrid
+            <KotobaUnitGrid
               units={unitsForLevel}
               words={initial.words}
               scores={mastery.scores}
@@ -516,104 +387,14 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
   )
 }
 
-// ── Unit grid with inline accordion ───────────
-
-type UnitGridProps = {
-  units: readonly KotobaUnit[]
-  words: Readonly<Record<string, KotobaWord>>
-  scores: Readonly<Record<string, number>>
-  lockedWordIds: ReadonlySet<string>
-  openUnitId: string | null
-  openGroupIds: ReadonlySet<string>
-  onToggleUnit: (unitId: string) => void
-  onToggleGroup: (groupId: string) => void
-  onUnlockUnit: (unit: KotobaUnit) => void
-  onUnlockGroup: (group: KotobaLevelGroup) => void
-  onResetUnit: (unit: KotobaUnit) => void
-  onResetGroup: (group: KotobaLevelGroup) => void
-  onWordClick: (word: KotobaWord) => void
-}
-
-function UnitGrid({
-  units,
-  words,
-  scores,
-  lockedWordIds,
-  openUnitId,
-  openGroupIds,
-  onToggleUnit,
-  onToggleGroup,
-  onUnlockUnit,
-  onUnlockGroup,
-  onResetUnit,
-  onResetGroup,
-  onWordClick,
-}: UnitGridProps): ReactNode {
-  const openUnit = openUnitId ? units.find((u) => u.id === openUnitId) : null
-
-  return (
-    <>
-      <div
-        className="grid gap-4"
-        style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}
-      >
-        {units.map((unit) => {
-          const controlsId = `kotoba-unit-panel-${unit.id}`
-          return (
-            <KotobaUnitCard
-              key={unit.id}
-              unit={unit}
-              words={words}
-              scores={scores}
-              lockedWordIds={lockedWordIds}
-              isOpen={openUnitId === unit.id}
-              onToggle={onToggleUnit}
-              onUnlockUnit={onUnlockUnit}
-              onResetUnit={onResetUnit}
-              controlsId={controlsId}
-            />
-          )
-        })}
-      </div>
-
-      {openUnit && (
-        <section
-          id={`kotoba-unit-panel-${openUnit.id}`}
-          aria-label={`${openUnit.label} level groups`}
-          className="mt-6 rounded-xl border border-warm-200 bg-surface-raised"
-        >
-          {openUnit.groups.length === 0 ? (
-            <p className="text-sm text-warm-500 text-center py-12">Coming soon</p>
-          ) : (
-            openUnit.groups.map((group) => (
-              <KotobaLevelGroupRow
-                key={group.id}
-                group={group}
-                words={words}
-                scores={scores}
-                lockedWordIds={lockedWordIds}
-                isOpen={openGroupIds.has(group.id)}
-                onToggle={onToggleGroup}
-                onUnlockGroup={onUnlockGroup}
-                onResetGroup={onResetGroup}
-                onWordClick={onWordClick}
-              />
-            ))
-          )}
-        </section>
-      )}
-    </>
-  )
-}
-
 // ── Root dispatcher ───────────────────────────
 
 export function KotobaDojoClient({
   fixture = 'variety',
   state = 'ready',
 }: KotobaDojoClientProps): ReactNode {
-  if (state === 'loading') return <LoadingShell />
-  if (state === 'error') return <ErrorShell />
-  if (state === 'empty') return <EmptyShell />
+  if (state === 'loading') return <KotobaLoadingShell />
+  if (state === 'error') return <KotobaErrorShell />
+  if (state === 'empty') return <KotobaEmptyShell />
   return <ReadyShell fixtureKey={fixture} />
 }

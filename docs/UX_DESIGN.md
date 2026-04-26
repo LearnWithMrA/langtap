@@ -2561,9 +2561,7 @@ Practice direction controls what the user sees and what they type.
 - Control: three-option segmented selector
 - Options:
   - "Kana to Romaji": shown a kana character, type the romaji
-  - "Alternate": alternates between both directions each prompt.
-    Shown with a small "Recommended" badge (`text-[10px] font-medium`,
-    `text-white/70` when active, `text-sage-500` when inactive)
+  - "Alternate": alternates between both directions each prompt
   - "Romaji to Kana": shown romaji, type/tap/swipe the kana
 - Default: Alternate
 - Segmented control style: `rounded-xl bg-warm-100 p-1`, each option
@@ -2579,7 +2577,7 @@ Controls what the user produces when practising vocabulary.
 - Options:
   - "Readings": type/tap/swipe the kana reading (1x scoring)
   - "Kanji": type the kanji form using keyboard auto-suggestion
-    (4x scoring). Shown with a small "4x" badge
+    (4x scoring). Shown with a small "4x points" badge
     (`text-xs text-sage-500 font-medium`)
 - Default: Readings
 - In Tap mode, selecting Kanji adds a second stage after the kana
@@ -2690,7 +2688,9 @@ The `AppTopBar` gear icon is a button, not a link.
 **Theme:** Cream surface background (`bg-surface`)
 **Max width:** `max-w-4xl` (side-by-side columns on desktop)
 **Scrollable:** Yes
-**Style:** Duolingo-inspired flat list. No podium, no hero section.
+**Style:** Duolingo-inspired list with condensed top-3 podium. Circular
+avatars with coloured rings (gold/silver/bronze). Rank 1 has float animation
+and sparkle decorations. Rank 4+ displayed as flat rows.
 
 ### 12.1 Page Layout
 

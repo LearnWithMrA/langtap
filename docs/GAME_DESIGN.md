@@ -706,18 +706,23 @@ All constants must be defined in `engine/constants.ts` and imported where needed
 No magic numbers anywhere in the codebase.
 
 ```ts
-// engine/constants.ts
+// engine/constants.ts - currently implemented
 
+export const FEEDBACK_FLASH_MS = 300       // correct/wrong flash duration
+export const WRONG_ANSWER_DELAY_MS = 800   // unused, reserved for future hint timing
+export const MEANING_DISPLAY_MS = 1500     // ms meaning shown after correct (Kana)
+export const KOTOBA_DISPLAY_MS = 3000      // ms result shown after correct (Kotoba)
+export const MEANING_FADE_MS = 150         // fade-in duration for meaning reveal
+export const TAP_REMINDER_THRESHOLD = 5    // correct answers before reminder hides
 export const UNLOCK_THRESHOLD = 5          // correct answers to unlock a character
-export const WORD_COUNTER_CAP = 5          // max times a word is shown before reset
-export const MAX_RESPONSE_TIME_MS = 5000   // response time ceiling for speed bonus
-export const BASE_DISTANCE_INCREMENT = 10  // metres per correct answer (base)
-export const WRONG_ANSWER_DELAY_MS = 800   // ms before auto-advancing after wrong answer
-export const MEANING_DISPLAY_MS = 1500     // ms meaning is shown after correct answer
-export const TAP_REMINDER_THRESHOLD = 5    // correct answers before reminder is hidden
-export const ANIMATION_WINDOW_SIZE = 10    // recent answers used for animation speed
-export const METRES_TO_FEET = 3.281        // conversion factor for US locale display
-export const KANJI_INPUT_MULTIPLIER = 4   // scoring multiplier for Kotoba kanji input
+export const MAX_WORD_COUNTER = 5          // max times a word is shown before reset
+
+// Sprint 4 additions (not yet implemented):
+// export const MAX_RESPONSE_TIME_MS = 5000   // response time ceiling for speed bonus
+// export const BASE_DISTANCE_INCREMENT = 10  // metres per correct answer (base)
+// export const ANIMATION_WINDOW_SIZE = 10    // recent answers for animation speed
+// export const METRES_TO_FEET = 3.281        // conversion factor for US locale
+// export const KANJI_INPUT_MULTIPLIER = 4    // scoring multiplier for kanji input
 ```
 
 ---
