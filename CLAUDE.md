@@ -435,6 +435,11 @@ openings (one-off questions, mid-session resumes, ad-hoc edits).
 - Does this change anything in the database schema? Flag it before proceeding.
 - Is this genuinely in the current sprint, or does it belong to a future sprint?
 
+**After each task completes (before moving to the next task):**
+- Run `npx eslint .` on any files created or modified. Fix errors before continuing.
+- Run `npx prettier --check .` on modified files. Fix formatting before continuing.
+- TypeScript and tests alone are not sufficient. Lint and format must pass too.
+
 ### Codex review checkpoints
 
 Codex is used as a manual reviewer at deliberate stage gates. It is not

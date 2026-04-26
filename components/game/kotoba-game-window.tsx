@@ -55,7 +55,6 @@ function isKatakanaWord(word: MockKotobaWord): boolean {
   return isKatakanaChar(word.characters[0].kana)
 }
 
-
 // ── Main export ──────────────────────────────
 
 export function KotobaGameWindow({

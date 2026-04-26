@@ -30,7 +30,6 @@ import {
   toKatakana,
 } from '@/components/game/kana-practice-data'
 
-
 const MAX_WRONG_ATTEMPTS = 3
 
 // -- Types --------------------------------------------------

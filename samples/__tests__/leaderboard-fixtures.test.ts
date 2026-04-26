@@ -11,10 +11,7 @@ import {
   getAvatarColor,
   formatLeaderboardScore,
 } from '@/samples/leaderboard-fixtures'
-import type {
-  GameType,
-  TimePeriod,
-} from '@/samples/leaderboard-fixtures'
+import type { GameType, TimePeriod } from '@/samples/leaderboard-fixtures'
 
 // ── getLeaderboardFixture ────────────────────
 
