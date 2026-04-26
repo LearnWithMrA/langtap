@@ -14,8 +14,6 @@ import {
 import type {
   GameType,
   TimePeriod,
-  InputMode,
-  LeaderboardBoard,
 } from '@/samples/leaderboard-fixtures'
 
 // ── getLeaderboardFixture ────────────────────
@@ -23,7 +21,6 @@ import type {
 describe('getLeaderboardFixture', () => {
   const gameTypes: GameType[] = ['kana', 'kotoba']
   const timePeriods: TimePeriod[] = ['all-time', 'this-week']
-  const modes: InputMode[] = ['tap', 'type', 'swipe']
 
   it.each(gameTypes)('returns 10 entries for %s all-time', (game) => {
     const board = getLeaderboardFixture(game, 'tap', 'all-time')

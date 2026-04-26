@@ -29,7 +29,7 @@ import {
   isKatakanaWord,
   toKatakana,
 } from '@/components/game/kana-practice-data'
-import type { MockWord } from '@/components/game/kana-practice-data'
+
 
 const MAX_WRONG_ATTEMPTS = 3
 

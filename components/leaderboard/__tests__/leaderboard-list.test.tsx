@@ -9,7 +9,7 @@
 
 import { render, screen, fireEvent } from '@testing-library/react'
 import { LeaderboardList } from '@/components/leaderboard/leaderboard-list'
-import type { LeaderboardBoard, InputMode } from '@/samples/leaderboard-fixtures'
+import type { LeaderboardBoard } from '@/samples/leaderboard-fixtures'
 
 // ── Test data ────────────────────────────────
 

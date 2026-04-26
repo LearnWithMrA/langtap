@@ -14,9 +14,6 @@
 
 import type { ReactNode } from 'react'
 import {
-  DistantTree,
-  Tree,
-  BushCluster1,
   Furthest1,
   Furthest2,
   Furthest3,

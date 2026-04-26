@@ -21,7 +21,7 @@ import type { ReactNode } from 'react'
 import { TypeInput } from '@/components/game/type-input'
 import { SwipeInput } from '@/components/game/swipe-input'
 import { TapInput } from '@/components/game/tap-input'
-import { FEEDBACK_FLASH_MS, KOTOBA_DISPLAY_MS, MEANING_FADE_MS } from '@/engine/constants'
+import { FEEDBACK_FLASH_MS, KOTOBA_DISPLAY_MS } from '@/engine/constants'
 import { getMockKotobaWords, generateKanjiDistractors } from '@/samples/kotoba-practice-fixtures'
 import type { MockKotobaWord } from '@/samples/kotoba-practice-fixtures'
 import {
@@ -55,9 +55,6 @@ function isKatakanaWord(word: MockKotobaWord): boolean {
   return isKatakanaChar(word.characters[0].kana)
 }
 
-function isHiraganaWord(word: MockKotobaWord): boolean {
-  return !isKatakanaWord(word)
-}
 
 // ── Main export ──────────────────────────────
 
@@ -83,7 +80,6 @@ export function KotobaGameWindow({
   const [feedbackState, setFeedbackState] = useState<'idle' | 'correct' | 'wrong'>('idle')
   const [wrongAttemptsMap, setWrongAttemptsMap] = useState<number[]>([])
   const [wordDone, setWordDone] = useState(false)
-  const [showResult, setShowResult] = useState(false)
   const [readingDone, setReadingDone] = useState(false)
   const [kanjiWrongCount, setKanjiWrongCount] = useState(0)
 
@@ -171,7 +167,6 @@ export function KotobaGameWindow({
     setWrongAttemptsMap([])
     setWordDone(false)
     setFeedbackState('idle')
-    setShowResult(false)
     setReadingDone(false)
     setTapFeedbackId(null)
     setTapFeedbackState(null)
@@ -197,7 +192,6 @@ export function KotobaGameWindow({
     generationRef.current++
     setWordDone(true)
     setFeedbackState('correct')
-    schedule((): void => setShowResult(true), MEANING_FADE_MS)
     schedule(advanceWord, KOTOBA_DISPLAY_MS)
   }, [clearTimers, schedule, advanceWord])
 
@@ -282,7 +276,7 @@ export function KotobaGameWindow({
 
       if (isKanjiMode && hasKanji) {
         // Kanji Type/Swipe: user types and selects kanji from IME
-        const cleaned = value.replace(/​/g, '').trim()
+        const cleaned = value.replace(/\u200B/g, '').trim()
         if (cleaned.length === 0) return
 
         // Ignore kana-only input (IME composition in progress)
@@ -300,7 +294,7 @@ export function KotobaGameWindow({
       }
 
       // Readings mode: user types kana directly, compared against kana breakpoints
-      const cleaned = value.replace(/​/g, '')
+      const cleaned = value.replace(/\u200B/g, '')
       const compare = cleaned
 
       if (compare.length === 0) return
