@@ -25,8 +25,7 @@
 //          - scriptOpen: Set<Script>. Active script defaults open.
 //          - stageOpen: Record<Script, Set<Stage>>. Active stage in each
 //            active/in-progress script defaults open.
-// Depends on: components/layout/app-top-bar.tsx,
-//             components/dojo/character-group.tsx,
+// Depends on: components/dojo/character-group.tsx,
 //             components/dojo/tile-detail-popover.tsx,
 //             components/dojo/unlock-prompt.tsx,
 //             components/dojo/bulk-unlock-prompt.tsx,
@@ -41,7 +40,6 @@
 
 import { useCallback, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { AppTopBar } from '@/components/layout/app-top-bar'
 import {
   KanaLoadingShell,
   KanaErrorShell,
@@ -367,8 +365,6 @@ function KanaDojoReadyShell({ fixture = 'variety' }: { fixture?: FixtureKey }): 
 
   return (
     <div className="min-h-svh text-[#3e312e]" style={{ backgroundColor: 'var(--color-dojo-bg)' }}>
-      <AppTopBar />
-
       <div className="pt-20 pb-16 px-2 md:px-5">
         <main className="mx-auto max-w-[1080px]">
           <div className="flex items-center gap-3 mb-6 pl-5">

@@ -11,11 +11,6 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { LeaderboardClient } from '@/components/leaderboard/leaderboard-client'
 
-// Mock AppTopBar to avoid rendering the full nav
-vi.mock('@/components/layout/app-top-bar', () => ({
-  AppTopBar: (): null => null,
-}))
-
 // ── Page structure ───────────────────────────
 
 describe('LeaderboardClient', () => {

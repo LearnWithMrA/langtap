@@ -5,10 +5,11 @@
 //          top-left, Kana + Kotoba panels to the right. Responsive:
 //          stacks on mobile, side-by-side on tablet+, fixed positions
 //          on xl+ screens. Reduced-motion support.
+//          Scene renders static until cyclist frames load, then
+//          landscape and cyclist animate together.
 //          All data from mock fixtures (Sprint 2B visual shell).
-// Depends on: components/layout/LandscapeBackground.tsx,
+// Depends on: components/layout/landscape-background.tsx,
 //             components/animation/cycling-character.tsx,
-//             components/layout/app-top-bar.tsx,
 //             components/dashboard/streak-calendar.tsx,
 //             components/dashboard/mode-panel.tsx,
 //             samples/dashboard-fixtures.ts
@@ -16,12 +17,11 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useReducedMotion } from 'motion/react'
 import { LandscapeBackground } from '@/components/layout/landscape-background'
 import { CyclingCharacter } from '@/components/animation/cycling-character'
-import { AppTopBar } from '@/components/layout/app-top-bar'
 import { StreakCalendar } from '@/components/dashboard/streak-calendar'
 import { ModePanel } from '@/components/dashboard/mode-panel'
 import type { DashboardFixtureKey } from '@/samples/dashboard-fixtures'
@@ -32,26 +32,33 @@ import { getDashboardFixture } from '@/samples/dashboard-fixtures'
 export function GameHomeClient(): ReactNode {
   const prefersReducedMotion = useReducedMotion()
   const [fixtureKey, setFixtureKey] = useState<DashboardFixtureKey>('mid')
+  const [sceneReady, setSceneReady] = useState(false)
   const data = getDashboardFixture(fixtureKey)
+
+  const handleAllFramesLoaded = useCallback((): void => {
+    setSceneReady(true)
+  }, [])
 
   const sceneSpeed = prefersReducedMotion ? 'stopped' : 'idle'
   const mascotSpeed = prefersReducedMotion ? 'stopped' : 'idle'
+  const animated = sceneReady && !prefersReducedMotion
 
   return (
     <div className="theme-day relative w-full min-h-svh overflow-y-auto">
       {/* Fixed parallax landscape background */}
       <div className="fixed inset-0 z-0">
-        <LandscapeBackground speed={sceneSpeed} staticHills={prefersReducedMotion ?? false} />
+        <LandscapeBackground
+          speed={sceneSpeed}
+          staticHills={prefersReducedMotion ?? false}
+          animated={animated}
+        />
         <div
           className="absolute bottom-[calc(12svh-max(7.73vw,62.7px))] -left-[1%] md:left-[3%] z-[3]"
           aria-hidden="true"
         >
-          <CyclingCharacter speed={mascotSpeed} />
+          <CyclingCharacter speed={mascotSpeed} onAllFramesLoaded={handleAllFramesLoaded} />
         </div>
       </div>
-
-      {/* Top bar */}
-      <AppTopBar />
 
       {/* Dashboard content - responsive flow layout */}
       <main className="relative z-10 px-3 sm:px-4 mt-[72px] mb-8">

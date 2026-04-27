@@ -318,6 +318,25 @@ Target Core Web Vitals for LangTap:
 The practice screen is the most performance-critical page. It must feel
 instantaneous. Avoid any loading states or layout shifts during the game loop.
 
+### Performance infrastructure
+
+- **Persistent layout:** AppTopBar lives in `app/(main)/layout.tsx` and mounts
+  once. It does not re-mount on page navigation. All `(main)` pages inherit it.
+- **Coordinated scene load:** CyclingCharacter loads frame 1 with priority,
+  frames 2-14 eagerly without priority. LandscapeBackground accepts an
+  `animated` prop. Both start moving together once all frames are loaded.
+- **Session prefetch:** `components/performance/session-prefetch.tsx` prefetches
+  core routes once per browser session (sessionStorage guard, 2s delay).
+- **Intent prefetch:** Mobile hamburger menu calls `router.prefetch()` for all
+  main routes on open.
+- **next.config.ts:** `generateEtags`, `removeConsole` in production,
+  `staleTimes` (30s dynamic, 300s static).
+- **vercel.json:** 1-year immutable cache headers for images, sounds, audio, fonts.
+- **Bundle budgets:** `npm run build:budget` runs `next build` and checks 7
+  routes against defined limits. Exits non-zero on violations.
+- **Kotoba data splitting:** Word data split by JLPT level (N5 eager, N4-N1
+  loaded on demand via dynamic import when user switches tabs).
+
 ---
 
 ## 9. Pre-Deployment Checklist

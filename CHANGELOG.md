@@ -30,6 +30,77 @@ Format per entry:
 
 ---
 
+## [2026-04-27] - Session 56
+
+**Sprint:** Sprint 10 - Polish and QA
+**Task completed:** Performance audit (Partial)
+**Status:** Partial
+
+### Changes made
+
+**Phase 0 - Coordinated scene load (initial page load fix):**
+- `components/animation/cycling-character.tsx`: Frame 1 loads with `priority` (~900KB), frames 2-14 load eagerly without priority (~12MB total no longer blocks critical resources). Animation starts only after all frames are loaded. New `onAllFramesLoaded` callback prop.
+- `components/layout/landscape-background.tsx`: New `animated` prop controls all motion (hills, ground, clouds). When false, renders static. Cloud CSS animation uses `animationPlayState`.
+- `components/layout/landing-scene.tsx`: Coordinates the start. Scene renders static, flips to animated when cyclist frames finish loading.
+- `components/layout/game-home-client.tsx`: Same coordinated pattern. Removed AppTopBar import.
+- `components/layout/practice-client.tsx`: Same coordinated pattern. Removed AppTopBar import.
+
+**Phase 1 - AppTopBar moved to persistent layout (navigation speed fix):**
+- `app/(main)/layout.tsx`: Now renders AppTopBar, SettingsDialog, and SessionPrefetch at layout level. AppTopBar mounts once and stays mounted across all navigations.
+- `components/layout/kana-dojo-client.tsx`: Removed AppTopBar import and JSX. Updated file header.
+- `components/layout/kotoba-dojo-client.tsx`: Removed AppTopBar import and JSX. Updated file header.
+- `components/layout/game-home-client.tsx`: Removed AppTopBar import (done in Phase 0).
+- `components/layout/practice-client.tsx`: Removed AppTopBar import (done in Phase 0).
+- `components/leaderboard/leaderboard-client.tsx`: Removed AppTopBar import and JSX.
+- `components/profile/profile-client.tsx`: Removed AppTopBar import and JSX.
+- `components/dojo/kana-dojo-shells.tsx`: Removed AppTopBar from all 3 shell variants.
+- `components/dojo/kotoba-dojo-shells.tsx`: Removed AppTopBar from all 3 shell variants.
+- `components/layout/app-top-bar.tsx`: Added `pathname` to scroll effect deps (fixes stale frosted glass after navigation). Added `useRouter` and intent-based prefetch on mobile menu open. Added body scroll lock when hamburger menu is open.
+- `components/leaderboard/__tests__/leaderboard-client.test.tsx`: Removed dead AppTopBar mock.
+
+**Phase 2 - Prefetching, config, and cache headers:**
+- `components/performance/session-prefetch.tsx`: New component. Prefetches 6 core routes once per browser session (sessionStorage guard, 2s delay after mount). Renders null.
+- `next.config.ts`: Added `generateEtags`, `removeConsole` in production, `staleTimes` (30s dynamic, 300s static).
+- `vercel.json`: New file. 1-year immutable cache headers for images, sounds, audio, fonts.
+- `package.json`: Added `build:budget` script.
+
+**Phase 3 - Targeted Kotoba data splitting:**
+- `samples/kotoba-words-n5.ts` through `kotoba-words-n1.ts`: 5 new per-level word files split from the monolithic `kotoba-dojo-words.ts`.
+- `samples/kotoba-dojo-fixtures.ts`: Rewritten. N5 loads eagerly (default tab). N4-N1 load on demand via dynamic `import()` with per-level cache. New `getN5Fixture()` and `getLevelFixture()` async API.
+- `components/layout/kotoba-dojo-client.tsx`: ReadyShell rewritten to use per-level data loading. Mastery state initializes from N5 only. Tab switch triggers async level load with skeleton placeholder. Merged mastery scores on level arrival.
+
+**Performance budgets:**
+- `scripts/check-bundle-budget.ts`: Parses `next build` output, checks 7 routes against defined limits. Exits non-zero on violations.
+
+**Bug fix:**
+- `components/layout/app-top-bar.tsx`: Hamburger menu overlay now locks body scroll (`overflow: hidden` on body, `overflow-hidden overscroll-contain touch-none` on overlay div). Prevents scroll-through on mobile.
+
+**Docs updated:**
+- `docs/ARCHITECTURE.md`: Main layout comment updated to reflect AppTopBar, SettingsDialog, SessionPrefetch.
+- `docs/DEVOPS.md`: Added "Performance infrastructure" subsection documenting all performance patterns.
+- `LangTap_Sprints.md`: Performance audit task updated to Partial with detailed notes.
+
+### Tests
+- All 354 tests passing (23 test files, 7 skipped stubs)
+- No new test files added (structural changes, not new behavior)
+
+### Bundle size impact
+| Route | Before | After | Change |
+|-------|--------|-------|--------|
+| /dojo/kotoba | 125 kB | 118 kB | -7 kB first-load JS |
+| /dojo/kotoba route chunk | 16.3 kB | 9.21 kB | -43% route JS |
+| Initial image priority load | ~12MB (14 frames) | ~900KB (1 frame) | -92% |
+
+### Next task
+Remaining performance audit items: Lighthouse score, animation jank check, kana dojo data splitting. Or resume Sprint 3 (Authentication and Onboarding).
+
+### Notes
+- Two pre-existing ESLint warnings in `game-window.tsx` and `kotoba-game-window.tsx` (missing deps in useCallback). Not introduced by this session.
+- The old `kotoba-dojo-words.ts` file still exists and is imported by `kotoba-practice-fixtures.ts`. It is not dead code. The per-level files duplicate its content for the dojo route; the practice fixtures still use the original.
+- KanaDojo (kanadojo.com) was researched as a reference. Key patterns adopted: heavy layout with thin pages, no loading.tsx files, explicit prefetch on nav links, session warmup, aggressive static cache headers.
+
+---
+
 ## [2026-04-26] - Session 55
 
 **Sprint:** Sprint 2B - UX/UI Design and Screen Specification

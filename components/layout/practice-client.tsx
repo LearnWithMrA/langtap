@@ -1,13 +1,13 @@
 // ------------------------------------------------------------
 // File: components/layout/practice-client.tsx
 // Purpose: Client component composing the full practice screen.
-//          Layers the parallax landscape, mascot, top bar,
-//          distance counter with mode selector, game window, and
-//          audio player into a full-viewport scene. Swipe mode
-//          uses a compact layout preset (hides mascot and top bar).
-// Depends on: components/layout/LandscapeBackground.tsx,
+//          Layers the parallax landscape, mascot, distance counter
+//          with mode selector, game window, and audio player into
+//          a full-viewport scene. Scene renders static until cyclist
+//          frames load, then landscape and cyclist animate together.
+//          Swipe mode uses a compact layout preset (hides mascot).
+// Depends on: components/layout/landscape-background.tsx,
 //             components/animation/cycling-character.tsx,
-//             components/layout/app-top-bar.tsx,
 //             components/game/game-window.tsx,
 //             components/game/distance-counter.tsx,
 //             components/audio/audio-player.tsx
@@ -21,7 +21,6 @@ import { useSearchParams } from 'next/navigation'
 import { useReducedMotion } from 'motion/react'
 import { LandscapeBackground } from '@/components/layout/landscape-background'
 import { CyclingCharacter } from '@/components/animation/cycling-character'
-import { AppTopBar } from '@/components/layout/app-top-bar'
 import { GameWindow } from '@/components/game/game-window'
 import { KotobaGameWindow } from '@/components/game/kotoba-game-window'
 import { DistanceCounter } from '@/components/game/distance-counter'
@@ -106,11 +105,17 @@ export function PracticeClient(): ReactNode {
   const searchParams = useSearchParams()
   const gameType = (searchParams.get('mode') === 'kotoba' ? 'kotoba' : 'kana') as GameType
   const [mode, setMode] = useState<InputMode>('tap')
+  const [sceneReady, setSceneReady] = useState(false)
   const kotobaInput = useSettingsStore((s) => s.kotobaInput)
   const prefersReducedMotion = useReducedMotion()
   const { counters, incrementCorrect } = usePracticeCounters()
 
+  const handleAllFramesLoaded = useCallback((): void => {
+    setSceneReady(true)
+  }, [])
+
   const sceneSpeed = prefersReducedMotion ? 'stopped' : 'idle'
+  const animated = sceneReady && !prefersReducedMotion
 
   const handleCharacterCorrect = useCallback((): void => {
     incrementCorrect(mode)
@@ -119,17 +124,18 @@ export function PracticeClient(): ReactNode {
   return (
     <div className="theme-day relative w-full h-svh overflow-hidden">
       {/* Parallax landscape */}
-      <LandscapeBackground speed={sceneSpeed} staticHills={prefersReducedMotion ?? false} />
+      <LandscapeBackground
+        speed={sceneSpeed}
+        staticHills={prefersReducedMotion ?? false}
+        animated={animated}
+      />
 
       <div
         className="absolute bottom-[calc(12svh-max(7.73vw,62.7px))] left-[3%] md:left-[8%] z-[3]"
         aria-hidden="true"
       >
-        <CyclingCharacter speed={sceneSpeed} />
+        <CyclingCharacter speed={sceneSpeed} onAllFramesLoaded={handleAllFramesLoaded} />
       </div>
-
-      {/* Top bar */}
-      <AppTopBar />
 
       {/* Audio player: bottom right */}
       <div className="absolute bottom-4 right-4 z-10">

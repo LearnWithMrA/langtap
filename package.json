@@ -13,6 +13,7 @@
     "test:watch": "NODE_ENV=test vitest",
     "lint": "eslint .",
     "check": "npm run format:check && npm run lint && npm run type-check && npm run test",
+    "build:budget": "next build 2>&1 | npx tsx scripts/check-bundle-budget.ts",
     "prebuild": "npm run check"
   },
   "dependencies": {

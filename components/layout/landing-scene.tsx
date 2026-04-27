@@ -2,16 +2,18 @@
 // File: components/layout/landing-scene.tsx
 // Purpose: Landing page hero section. Composes the animated
 //          LandscapeBackground and CyclingCharacter into a
-//          full-viewport scene. All elements animate continuously
-//          on load (ground scrolls, character pedals). Clouds are
-//          rendered by LandscapeBackground automatically.
+//          full-viewport scene. Scene renders static on first
+//          paint (cyclist frame 1, hills frozen, clouds paused).
+//          Once all cyclist frames load, everything starts
+//          moving together for a coordinated animation start.
 //          Supports four scene themes via CSS custom properties.
-// Depends on: components/layout/LandscapeBackground.tsx,
+// Depends on: components/layout/landscape-background.tsx,
 //             components/animation/cycling-character.tsx
 // ------------------------------------------------------------
 
 'use client'
 
+import { useCallback, useState } from 'react'
 import type { ReactNode } from 'react'
 import { LandscapeBackground } from '@/components/layout/landscape-background'
 import { CyclingCharacter } from '@/components/animation/cycling-character'
@@ -25,11 +27,17 @@ type LandingSceneProps = {
 // -- Component ----------------------------------------------
 
 export function LandingScene({ children }: LandingSceneProps): ReactNode {
+  const [sceneReady, setSceneReady] = useState(false)
+
+  const handleAllFramesLoaded = useCallback((): void => {
+    setSceneReady(true)
+  }, [])
+
   return (
     <div className="theme-day relative w-full overflow-hidden">
       <section className="relative h-svh">
-        {/* Animated landscape (sky, hills, clouds, ground with continuous motion) */}
-        <LandscapeBackground speed="idle" staticHills={false} />
+        {/* Landscape starts static, animates once cyclist frames are loaded */}
+        <LandscapeBackground speed="idle" animated={sceneReady} />
 
         {/* Mascot riding along the dark green mid-hill path.
             Bottom offset compensates for the PNG's transparent bottom padding
@@ -42,7 +50,7 @@ export function LandingScene({ children }: LandingSceneProps): ReactNode {
           className="absolute bottom-[calc(12svh-max(7.73vw,62.7px))] left-[3%] md:left-[8%] z-[3]"
           aria-hidden="true"
         >
-          <CyclingCharacter speed="idle" />
+          <CyclingCharacter speed="idle" onAllFramesLoaded={handleAllFramesLoaded} />
         </div>
 
         {/* Content overlay (hero copy, etc.) - positioned in the sky above the hills */}

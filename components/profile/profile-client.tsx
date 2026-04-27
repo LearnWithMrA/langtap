@@ -20,7 +20,6 @@
 
 import { useCallback, useState } from 'react'
 import type { ReactNode } from 'react'
-import { AppTopBar } from '@/components/layout/app-top-bar'
 import { Modal } from '@/components/ui/modal'
 import type { ProfileFixtureKey } from '@/samples/profile-fixtures'
 import { getProfileFixture } from '@/samples/profile-fixtures'
@@ -50,8 +49,6 @@ export function ProfileClient(): ReactNode {
 
   return (
     <div className="min-h-svh bg-profile-bg flex flex-col">
-      <AppTopBar />
-
       <main className="max-w-2xl mx-auto px-4 sm:px-8 pt-20 pb-16 flex-1 w-full">
         <div className="flex flex-col gap-6">
           {/* Guest conversion banner */}

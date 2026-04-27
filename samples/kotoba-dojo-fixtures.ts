@@ -1,20 +1,13 @@
 // ─────────────────────────────────────────────
 // File: samples/kotoba-dojo-fixtures.ts
-// Purpose: Mock Kotoba fixtures for the /dojo/kotoba visual shell. Used
-//          while the real word bank (Sprint 5) and mastery store
-//          (Sprint 4) are not yet wired up.
-//          Every JLPT level (N5-N1) is populated with three units of
-//          two level groups of twelve words each, so the owner can page
-//          through every tab and review the shell at realistic density.
-//          Words are hand-authored sample content chosen to be
-//          plausibly level-appropriate; the real pipeline (CONTENT.md
-//          §7.3, Sprint 5) will replace them with JMdict-derived data.
-//          Scores follow a deterministic pattern per group so each
-//          group contains at least one tile in every heat band, two
-//          tiles that need manual unlock (low score, in the manual
-//          set), and two tiles that stay locked (score below threshold,
-//          not in the manual set).
-// Depends on: types/kotoba.types.ts, engine/mastery.ts
+// Purpose: Mock Kotoba fixtures for the /dojo/kotoba visual shell.
+//          N5 words load eagerly (default tab). N4-N1 words load
+//          on demand when the user switches tabs, keeping the
+//          initial bundle small. Word data is split per JLPT level
+//          in samples/kotoba-words-{n5..n1}.ts.
+// Depends on: types/kotoba.types.ts, engine/mastery.ts,
+//             samples/kotoba-words-n5.ts (eager),
+//             samples/kotoba-words-{n4,n3,n2,n1}.ts (lazy)
 // ─────────────────────────────────────────────
 
 import { MASTERY_THRESHOLD } from '@/engine/mastery'
@@ -25,6 +18,8 @@ import type {
   KotobaUnit,
   KotobaWord,
 } from '@/types/kotoba.types'
+
+// N5 loads eagerly (default tab, always visible on first render)
 import {
   N5_U1_G1,
   N5_U1_G2,
@@ -32,64 +27,65 @@ import {
   N5_U2_G2,
   N5_U3_G1,
   N5_U3_G2,
-  N4_U1_G1,
-  N4_U1_G2,
-  N4_U2_G1,
-  N4_U2_G2,
-  N4_U3_G1,
-  N4_U3_G2,
-  N3_U1_G1,
-  N3_U1_G2,
-  N3_U2_G1,
-  N3_U2_G2,
-  N3_U3_G1,
-  N3_U3_G2,
-  N2_U1_G1,
-  N2_U1_G2,
-  N2_U2_G1,
-  N2_U2_G2,
-  N2_U3_G1,
-  N2_U3_G2,
-  N1_U1_G1,
-  N1_U1_G2,
-  N1_U2_G1,
-  N1_U2_G2,
-  N1_U3_G1,
-  N1_U3_G2,
-} from '@/samples/kotoba-dojo-words'
+} from '@/samples/kotoba-words-n5'
 
-// ── Aggregations ──────────────────────────────
+// ── Types ─────────────────────────────────────
 
 type GroupTuple = readonly [readonly KotobaWord[], readonly KotobaWord[]]
 type LevelTuple = readonly [GroupTuple, GroupTuple, GroupTuple]
 
-const LEVEL_WORDS: Readonly<Record<JlptLevel, LevelTuple>> = {
-  n5: [
-    [N5_U1_G1, N5_U1_G2],
-    [N5_U2_G1, N5_U2_G2],
-    [N5_U3_G1, N5_U3_G2],
-  ],
-  n4: [
-    [N4_U1_G1, N4_U1_G2],
-    [N4_U2_G1, N4_U2_G2],
-    [N4_U3_G1, N4_U3_G2],
-  ],
-  n3: [
-    [N3_U1_G1, N3_U1_G2],
-    [N3_U2_G1, N3_U2_G2],
-    [N3_U3_G1, N3_U3_G2],
-  ],
-  n2: [
-    [N2_U1_G1, N2_U1_G2],
-    [N2_U2_G1, N2_U2_G2],
-    [N2_U3_G1, N2_U3_G2],
-  ],
-  n1: [
-    [N1_U1_G1, N1_U1_G2],
-    [N1_U2_G1, N1_U2_G2],
-    [N1_U3_G1, N1_U3_G2],
-  ],
+type LevelWordModule = {
+  [key: string]: readonly KotobaWord[]
 }
+
+// ── Lazy level loaders ────────────────────────
+
+const levelWordCache = new Map<JlptLevel, LevelTuple>()
+
+function extractLevelTuple(mod: LevelWordModule, prefix: string): LevelTuple {
+  return [
+    [mod[`${prefix}_U1_G1`], mod[`${prefix}_U1_G2`]],
+    [mod[`${prefix}_U2_G1`], mod[`${prefix}_U2_G2`]],
+    [mod[`${prefix}_U3_G1`], mod[`${prefix}_U3_G2`]],
+  ] as LevelTuple
+}
+
+const N5_TUPLE: LevelTuple = [
+  [N5_U1_G1, N5_U1_G2],
+  [N5_U2_G1, N5_U2_G2],
+  [N5_U3_G1, N5_U3_G2],
+]
+levelWordCache.set('n5', N5_TUPLE)
+
+async function loadLevelWords(level: JlptLevel): Promise<LevelTuple> {
+  const cached = levelWordCache.get(level)
+  if (cached) return cached
+
+  let mod: LevelWordModule
+  switch (level) {
+    case 'n4':
+      mod = (await import('@/samples/kotoba-words-n4')) as LevelWordModule
+      break
+    case 'n3':
+      mod = (await import('@/samples/kotoba-words-n3')) as LevelWordModule
+      break
+    case 'n2':
+      mod = (await import('@/samples/kotoba-words-n2')) as LevelWordModule
+      break
+    case 'n1':
+      mod = (await import('@/samples/kotoba-words-n1')) as LevelWordModule
+      break
+    default:
+      mod = (await import('@/samples/kotoba-words-n5')) as LevelWordModule
+  }
+
+  const prefix = level.toUpperCase()
+  const tuple = extractLevelTuple(mod, prefix)
+  levelWordCache.set(level, tuple)
+  return tuple
+}
+
+// ── Constants ─────────────────────────────────
 
 const UNIT_RANGES: readonly [string, string, string, string, string, string] = [
   'Levels 1-2',
@@ -106,37 +102,21 @@ const UNIT_RANGE_LABELS: readonly [string, string, string] = [
   'Levels 9-12',
 ]
 
-const ALL_WORDS: readonly KotobaWord[] = (Object.values(LEVEL_WORDS) as LevelTuple[]).flatMap(
-  (level) => level.flatMap((unit) => [...unit[0], ...unit[1]]),
-)
-
-const WORDS_BY_ID: Readonly<Record<string, KotobaWord>> = ((): Readonly<
-  Record<string, KotobaWord>
-> => {
-  const out: Record<string, KotobaWord> = {}
-  for (const entry of ALL_WORDS) out[entry.id] = entry
-  return out
-})()
-
 // ── Scoring pattern ───────────────────────────
-// Twelve positions per group. Picked so each group exercises every
-// heat band plus two manual-unlocks (positions 4 and 9) and two locked
-// tiles (positions 5 and 11 - score below UNLOCK_THRESHOLD and not in
-// the manual set).
 
 const SCORE_PATTERN: readonly number[] = [
-  MASTERY_THRESHOLD + 5, // 0: gold (45)
-  28, // 1: heat-4
-  15, // 2: heat-3
-  7, // 3: heat-2
-  2, // 4: heat-1 (manual unlock required)
-  0, // 5: locked
-  38, // 6: heat-4
-  20, // 7: heat-4
-  12, // 8: heat-3
-  4, // 9: heat-1 (manual unlock required)
-  8, // 10: heat-2
-  0, // 11: locked
+  MASTERY_THRESHOLD + 5,
+  28,
+  15,
+  7,
+  2,
+  0,
+  38,
+  20,
+  12,
+  4,
+  8,
+  0,
 ]
 
 const MANUAL_POSITIONS: readonly number[] = [4, 9]
@@ -155,42 +135,10 @@ function manualUnlocksForGroup(words: readonly KotobaWord[]): readonly string[] 
     .map((entry) => entry.id)
 }
 
-const VARIETY_SCORES: Readonly<Record<string, number>> = ((): Readonly<Record<string, number>> => {
-  const out: Record<string, number> = {}
-  for (const level of Object.values(LEVEL_WORDS)) {
-    for (const unit of level) {
-      for (const group of unit) {
-        Object.assign(out, buildScoresForGroup(group))
-      }
-    }
-  }
-  return out
-})()
-
-const VARIETY_MANUAL_WORDS: readonly string[] = ((): readonly string[] => {
-  const out: string[] = []
-  for (const level of Object.values(LEVEL_WORDS)) {
-    for (const unit of level) {
-      for (const group of unit) {
-        out.push(...manualUnlocksForGroup(group))
-      }
-    }
-  }
-  return out
-})()
-
-const COMPLETE_SCORES: Readonly<Record<string, number>> = ((): Readonly<Record<string, number>> => {
-  const out: Record<string, number> = {}
-  for (const entry of ALL_WORDS) {
-    out[entry.id] = MASTERY_THRESHOLD + (entry.id.charCodeAt(2) % 15)
-  }
-  return out
-})()
-
 // ── Unit builder ──────────────────────────────
 
-function buildUnits(level: JlptLevel): readonly KotobaUnit[] {
-  return LEVEL_WORDS[level].map((unitGroups, unitIndex): KotobaUnit => {
+function buildUnits(level: JlptLevel, levelWords: LevelTuple): readonly KotobaUnit[] {
+  return levelWords.map((unitGroups, unitIndex): KotobaUnit => {
     const [g1, g2] = unitGroups
     const rangeLabels: readonly [string, string] = [
       UNIT_RANGES[unitIndex * 2],
@@ -217,55 +165,134 @@ function buildUnits(level: JlptLevel): readonly KotobaUnit[] {
   })
 }
 
-const LEVELS: Readonly<Record<JlptLevel, readonly KotobaUnit[]>> = {
-  n5: buildUnits('n5'),
-  n4: buildUnits('n4'),
-  n3: buildUnits('n3'),
-  n2: buildUnits('n2'),
-  n1: buildUnits('n1'),
+function buildWordsMap(levelWords: LevelTuple): Readonly<Record<string, KotobaWord>> {
+  const out: Record<string, KotobaWord> = {}
+  for (const unit of levelWords) {
+    for (const group of unit) {
+      for (const entry of group) {
+        out[entry.id] = entry
+      }
+    }
+  }
+  return out
 }
 
-// ── Fixtures ──────────────────────────────────
-
-export const EMPTY_STATE: KotobaDojoFixture = {
-  levels: LEVELS,
-  words: WORDS_BY_ID,
-  mastery: {
-    scores: {},
-    manuallyUnlockedUnits: [],
-    manuallyUnlockedWords: [],
-  },
+function buildScores(levelWords: LevelTuple): Readonly<Record<string, number>> {
+  const out: Record<string, number> = {}
+  for (const unit of levelWords) {
+    for (const group of unit) {
+      Object.assign(out, buildScoresForGroup(group))
+    }
+  }
+  return out
 }
 
-export const VARIETY_STATE: KotobaDojoFixture = {
-  levels: LEVELS,
-  words: WORDS_BY_ID,
-  mastery: {
-    scores: VARIETY_SCORES,
-    manuallyUnlockedUnits: [],
-    manuallyUnlockedWords: VARIETY_MANUAL_WORDS,
-  },
+function buildManualUnlocks(levelWords: LevelTuple): readonly string[] {
+  const out: string[] = []
+  for (const unit of levelWords) {
+    for (const group of unit) {
+      out.push(...manualUnlocksForGroup(group))
+    }
+  }
+  return out
 }
 
-export const COMPLETE_STATE: KotobaDojoFixture = {
-  levels: LEVELS,
-  words: WORDS_BY_ID,
-  mastery: {
-    scores: COMPLETE_SCORES,
-    manuallyUnlockedUnits: [],
-    manuallyUnlockedWords: ALL_WORDS.map((entry) => entry.id),
-  },
+// ── Per-level fixture data ────────────────────
+
+export type KotobaLevelFixture = {
+  units: readonly KotobaUnit[]
+  words: Readonly<Record<string, KotobaWord>>
+  scores: Readonly<Record<string, number>>
+  manualUnlocks: readonly string[]
+  completeScores: Readonly<Record<string, number>>
+  allWordIds: readonly string[]
 }
 
-// ── Access ────────────────────────────────────
+function buildLevelFixture(level: JlptLevel, levelWords: LevelTuple): KotobaLevelFixture {
+  const words = buildWordsMap(levelWords)
+  const allWords = Object.values(words)
+  const completeScores: Record<string, number> = {}
+  for (const entry of allWords) {
+    completeScores[entry.id] = MASTERY_THRESHOLD + (entry.id.charCodeAt(2) % 15)
+  }
+
+  return {
+    units: buildUnits(level, levelWords),
+    words,
+    scores: buildScores(levelWords),
+    manualUnlocks: buildManualUnlocks(levelWords),
+    completeScores,
+    allWordIds: allWords.map((e) => e.id),
+  }
+}
+
+// ── Sync access for N5 (default tab) ──────────
+
+const n5Fixture = buildLevelFixture('n5', N5_TUPLE)
+
+export function getN5Fixture(): KotobaLevelFixture {
+  return n5Fixture
+}
+
+// ── Async access for any level ────────────────
+
+const levelFixtureCache = new Map<JlptLevel, KotobaLevelFixture>()
+levelFixtureCache.set('n5', n5Fixture)
+
+export async function getLevelFixture(level: JlptLevel): Promise<KotobaLevelFixture> {
+  const cached = levelFixtureCache.get(level)
+  if (cached) return cached
+
+  const levelWords = await loadLevelWords(level)
+  const fixture = buildLevelFixture(level, levelWords)
+  levelFixtureCache.set(level, fixture)
+  return fixture
+}
+
+// ── Legacy sync API (loads all levels eagerly) ─
 
 export function getKotobaFixture(key: KotobaFixtureKey): KotobaDojoFixture {
+  const allLevels: JlptLevel[] = ['n5', 'n4', 'n3', 'n2', 'n1']
+  const levels: Record<string, readonly KotobaUnit[]> = {}
+  const words: Record<string, KotobaWord> = {}
+  const scores: Record<string, number> = {}
+  const manualUnlocks: string[] = []
+  const completeScores: Record<string, number> = {}
+  const allWordIds: string[] = []
+
+  for (const level of allLevels) {
+    const cached = levelFixtureCache.get(level)
+    if (!cached) continue
+    levels[level] = cached.units
+    Object.assign(words, cached.words)
+    Object.assign(scores, cached.scores)
+    manualUnlocks.push(...cached.manualUnlocks)
+    Object.assign(completeScores, cached.completeScores)
+    allWordIds.push(...cached.allWordIds)
+  }
+
   switch (key) {
     case 'empty':
-      return EMPTY_STATE
+      return {
+        levels: levels as Readonly<Record<JlptLevel, readonly KotobaUnit[]>>,
+        words,
+        mastery: { scores: {}, manuallyUnlockedUnits: [], manuallyUnlockedWords: [] },
+      }
     case 'variety':
-      return VARIETY_STATE
+      return {
+        levels: levels as Readonly<Record<JlptLevel, readonly KotobaUnit[]>>,
+        words,
+        mastery: { scores, manuallyUnlockedUnits: [], manuallyUnlockedWords: manualUnlocks },
+      }
     case 'complete':
-      return COMPLETE_STATE
+      return {
+        levels: levels as Readonly<Record<JlptLevel, readonly KotobaUnit[]>>,
+        words,
+        mastery: {
+          scores: completeScores,
+          manuallyUnlockedUnits: [],
+          manuallyUnlockedWords: allWordIds,
+        },
+      }
   }
 }

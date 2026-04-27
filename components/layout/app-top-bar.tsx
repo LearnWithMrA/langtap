@@ -19,7 +19,7 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { LogoFull } from '@/components/ui/logo-full'
 import { LogoLt } from '@/components/ui/logo-lt'
 import { useEasterEgg } from '@/hooks/useEasterEgg'
@@ -111,8 +111,18 @@ const SCROLL_THRESHOLD = 16
 
 // -- Component ----------------------------------------------
 
+const PREFETCH_ROUTES = [
+  '/home',
+  '/dojo/kana',
+  '/dojo/kotoba',
+  '/practice',
+  '/leaderboard',
+  '/profile',
+]
+
 export function AppTopBar(): ReactNode {
   const pathname = usePathname() ?? ''
+  const router = useRouter()
   const { isActive: easterEggActive } = useEasterEgg()
   const { playSound } = useKeySound()
   const openSettings = useSettingsStore((s) => s.openSettings)
@@ -126,7 +136,18 @@ export function AppTopBar(): ReactNode {
     handleScroll()
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  }, [pathname])
+
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return (): void => {
+      document.body.style.overflow = ''
+    }
+  }, [menuOpen])
 
   const isHome = pathname === '/home'
   const isKanaDojo = pathname.startsWith('/dojo/kana')
@@ -169,7 +190,13 @@ export function AppTopBar(): ReactNode {
             type="button"
             onClick={(): void => {
               playSound('ui-nav-click')
-              setMenuOpen(!menuOpen)
+              const opening = !menuOpen
+              setMenuOpen(opening)
+              if (opening) {
+                for (const route of PREFETCH_ROUTES) {
+                  router.prefetch(route)
+                }
+              }
             }}
             className={[ICON_LINK, 'text-warm-800 hover:text-sage-400 hover:bg-white/10'].join(' ')}
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
@@ -210,7 +237,7 @@ export function AppTopBar(): ReactNode {
       {/* Mobile full-screen menu overlay */}
       {menuOpen && (
         <div
-          className="fixed inset-0 z-40 bg-white/30 backdrop-blur-xl flex flex-col items-center justify-center gap-6 pt-16 min-[425px]:hidden"
+          className="fixed inset-0 z-40 bg-white/30 backdrop-blur-xl flex flex-col items-center justify-center gap-6 pt-16 min-[425px]:hidden overflow-hidden overscroll-contain touch-none"
           onClick={(e): void => {
             if (e.target === e.currentTarget) setMenuOpen(false)
           }}

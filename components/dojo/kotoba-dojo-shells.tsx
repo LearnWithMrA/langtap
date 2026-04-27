@@ -3,12 +3,11 @@
 // Purpose: Loading, error, and empty state shells for the Kotoba
 //          Dojo page. Extracted from kotoba-dojo-client.tsx to keep
 //          the main orchestrator under the 300-line limit.
-// Depends on: components/layout/app-top-bar.tsx
+//          AppTopBar is rendered by the (main) layout, not here.
 // ─────────────────────────────────────────────
 
 import Link from 'next/link'
 import type { ReactNode } from 'react'
-import { AppTopBar } from '@/components/layout/app-top-bar'
 
 // ── Loading ──────────────────────────────────
 
@@ -19,7 +18,6 @@ export function KotobaLoadingShell(): ReactNode {
       className="min-h-svh text-warm-800"
       style={{ backgroundColor: 'var(--color-kotoba-dojo-bg)' }}
     >
-      <AppTopBar />
       <div className="pt-20 pb-16 px-5">
         <main className="mx-auto max-w-[988px]">
           <div className="h-8 w-40 rounded-lg bg-warm-100 animate-pulse mb-6" />
@@ -50,7 +48,6 @@ export function KotobaErrorShell(): ReactNode {
       className="min-h-svh text-warm-800"
       style={{ backgroundColor: 'var(--color-kotoba-dojo-bg)' }}
     >
-      <AppTopBar />
       <div className="pt-20 pb-16 px-5">
         <main className="mx-auto max-w-[988px]">
           <div
@@ -84,7 +81,6 @@ export function KotobaEmptyShell(): ReactNode {
       className="min-h-svh text-warm-800"
       style={{ backgroundColor: 'var(--color-kotoba-dojo-bg)' }}
     >
-      <AppTopBar />
       <div className="pt-20 pb-16 px-5">
         <main className="mx-auto max-w-[988px]">
           <h1 className="text-2xl font-bold mb-6">Kotoba Dojo</h1>

@@ -20,8 +20,7 @@
 //          tests and design review without waiting on real data.
 //          Real mastery wiring, Supabase persistence, and URL
 //          deep-linking land in Sprint 4.
-// Depends on: components/layout/app-top-bar.tsx,
-//             components/dojo/kotoba-level-tabs.tsx,
+// Depends on: components/dojo/kotoba-level-tabs.tsx,
 //             components/dojo/kotoba-unit-card.tsx,
 //             components/dojo/kotoba-level-group.tsx,
 //             components/dojo/kotoba-word-popover.tsx,
@@ -37,7 +36,6 @@
 
 import { useCallback, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { AppTopBar } from '@/components/layout/app-top-bar'
 import { KotobaLevelTabs } from '@/components/dojo/kotoba-level-tabs'
 import { KotobaUnitGrid } from '@/components/dojo/kotoba-unit-grid'
 import { KotobaWordPopover } from '@/components/dojo/kotoba-word-popover'
@@ -59,7 +57,8 @@ import {
   lockedIdsAtLevel,
 } from '@/components/dojo/kotoba-dojo-helpers'
 import { MASTERY_THRESHOLD } from '@/engine/mastery'
-import { getKotobaFixture } from '@/samples/kotoba-dojo-fixtures'
+import { getN5Fixture, getLevelFixture } from '@/samples/kotoba-dojo-fixtures'
+import type { KotobaLevelFixture } from '@/samples/kotoba-dojo-fixtures'
 import { JLPT_LABELS } from '@/types/kotoba.types'
 import type {
   JlptLevel,
@@ -85,23 +84,43 @@ type ReadyShellProps = {
 }
 
 function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
-  const initial = useMemo(() => getKotobaFixture(fixtureKey), [fixtureKey])
-  const [mastery, setMastery] = useState<KotobaMasteryState>(() => initial.mastery)
+  const n5Data = useMemo(() => getN5Fixture(), [])
+  const [levelData, setLevelData] = useState<Readonly<Record<string, KotobaLevelFixture>>>(() => ({
+    n5: n5Data,
+  }))
   const [activeLevel, setActiveLevel] = useState<JlptLevel>('n5')
+  const [levelLoading, setLevelLoading] = useState(false)
 
-  // Every unit is expandable now. Default to the first unit of the
-  // active level with its first group already open so the view lands
-  // on content instead of a closed grid.
+  const currentFixture = levelData[activeLevel]
+  const currentUnits = useMemo(() => currentFixture?.units ?? [], [currentFixture])
+  const currentWords = useMemo(() => currentFixture?.words ?? {}, [currentFixture])
+
+  const [mastery, setMastery] = useState<KotobaMasteryState>(() => {
+    if (fixtureKey === 'empty') {
+      return { scores: {}, manuallyUnlockedUnits: [], manuallyUnlockedWords: [] }
+    }
+    if (fixtureKey === 'complete') {
+      return {
+        scores: n5Data.completeScores,
+        manuallyUnlockedUnits: [],
+        manuallyUnlockedWords: n5Data.allWordIds,
+      }
+    }
+    return {
+      scores: n5Data.scores,
+      manuallyUnlockedUnits: [],
+      manuallyUnlockedWords: [...n5Data.manualUnlocks],
+    }
+  })
+
   const initialOpenUnitId = useMemo((): string | null => {
-    const units = initial.levels[activeLevel]
-    return units.length > 0 ? units[0].id : null
-  }, [initial, activeLevel])
+    return currentUnits.length > 0 ? currentUnits[0].id : null
+  }, [currentUnits])
   const [openUnitId, setOpenUnitId] = useState<string | null>(initialOpenUnitId)
 
   const [openGroupIds, setOpenGroupIds] = useState<ReadonlySet<string>>(() => {
     if (!initialOpenUnitId) return new Set()
-    const units = initial.levels[activeLevel]
-    const openUnit = units.find((u) => u.id === initialOpenUnitId)
+    const openUnit = currentUnits.find((u) => u.id === initialOpenUnitId)
     if (!openUnit || openUnit.groups.length === 0) return new Set()
     return new Set([openUnit.groups[0].id])
   })
@@ -112,11 +131,11 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
   const [bulkResetScope, setBulkResetScope] = useState<KotobaBulkResetScope | null>(null)
 
   const lockedWordIds = useMemo(
-    () => buildLockedWordSet(initial.words, mastery),
-    [initial.words, mastery],
+    () => buildLockedWordSet(currentWords, mastery),
+    [currentWords, mastery],
   )
 
-  const unitsForLevel = initial.levels[activeLevel]
+  const unitsForLevel = currentUnits
   const lockedAtLevel = useMemo(
     () => lockedIdsAtLevel(unitsForLevel, lockedWordIds),
     [unitsForLevel, lockedWordIds],
@@ -125,24 +144,55 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
   const handleLevelChange = useCallback(
     (level: JlptLevel): void => {
       setActiveLevel(level)
-      const nextUnits = initial.levels[level]
-      const firstUnit = nextUnits[0]
-      setOpenUnitId(firstUnit ? firstUnit.id : null)
-      if (firstUnit && firstUnit.groups.length > 0) {
-        setOpenGroupIds(new Set([firstUnit.groups[0].id]))
-      } else {
-        setOpenGroupIds(new Set())
+
+      const existing = levelData[level]
+      if (existing) {
+        const firstUnit = existing.units[0]
+        setOpenUnitId(firstUnit ? firstUnit.id : null)
+        if (firstUnit && firstUnit.groups.length > 0) {
+          setOpenGroupIds(new Set([firstUnit.groups[0].id]))
+        } else {
+          setOpenGroupIds(new Set())
+        }
+        return
       }
+
+      setLevelLoading(true)
+      getLevelFixture(level).then((fix) => {
+        setLevelData((prev) => ({ ...prev, [level]: fix }))
+
+        if (fixtureKey === 'variety') {
+          setMastery((prev) => ({
+            ...prev,
+            scores: { ...prev.scores, ...fix.scores },
+            manuallyUnlockedWords: [...prev.manuallyUnlockedWords, ...fix.manualUnlocks],
+          }))
+        } else if (fixtureKey === 'complete') {
+          setMastery((prev) => ({
+            ...prev,
+            scores: { ...prev.scores, ...fix.completeScores },
+            manuallyUnlockedWords: [...prev.manuallyUnlockedWords, ...fix.allWordIds],
+          }))
+        }
+
+        const firstUnit = fix.units[0]
+        setOpenUnitId(firstUnit ? firstUnit.id : null)
+        if (firstUnit && firstUnit.groups.length > 0) {
+          setOpenGroupIds(new Set([firstUnit.groups[0].id]))
+        } else {
+          setOpenGroupIds(new Set())
+        }
+        setLevelLoading(false)
+      })
     },
-    [initial],
+    [levelData, fixtureKey],
   )
 
   const handleToggleUnit = useCallback(
     (unitId: string): void => {
       setOpenUnitId((current) => {
         if (current === unitId) return null
-        const units = initial.levels[activeLevel]
-        const nextUnit = units.find((u) => u.id === unitId)
+        const nextUnit = currentUnits.find((u) => u.id === unitId)
         if (nextUnit && nextUnit.groups.length > 0) {
           setOpenGroupIds((prev) => {
             const next = new Set(prev)
@@ -153,7 +203,7 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
         return unitId
       })
     },
-    [initial, activeLevel],
+    [currentUnits],
   )
 
   const handleToggleGroup = useCallback((groupId: string): void => {
@@ -305,8 +355,6 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
       className="min-h-svh text-warm-800"
       style={{ backgroundColor: 'var(--color-kotoba-dojo-bg)' }}
     >
-      <AppTopBar />
-
       <div className="pt-20 pb-16 px-5">
         <main className="mx-auto max-w-[988px]">
           <div className="flex items-center gap-3 mb-5">
@@ -347,21 +395,36 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
             aria-label={`${activeLevel.toUpperCase()} units`}
             className="mt-5"
           >
-            <KotobaUnitGrid
-              units={unitsForLevel}
-              words={initial.words}
-              scores={mastery.scores}
-              lockedWordIds={lockedWordIds}
-              openUnitId={openUnitId}
-              openGroupIds={openGroupIds}
-              onToggleUnit={handleToggleUnit}
-              onToggleGroup={handleToggleGroup}
-              onUnlockUnit={handleUnlockUnit}
-              onUnlockGroup={handleUnlockGroup}
-              onResetUnit={handleResetUnit}
-              onResetGroup={handleResetGroup}
-              onWordClick={handleWordClick}
-            />
+            {levelLoading ? (
+              <div
+                className="grid gap-4"
+                style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}
+              >
+                {Array.from({ length: 3 }, (_, i) => (
+                  <div
+                    key={i}
+                    className="h-32 rounded-xl bg-warm-100 animate-pulse"
+                    aria-hidden="true"
+                  />
+                ))}
+              </div>
+            ) : (
+              <KotobaUnitGrid
+                units={unitsForLevel}
+                words={currentWords}
+                scores={mastery.scores}
+                lockedWordIds={lockedWordIds}
+                openUnitId={openUnitId}
+                openGroupIds={openGroupIds}
+                onToggleUnit={handleToggleUnit}
+                onToggleGroup={handleToggleGroup}
+                onUnlockUnit={handleUnlockUnit}
+                onUnlockGroup={handleUnlockGroup}
+                onResetUnit={handleResetUnit}
+                onResetGroup={handleResetGroup}
+                onWordClick={handleWordClick}
+              />
+            )}
           </div>
         </main>
       </div>

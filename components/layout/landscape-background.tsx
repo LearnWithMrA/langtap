@@ -5,6 +5,9 @@
 //          that flows into the section beneath it.
 //          Clouds drift continuously right-to-left via the
 //          cloud-drift keyframe defined in globals.css.
+//          Accepts an `animated` prop to control all motion.
+//          When animated=false, the full scene renders static.
+//          When animated flips to true, all layers start moving.
 // Depends on: motion/react, next/image,
 //             public/images/cloud-large.svg,
 //             public/images/cloud-small.svg
@@ -40,6 +43,7 @@ const SPEED_MULTIPLIERS: Record<SceneSpeed, number> = {
 type LandscapeBackgroundProps = {
   speed?: SceneSpeed
   staticHills?: boolean
+  animated?: boolean
 }
 
 // -- Clouds -------------------------------------------------
@@ -96,7 +100,7 @@ function CloudSet(): ReactNode {
   )
 }
 
-function CloudsLayer(): ReactNode {
+function CloudsLayer({ animated = true }: { animated?: boolean }): ReactNode {
   return (
     <div
       className="absolute top-14 left-0 right-0 h-[45vh] overflow-hidden pointer-events-none z-[1]"
@@ -104,7 +108,10 @@ function CloudsLayer(): ReactNode {
     >
       <div
         className="flex w-[200%] h-full"
-        style={{ animation: 'cloud-drift 60s linear infinite' }}
+        style={{
+          animation: 'cloud-drift 60s linear infinite',
+          animationPlayState: animated ? 'running' : 'paused',
+        }}
       >
         <CloudSet />
         <CloudSet />
@@ -118,12 +125,15 @@ function CloudsLayer(): ReactNode {
 export function LandscapeBackground({
   speed = 'idle',
   staticHills = false,
+  animated = true,
 }: LandscapeBackgroundProps): ReactNode {
   const multiplier = SPEED_MULTIPLIERS[speed]
   const groundDuration = multiplier === 0 ? 999999 : 2.5 / multiplier
   const midFrontDuration = groundDuration * 6
   const midBackDuration = groundDuration * 12
   const farHillDuration = groundDuration * 24
+
+  const renderStatic = staticHills || !animated
 
   return (
     <div
@@ -139,11 +149,11 @@ export function LandscapeBackground({
       />
 
       {/* Drifting clouds layer */}
-      <CloudsLayer />
+      <CloudsLayer animated={animated} />
 
       {/* Far Hills Back Ridge (Slowest) */}
       <div className="absolute bottom-[27%] left-0 right-0 h-[40%]">
-        {staticHills ? (
+        {renderStatic ? (
           <div className="absolute inset-0">
             <Furthest1 />
           </div>
@@ -170,7 +180,7 @@ export function LandscapeBackground({
 
       {/* Far Hills Front Ridge */}
       <div className="absolute bottom-[27%] left-0 right-0 h-[40%]">
-        {staticHills ? (
+        {renderStatic ? (
           <div className="absolute inset-0">
             <Furthest2 />
           </div>
@@ -197,7 +207,7 @@ export function LandscapeBackground({
 
       {/* Mid Back Hills */}
       <div className="absolute bottom-[20%] left-0 right-0 h-[35%]">
-        {staticHills ? (
+        {renderStatic ? (
           <div className="absolute inset-0">
             <Furthest3 />
           </div>
@@ -224,7 +234,7 @@ export function LandscapeBackground({
 
       {/* Mid Front Hills */}
       <div className="absolute bottom-[14%] left-0 right-0 h-[30%]">
-        {staticHills ? (
+        {renderStatic ? (
           <div className="absolute inset-0">
             <Furthest4 />
           </div>
@@ -254,46 +264,58 @@ export function LandscapeBackground({
         className="absolute bottom-0 left-0 right-0 h-[25%] z-[2]"
         style={{ backgroundColor: 'var(--scene-ground)' }}
       >
-        <motion.div
-          className="absolute inset-0 flex"
-          animate={{ x: ['0%', '-50%'] }}
-          transition={{ duration: groundDuration, repeat: Infinity, ease: 'linear' }}
-          style={{ width: '200%' }}
-        >
-          <div className="w-1/2 h-full relative">
+        {renderStatic ? (
+          <div className="absolute inset-0">
             <GroundBase />
           </div>
-          <div className="w-1/2 h-full relative">
-            <GroundBase />
-          </div>
-          {/* Seam cover: dirt path zone */}
-          <div
-            className="absolute left-[50%] top-[17%] w-1 h-[43%] -ml-px"
-            style={{ backgroundColor: 'var(--scene-path)' }}
-          />
-        </motion.div>
+        ) : (
+          <motion.div
+            className="absolute inset-0 flex"
+            animate={{ x: ['0%', '-50%'] }}
+            transition={{ duration: groundDuration, repeat: Infinity, ease: 'linear' }}
+            style={{ width: '200%' }}
+          >
+            <div className="w-1/2 h-full relative">
+              <GroundBase />
+            </div>
+            <div className="w-1/2 h-full relative">
+              <GroundBase />
+            </div>
+            {/* Seam cover: dirt path zone */}
+            <div
+              className="absolute left-[50%] top-[17%] w-1 h-[43%] -ml-px"
+              style={{ backgroundColor: 'var(--scene-path)' }}
+            />
+          </motion.div>
+        )}
       </div>
 
       {/* Ground Foliage Layer (in front of cyclist, z-[4]) */}
       <div className="absolute bottom-0 left-0 right-0 h-[25%] z-[4] pointer-events-none">
-        <motion.div
-          className="absolute inset-0 flex"
-          animate={{ x: ['0%', '-50%'] }}
-          transition={{ duration: groundDuration, repeat: Infinity, ease: 'linear' }}
-          style={{ width: '200%' }}
-        >
-          <div className="w-1/2 h-full relative">
+        {renderStatic ? (
+          <div className="absolute inset-0">
             <GroundFoliage />
           </div>
-          <div className="w-1/2 h-full relative">
-            <GroundFoliage />
-          </div>
-          {/* Seam cover: dark grass zone */}
-          <div
-            className="absolute left-[50%] top-[60%] w-1 h-[40%] -ml-px"
-            style={{ backgroundColor: 'var(--scene-grass-dark)' }}
-          />
-        </motion.div>
+        ) : (
+          <motion.div
+            className="absolute inset-0 flex"
+            animate={{ x: ['0%', '-50%'] }}
+            transition={{ duration: groundDuration, repeat: Infinity, ease: 'linear' }}
+            style={{ width: '200%' }}
+          >
+            <div className="w-1/2 h-full relative">
+              <GroundFoliage />
+            </div>
+            <div className="w-1/2 h-full relative">
+              <GroundFoliage />
+            </div>
+            {/* Seam cover: dark grass zone */}
+            <div
+              className="absolute left-[50%] top-[60%] w-1 h-[40%] -ml-px"
+              style={{ backgroundColor: 'var(--scene-grass-dark)' }}
+            />
+          </motion.div>
+        )}
       </div>
 
       {/* Massive downward green swoop extending over the #about section! */}

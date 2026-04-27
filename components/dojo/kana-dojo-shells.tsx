@@ -2,12 +2,11 @@
 // File: components/dojo/kana-dojo-shells.tsx
 // Purpose: Loading, error, and empty state shells for the Kana
 //          Dojo page. Extracted from kana-dojo-client.tsx.
-// Depends on: components/layout/app-top-bar.tsx
+//          AppTopBar is rendered by the (main) layout, not here.
 // ─────────────────────────────────────────────
 
 import Link from 'next/link'
 import type { ReactNode } from 'react'
-import { AppTopBar } from '@/components/layout/app-top-bar'
 
 // ── Loading ──────────────────────────────────
 
@@ -15,7 +14,6 @@ export function KanaLoadingShell(): ReactNode {
   const skeletons = Array.from({ length: 5 }, (_, i) => i)
   return (
     <div className="min-h-svh text-[#3e312e]" style={{ backgroundColor: 'var(--color-dojo-bg)' }}>
-      <AppTopBar />
       <div className="pt-20 pb-16 px-5">
         <main className="mx-auto max-w-[988px]">
           <div className="h-8 w-40 rounded-lg bg-warm-100 animate-pulse mb-6" />
@@ -37,7 +35,6 @@ export function KanaLoadingShell(): ReactNode {
 export function KanaErrorShell(): ReactNode {
   return (
     <div className="min-h-svh text-[#3e312e]" style={{ backgroundColor: 'var(--color-dojo-bg)' }}>
-      <AppTopBar />
       <div className="pt-20 pb-16 px-5">
         <main className="mx-auto max-w-[988px]">
           <div
@@ -68,7 +65,6 @@ export function KanaErrorShell(): ReactNode {
 export function KanaEmptyShell(): ReactNode {
   return (
     <div className="min-h-svh text-[#3e312e]" style={{ backgroundColor: 'var(--color-dojo-bg)' }}>
-      <AppTopBar />
       <div className="pt-20 pb-16 px-5">
         <main className="mx-auto max-w-[988px]">
           <h1 className="text-2xl font-bold mb-6">Kana Dojo</h1>

@@ -264,7 +264,7 @@ No UI yet. This is pure logic.
 | Build guest-to-account conversion flow | **Medium** | **To Do** | Guest user clicks "Save Progress" or similar CTA. Prompted to create an account. Local progress migrated to Supabase on account creation. |
 | Accessibility audit | **Medium** | **To Do** | Every interactive element: ARIA labels, keyboard navigation, focus states, touch targets minimum 44x44pt. |
 | Cross-browser and cross-device testing | **Medium** | **To Do** | Chrome, Safari, Firefox. Desktop, tablet, mobile. iOS and Android swipe keyboard behaviour. |
-| Performance audit | **Small** | **To Do** | Lighthouse score. Identify and fix any slow loads. Confirm animation does not cause jank. |
+| Performance audit | **Medium** | **Partial** | Phase 0-2 done: coordinated scene load (cyclist frame-first, landscape waits), AppTopBar moved to persistent layout, session prefetch, intent-based mobile prefetch, next.config optimizations (ETags, staleTimes, removeConsole), vercel.json cache headers, bundle budgets with CI script. Kotoba data split by JLPT level (N5 eager, N4-N1 on demand). Hamburger scroll-through fixed. Remaining: Lighthouse audit, animation jank check, kana dojo data splitting. |
 | Error boundary implementation | **Small** | **To Do** | Global error boundary. All screens handle error state with a human-readable message and a recovery action. |
 
 ---

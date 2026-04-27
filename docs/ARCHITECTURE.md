@@ -152,7 +152,7 @@ langtap/
 |  |  |  |- page.tsx
 |  |  |- credits/
 |  |  |  |- page.tsx            # Attribution and licences
-|  |  |- layout.tsx             # Main layout (bottom nav, top bar)
+|  |  |- layout.tsx             # Main layout (AppTopBar, SettingsDialog, SessionPrefetch)
 |  |
 |  |- api/                      # Next.js route handlers (server-side only)
 |  |  |- stripe/

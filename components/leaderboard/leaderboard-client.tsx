@@ -12,7 +12,6 @@
 
 import { useState } from 'react'
 import type { ReactNode } from 'react'
-import { AppTopBar } from '@/components/layout/app-top-bar'
 import { LeaderboardList, SkeletonRows } from '@/components/leaderboard/leaderboard-list'
 import type { InputMode, TimePeriod, GameType } from '@/samples/leaderboard-fixtures'
 import { getLeaderboardFixture } from '@/samples/leaderboard-fixtures'
@@ -155,7 +154,6 @@ export function LeaderboardClient(): ReactNode {
 
   return (
     <div className="min-h-svh bg-surface">
-      <AppTopBar />
       <div className="max-w-4xl mx-auto px-4 pt-20 pb-8">
         {/* Desktop: title + time period on same row */}
         <div className="hidden lg:flex items-center justify-between gap-3 mb-6">

@@ -3,6 +3,9 @@
 // Purpose: Animated cycling mascot with two implementations:
 //          1. CyclingCharacter (default) - sprite-sheet frame
 //             animation using 14 PNG frames and setInterval.
+//             Frame 1 loads with priority for instant first paint.
+//             Remaining frames load eagerly in the background.
+//             Animation starts only after all frames are loaded.
 //          2. CyclingCharacterSVG - original motion/react SVG
 //             animation (retained for reference).
 //          Speed prop controls frame rate (PNG) or animation
@@ -12,7 +15,7 @@
 
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { motion } from 'motion/react'
 
@@ -22,6 +25,7 @@ type SpeedLevel = 'stopped' | 'idle' | 'slow' | 'medium' | 'fast'
 
 type CyclingCharacterProps = {
   speed: SpeedLevel
+  onAllFramesLoaded?: () => void
 }
 
 // -- Constants ----------------------------------------------
@@ -43,11 +47,26 @@ const FRAME_PATHS: string[] = Array.from(
 
 // -- PNG sprite-sheet animation -----------------------------
 
-export function CyclingCharacter({ speed }: CyclingCharacterProps): React.ReactElement {
+export function CyclingCharacter({
+  speed,
+  onAllFramesLoaded,
+}: CyclingCharacterProps): React.ReactElement {
   const [frameIndex, setFrameIndex] = useState(0)
+  const [allLoaded, setAllLoaded] = useState(false)
+  const loadedCount = useRef(0)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  const handleFrameLoad = useCallback((): void => {
+    loadedCount.current += 1
+    if (loadedCount.current >= FRAME_COUNT) {
+      setAllLoaded(true)
+      onAllFramesLoaded?.()
+    }
+  }, [onAllFramesLoaded])
+
   useEffect(() => {
+    if (!allLoaded) return
+
     const ms = FRAME_INTERVAL_MS[speed]
 
     if (intervalRef.current !== null) {
@@ -55,7 +74,6 @@ export function CyclingCharacter({ speed }: CyclingCharacterProps): React.ReactE
       intervalRef.current = null
     }
 
-    // When stopped, freeze on the current frame
     if (ms > 0) {
       intervalRef.current = setInterval(() => {
         setFrameIndex((prev) => (prev + 1) % FRAME_COUNT)
@@ -67,7 +85,7 @@ export function CyclingCharacter({ speed }: CyclingCharacterProps): React.ReactE
         clearInterval(intervalRef.current)
       }
     }
-  }, [speed])
+  }, [speed, allLoaded])
 
   return (
     <div
@@ -81,8 +99,10 @@ export function CyclingCharacter({ speed }: CyclingCharacterProps): React.ReactE
           alt=""
           width={400}
           height={380}
-          priority
+          priority={i === 0}
+          loading={i === 0 ? undefined : 'eager'}
           unoptimized
+          onLoad={handleFrameLoad}
           className={[
             'absolute inset-0 h-full w-full object-contain',
             i === frameIndex ? 'opacity-100' : 'opacity-0',
