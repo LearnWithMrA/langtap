@@ -33,7 +33,7 @@ export function LandingCta(): ReactNode {
         variant="secondary"
         size="lg"
         aria-label="Play as a guest without creating an account"
-        onClick={() => router.push('/practice')}
+        onClick={() => router.push('/onboarding/step-1')}
         className="w-full"
       >
         Play as guest

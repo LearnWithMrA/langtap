@@ -30,6 +30,39 @@ Format per entry:
 
 ---
 
+## [2026-04-27] - Session 56 (Hotfix 2)
+
+**Sprint:** N/A (routing fix)
+**Task completed:** Fix guest entry flow skipping onboarding
+**Status:** Done
+
+### Changes made
+- `components/ui/landing-cta.tsx`: "Play as guest" button now routes to `/onboarding/step-1` instead of `/practice`. Previously bypassed onboarding entirely. Flow is now: Landing > Onboarding (steps 1-3) > Home.
+
+### Tests
+- No test changes.
+
+---
+
+## [2026-04-27] - Session 56 (Hotfix)
+
+**Sprint:** N/A (build fix)
+**Task completed:** Fix Vercel build failure from prettier version mismatch
+**Status:** Done
+
+### Changes made
+- `.prettierignore`: Added `vercel.json` to ignore list. Vercel's cached node_modules had an older prettier version that formatted JSON differently from local 3.8.1, causing `prettier --check` to fail on `vercel.json` during the build. Ignoring deployment config in prettier is standard practice.
+- `package.json`: Pinned prettier from `^3` to `3.8.1` to prevent future version drift between local and CI environments.
+- `package-lock.json`: Updated lockfile to reflect pinned version.
+
+### Tests
+- No test changes. All 354 tests unaffected.
+
+### Notes
+- Vercel build cache (`node_modules`) was stale and did not pick up the pinned version because `npm install` reported "up to date". Clearing the Vercel build cache is recommended when convenient (Settings > General > Build Cache) but the `.prettierignore` fix resolves the immediate build failure without it.
+
+---
+
 ## [2026-04-27] - Session 56
 
 **Sprint:** Sprint 10 - Polish and QA
