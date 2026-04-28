@@ -12,7 +12,7 @@
 
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { StepIndicator } from '@/components/onboarding/step-indicator'
@@ -20,13 +20,18 @@ import { InputModePicker } from '@/components/onboarding/input-mode-picker'
 import { KeyButton } from '@/components/ui/key-button'
 import { useOnboardingStore } from '@/stores/onboarding.store'
 import type { OnboardingStore } from '@/stores/onboarding.store'
+import { useAuth } from '@/hooks/useAuth'
+import { updateProfile } from '@/services/profile.service'
+import { syncManualUnlocks } from '@/services/unlock.service'
 
 // -- Component ---------------------------------------------------
 
 export default function OnboardingStep3Page(): ReactNode {
   const router = useRouter()
+  const { user } = useAuth()
   const completeOnboarding = useOnboardingStore((s: OnboardingStore) => s.completeOnboarding)
   const onboardingComplete = useOnboardingStore((s: OnboardingStore) => s.onboardingComplete)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     useOnboardingStore.persist.rehydrate()
@@ -42,7 +47,22 @@ export default function OnboardingStep3Page(): ReactNode {
     router.push('/onboarding/step-2')
   }
 
-  const handleStart = (): void => {
+  async function handleStart(): Promise<void> {
+    setSaving(true)
+    const { jlptLevel, inputMode, selectedCharacterIds } = useOnboardingStore.getState()
+
+    if (user) {
+      await updateProfile(user.id, {
+        jlpt_level: jlptLevel,
+        input_mode: inputMode,
+        onboarding_complete: true,
+      })
+
+      if (selectedCharacterIds.length > 0) {
+        await syncManualUnlocks(user.id, selectedCharacterIds)
+      }
+    }
+
     completeOnboarding()
     router.push('/home')
   }
@@ -89,9 +109,10 @@ export default function OnboardingStep3Page(): ReactNode {
       <div className="mt-5">
         <KeyButton
           onClick={handleStart}
+          disabled={saving}
           className="w-full bg-[#c4b0d0] text-white py-3 text-base font-bold shadow-[0_4px_0_0_#a68fb8] focus:!ring-[#c4b0d0]"
         >
-          Start practising
+          {saving ? 'Saving...' : 'Start practising'}
         </KeyButton>
       </div>
     </div>

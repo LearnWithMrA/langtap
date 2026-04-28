@@ -11,13 +11,16 @@
 
 import { useState } from 'react'
 import type { ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
 import { LogoFull } from '@/components/ui/logo-full'
 import { Input } from '@/components/ui/input'
 import { KeyButton } from '@/components/ui/key-button'
+import { signIn, sendPasswordReset } from '@/services/auth.service'
+import { loadProfile } from '@/services/profile.service'
 
 // -- Types ----------------------------------------------------
 
-type Step = 'pick' | 'email'
+type Step = 'pick' | 'email' | 'forgot'
 
 type LogInCardProps = {
   onClose: () => void
@@ -27,9 +30,116 @@ type LogInCardProps = {
 // -- Component ------------------------------------------------
 
 export function LogInCard({ onClose, onSwitchToSignUp }: LogInCardProps): ReactNode {
+  const router = useRouter()
   const [step, setStep] = useState<Step>('pick')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
+
+  async function handleLogIn(): Promise<void> {
+    setError('')
+    setLoading(true)
+
+    const result = await signIn(email, password)
+
+    if (!result.ok) {
+      setError(result.error)
+      setLoading(false)
+      return
+    }
+
+    const profileResult = await loadProfile(result.userId)
+    if (profileResult.ok && !profileResult.data.onboardingComplete) {
+      router.push('/onboarding/step-1')
+    } else {
+      router.push('/home')
+    }
+  }
+
+  async function handleForgotPassword(): Promise<void> {
+    setError('')
+    setLoading(true)
+
+    const result = await sendPasswordReset(email)
+
+    if (!result.ok) {
+      setError(result.error ?? 'Something went wrong.')
+      setLoading(false)
+      return
+    }
+
+    setResetSent(true)
+    setLoading(false)
+  }
+
+  if (step === 'forgot') {
+    return (
+      <div className="relative bg-surface-raised rounded-2xl px-4 pt-4 pb-3 sm:px-8 sm:pt-8 sm:pb-5 shadow-xl w-full max-w-[440px]">
+        <div className="absolute top-2 left-2">
+          <button
+            type="button"
+            onClick={() => {
+              setStep('email')
+              setError('')
+              setResetSent(false)
+            }}
+            className="flex h-7 w-7 items-center justify-center rounded-full text-text-secondary hover:bg-warm-100 transition-colors"
+            aria-label="Back to log in"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <path d="M10 4L6 8l4 4" />
+            </svg>
+          </button>
+        </div>
+        <div className="absolute top-2 right-2">
+          <CloseButton onClick={onClose} />
+        </div>
+        <div className="h-5 sm:h-3" />
+
+        <div className="flex flex-col gap-3">
+          <p className="text-base font-medium text-text-primary">Reset your password</p>
+
+          <Input
+            value={email}
+            onChange={setEmail}
+            type="email"
+            label="Email"
+            placeholder="you@example.com"
+          />
+
+          {error && (
+            <p role="alert" className="text-sm text-feedback-wrong text-center">
+              {error}
+            </p>
+          )}
+
+          {resetSent ? (
+            <p className="text-sm text-sage-500 text-center">Check your email for a reset link.</p>
+          ) : (
+            <KeyButton
+              onClick={handleForgotPassword}
+              disabled={loading}
+              className="w-full justify-center px-4 py-2.5 sm:py-3.5 text-base sm:text-lg font-medium mt-1 bg-navy-deep text-white shadow-[0_4px_0_0_#0f2640]"
+              aria-label="Send reset link"
+            >
+              {loading ? 'Sending...' : 'Send Reset Link'}
+            </KeyButton>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   if (step === 'email') {
     return (
@@ -77,16 +187,28 @@ export function LogInCard({ onClose, onSwitchToSignUp }: LogInCardProps): ReactN
               label="Password"
               placeholder="Enter your password"
             />
-            <a href="#" className="text-sm text-navy-deep hover:underline mt-1 inline-block">
+            <button
+              type="button"
+              onClick={() => setStep('forgot')}
+              className="text-sm text-navy-deep hover:underline mt-1 inline-block"
+            >
               Forgot your password?
-            </a>
+            </button>
           </div>
 
+          {error && (
+            <p role="alert" className="text-sm text-feedback-wrong text-center">
+              {error}
+            </p>
+          )}
+
           <KeyButton
+            onClick={handleLogIn}
+            disabled={loading}
             className="w-full justify-center px-4 py-2.5 sm:py-3.5 text-base sm:text-lg font-medium mt-1 bg-navy-deep text-white shadow-[0_4px_0_0_#0f2640]"
             aria-label="Log in"
           >
-            Log In
+            {loading ? 'Logging in...' : 'Log In'}
           </KeyButton>
         </div>
 

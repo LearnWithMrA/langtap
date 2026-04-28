@@ -1,9 +1,89 @@
-// ------------------------------------------------------------
+// ─────────────────────────────────────────────
 // File: services/profile.service.ts
-// Purpose: Read and write user profile data in Supabase.
-//          Handles JLPT level, input mode, font preferences, and settings.
-//          Placeholder - to be implemented in Sprint 3.
-// Depends on: services/supabase.ts, types/user.types.ts
-// ------------------------------------------------------------
+// Purpose: Read and write user profile data from Supabase.
+//          Maps snake_case database columns to camelCase TypeScript types.
+//          Never called directly from components; go through hooks.
+// Depends on: services/supabase-browser.ts, types/user.types.ts
+// ─────────────────────────────────────────────
 
-export {}
+import { createBrowserSupabaseClient } from '@/services/supabase-browser'
+import type { UserProfile } from '@/types/user.types'
+
+// ── Types ─────────────────────────────────────
+
+type ServiceResult<T> = { ok: true; data: T } | { ok: false; error: string }
+
+// Raw row shape from Supabase (snake_case)
+type ProfileRow = {
+  id: string
+  username: string
+  jlpt_level: string
+  input_mode: string
+  onboarding_complete: boolean
+  notifications_enabled: boolean
+  mnemonics_enabled: boolean
+  distance_unit: string
+  username_changed_at: string | null
+  created_at: string
+}
+
+// ── Helpers ───────────────────────────────────
+
+function mapRowToProfile(row: ProfileRow): UserProfile {
+  return {
+    id: row.id,
+    username: row.username,
+    jlptLevel: row.jlpt_level as UserProfile['jlptLevel'],
+    inputMode: row.input_mode as UserProfile['inputMode'],
+    onboardingComplete: row.onboarding_complete,
+    notificationsEnabled: row.notifications_enabled,
+    mnemonicsEnabled: row.mnemonics_enabled,
+    distanceUnit: row.distance_unit as UserProfile['distanceUnit'],
+    usernameChangedAt: row.username_changed_at,
+    createdAt: row.created_at,
+  }
+}
+
+// ── Main exports ──────────────────────────────
+
+export async function loadProfile(userId: string): Promise<ServiceResult<UserProfile>> {
+  const supabase = createBrowserSupabaseClient()
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select(
+      'id, username, jlpt_level, input_mode, onboarding_complete, notifications_enabled, mnemonics_enabled, distance_unit, username_changed_at, created_at',
+    )
+    .eq('id', userId)
+    .single()
+
+  if (error) {
+    return { ok: false, error: 'Failed to load profile.' }
+  }
+
+  return { ok: true, data: mapRowToProfile(data as ProfileRow) }
+}
+
+export async function updateProfile(
+  userId: string,
+  updates: Partial<{
+    username: string
+    jlpt_level: string
+    input_mode: string
+    onboarding_complete: boolean
+    notifications_enabled: boolean
+    mnemonics_enabled: boolean
+    distance_unit: string
+    username_changed_at: string
+  }>,
+): Promise<ServiceResult<void>> {
+  const supabase = createBrowserSupabaseClient()
+
+  const { error } = await supabase.from('profiles').update(updates).eq('id', userId)
+
+  if (error) {
+    return { ok: false, error: 'Failed to update profile.' }
+  }
+
+  return { ok: true, data: undefined }
+}

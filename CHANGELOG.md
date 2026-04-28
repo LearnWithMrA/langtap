@@ -30,6 +30,47 @@ Format per entry:
 
 ---
 
+## [2026-04-28] - Session 57
+
+**Sprint:** Sprint 3 - Authentication and Onboarding
+**Task completed:** All Sprint 3 tasks (13 tasks, 1 deferred)
+**Status:** Done
+
+### Changes made
+- `components/layout/app-top-bar.tsx`: Fixed mobile burger menu. Moved overlay outside header to escape stacking context. Cleared frosted background when menu is open.
+- `types/user.types.ts`: Added AuthUser and UserProfile types.
+- `stores/user.store.ts`: Implemented Zustand store for auth user, profile, and loading state.
+- `hooks/useAuth.ts`: Implemented auth hook. Initialises on mount, subscribes to auth state changes, exposes isAuthenticated/isGuest/isLoading.
+- `services/profile.service.ts`: Implemented loadProfile() and updateProfile() with snake_case-to-camelCase mapping.
+- `services/unlock.service.ts`: New service. loadManualUnlocks(), syncManualUnlocks(), addManualUnlock().
+- `components/ui/sign-up-card.tsx`: Wired to auth.service.signUp(). Loading/error states. Anonymity reminder. Redirects to onboarding on success.
+- `components/ui/log-in-card.tsx`: Wired to auth.service.signIn(). Checks onboardingComplete for routing. Added forgot password flow with sendPasswordReset().
+- `components/layout/guest-banner.tsx`: New component. Persistent banner for guest users. Session-only dismissal. "Create an account" link.
+- `app/(main)/layout.tsx`: Added GuestBanner to layout.
+- `app/(onboarding)/onboarding/step-3/page.tsx`: Wired to useAuth, updateProfile, syncManualUnlocks. Authenticated users sync JLPT level, input mode, onboarding_complete, and character unlocks to Supabase at completion.
+- `middleware.ts`: Restored /leaderboard and /profile to auth-only routes. Left /onboarding open for guests. Removed outdated TODOs.
+- `supabase/migrations/20260428120000_add_practice_sessions_and_username_changed_at.sql`: New migration. Creates practice_sessions table with RLS. Adds username_changed_at and distance_unit columns to profiles.
+- `docs/AUTH.md`: Updated route protection table and code sample. /onboarding now guest-accessible. /profile restored to auth-only.
+
+### Tests
+- `stores/__tests__/user.store.test.ts`: 7 tests. Pass.
+- `hooks/__tests__/useAuth.test.ts`: 4 tests. Pass.
+- `services/__tests__/profile.service.test.ts`: 4 tests. Pass.
+- `services/__tests__/unlock.service.test.ts`: 6 tests. Pass.
+- `components/layout/__tests__/guest-banner.test.tsx`: 5 tests. Pass.
+- Full suite: 380 tests passing, 0 failures.
+
+### Next task
+Sprint 4 - Core Game Engine (mastery system, word counter, character selection)
+
+### Notes
+- Docker was not running so `supabase db reset` could not apply the new migration. Run it manually before starting Sprint 4.
+- The profiles table column is `jlpt_level` in the actual migration (not `kotoba_jlpt_level` as BACKEND.md shows). Profile service matches the real schema.
+- Notification preferences step (onboarding step 3) deferred to Sprint 10 per AUTH.md. Contextual prompt after first practice session.
+- Sprint 2B visual shells for auth and onboarding were already functional. This sprint wired them to Supabase and added the auth/guest state management layer.
+
+---
+
 ## [2026-04-27] - Session 56 (Hotfix 2)
 
 **Sprint:** N/A (routing fix)

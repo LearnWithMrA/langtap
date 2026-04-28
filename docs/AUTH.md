@@ -132,7 +132,7 @@ export async function middleware(request: NextRequest) {
   // Auth-only routes: require a full account. Guests are redirected.
   // Source of truth for route access rules: Section 4 of this document.
   // Do not add /practice, /dojo, /settings here - guests can access those.
-  const AUTHED_ONLY_ROUTES = ['/leaderboard', '/profile', '/onboarding']
+  const AUTHED_ONLY_ROUTES = ['/leaderboard', '/profile']
   const isAuthedOnly = AUTHED_ONLY_ROUTES.some((r) => pathname.startsWith(r))
 
   if (!user && isAuthedOnly) {
@@ -178,12 +178,12 @@ serves sensitive data. Never rely on middleware alone to protect data.
 | `/` (landing page) | Public. No auth required. |
 | `/(auth)/sign-up` | Public. Redirect to practice if already logged in. |
 | `/(auth)/log-in` | Public. Redirect to practice if already logged in. |
-| `/(onboarding)/*` | Authenticated only. Redirect to log-in if not. |
+| `/(onboarding)/*` | Guest or authenticated. Guests use localStorage for onboarding state. |
 | `/(main)/practice` | Guest or authenticated. Guests see guest banner. |
 | `/(main)/dojo` | Guest or authenticated. |
 | `/(main)/library` | Guest or authenticated. Shows under-construction in Phase 1. |
 | `/(main)/leaderboard` | Authenticated only. Guests see a sign-up prompt. |
-| `/(main)/profile` | Authenticated only. **Temporarily unprotected in Sprint 2B for visual shell testing. Restore to auth-only before Sprint 3.** |
+| `/(main)/profile` | Authenticated only. Restored to auth-only in Sprint 3. |
 | `/(main)/settings` | Guest or authenticated. |
 | `/(main)/credits` | Public. |
 

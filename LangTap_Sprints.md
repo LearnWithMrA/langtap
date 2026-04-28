@@ -120,26 +120,26 @@ Gemini is used for image generation only when photographic or painted assets are
 
 ---
 
-## Sprint 3 - Authentication and Onboarding
+## Sprint 3 - Authentication and Onboarding ✅ COMPLETE
 
-**Goal:** Users can sign up, log in, and complete the four-step onboarding flow.
-**Status:** Pending
+**Goal:** Users can sign up, log in, and complete the onboarding flow.
+**Status:** Complete
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Set up Supabase Auth (email and password) | **Medium** | **To Do** | Configure email/password auth in Supabase. RLS enabled on all tables from the start. |
-| Build sign-up screen | **Medium** | **To Do** | Username field, email, password. Password strength indicator. Anonymity reminder. No real name prompt. |
-| Build log-in screen | **Small** | **To Do** | Email and password. Forgot password link (Supabase magic link flow). |
-| Build guest mode | **Small** | **To Do** | Allow entry without account. Store progress in localStorage. Show persistent banner on every screen. |
-| Build onboarding step 1 - JLPT self-assessment | **Medium** | **To Do** | Show N5-N1 levels with descriptions. User selects Kotoba JLPT level and Kanji JLPT level. Save both to user profile in Supabase. Show mastery pre-set warning message. |
-| Build onboarding step 2 - early character unlock | **Large** | **To Do** | Show full kana chart. User taps characters they know. Unlock those characters immediately. Skip button visible. Confirmation before applying. |
-| Build onboarding step 3 - notification preferences | **Small** | **To Do** | Minimal screen in Phase 1. Toggle placeholder only. Save preference to user profile. |
-| Build onboarding step 4 - input mode selection | **Small** | **To Do** | Choose Tap, Type, or Swipe. Save to user profile. Show mode icon preview. |
-| Build user profile record in Supabase | **Medium** | **To Do** | Schema: user_id, username, kotoba_jlpt_level, kanji_jlpt_level, input_mode, notification_prefs, created_at. RLS: user can only read and write their own row. |
-| Write auth tests | **Medium** | **To Do** | Sign up, log in, guest mode, onboarding flow. Happy path, loading, and error states for each screen. |
-| Add `practice_sessions` table to Supabase | **Small** | **To Do** | Schema: user_id, event_at_utc, user_tz, local_date, characters_practiced. Unique (user_id, local_date). RLS user read/write own rows. See BACKEND.md Section 2.7. Flagged in Session 49. |
-| Add `username_changed_at` to profiles | **Small** | **To Do** | timestamptz nullable. Server enforces 30-day cooldown. See BACKEND.md Section 2.7, SECURITY.md Section 5.1. Flagged in Session 49. |
-| Restore `/profile` to auth-only routes | **Small** | **To Do** | Undo temporary middleware change from Session 49. Add '/profile' back to AUTHED_ONLY_ROUTES in middleware.ts. |
+| Set up Supabase Auth (email and password) | **Medium** | **Done** | auth.service.ts (signUp, signIn, getUser, sendPasswordReset), Supabase browser+server clients, middleware, auth callback route all built in Sprint 2B. Verified and wired in this sprint. |
+| Build sign-up screen | **Medium** | **Done** | sign-up-card.tsx wired to auth.service.signUp(). Loading/error states. Anonymity reminder added. Redirects to /onboarding/step-1 on success. |
+| Build log-in screen | **Small** | **Done** | log-in-card.tsx wired to auth.service.signIn(). Checks onboardingComplete, routes accordingly. Forgot password flow with sendPasswordReset(). |
+| Build guest mode | **Small** | **Done** | "Try it now" routes through onboarding (localStorage via Zustand persist). GuestBanner component in (main) layout. Dismissible per session. /leaderboard and /profile are auth-only. |
+| Build onboarding step 1 - JLPT self-assessment | **Medium** | **Done** | Visual shell from Sprint 2B. Stores jlptLevel in onboarding store (localStorage). Synced to Supabase profile at completion (step 3). |
+| Build onboarding step 2 - early character unlock | **Large** | **Done** | Visual shell from Sprint 2B (step 2 + step 2b). Character selections stored in onboarding store. Synced to manual_unlocks table via syncManualUnlocks() at completion. |
+| Build onboarding step 3 - notification preferences | **Small** | **Deferred** | Deferred to Sprint 10 per AUTH.md. Contextual prompt after first practice session. |
+| Build onboarding step 4 - input mode selection | **Small** | **Done** | Visual shell from Sprint 2B (step 3 in the 3-step flow). Input mode synced to profile at completion. |
+| Build user profile record in Supabase | **Medium** | **Done** | profiles table + handle_new_user trigger created in Sprint 1. profile.service.ts implemented with loadProfile() and updateProfile(). Tested. |
+| Write auth tests | **Medium** | **Done** | 380 tests total. Auth: auth.service (33), useAuth hook (4), user.store (7), profile.service (4), unlock.service (6), guest-banner (5). |
+| Add `practice_sessions` table to Supabase | **Small** | **Done** | Migration 20260428120000. RLS + FORCE RLS + indexes. Needs `supabase db reset` to apply locally. |
+| Add `username_changed_at` to profiles | **Small** | **Done** | Same migration. Also adds distance_unit column. |
+| Restore `/profile` to auth-only routes | **Small** | **Done** | middleware.ts AUTHED_ONLY_ROUTES restored to ['/leaderboard', '/profile']. /onboarding left open for guests. |
 
 ---
 

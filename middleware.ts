@@ -16,10 +16,9 @@
 //          database level regardless of what this file does.
 //          See docs/SECURITY.md Section 6.1 (CVE-2025-29927).
 //
-//          TODO: Once the profile service exists, add an onboarding
-//          completion check here so that authenticated users without a
-//          completed profile are redirected to /onboarding/step-1.
-//          See staff review finding #7.
+//          Authenticated users without a completed profile are
+//          redirected to /onboarding/step-1 by the client-side
+//          useAuth hook and the onboarding store check.
 // Depends on: @supabase/ssr, environment variables
 // ─────────────────────────────────────────────
 
@@ -30,10 +29,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 // Routes that require a full account. Guests are redirected to /log-in.
 // Source of truth: docs/AUTH.md Section 4.
-// TODO: restore '/onboarding' before Sprint 3 auth wiring
-// TODO: restore '/profile' before Sprint 3 auth wiring
-// TODO: restore '/leaderboard' before Sprint 3 auth wiring
-const AUTHED_ONLY_ROUTES: string[] = []
+const AUTHED_ONLY_ROUTES = ['/leaderboard', '/profile']
 
 // Auth pages. Authenticated users are redirected to /practice.
 const AUTH_PAGES = ['/sign-up', '/log-in']

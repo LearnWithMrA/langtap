@@ -11,9 +11,11 @@
 
 import { useState } from 'react'
 import type { ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
 import { LogoFull } from '@/components/ui/logo-full'
 import { Input } from '@/components/ui/input'
 import { KeyButton } from '@/components/ui/key-button'
+import { signUp } from '@/services/auth.service'
 
 // -- Types ----------------------------------------------------
 
@@ -58,12 +60,30 @@ function getStrengthColor(index: number, strength: number): string {
 // -- Component ------------------------------------------------
 
 export function SignUpCard({ onClose, onSwitchToLogIn }: SignUpCardProps): ReactNode {
+  const router = useRouter()
   const [step, setStep] = useState<Step>('pick')
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const strength = getPasswordStrength(password)
+
+  async function handleSignUp(): Promise<void> {
+    setError('')
+    setLoading(true)
+
+    const result = await signUp(email, password, username)
+
+    if (!result.ok) {
+      setError(result.error)
+      setLoading(false)
+      return
+    }
+
+    router.push('/onboarding/step-1')
+  }
 
   if (step === 'email') {
     return (
@@ -133,11 +153,23 @@ export function SignUpCard({ onClose, onSwitchToLogIn }: SignUpCardProps): React
             )}
           </div>
 
+          <p className="text-xs text-text-muted">
+            Your username will be visible on the leaderboard. Do not use your real name.
+          </p>
+
+          {error && (
+            <p role="alert" className="text-sm text-feedback-wrong text-center">
+              {error}
+            </p>
+          )}
+
           <KeyButton
+            onClick={handleSignUp}
+            disabled={loading}
             className="w-full justify-center px-4 py-2.5 sm:py-3.5 text-base sm:text-lg font-medium mt-1 bg-[#4a7faa] text-white shadow-[0_4px_0_0_#3a6488]"
             aria-label="Sign up"
           >
-            Sign Up
+            {loading ? 'Signing up...' : 'Sign Up'}
           </KeyButton>
         </div>
 

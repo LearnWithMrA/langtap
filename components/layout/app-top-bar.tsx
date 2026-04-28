@@ -157,24 +157,140 @@ export function AppTopBar(): ReactNode {
   const logoColour = easterEggActive ? 'text-sage-500 scale-105' : 'text-warm-800'
 
   return (
-    <header
-      className={[
-        'fixed top-0 left-0 right-0 h-14 z-50 px-2 min-[425px]:px-4',
-        'transition-all duration-200',
-        scrolled ? 'bg-white/80 backdrop-blur-sm border-b border-border' : 'bg-transparent',
-      ].join(' ')}
-    >
-      {/* Mobile: logo left, settings + hamburger right */}
-      <div className="max-[424px]:flex hidden items-center justify-between h-full">
-        <button
-          type="button"
-          onClick={(): void => playSound('ui-logo')}
-          className="min-h-9 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-sage-300 rounded-lg cursor-pointer"
-          aria-label="LangTap logo"
-        >
-          <LogoLt className={['h-7 w-7 transition-all duration-300', logoColour].join(' ')} />
-        </button>
-        <div className="flex items-center gap-1">
+    <>
+      <header
+        className={[
+          'fixed top-0 left-0 right-0 h-14 z-50 px-2 min-[425px]:px-4',
+          'transition-all duration-200',
+          scrolled && !menuOpen
+            ? 'bg-white/80 backdrop-blur-sm border-b border-border'
+            : 'bg-transparent',
+        ].join(' ')}
+      >
+        {/* Mobile: logo left, settings + hamburger right */}
+        <div className="max-[424px]:flex hidden items-center justify-between h-full">
+          <button
+            type="button"
+            onClick={(): void => playSound('ui-logo')}
+            className="min-h-9 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-sage-300 rounded-lg cursor-pointer"
+            aria-label="LangTap logo"
+          >
+            <LogoLt className={['h-7 w-7 transition-all duration-300', logoColour].join(' ')} />
+          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={(): void => {
+                playSound('ui-nav-click')
+                openSettings()
+              }}
+              className={[ICON_LINK, 'text-warm-800 hover:text-sage-400 hover:bg-white/10'].join(
+                ' ',
+              )}
+              aria-label="Settings"
+            >
+              <IconSettings />
+            </button>
+            <button
+              type="button"
+              onClick={(): void => {
+                playSound('ui-nav-click')
+                const opening = !menuOpen
+                setMenuOpen(opening)
+                if (opening) {
+                  for (const route of PREFETCH_ROUTES) {
+                    router.prefetch(route)
+                  }
+                }
+              }}
+              className={[ICON_LINK, 'text-warm-800 hover:text-sage-400 hover:bg-white/10'].join(
+                ' ',
+              )}
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={menuOpen}
+            >
+              {menuOpen ? (
+                <svg
+                  width={24}
+                  height={24}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                >
+                  <line x1={6} y1={6} x2={18} y2={18} />
+                  <line x1={6} y1={18} x2={18} y2={6} />
+                </svg>
+              ) : (
+                <svg
+                  width={24}
+                  height={24}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                >
+                  <line x1={4} y1={6} x2={20} y2={6} />
+                  <line x1={4} y1={12} x2={20} y2={12} />
+                  <line x1={4} y1={18} x2={20} y2={18} />
+                </svg>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Medium: icon bar (425px to 768px) */}
+        <div className="hidden min-[425px]:flex md:hidden items-center justify-between h-full">
+          <button
+            type="button"
+            onClick={(): void => playSound('ui-logo')}
+            className="min-h-11 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-sage-300 rounded-lg cursor-pointer"
+            aria-label="LangTap logo"
+          >
+            <LogoLt className={['h-8 w-8 transition-all duration-300', logoColour].join(' ')} />
+          </button>
+          <Link
+            href="/home"
+            className={[
+              ICON_LINK,
+              isHome ? 'text-sage-500' : 'text-warm-800 hover:text-sage-400',
+            ].join(' ')}
+            aria-label="Home"
+          >
+            <IconHome />
+          </Link>
+          <Link
+            href="/dojo/kana"
+            className={[
+              ICON_LINK,
+              isKanaDojo ? 'text-sage-500 font-bold' : 'text-warm-800 hover:text-sage-400',
+            ].join(' ')}
+            aria-label="Kana Dojo"
+          >
+            <span className="text-xl">あ</span>
+          </Link>
+          <Link
+            href="/dojo/kotoba"
+            className={[
+              ICON_LINK,
+              isKotobaDojo ? 'text-sage-500 font-bold' : 'text-warm-800 hover:text-sage-400',
+            ].join(' ')}
+            aria-label="Kotoba Dojo"
+          >
+            <span className="text-xl">言</span>
+          </Link>
+          <Link
+            href="/leaderboard"
+            className={[
+              ICON_LINK,
+              isLeaderboard ? 'text-sage-500' : 'text-warm-800 hover:text-sage-400',
+            ].join(' ')}
+            aria-label="Leaderboard"
+          >
+            <IconTrophy />
+          </Link>
           <button
             type="button"
             onClick={(): void => {
@@ -186,55 +302,103 @@ export function AppTopBar(): ReactNode {
           >
             <IconSettings />
           </button>
+          <Link
+            href="/profile"
+            className={[ICON_LINK, 'text-warm-800 hover:text-sage-400 hover:bg-white/10'].join(' ')}
+            aria-label="Profile"
+          >
+            <IconProfile />
+          </Link>
+        </div>
+
+        {/* Desktop: full text links (768px+) */}
+        <div className="hidden md:flex items-center h-full">
           <button
             type="button"
-            onClick={(): void => {
-              playSound('ui-nav-click')
-              const opening = !menuOpen
-              setMenuOpen(opening)
-              if (opening) {
-                for (const route of PREFETCH_ROUTES) {
-                  router.prefetch(route)
-                }
-              }
-            }}
-            className={[ICON_LINK, 'text-warm-800 hover:text-sage-400 hover:bg-white/10'].join(' ')}
-            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-            aria-expanded={menuOpen}
+            onClick={(): void => playSound('ui-logo')}
+            className="flex-none min-h-11 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-sage-300 rounded-lg cursor-pointer"
+            aria-label="LangTap logo"
           >
-            {menuOpen ? (
-              <svg
-                width={24}
-                height={24}
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeLinecap="round"
-              >
-                <line x1={6} y1={6} x2={18} y2={18} />
-                <line x1={6} y1={18} x2={18} y2={6} />
-              </svg>
-            ) : (
-              <svg
-                width={24}
-                height={24}
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeLinecap="round"
-              >
-                <line x1={4} y1={6} x2={20} y2={6} />
-                <line x1={4} y1={12} x2={20} y2={12} />
-                <line x1={4} y1={18} x2={20} y2={18} />
-              </svg>
-            )}
+            <LogoFull
+              className={['h-7 w-auto transition-all duration-300', logoColour].join(' ')}
+            />
           </button>
-        </div>
-      </div>
 
-      {/* Mobile full-screen menu overlay */}
+          <nav className="flex-1 flex justify-center gap-6">
+            <Link
+              href="/home"
+              className={[
+                'text-base transition-all duration-150 min-h-11 leading-[2.75rem] px-3 rounded-lg hover:bg-white/10',
+                isHome
+                  ? 'text-sage-500 font-bold'
+                  : 'text-warm-800 font-medium hover:text-sage-400',
+              ].join(' ')}
+            >
+              Home
+            </Link>
+            <Link
+              href="/dojo/kana"
+              className={[
+                'text-base transition-all duration-150 min-h-11 leading-[2.75rem] px-3 rounded-lg hover:bg-white/10',
+                isKanaDojo
+                  ? 'text-sage-500 font-bold'
+                  : 'text-warm-800 font-medium hover:text-sage-400',
+              ].join(' ')}
+            >
+              Kana Dojo
+            </Link>
+            <Link
+              href="/dojo/kotoba"
+              className={[
+                'text-base transition-all duration-150 min-h-11 leading-[2.75rem] px-3 rounded-lg hover:bg-white/10',
+                isKotobaDojo
+                  ? 'text-sage-500 font-bold'
+                  : 'text-warm-800 font-medium hover:text-sage-400',
+              ].join(' ')}
+            >
+              Kotoba Dojo
+            </Link>
+            <Link
+              href="/leaderboard"
+              className={[
+                'text-base transition-all duration-150 min-h-11 leading-[2.75rem] px-3 rounded-lg hover:bg-white/10',
+                isLeaderboard
+                  ? 'text-sage-500 font-bold'
+                  : 'text-warm-800 font-medium hover:text-sage-400',
+              ].join(' ')}
+            >
+              Leaderboard
+            </Link>
+          </nav>
+
+          <div className="flex-none flex gap-2">
+            <button
+              type="button"
+              onClick={(): void => {
+                playSound('ui-nav-click')
+                openSettings()
+              }}
+              className={[ICON_LINK, 'text-warm-800 hover:text-sage-400 hover:bg-white/10'].join(
+                ' ',
+              )}
+              aria-label="Settings"
+            >
+              <IconSettings />
+            </button>
+            <Link
+              href="/profile"
+              className={[ICON_LINK, 'text-warm-800 hover:text-sage-400 hover:bg-white/10'].join(
+                ' ',
+              )}
+              aria-label="Profile"
+            >
+              <IconProfile />
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile full-screen menu overlay (outside header to avoid stacking context issues) */}
       {menuOpen && (
         <div
           className="fixed inset-0 z-40 bg-white/30 backdrop-blur-xl flex flex-col items-center justify-center gap-6 pt-16 min-[425px]:hidden overflow-hidden overscroll-contain touch-none"
@@ -294,154 +458,6 @@ export function AppTopBar(): ReactNode {
           </Link>
         </div>
       )}
-
-      {/* Medium: icon bar (425px to 768px) */}
-      <div className="hidden min-[425px]:flex md:hidden items-center justify-between h-full">
-        <button
-          type="button"
-          onClick={(): void => playSound('ui-logo')}
-          className="min-h-11 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-sage-300 rounded-lg cursor-pointer"
-          aria-label="LangTap logo"
-        >
-          <LogoLt className={['h-8 w-8 transition-all duration-300', logoColour].join(' ')} />
-        </button>
-        <Link
-          href="/home"
-          className={[
-            ICON_LINK,
-            isHome ? 'text-sage-500' : 'text-warm-800 hover:text-sage-400',
-          ].join(' ')}
-          aria-label="Home"
-        >
-          <IconHome />
-        </Link>
-        <Link
-          href="/dojo/kana"
-          className={[
-            ICON_LINK,
-            isKanaDojo ? 'text-sage-500 font-bold' : 'text-warm-800 hover:text-sage-400',
-          ].join(' ')}
-          aria-label="Kana Dojo"
-        >
-          <span className="text-xl">あ</span>
-        </Link>
-        <Link
-          href="/dojo/kotoba"
-          className={[
-            ICON_LINK,
-            isKotobaDojo ? 'text-sage-500 font-bold' : 'text-warm-800 hover:text-sage-400',
-          ].join(' ')}
-          aria-label="Kotoba Dojo"
-        >
-          <span className="text-xl">言</span>
-        </Link>
-        <Link
-          href="/leaderboard"
-          className={[
-            ICON_LINK,
-            isLeaderboard ? 'text-sage-500' : 'text-warm-800 hover:text-sage-400',
-          ].join(' ')}
-          aria-label="Leaderboard"
-        >
-          <IconTrophy />
-        </Link>
-        <button
-          type="button"
-          onClick={(): void => {
-            playSound('ui-nav-click')
-            openSettings()
-          }}
-          className={[ICON_LINK, 'text-warm-800 hover:text-sage-400 hover:bg-white/10'].join(' ')}
-          aria-label="Settings"
-        >
-          <IconSettings />
-        </button>
-        <Link
-          href="/profile"
-          className={[ICON_LINK, 'text-warm-800 hover:text-sage-400 hover:bg-white/10'].join(' ')}
-          aria-label="Profile"
-        >
-          <IconProfile />
-        </Link>
-      </div>
-
-      {/* Desktop: full text links (768px+) */}
-      <div className="hidden md:flex items-center h-full">
-        <button
-          type="button"
-          onClick={(): void => playSound('ui-logo')}
-          className="flex-none min-h-11 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-sage-300 rounded-lg cursor-pointer"
-          aria-label="LangTap logo"
-        >
-          <LogoFull className={['h-7 w-auto transition-all duration-300', logoColour].join(' ')} />
-        </button>
-
-        <nav className="flex-1 flex justify-center gap-6">
-          <Link
-            href="/home"
-            className={[
-              'text-base transition-all duration-150 min-h-11 leading-[2.75rem] px-3 rounded-lg hover:bg-white/10',
-              isHome ? 'text-sage-500 font-bold' : 'text-warm-800 font-medium hover:text-sage-400',
-            ].join(' ')}
-          >
-            Home
-          </Link>
-          <Link
-            href="/dojo/kana"
-            className={[
-              'text-base transition-all duration-150 min-h-11 leading-[2.75rem] px-3 rounded-lg hover:bg-white/10',
-              isKanaDojo
-                ? 'text-sage-500 font-bold'
-                : 'text-warm-800 font-medium hover:text-sage-400',
-            ].join(' ')}
-          >
-            Kana Dojo
-          </Link>
-          <Link
-            href="/dojo/kotoba"
-            className={[
-              'text-base transition-all duration-150 min-h-11 leading-[2.75rem] px-3 rounded-lg hover:bg-white/10',
-              isKotobaDojo
-                ? 'text-sage-500 font-bold'
-                : 'text-warm-800 font-medium hover:text-sage-400',
-            ].join(' ')}
-          >
-            Kotoba Dojo
-          </Link>
-          <Link
-            href="/leaderboard"
-            className={[
-              'text-base transition-all duration-150 min-h-11 leading-[2.75rem] px-3 rounded-lg hover:bg-white/10',
-              isLeaderboard
-                ? 'text-sage-500 font-bold'
-                : 'text-warm-800 font-medium hover:text-sage-400',
-            ].join(' ')}
-          >
-            Leaderboard
-          </Link>
-        </nav>
-
-        <div className="flex-none flex gap-2">
-          <button
-            type="button"
-            onClick={(): void => {
-              playSound('ui-nav-click')
-              openSettings()
-            }}
-            className={[ICON_LINK, 'text-warm-800 hover:text-sage-400 hover:bg-white/10'].join(' ')}
-            aria-label="Settings"
-          >
-            <IconSettings />
-          </button>
-          <Link
-            href="/profile"
-            className={[ICON_LINK, 'text-warm-800 hover:text-sage-400 hover:bg-white/10'].join(' ')}
-            aria-label="Profile"
-          >
-            <IconProfile />
-          </Link>
-        </div>
-      </div>
-    </header>
+    </>
   )
 }
