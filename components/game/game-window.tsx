@@ -1,17 +1,18 @@
-// ------------------------------------------------------------
+// ─────────────────────────────────────────────
 // File: components/game/game-window.tsx
 // Purpose: Floating game card containing the word prompt,
 //          input area (varies by mode), and feedback elements.
 //          The full word is shown with characters dimming as the
 //          user types through them. All characters flash green on
-//          word completion. Mock game loop with generation-guarded
-//          timers. Replaced by the real engine in Sprint 4-5.
-// Depends on: engine/constants.ts,
+//          word completion. Wired to the real engine via
+//          usePracticeSession hook.
+// Depends on: hooks/usePracticeSession.ts, engine/input.ts,
+//             engine/constants.ts,
 //             components/game/type-input.tsx,
 //             components/game/swipe-input.tsx,
 //             components/game/tap-input.tsx,
 //             components/game/meaning-reveal.tsx
-// ------------------------------------------------------------
+// ─────────────────────────────────────────────
 
 'use client'
 
@@ -22,42 +23,45 @@ import { SwipeInput } from '@/components/game/swipe-input'
 import { TapInput } from '@/components/game/tap-input'
 import { MeaningReveal } from '@/components/game/meaning-reveal'
 import { FEEDBACK_FLASH_MS, MEANING_DISPLAY_MS, MEANING_FADE_MS } from '@/engine/constants'
-import {
-  MOCK_WORDS,
-  HIRAGANA_TAP,
-  KATAKANA_TAP,
-  isKatakanaWord,
-  toKatakana,
-} from '@/components/game/kana-practice-data'
+import { evaluateInput } from '@/engine/input'
+import { HIRAGANA_TAP, KATAKANA_TAP, toKatakana } from '@/components/game/kana-practice-data'
+import type { UsePracticeSessionReturn, CharacterResult } from '@/hooks/usePracticeSession'
 
 const MAX_WRONG_ATTEMPTS = 3
 
-// -- Types --------------------------------------------------
+// ── Types ─────────────────────────────────────
 
 type InputMode = 'type' | 'tap' | 'swipe'
 
 type GameWindowProps = {
   mode: InputMode
+  session: UsePracticeSessionReturn
   children?: ReactNode
-  onCharacterCorrect?: () => void
 }
 
-// -- Component ----------------------------------------------
+// ── Helpers ───────────────────────────────────
 
-export function GameWindow({ mode, children, onCharacterCorrect }: GameWindowProps): ReactNode {
+function isKatakanaChar(kana: string): boolean {
+  const code = kana.charCodeAt(0)
+  return code >= 0x30a0 && code <= 0x30ff
+}
+
+// ── Component ─────────────────────────────────
+
+export function GameWindow({ mode, session, children }: GameWindowProps): ReactNode {
   const childArray = Array.isArray(children) ? children : children ? [children] : []
   const topLeft = childArray[0] ?? null
   const topRight = childArray[1] ?? null
 
-  // Direction alternates each word: kana prompt + romaji answer, then romaji prompt + kana answer
+  const { prompt, isLoading, isEmpty, handleWordComplete, advanceToNext } = session
+
   type Direction = 'kana-to-romaji' | 'romaji-to-kana'
   const [direction, setDirection] = useState<Direction>('kana-to-romaji')
-  const [wordIndex, setWordIndex] = useState(0)
   const [inputValue, setInputValue] = useState('')
   const [completedCount, setCompletedCount] = useState(0)
   const [feedbackState, setFeedbackState] = useState<'idle' | 'correct' | 'wrong'>('idle')
   const [wrongAttemptsMap, setWrongAttemptsMap] = useState<number[]>([])
-  // Hint visibility is derived: show when current char has 3+ wrong attempts
+  const [charStartTimes, setCharStartTimes] = useState<number[]>([])
 
   const [showMeaning, setShowMeaning] = useState(false)
   const [wordDone, setWordDone] = useState(false)
@@ -67,36 +71,36 @@ export function GameWindow({ mode, children, onCharacterCorrect }: GameWindowPro
   const generationRef = useRef(0)
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
 
-  const currentWord = MOCK_WORDS[wordIndex]
+  const characters = prompt?.characters ?? []
+  const isKatakana = characters.length > 0 && isKatakanaChar(characters[0].kana)
+  const isKanaToRomaji = direction === 'kana-to-romaji'
+  const currentCharIndex = Math.min(completedCount, characters.length - 1)
+  const currentChar = characters[currentCharIndex]
 
-  // Cumulative breakpoints for both directions
+  // Cumulative breakpoints
   const romajiBreakpoints = useMemo((): string[] => {
     const result: string[] = []
     let cumulative = ''
-    for (const char of currentWord.characters) {
+    for (const char of characters) {
       cumulative += char.romaji
       result.push(cumulative)
     }
     return result
-  }, [currentWord])
+  }, [characters])
 
   const kanaBreakpoints = useMemo((): string[] => {
     const result: string[] = []
     let cumulative = ''
-    for (const char of currentWord.characters) {
+    for (const char of characters) {
       cumulative += char.kana
       result.push(cumulative)
     }
     return result
-  }, [currentWord])
+  }, [characters])
 
-  const isKanaToRomaji = direction === 'kana-to-romaji'
   const breakpoints = isKanaToRomaji ? romajiBreakpoints : kanaBreakpoints
-  const fullAnswer = breakpoints[breakpoints.length - 1]
-  const currentCharIndex = Math.min(completedCount, currentWord.characters.length - 1)
-  const currentChar = currentWord.characters[currentCharIndex]
+  const fullAnswer = breakpoints[breakpoints.length - 1] ?? ''
 
-  // Per-character wrong attempts and derived hint visibility
   function getWrongAttempts(charIdx: number): number {
     return wrongAttemptsMap[charIdx] ?? 0
   }
@@ -116,12 +120,13 @@ export function GameWindow({ mode, children, onCharacterCorrect }: GameWindowPro
     timersRef.current.push(id)
   }, [])
 
-  const resetAll = useCallback((): void => {
+  const resetInputState = useCallback((): void => {
     generationRef.current++
     clearTimers()
     setInputValue('')
     setCompletedCount(0)
     setWrongAttemptsMap([])
+    setCharStartTimes([Date.now()])
     setWordDone(false)
     setFeedbackState('idle')
     setShowMeaning(false)
@@ -129,33 +134,42 @@ export function GameWindow({ mode, children, onCharacterCorrect }: GameWindowPro
     setTapFeedbackState(null)
   }, [clearTimers])
 
-  const advanceWord = useCallback((): void => {
-    resetAll()
-    setDirection((prev) => (prev === 'kana-to-romaji' ? 'romaji-to-kana' : 'kana-to-romaji'))
-    setWordIndex((prev) => (prev + 1) % MOCK_WORDS.length)
-  }, [resetAll])
-
-  // Reset input on mode change but keep the current word
+  // Reset on new prompt or mode change
   useEffect((): void => {
-    resetAll()
-  }, [mode, resetAll])
+    resetInputState()
+  }, [prompt, mode, resetInputState])
 
   useEffect((): (() => void) => {
     return clearTimers
   }, [clearTimers])
 
-  // Word complete: flash green, show meaning, advance
-  const handleWordComplete = useCallback((): void => {
+  // Build character results for scoring
+  const buildResults = useCallback((): CharacterResult[] => {
+    const now = Date.now()
+    return characters.map((char, i) => ({
+      characterId: char.id,
+      isFirstAttemptCorrect: (wrongAttemptsMap[i] ?? 0) === 0,
+      responseTimeMs: now - (charStartTimes[i] ?? now),
+    }))
+  }, [characters, wrongAttemptsMap, charStartTimes])
+
+  const onWordComplete = useCallback((): void => {
     clearTimers()
     generationRef.current++
     setWordDone(true)
-    setCompletedCount(currentWord.characters.length)
+    setCompletedCount(characters.length)
     setFeedbackState('correct')
-    scheduleTimeout((): void => setShowMeaning(true), MEANING_FADE_MS)
-    scheduleTimeout(advanceWord, MEANING_DISPLAY_MS)
-  }, [clearTimers, scheduleTimeout, advanceWord, currentWord.characters.length])
 
-  // Wrong answer: increment per-character wrong count, progressive orange
+    const results = buildResults()
+    handleWordComplete(results)
+
+    scheduleTimeout((): void => setShowMeaning(true), MEANING_FADE_MS)
+    scheduleTimeout((): void => {
+      setDirection((prev) => (prev === 'kana-to-romaji' ? 'romaji-to-kana' : 'kana-to-romaji'))
+      advanceToNext()
+    }, MEANING_DISPLAY_MS)
+  }, [clearTimers, scheduleTimeout, characters.length, buildResults, handleWordComplete, advanceToNext])
+
   const handleWrong = useCallback((): void => {
     clearTimers()
     generationRef.current++
@@ -167,7 +181,6 @@ export function GameWindow({ mode, children, onCharacterCorrect }: GameWindowPro
     })
     setFeedbackState('wrong')
 
-    // No auto-clear: player backspaces to correct their own input
     scheduleTimeout((): void => {
       setFeedbackState('idle')
       setTapFeedbackId(null)
@@ -175,28 +188,26 @@ export function GameWindow({ mode, children, onCharacterCorrect }: GameWindowPro
     }, FEEDBACK_FLASH_MS)
   }, [clearTimers, scheduleTimeout, currentCharIndex])
 
-  // Type/Swipe: cumulative input evaluation
+  // Type/Swipe: cumulative input evaluation using tri-state
   const handleInputChange = useCallback(
     (value: string): void => {
-      if (wordDone) return
-      // For kana input, compare as-is. For romaji input, lowercase.
-      // Strip zero-width spaces inserted by TypeInput for IME separation
-      const cleaned = value.replace(/\u200B/g, '')
-      // For romaji input: lowercase. For kana input on a katakana word: convert hiragana to katakana.
+      if (wordDone || !prompt) return
+
+      const cleaned = value.replace(/​/g, '')
       let compare = isKanaToRomaji ? cleaned.toLowerCase() : cleaned
-      if (!isKanaToRomaji && isKatakanaWord(currentWord)) {
+      if (!isKanaToRomaji && isKatakana) {
         compare = toKatakana(compare)
       }
 
       setInputValue(value)
 
-      // Check if input is a valid prefix of the expected answer
-      if (!fullAnswer.startsWith(compare)) {
+      const match = evaluateInput(compare, fullAnswer)
+
+      if (match === 'no_match') {
         handleWrong()
         return
       }
 
-      // Valid prefix: clear wrong state if user backspaced to fix
       if (feedbackState === 'wrong') {
         setFeedbackState('idle')
       }
@@ -208,21 +219,20 @@ export function GameWindow({ mode, children, onCharacterCorrect }: GameWindowPro
           newCompleted++
         }
       }
-      // Fire correct-character event for each newly-completed kana, but only
-      // if that character had zero wrong attempts. A character that was
-      // missed and then corrected does not count toward distance.
+
+      // Record start time for newly reached characters
       if (newCompleted > completedCount) {
-        for (let idx = completedCount; idx < newCompleted; idx++) {
-          if ((wrongAttemptsMap[idx] ?? 0) === 0) {
-            onCharacterCorrect?.()
-          }
-        }
+        setCharStartTimes((prev) => {
+          const next = [...prev]
+          while (next.length <= newCompleted) next.push(Date.now())
+          return next
+        })
       }
+
       setCompletedCount(newCompleted)
 
-      // Check if word is fully typed
-      if (compare === fullAnswer) {
-        handleWordComplete()
+      if (match === 'full_match') {
+        onWordComplete()
       }
     },
     [
@@ -230,34 +240,34 @@ export function GameWindow({ mode, children, onCharacterCorrect }: GameWindowPro
       breakpoints,
       feedbackState,
       wordDone,
+      prompt,
       isKanaToRomaji,
+      isKatakana,
       completedCount,
-      wrongAttemptsMap,
-      onCharacterCorrect,
       handleWrong,
-      handleWordComplete,
+      onWordComplete,
     ],
   )
 
-  // Tap: character-by-character, matching answer value
+  // Tap: character-by-character
   const handleTap = useCallback(
     (id: string, value: string): void => {
-      if (wordDone) return
+      if (wordDone || !currentChar) return
       setTapFeedbackId(id)
       const expected = isKanaToRomaji ? currentChar.romaji : currentChar.kana
       if (value === expected) {
         setTapFeedbackState('correct')
         const newCompleted = completedCount + 1
         setCompletedCount(newCompleted)
-        // Only count toward distance if this char had zero prior wrong attempts
-        if ((wrongAttemptsMap[currentCharIndex] ?? 0) === 0) {
-          onCharacterCorrect?.()
-        }
+        setCharStartTimes((prev) => {
+          const next = [...prev]
+          while (next.length <= newCompleted) next.push(Date.now())
+          return next
+        })
 
-        if (newCompleted === currentWord.characters.length) {
-          handleWordComplete()
+        if (newCompleted === characters.length) {
+          onWordComplete()
         } else {
-          // Brief flash then reset tap feedback
           clearTimers()
           generationRef.current++
           setFeedbackState('correct')
@@ -273,31 +283,23 @@ export function GameWindow({ mode, children, onCharacterCorrect }: GameWindowPro
       }
     },
     [
-      currentChar.romaji,
-      currentChar.kana,
-      currentCharIndex,
+      currentChar,
       isKanaToRomaji,
       completedCount,
-      currentWord.characters.length,
+      characters.length,
       wordDone,
-      wrongAttemptsMap,
-      onCharacterCorrect,
-      handleWordComplete,
       handleWrong,
+      onWordComplete,
       clearTimers,
       scheduleTimeout,
     ],
   )
 
-  // Character colour: green when complete, dimmed when passed, dark when current/upcoming
-  // Progressive orange: light on first wrong, medium on second, full on third
+  // Character colour
   const WRONG_COLOURS = ['text-[#f5c490]', 'text-[#f5ac6a]', 'text-feedback-wrong']
 
   function charColour(index: number): string {
-    if (
-      showMeaning ||
-      (feedbackState === 'correct' && completedCount === currentWord.characters.length)
-    ) {
+    if (showMeaning || (feedbackState === 'correct' && completedCount === characters.length)) {
       return 'text-feedback-correct'
     }
     const charWrong = getWrongAttempts(index)
@@ -308,6 +310,28 @@ export function GameWindow({ mode, children, onCharacterCorrect }: GameWindowPro
     return 'text-warm-800'
   }
 
+  // ── Loading and empty states ──────────────────
+
+  if (isLoading) {
+    return (
+      <div className="bg-[#faf5e4] rounded-2xl shadow-[0_6px_0_0_#d4c9b0] w-full max-w-md mx-auto p-6 md:p-8">
+        <p className="text-center text-warm-400 py-8">Loading...</p>
+      </div>
+    )
+  }
+
+  if (isEmpty || !prompt) {
+    return (
+      <div className="bg-[#faf5e4] rounded-2xl shadow-[0_6px_0_0_#d4c9b0] w-full max-w-md mx-auto p-6 md:p-8">
+        <p className="text-center text-warm-600 py-8 font-medium">
+          Unlock characters in the Dojo to start practising
+        </p>
+      </div>
+    )
+  }
+
+  // ── Render ────────────────────────────────────
+
   return (
     <div className="bg-[#faf5e4] rounded-2xl shadow-[0_6px_0_0_#d4c9b0] w-full max-w-md mx-auto p-6 md:p-8">
       {(topLeft || topRight) && (
@@ -317,10 +341,8 @@ export function GameWindow({ mode, children, onCharacterCorrect }: GameWindowPro
         </div>
       )}
 
-      {/* Word prompt: shows kana or romaji depending on direction */}
-      {/* Hint floats above the current character without affecting layout */}
       <div className="text-5xl md:text-6xl font-bold text-center py-1 select-none leading-tight">
-        {currentWord.characters.map((char, i) => {
+        {characters.map((char, i) => {
           const displayText = isKanaToRomaji ? char.kana : char.romaji
           const hintText = isKanaToRomaji ? char.romaji : char.kana
           return (
@@ -347,7 +369,7 @@ export function GameWindow({ mode, children, onCharacterCorrect }: GameWindowPro
         })}
       </div>
 
-      <MeaningReveal meaning={currentWord.meaning} visible={showMeaning} />
+      <MeaningReveal meaning={prompt.word.meaning} visible={showMeaning} />
 
       {mode === 'type' && (
         <div className="pt-3">
@@ -356,7 +378,7 @@ export function GameWindow({ mode, children, onCharacterCorrect }: GameWindowPro
             onChange={handleInputChange}
             feedbackState={feedbackState}
             disabled={wordDone}
-            showKatakana={!isKanaToRomaji && isKatakanaWord(currentWord)}
+            showKatakana={!isKanaToRomaji && isKatakana}
           />
           <p className="text-sm text-warm-400 text-center mt-2">
             This mode is for a computer keyboard
@@ -371,7 +393,7 @@ export function GameWindow({ mode, children, onCharacterCorrect }: GameWindowPro
             onChange={handleInputChange}
             feedbackState={feedbackState}
             disabled={wordDone}
-            showKatakana={!isKanaToRomaji && isKatakanaWord(currentWord)}
+            showKatakana={!isKanaToRomaji && isKatakana}
           />
           <p className="text-sm text-warm-400 text-center mt-2">
             This mode is for the mobile keyboard
@@ -381,7 +403,7 @@ export function GameWindow({ mode, children, onCharacterCorrect }: GameWindowPro
 
       {mode === 'tap' && (
         <TapInput
-          characters={isKatakanaWord(currentWord) ? KATAKANA_TAP : HIRAGANA_TAP}
+          characters={isKatakana ? KATAKANA_TAP : HIRAGANA_TAP}
           displayField={isKanaToRomaji ? 'romaji' : 'kana'}
           onTap={handleTap}
           feedbackId={tapFeedbackId}

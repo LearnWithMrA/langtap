@@ -27,6 +27,7 @@ import { DistanceCounter } from '@/components/game/distance-counter'
 import { AudioPlayer } from '@/components/audio/audio-player'
 import { useKeySound } from '@/hooks/useKeySound'
 import { usePracticeCounters } from '@/hooks/usePracticeCounters'
+import { usePracticeSession } from '@/hooks/usePracticeSession'
 import { useSettingsStore } from '@/stores/settings.store'
 
 // -- Types --------------------------------------------------
@@ -109,6 +110,7 @@ export function PracticeClient(): ReactNode {
   const kotobaInput = useSettingsStore((s) => s.kotobaInput)
   const prefersReducedMotion = useReducedMotion()
   const { counters, incrementCorrect } = usePracticeCounters()
+  const kanaSession = usePracticeSession('N5')
 
   const handleAllFramesLoaded = useCallback((): void => {
     setSceneReady(true)
@@ -154,7 +156,7 @@ export function PracticeClient(): ReactNode {
             <DistanceCounter value={counters[mode]} />
           </KotobaGameWindow>
         ) : (
-          <GameWindow mode={mode} onCharacterCorrect={handleCharacterCorrect}>
+          <GameWindow mode={mode} session={kanaSession}>
             <ModeDropdown mode={mode} onModeChange={setMode} gameType="kana" />
             <DistanceCounter value={counters[mode]} />
           </GameWindow>

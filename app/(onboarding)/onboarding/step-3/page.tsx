@@ -23,6 +23,7 @@ import type { OnboardingStore } from '@/stores/onboarding.store'
 import { useAuth } from '@/hooks/useAuth'
 import { updateProfile } from '@/services/profile.service'
 import { syncManualUnlocks } from '@/services/unlock.service'
+import { useSettingsStore } from '@/stores/settings.store'
 
 // -- Component ---------------------------------------------------
 
@@ -63,6 +64,7 @@ export default function OnboardingStep3Page(): ReactNode {
       }
     }
 
+    useSettingsStore.getState().setInputMode(inputMode)
     completeOnboarding()
     router.push('/home')
   }
