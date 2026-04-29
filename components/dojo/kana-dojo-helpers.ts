@@ -9,7 +9,7 @@
 import { UNLOCK_THRESHOLD } from '@/engine/constants'
 import { KANA_CHARACTERS } from '@/data/kana/characters'
 import type { KanaCharacter, Script, Stage } from '@/types/kana.types'
-import type { MasteryState } from '@/samples/mastery-fixtures'
+import type { MasteryState } from '@/types/game.types'
 
 const SPECIAL_ROWS = new Set(['sokuon', 'longvowel'])
 export const DOJO_CHARACTERS = KANA_CHARACTERS.filter((c) => !SPECIAL_ROWS.has(c.row))

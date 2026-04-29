@@ -34,3 +34,14 @@ export type CharacterWithMastery = {
  * 'mastery_and_manual' - both conditions are currently true
  */
 export type UnlockSource = 'mastery' | 'manual' | 'mastery_and_manual'
+
+// ── State shapes ────────────────────────────
+
+/**
+ * Serialisable mastery state. Uses plain string[] (not Set) so the shape
+ * can cross the Next.js server/client boundary without serialisation warnings.
+ */
+export type MasteryState = {
+  scores: Readonly<Record<string, number>>
+  manuallyUnlocked: readonly string[]
+}

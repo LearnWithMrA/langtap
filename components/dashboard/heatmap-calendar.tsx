@@ -12,7 +12,7 @@
 
 import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { HeatmapDay } from '@/samples/dashboard-fixtures'
+import type { HeatmapDay } from '@/types/dashboard.types'
 import { MiniFlame } from '@/components/dashboard/dashboard-icons'
 import { getHeatClass } from '@/components/dashboard/dashboard-helpers'
 

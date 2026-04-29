@@ -13,7 +13,6 @@
 
 'use client'
 
-import Link from 'next/link'
 import { useCallback, useSyncExternalStore } from 'react'
 import type { ReactNode } from 'react'
 
@@ -67,36 +66,28 @@ export function HelpCard({ onDismiss }: HelpCardProps): ReactNode {
   return (
     <aside
       aria-label="Getting started"
-      className="relative bg-cream border border-warm-200 rounded-2xl p-5 flex flex-col md:flex-row md:items-center gap-4 shadow-sm"
+      className="relative bg-cream border border-warm-200 rounded-2xl px-4 py-3 flex items-center gap-3 shadow-sm max-w-3xl mx-auto"
     >
       <div
         aria-hidden="true"
-        className="flex-shrink-0 w-12 h-12 rounded-full bg-sage-100 flex items-center justify-center text-2xl"
+        className="flex-shrink-0 w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center text-xl leading-none"
       >
         あ
       </div>
       <div className="flex-1">
-        <h2 className="text-lg font-medium text-warm-800">Start your journey</h2>
-        <p className="text-sm text-warm-600 mt-1">
-          Tap any character to unlock it, or jump into practice and unlock as you go.
+        <h2 className="text-base font-medium text-warm-800">Welcome to the Dojo</h2>
+        <p className="text-sm text-warm-500 mt-0.5">
+          Unlock more characters here, mark them as mastered, or just practice to follow our course.
         </p>
       </div>
-      <div className="flex gap-2">
-        <Link
-          href="/practice?mode=kana"
-          className="inline-flex items-center justify-center min-h-11 min-w-11 px-4 py-2 rounded-xl bg-sage-500 text-white font-medium text-sm hover:bg-sage-600 focus:outline-none focus:ring-2 focus:ring-sage-300 focus:ring-offset-1 transition-colors"
-        >
-          Start practice
-        </Link>
-        <button
-          type="button"
-          onClick={onDismiss}
-          aria-label="Dismiss getting-started card"
-          className="inline-flex items-center justify-center min-h-11 min-w-11 px-3 py-2 rounded-xl text-warm-600 hover:bg-warm-100 focus:outline-none focus:ring-2 focus:ring-sage-300 transition-colors text-sm"
-        >
-          Dismiss
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={onDismiss}
+        aria-label="Dismiss welcome card"
+        className="inline-flex items-center justify-center min-h-9 px-4 py-1.5 rounded-lg bg-sky-600/85 text-white font-bold text-sm hover:bg-sky-700/85 border-b-[3px] border-b-sky-700/85 active:translate-y-[1px] active:border-b-[2px] focus:outline-none transition-colors"
+      >
+        Got it
+      </button>
     </aside>
   )
 }

@@ -7,12 +7,12 @@
 // ─────────────────────────────────────────────
 
 import type { ReactNode } from 'react'
-import type { DashboardFixture } from '@/samples/dashboard-fixtures'
+import type { LeaderboardGlance as LeaderboardGlanceData } from '@/types/dashboard.types'
 import { formatScore } from '@/components/dashboard/dashboard-helpers'
 
 // ── Component ─────────────────────────────────
 
-export function LeaderboardGlance({ data }: { data: DashboardFixture['leaderboard'] }): ReactNode {
+export function LeaderboardGlance({ data }: { data: LeaderboardGlanceData }): ReactNode {
   return (
     <div>
       <p className="text-sm font-medium text-warm-600 mb-2">Leaderboard</p>

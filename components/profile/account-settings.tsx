@@ -13,7 +13,7 @@
 
 import { useCallback, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { ProfileFixture } from '@/samples/profile-fixtures'
+import type { ProfileFixture } from '@/fixtures/samples/profile-fixtures'
 import { daysUntilNextChange, formatNextChangeDate } from '@/components/profile/profile-helpers'
 import { IconChevron, IconPencil } from '@/components/profile/profile-icons'
 

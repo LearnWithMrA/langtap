@@ -13,8 +13,9 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { LeaderboardList, SkeletonRows } from '@/components/leaderboard/leaderboard-list'
-import type { InputMode, TimePeriod, GameType } from '@/samples/leaderboard-fixtures'
-import { getLeaderboardFixture } from '@/samples/leaderboard-fixtures'
+import type { InputMode } from '@/types/user.types'
+import type { TimePeriod, GameType } from '@/types/leaderboard.types'
+import { getLeaderboardFixture } from '@/fixtures/samples/leaderboard-fixtures'
 
 // ── Types ─────────────────────────────────────
 

@@ -26,8 +26,8 @@ import { LogInCard } from '@/components/ui/log-in-card'
 import { SignUpCard } from '@/components/ui/sign-up-card'
 import { useEasterEgg } from '@/hooks/useEasterEgg'
 import { LeaderboardList } from '@/components/leaderboard/leaderboard-list'
-import { getLeaderboardFixture } from '@/samples/leaderboard-fixtures'
-import type { InputMode } from '@/samples/leaderboard-fixtures'
+import { getLeaderboardFixture } from '@/fixtures/samples/leaderboard-fixtures'
+import type { InputMode } from '@/types/user.types'
 
 // -- Types --------------------------------------------------
 

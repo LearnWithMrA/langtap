@@ -8,7 +8,7 @@
 // ─────────────────────────────────────────────
 
 import type { ReactNode } from 'react'
-import type { DashboardFixture } from '@/samples/dashboard-fixtures'
+import type { DashboardStats } from '@/types/dashboard.types'
 import { IconStar, IconLockOpen, IconClock, IconRoad } from '@/components/dashboard/dashboard-icons'
 import {
   formatScore,
@@ -18,7 +18,7 @@ import {
 
 // ── Component ─────────────────────────────────
 
-export function StatsGrid({ stats }: { stats: DashboardFixture['stats'] }): ReactNode {
+export function StatsGrid({ stats }: { stats: DashboardStats }): ReactNode {
   const cards = [
     { icon: <IconStar />, value: formatScore(stats.totalScore), label: 'Total Score' },
     {

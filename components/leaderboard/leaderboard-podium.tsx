@@ -8,8 +8,8 @@
 // ─────────────────────────────────────────────
 
 import type { ReactNode } from 'react'
-import type { LeaderboardEntry } from '@/samples/leaderboard-fixtures'
-import { getAvatarColor, formatLeaderboardScore } from '@/samples/leaderboard-fixtures'
+import type { LeaderboardEntry } from '@/types/leaderboard.types'
+import { getAvatarColor, formatLeaderboardScore } from '@/utils/leaderboard'
 
 // ── Sparkle SVG ──────────────────────────────
 

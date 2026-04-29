@@ -7,7 +7,7 @@
 // ─────────────────────────────────────────────
 
 import type { ReactNode } from 'react'
-import type { ProfileFixture } from '@/samples/profile-fixtures'
+import type { ProfileFixture } from '@/fixtures/samples/profile-fixtures'
 import { formatMemberSince } from '@/components/profile/profile-helpers'
 
 // ── Constants ─────────────────────────────────

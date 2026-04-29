@@ -98,9 +98,11 @@ export function usePracticeSession(
   const recordWrong = useSessionStore((s) => s.recordWrong)
 
   const unlockedIds = useUnlockStore((s) => s.unlockedIds)
+  const bootstrapUnlocks = useUnlockStore((s) => s.bootstrap)
   const recomputeUnlocks = useUnlockStore((s) => s.recompute)
 
   const manualUnlockIds = useOnboardingStore((s) => s.selectedCharacterIds)
+  const setSelectedBulk = useOnboardingStore((s) => s.setSelectedBulk)
 
   const selectNext = useCallback(
     (currentCounters: Record<string, number>): void => {
@@ -129,14 +131,17 @@ export function usePracticeSession(
     }
   }, [hasHydrated])
 
-  // Bootstrap: wait for hydration, then start session and select first prompt
+  // Bootstrap: wait for hydration, then auto-unlock first group if needed
   useEffect(() => {
     if (!hasHydrated || startedRef.current) return
     startedRef.current = true
-    recomputeUnlocks(scores, new Set(manualUnlockIds))
+    const resolvedManual = bootstrapUnlocks(scores, manualUnlockIds)
+    if (resolvedManual.length !== manualUnlockIds.length) {
+      setSelectedBulk(resolvedManual as string[])
+    }
     startSession()
     resetAllCounters()
-  }, [hasHydrated, scores, manualUnlockIds, recomputeUnlocks, startSession, resetAllCounters])
+  }, [hasHydrated, scores, manualUnlockIds, bootstrapUnlocks, setSelectedBulk, startSession, resetAllCounters])
 
   // Select first prompt after unlock recompute
   useEffect(() => {

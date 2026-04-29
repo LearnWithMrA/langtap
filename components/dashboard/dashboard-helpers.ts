@@ -38,7 +38,7 @@ export function formatScore(n: number): string {
 
 /** Returns a Tailwind background class based on characters practiced count. */
 export function getHeatClass(chars: number): string {
-  if (chars === 0) return 'bg-warm-100'
+  if (chars === 0) return 'bg-warm-50'
   if (chars <= 10) return 'bg-heat-1'
   if (chars <= 30) return 'bg-heat-2'
   if (chars <= 60) return 'bg-heat-3'

@@ -57,8 +57,8 @@ import {
   lockedIdsAtLevel,
 } from '@/components/dojo/kotoba-dojo-helpers'
 import { MASTERY_THRESHOLD } from '@/engine/mastery'
-import { getN5Fixture, getLevelFixture } from '@/samples/kotoba-dojo-fixtures'
-import type { KotobaLevelFixture } from '@/samples/kotoba-dojo-fixtures'
+import { getN5Fixture, getLevelFixture } from '@/fixtures/samples/kotoba-dojo-fixtures'
+import type { KotobaLevelFixture } from '@/fixtures/samples/kotoba-dojo-fixtures'
 import { JLPT_LABELS } from '@/types/kotoba.types'
 import type {
   JlptLevel,

@@ -8,7 +8,7 @@
 // ─────────────────────────────────────────────
 
 import type { ReactNode } from 'react'
-import type { StageProgress } from '@/samples/dashboard-fixtures'
+import type { StageProgress } from '@/types/dashboard.types'
 import { getProgressHeatClass } from '@/components/dashboard/dashboard-helpers'
 
 // ── Component ─────────────────────────────────

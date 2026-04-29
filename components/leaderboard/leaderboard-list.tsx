@@ -8,8 +8,9 @@
 // ─────────────────────────────────────────────
 
 import type { ReactNode } from 'react'
-import type { LeaderboardEntry, LeaderboardBoard, InputMode } from '@/samples/leaderboard-fixtures'
-import { getAvatarColor, formatLeaderboardScore } from '@/samples/leaderboard-fixtures'
+import type { LeaderboardEntry, LeaderboardBoard } from '@/types/leaderboard.types'
+import type { InputMode } from '@/types/user.types'
+import { getAvatarColor, formatLeaderboardScore } from '@/utils/leaderboard'
 import { RankBadge, Podium } from '@/components/leaderboard/leaderboard-podium'
 
 // ── Types ─────────────────────────────────────

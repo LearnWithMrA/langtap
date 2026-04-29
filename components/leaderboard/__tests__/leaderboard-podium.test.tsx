@@ -9,7 +9,7 @@
 
 import { render, screen } from '@testing-library/react'
 import { Podium, RankBadge } from '@/components/leaderboard/leaderboard-podium'
-import type { LeaderboardEntry } from '@/samples/leaderboard-fixtures'
+import type { LeaderboardEntry } from '@/types/leaderboard.types'
 
 // ── Test data ────────────────────────────────
 

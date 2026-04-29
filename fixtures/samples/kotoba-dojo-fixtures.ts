@@ -27,7 +27,7 @@ import {
   N5_U2_G2,
   N5_U3_G1,
   N5_U3_G2,
-} from '@/samples/kotoba-words-n5'
+} from '@/fixtures/samples/kotoba-words-n5'
 
 // ── Types ─────────────────────────────────────
 
@@ -64,19 +64,19 @@ async function loadLevelWords(level: JlptLevel): Promise<LevelTuple> {
   let mod: LevelWordModule
   switch (level) {
     case 'n4':
-      mod = (await import('@/samples/kotoba-words-n4')) as LevelWordModule
+      mod = (await import('@/fixtures/samples/kotoba-words-n4')) as LevelWordModule
       break
     case 'n3':
-      mod = (await import('@/samples/kotoba-words-n3')) as LevelWordModule
+      mod = (await import('@/fixtures/samples/kotoba-words-n3')) as LevelWordModule
       break
     case 'n2':
-      mod = (await import('@/samples/kotoba-words-n2')) as LevelWordModule
+      mod = (await import('@/fixtures/samples/kotoba-words-n2')) as LevelWordModule
       break
     case 'n1':
-      mod = (await import('@/samples/kotoba-words-n1')) as LevelWordModule
+      mod = (await import('@/fixtures/samples/kotoba-words-n1')) as LevelWordModule
       break
     default:
-      mod = (await import('@/samples/kotoba-words-n5')) as LevelWordModule
+      mod = (await import('@/fixtures/samples/kotoba-words-n5')) as LevelWordModule
   }
 
   const prefix = level.toUpperCase()

@@ -7,33 +7,102 @@
 //          on xl+ screens. Reduced-motion support.
 //          Scene renders static until cyclist frames load, then
 //          landscape and cyclist animate together.
-//          All data from mock fixtures (Sprint 2B visual shell).
+//          All data derived from real Zustand stores.
 // Depends on: components/layout/landscape-background.tsx,
 //             components/animation/cycling-character.tsx,
 //             components/dashboard/streak-calendar.tsx,
 //             components/dashboard/mode-panel.tsx,
-//             samples/dashboard-fixtures.ts
+//             stores/mastery.store.ts, stores/unlock.store.ts,
+//             stores/settings.store.ts
 // ─────────────────────────────────────────────
 
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useReducedMotion } from 'motion/react'
 import { LandscapeBackground } from '@/components/layout/landscape-background'
 import { CyclingCharacter } from '@/components/animation/cycling-character'
 import { StreakCalendar } from '@/components/dashboard/streak-calendar'
 import { ModePanel } from '@/components/dashboard/mode-panel'
-import type { DashboardFixtureKey } from '@/samples/dashboard-fixtures'
-import { getDashboardFixture } from '@/samples/dashboard-fixtures'
+import { useMasteryStore } from '@/stores/mastery.store'
+import { useUnlockStore } from '@/stores/unlock.store'
+import { useSettingsStore } from '@/stores/settings.store'
+import { useOnboardingStore } from '@/stores/onboarding.store'
+import { KANA_CHARACTERS } from '@/data/kana/characters'
+import { UNLOCK_THRESHOLD } from '@/engine/constants'
+import type { StageProgress, LeaderboardGlance, HeatmapDay } from '@/types/dashboard.types'
+import type { Stage } from '@/types/kana.types'
+
+// ── Helpers ──────────────────────────────────
+
+const STAGE_LABELS: Record<Stage, string> = {
+  seion: 'Seion',
+  dakuon: 'Dakuon',
+  combination: 'Combination',
+}
+
+const SPECIAL_ROWS = new Set(['sokuon', 'longvowel'])
+
+function deriveKanaStages(
+  scores: Readonly<Record<string, number>>,
+  unlockedIds: ReadonlySet<string>,
+): StageProgress[] {
+  const stages: Stage[] = ['seion', 'dakuon', 'combination']
+  return stages.map((stage) => {
+    const chars = KANA_CHARACTERS.filter(
+      (c) => c.stage === stage && !SPECIAL_ROWS.has(c.row),
+    )
+    const total = chars.length
+    const mastered = chars.filter(
+      (c) => unlockedIds.has(c.id) && (scores[c.id] ?? 0) >= UNLOCK_THRESHOLD,
+    ).length
+    const percentage = total > 0 ? Math.round((mastered / total) * 100) : 0
+    return { label: STAGE_LABELS[stage], mastered, total, percentage }
+  })
+}
+
+const EMPTY_LEADERBOARD: LeaderboardGlance = { rank: null, username: '', score: 0 }
+const EMPTY_HEATMAP: readonly HeatmapDay[] = []
 
 // ── Main component ────────────────────────────
 
 export function GameHomeClient(): ReactNode {
   const prefersReducedMotion = useReducedMotion()
-  const [fixtureKey, setFixtureKey] = useState<DashboardFixtureKey>('mid')
   const [sceneReady, setSceneReady] = useState(false)
-  const data = getDashboardFixture(fixtureKey)
+
+  const hasHydrated = useMasteryStore((s) => s.hasHydrated)
+  const scores = useMasteryStore((s) => s.scores)
+  const unlockedIds = useUnlockStore((s) => s.unlockedIds)
+  const allKanaUnlocked = useUnlockStore((s) => s.allKanaUnlocked)
+  const inputMode = useSettingsStore((s) => s.inputMode)
+
+  useEffect(() => {
+    if (!hasHydrated) {
+      useMasteryStore.persist.rehydrate()
+    }
+  }, [hasHydrated])
+
+  useEffect(() => {
+    useOnboardingStore.persist.rehydrate()
+  }, [])
+
+  useEffect(() => {
+    if (hasHydrated) {
+      const manual = new Set(useOnboardingStore.getState().selectedCharacterIds)
+      useUnlockStore.getState().recompute(scores, manual)
+    }
+  }, [hasHydrated, scores])
+
+  const kanaStages = useMemo(
+    () => deriveKanaStages(scores, unlockedIds),
+    [scores, unlockedIds],
+  )
+
+  const kotobaStages: StageProgress[] = useMemo(
+    () => [{ label: 'Words', mastered: 0, total: 0, percentage: 0 }],
+    [],
+  )
 
   const handleAllFramesLoaded = useCallback((): void => {
     setSceneReady(true)
@@ -45,7 +114,6 @@ export function GameHomeClient(): ReactNode {
 
   return (
     <div className="theme-day relative w-full min-h-svh overflow-y-auto">
-      {/* Fixed parallax landscape background */}
       <div className="fixed inset-0 z-0">
         <LandscapeBackground
           speed={sceneSpeed}
@@ -60,55 +128,33 @@ export function GameHomeClient(): ReactNode {
         </div>
       </div>
 
-      {/* Dashboard content - responsive flow layout */}
       <main className="relative z-10 px-3 sm:px-4 mt-[72px] mb-8">
         <div className="max-w-5xl mx-auto lg:ml-auto lg:mr-4 flex flex-col md:flex-row gap-4">
-          {/* Calendar */}
           <div className="w-full max-w-[320px] mx-auto md:mx-0 md:max-w-none md:w-[260px] shrink-0">
-            <StreakCalendar heatmap={data.heatmap} streakCount={data.streak.streakChainDays} />
+            <StreakCalendar heatmap={EMPTY_HEATMAP} streakCount={0} />
           </div>
 
-          {/* Kana and Kotoba panels - stacked on mobile+tablet, side by side on lg+ */}
           <div className="flex-1 flex flex-col lg:flex-row gap-4">
             <div className="lg:flex-1">
               <ModePanel
                 variant="kana"
-                stages={data.stages}
-                leaderboard={data.leaderboard}
-                inputMode={data.inputMode}
+                stages={kanaStages}
+                leaderboard={EMPTY_LEADERBOARD}
+                inputMode={inputMode}
               />
             </div>
             <div className="lg:flex-1">
               <ModePanel
                 variant="kotoba"
-                stages={data.kotobaStages}
-                leaderboard={data.kotobaLeaderboard}
-                inputMode={data.inputMode}
-                locked={data.kotobaLocked}
+                stages={kotobaStages}
+                leaderboard={EMPTY_LEADERBOARD}
+                inputMode={inputMode}
+                locked={!allKanaUnlocked}
               />
             </div>
           </div>
         </div>
       </main>
-
-      {/* Fixture selector (dev only, pinned to bottom) */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-4 py-2">
-        <span className="text-xs text-white/70">Fixture:</span>
-        {(['zero', 'mid', 'advanced'] as const).map((key) => (
-          <button
-            key={key}
-            type="button"
-            onClick={(): void => setFixtureKey(key)}
-            className={`text-xs px-2 py-1 rounded-lg transition-colors duration-150 ${
-              fixtureKey === key
-                ? 'bg-white/80 text-warm-700 font-medium'
-                : 'text-white/60 hover:bg-white/30'
-            }`}
-          >
-            {key}
-          </button>
-        ))}
-      </div>
     </div>
   )
 }

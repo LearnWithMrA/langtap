@@ -24,10 +24,12 @@ import { TapInput } from '@/components/game/tap-input'
 import { MeaningReveal } from '@/components/game/meaning-reveal'
 import { FEEDBACK_FLASH_MS, MEANING_DISPLAY_MS, MEANING_FADE_MS } from '@/engine/constants'
 import { evaluateInput } from '@/engine/input'
-import { HIRAGANA_TAP, KATAKANA_TAP, toKatakana } from '@/components/game/kana-practice-data'
-import type { UsePracticeSessionReturn, CharacterResult } from '@/hooks/usePracticeSession'
+import { toKatakana } from '@/fixtures/kana-practice-data'
+import { KANA_CHARACTERS } from '@/data/kana/characters'
+import type { UsePracticeSessionReturn, CharacterResult, PracticeCharacter } from '@/hooks/usePracticeSession'
 
 const MAX_WRONG_ATTEMPTS = 3
+const TAP_GRID_SIZE = 10
 
 // ── Types ─────────────────────────────────────
 
@@ -44,6 +46,48 @@ type GameWindowProps = {
 function isKatakanaChar(kana: string): boolean {
   const code = kana.charCodeAt(0)
   return code >= 0x30a0 && code <= 0x30ff
+}
+
+function buildTapGrid(
+  wordChars: PracticeCharacter[],
+  isKatakana: boolean,
+): { id: string; kana: string; romaji: string }[] {
+  const requiredIds = new Set(wordChars.map((c) => c.id))
+  const required = wordChars.filter(
+    (c, i, arr) => arr.findIndex((x) => x.id === c.id) === i,
+  )
+
+  const needed = TAP_GRID_SIZE - required.length
+  const script = isKatakana ? 'katakana' : 'hiragana'
+
+  const wordStages = new Set(
+    wordChars
+      .map((c) => KANA_CHARACTERS.find((k) => k.id === c.id)?.stage)
+      .filter((s): s is string => s !== undefined),
+  )
+
+  const sameStagePool = KANA_CHARACTERS.filter(
+    (c) => c.script === script && c.romaji !== '' && !requiredIds.has(c.id) && wordStages.has(c.stage),
+  )
+
+  const shuffledSame = [...sameStagePool].sort(() => Math.random() - 0.5)
+  const distractors = shuffledSame.slice(0, needed)
+
+  if (distractors.length < needed) {
+    const usedIds = new Set([...requiredIds, ...distractors.map((c) => c.id)])
+    const fallback = KANA_CHARACTERS.filter(
+      (c) => c.script === script && c.romaji !== '' && !usedIds.has(c.id),
+    )
+    const shuffledFallback = [...fallback].sort(() => Math.random() - 0.5)
+    distractors.push(...shuffledFallback.slice(0, needed - distractors.length))
+  }
+
+  const grid = [
+    ...required.map((c) => ({ id: c.id, kana: c.kana, romaji: c.romaji })),
+    ...distractors.map((c) => ({ id: c.id, kana: c.kana, romaji: c.romaji })),
+  ]
+
+  return grid.sort(() => Math.random() - 0.5)
 }
 
 // ── Component ─────────────────────────────────
@@ -76,6 +120,11 @@ export function GameWindow({ mode, session, children }: GameWindowProps): ReactN
   const isKanaToRomaji = direction === 'kana-to-romaji'
   const currentCharIndex = Math.min(completedCount, characters.length - 1)
   const currentChar = characters[currentCharIndex]
+
+  const tapGrid = useMemo(
+    () => (characters.length > 0 ? buildTapGrid(characters, isKatakana) : []),
+    [characters, isKatakana],
+  )
 
   // Cumulative breakpoints
   const romajiBreakpoints = useMemo((): string[] => {
@@ -403,7 +452,7 @@ export function GameWindow({ mode, session, children }: GameWindowProps): ReactN
 
       {mode === 'tap' && (
         <TapInput
-          characters={isKatakana ? KATAKANA_TAP : HIRAGANA_TAP}
+          characters={tapGrid}
           displayField={isKanaToRomaji ? 'romaji' : 'kana'}
           onTap={handleTap}
           feedbackId={tapFeedbackId}
