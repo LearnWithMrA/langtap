@@ -36,17 +36,21 @@ const YOON_ROWS = [
 ] as const
 
 const SEION_COLS = ['a', 'i', 'u', 'e', 'o'] as const
+const YOON_COLS = ['a', 'u', 'o'] as const
 
-const EXTENDED_ROWS = [
-  'fa', 'wi', 'tsa', 'ti', 'di', 'she', 'che', 'je',
-] as const
+const EXTENDED_DISPLAY_GROUPS = [
+  { key: 'vu', ids: ['k-va', 'k-vi', 'k-vu', 'k-ve', 'k-vo'] },
+  { key: 'fa', ids: ['k-fa', 'k-fi', 'k-fe', 'k-fo'] },
+  { key: 'ti-di', ids: ['k-ti', 'k-dhi', 'k-twu', 'k-dwu', 'k-che'] },
+  { key: 'wi-she', ids: ['k-wi', 'k-we', 'k-uxo', 'k-she', 'k-je'] },
+]
 
-const COMBINATION_ROWS = [...YOON_ROWS, ...EXTENDED_ROWS] as const
+const charById = new Map(KANA_CHARACTERS.map((c) => [c.id, c]))
 
 const STAGE_ROW_MAP: Record<Stage, readonly string[]> = {
   seion: SEION_ROWS,
   dakuon: DAKUON_ROWS,
-  combination: COMBINATION_ROWS,
+  combination: YOON_ROWS,
 }
 
 // -- Helpers -----------------------------------------------------
@@ -67,17 +71,18 @@ function buildGrid(characters: KanaCharacter[], stage: Stage): GridRow[] {
   }
 
   const rows = STAGE_ROW_MAP[stage]
+  const cols = stage === 'combination' ? YOON_COLS : SEION_COLS
 
   return rows
     .map((row) => ({
       rowKey: row,
-      cells: SEION_COLS.map((col) => lookup.get(`${row}-${col}`) ?? null),
+      cells: cols.map((col) => lookup.get(`${row}-${col}`) ?? null),
     }))
     .filter(({ cells }) => cells.some((c) => c !== null))
 }
 
-function getColumnsForStage(): readonly string[] {
-  return SEION_COLS
+function getColumnsForStage(stage: Stage): readonly string[] {
+  return stage === 'combination' ? YOON_COLS : SEION_COLS
 }
 
 // -- Sub-components ----------------------------------------------
@@ -232,14 +237,28 @@ export function KanaChartSelector({ onActiveGroupChange }: KanaChartSelectorProp
     () => buildGrid(getCharsByStageAndScript(activeStage, activeScript), activeStage),
     [activeStage, activeScript],
   )
-  const activeCols = getColumnsForStage()
+  const activeCols = getColumnsForStage(activeStage)
+
+  const extendedGrid = useMemo(() => {
+    if (activeStage !== 'combination' || activeScript !== 'katakana') return []
+    return EXTENDED_DISPLAY_GROUPS.map(({ key, ids }) => ({
+      rowKey: key,
+      chars: ids
+        .map((id) => charById.get(id))
+        .filter((c): c is KanaCharacter => c !== undefined),
+    }))
+  }, [activeStage, activeScript])
 
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds])
 
-  const activeGroupIds = useMemo(
-    () => getCharsByStageAndScript(activeStage, activeScript).map((c) => c.id),
-    [activeStage, activeScript],
-  )
+  const activeGroupIds = useMemo(() => {
+    const base = getCharsByStageAndScript(activeStage, activeScript).map((c) => c.id)
+    if (activeStage === 'combination' && activeScript === 'katakana') {
+      const extIds = EXTENDED_DISPLAY_GROUPS.flatMap(({ ids }) => ids)
+      return [...new Set([...base, ...extIds])]
+    }
+    return base
+  }, [activeStage, activeScript])
 
   useEffect(() => {
     onActiveGroupChange?.(activeGroupIds)
@@ -328,6 +347,7 @@ export function KanaChartSelector({ onActiveGroupChange }: KanaChartSelectorProp
               ]
             })}
           </div>
+          {renderExtendedSection()}
           {activeStage === 'seion' && renderStandaloneN()}
         </div>
 
@@ -371,11 +391,51 @@ export function KanaChartSelector({ onActiveGroupChange }: KanaChartSelectorProp
               }),
             )}
           </div>
+          {renderExtendedSection()}
           {activeStage === 'seion' && renderStandaloneN()}
         </div>
       </div>
     </div>
   )
+
+  function renderExtendedSection(): ReactNode {
+    if (extendedGrid.length === 0) return null
+    return (
+      <div className="flex flex-col items-center gap-1.5 mt-4">
+        <span
+          className="text-warm-400 font-medium"
+          style={{ fontSize: 'clamp(11px, calc(3vw - 1px), 14px)' }}
+        >
+          Extended
+        </span>
+        {extendedGrid.map(({ rowKey, chars }) => {
+          if (chars.length === 0) return null
+          const rowIds = chars.map((c) => c.id)
+          const allSel = rowIds.every((id) => selectedSet.has(id))
+          const someSel = !allSel && rowIds.some((id) => selectedSet.has(id))
+          return (
+            <div key={rowKey} className="flex items-center gap-1.5">
+              <RowCheckbox
+                allSelected={allSel}
+                someSelected={someSel}
+                onToggle={(): void => toggleGroup(rowIds)}
+                label={rowKey}
+              />
+              {chars.map((char) => (
+                <CharacterCell
+                  key={char.id}
+                  character={char}
+                  isSelected={selectedSet.has(char.id)}
+                  onToggle={(): void => toggleCharacter(char.id)}
+                  stage={activeStage}
+                />
+              ))}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
 
   function renderStandaloneN(): ReactNode {
     const nChar = getCharsByStageAndScript('seion', activeScript).find(

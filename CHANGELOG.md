@@ -34,9 +34,15 @@ Format per entry:
 
 **Sprint:** Sprint 5 - Content Pipeline and Practice Screen (Type Mode)
 **Task completed:** Build `data/kana/characters.ts` (expanded), Build `scripts/build-word-bank.ts`, Run build script and commit word bank files
-**Status:** Partial (crashed mid-test run, recovered in new session)
+**Status:** Done
 
 ### Changes made
+
+**Dojo and onboarding fixes (3 files):**
+- `components/dojo/kana-dojo-helpers.ts`: Added DOJO_CHARACTERS filter excluding special characters (sokuon, long vowel) from the dojo. All dojo functions now use DOJO_CHARACTERS.
+- `components/dojo/character-group.tsx`: Combination stage now renders yoon grid and extended section separately. Extended section uses 4 custom flex rows (vu, fa, ti/di, wi/she) with CharacterTile directly, no axis labels.
+- `components/layout/kana-dojo-client.tsx`: Replaced KANA_CHARACTERS with DOJO_CHARACTERS throughout. Fixed stale "Yoon" comment.
+- `components/onboarding/kana-chart-selector.tsx`: Restored yoon grid to 3 columns (a/u/o). Extended katakana characters rendered as 4 compact flex rows below the yoon grid with "Extended" label. Added Vu to dakuon rows. Custom display groups: [va vi vu ve vo], [fa fi fe fo], [ti di twu dwu che], [wi we wo she je].
 
 **Kana character data (3 files):**
 - `types/kana.types.ts`: Stage type `'yoon'` renamed to `'combination'`
@@ -67,10 +73,10 @@ Format per entry:
 - `data/words/__tests__/word-bank.test.ts`: New file. Schema validation per level (kana, meaning, min 2 characterIds, correct level). Cross-references (all characterIds exist, no duplicate IDs or kana). Size checks (N5 >= 600, total >= 5,000).
 
 ### Tests
-- All test files updated but test suite not yet run (session crashed before completion)
+- Full suite: 652 tests passing, 0 failures, 2 skipped (romaji, sokuon - future work).
 
 ### Next task
-- Run tests, fix any failures, then continue Sprint 5 practice screen tasks
+- Continue Sprint 5 practice screen tasks (Plan 2: wire practice screen to engine)
 
 ### Notes
 - Session recovered after Cursor deleted files during a reorganisation popup. Rolled back to Sprint 4 commit, re-applied Sprint 5 changes, then Claude crashed mid-test. Duplicate " 2/" folders from the recovery were cleaned up manually.
