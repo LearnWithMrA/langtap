@@ -100,23 +100,23 @@ describe('KanaDojoClient', () => {
     expect(screen.getByRole('heading', { name: 'Combination' })).toBeInTheDocument()
   })
 
-  it('does not show the help card when characters are unlocked', () => {
+  it('shows the welcome card on first visit regardless of unlock state', () => {
     seedVarietyState()
     render(<KanaDojoClient />)
-    expect(screen.queryByRole('complementary', { name: 'Getting started' })).not.toBeInTheDocument()
+    expect(screen.getByRole('complementary', { name: 'Getting started' })).toBeInTheDocument()
   })
 
-  it('shows the help card when all characters are locked', () => {
+  it('shows the welcome card when all characters are locked', () => {
     seedEmptyState()
     render(<KanaDojoClient />)
     expect(screen.getByRole('complementary', { name: 'Getting started' })).toBeInTheDocument()
   })
 
-  it('hides the help card after it is dismissed', async () => {
+  it('hides the welcome card after it is dismissed', async () => {
     const user = userEvent.setup()
     seedEmptyState()
     render(<KanaDojoClient />)
-    await user.click(screen.getByRole('button', { name: 'Dismiss getting-started card' }))
+    await user.click(screen.getByRole('button', { name: 'Dismiss welcome card' }))
     expect(screen.queryByRole('complementary', { name: 'Getting started' })).not.toBeInTheDocument()
   })
 
