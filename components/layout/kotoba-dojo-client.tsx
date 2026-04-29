@@ -37,7 +37,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { KotobaLevelTabs } from '@/components/dojo/kotoba-level-tabs'
-import { KotobaUnitGrid } from '@/components/dojo/kotoba-unit-grid'
+import { KotobaLevelGroupRow } from '@/components/dojo/kotoba-level-group'
 import { KotobaWordPopover } from '@/components/dojo/kotoba-word-popover'
 import { KotobaUnlockPrompt } from '@/components/dojo/kotoba-unlock-prompt'
 import { KotobaBulkUnlockPrompt } from '@/components/dojo/kotoba-bulk-unlock-prompt'
@@ -50,12 +50,7 @@ import {
   KotobaErrorShell,
   KotobaEmptyShell,
 } from '@/components/dojo/kotoba-dojo-shells'
-import {
-  buildLockedWordSet,
-  lockedIdsInUnit,
-  lockedIdsInGroup,
-  lockedIdsAtLevel,
-} from '@/components/dojo/kotoba-dojo-helpers'
+import { buildLockedWordSet, lockedIdsInGroup } from '@/components/dojo/kotoba-dojo-helpers'
 import { MASTERY_THRESHOLD } from '@/engine/mastery'
 import { getN5Fixture, getLevelFixture } from '@/fixtures/samples/kotoba-dojo-fixtures'
 import type { KotobaLevelFixture } from '@/fixtures/samples/kotoba-dojo-fixtures'
@@ -66,7 +61,6 @@ import type {
   KotobaFixtureKey,
   KotobaLevelGroup,
   KotobaMasteryState,
-  KotobaUnit,
   KotobaWord,
 } from '@/types/kotoba.types'
 
@@ -94,6 +88,7 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
   const currentFixture = levelData[activeLevel]
   const currentUnits = useMemo(() => currentFixture?.units ?? [], [currentFixture])
   const currentWords = useMemo(() => currentFixture?.words ?? {}, [currentFixture])
+  const allGroups = useMemo(() => currentUnits.flatMap((u) => u.groups), [currentUnits])
 
   const [mastery, setMastery] = useState<KotobaMasteryState>(() => {
     if (fixtureKey === 'empty') {
@@ -113,16 +108,9 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
     }
   })
 
-  const initialOpenUnitId = useMemo((): string | null => {
-    return currentUnits.length > 0 ? currentUnits[0].id : null
-  }, [currentUnits])
-  const [openUnitId, setOpenUnitId] = useState<string | null>(initialOpenUnitId)
-
   const [openGroupIds, setOpenGroupIds] = useState<ReadonlySet<string>>(() => {
-    if (!initialOpenUnitId) return new Set()
-    const openUnit = currentUnits.find((u) => u.id === initialOpenUnitId)
-    if (!openUnit || openUnit.groups.length === 0) return new Set()
-    return new Set([openUnit.groups[0].id])
+    const firstGroup = currentUnits[0]?.groups[0]
+    return firstGroup ? new Set([firstGroup.id]) : new Set()
   })
 
   const [selectedWord, setSelectedWord] = useState<KotobaWord | null>(null)
@@ -135,10 +123,9 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
     [currentWords, mastery],
   )
 
-  const unitsForLevel = currentUnits
   const lockedAtLevel = useMemo(
-    () => lockedIdsAtLevel(unitsForLevel, lockedWordIds),
-    [unitsForLevel, lockedWordIds],
+    () => allGroups.flatMap((g) => lockedIdsInGroup(g, lockedWordIds)),
+    [allGroups, lockedWordIds],
   )
 
   const handleLevelChange = useCallback(
@@ -147,13 +134,8 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
 
       const existing = levelData[level]
       if (existing) {
-        const firstUnit = existing.units[0]
-        setOpenUnitId(firstUnit ? firstUnit.id : null)
-        if (firstUnit && firstUnit.groups.length > 0) {
-          setOpenGroupIds(new Set([firstUnit.groups[0].id]))
-        } else {
-          setOpenGroupIds(new Set())
-        }
+        const firstGroup = existing.units[0]?.groups[0]
+        setOpenGroupIds(firstGroup ? new Set([firstGroup.id]) : new Set())
         return
       }
 
@@ -175,35 +157,12 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
           }))
         }
 
-        const firstUnit = fix.units[0]
-        setOpenUnitId(firstUnit ? firstUnit.id : null)
-        if (firstUnit && firstUnit.groups.length > 0) {
-          setOpenGroupIds(new Set([firstUnit.groups[0].id]))
-        } else {
-          setOpenGroupIds(new Set())
-        }
+        const firstGroup = fix.units[0]?.groups[0]
+        setOpenGroupIds(firstGroup ? new Set([firstGroup.id]) : new Set())
         setLevelLoading(false)
       })
     },
     [levelData, fixtureKey],
-  )
-
-  const handleToggleUnit = useCallback(
-    (unitId: string): void => {
-      setOpenUnitId((current) => {
-        if (current === unitId) return null
-        const nextUnit = currentUnits.find((u) => u.id === unitId)
-        if (nextUnit && nextUnit.groups.length > 0) {
-          setOpenGroupIds((prev) => {
-            const next = new Set(prev)
-            next.add(nextUnit.groups[0].id)
-            return next
-          })
-        }
-        return unitId
-      })
-    },
-    [currentUnits],
   )
 
   const handleToggleGroup = useCallback((groupId: string): void => {
@@ -277,15 +236,6 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
     setBulkScope(null)
   }, [])
 
-  const handleUnlockUnit = useCallback(
-    (unit: KotobaUnit): void => {
-      const ids = lockedIdsInUnit(unit, lockedWordIds)
-      if (ids.length === 0) return
-      setBulkScope({ label: unit.label, wordIds: ids })
-    },
-    [lockedWordIds],
-  )
-
   const handleUnlockGroup = useCallback(
     (group: KotobaLevelGroup): void => {
       const ids = lockedIdsInGroup(group, lockedWordIds)
@@ -332,16 +282,10 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
   }, [])
 
   const handleResetLevel = useCallback((): void => {
-    const allIds = unitsForLevel.flatMap((u) => u.groups.flatMap((g) => g.wordIds))
+    const allIds = allGroups.flatMap((g) => [...g.wordIds])
     if (allIds.length === 0) return
     setBulkResetScope({ label: `${JLPT_LABELS[activeLevel]} Kotoba`, wordIds: allIds })
-  }, [activeLevel, unitsForLevel])
-
-  const handleResetUnit = useCallback((unit: KotobaUnit): void => {
-    const ids = unit.groups.flatMap((g) => g.wordIds)
-    if (ids.length === 0) return
-    setBulkResetScope({ label: unit.label, wordIds: ids })
-  }, [])
+  }, [activeLevel, allGroups])
 
   const handleResetGroup = useCallback((group: KotobaLevelGroup): void => {
     if (group.wordIds.length === 0) return
@@ -392,38 +336,40 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
           <div
             id={`kotoba-panel-${activeLevel}`}
             role="tabpanel"
-            aria-label={`${activeLevel.toUpperCase()} units`}
+            aria-label={`${activeLevel.toUpperCase()} levels`}
             className="mt-5"
           >
             {levelLoading ? (
-              <div
-                className="grid gap-4"
-                style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}
-              >
+              <div className="flex flex-col gap-2">
                 {Array.from({ length: 3 }, (_, i) => (
                   <div
                     key={i}
-                    className="h-32 rounded-xl bg-warm-100 animate-pulse"
+                    className="h-12 rounded-lg bg-warm-100 animate-pulse"
                     aria-hidden="true"
                   />
                 ))}
               </div>
             ) : (
-              <KotobaUnitGrid
-                units={unitsForLevel}
-                words={currentWords}
-                scores={mastery.scores}
-                lockedWordIds={lockedWordIds}
-                openUnitId={openUnitId}
-                openGroupIds={openGroupIds}
-                onToggleUnit={handleToggleUnit}
-                onToggleGroup={handleToggleGroup}
-                onUnlockUnit={handleUnlockUnit}
-                onUnlockGroup={handleUnlockGroup}
-                onResetUnit={handleResetUnit}
-                onResetGroup={handleResetGroup}
-                onWordClick={handleWordClick}
-              />
+              <section className="rounded-xl border border-warm-200 bg-surface-raised">
+                {allGroups.length === 0 ? (
+                  <p className="text-sm text-warm-500 text-center py-12">Coming soon</p>
+                ) : (
+                  allGroups.map((group) => (
+                    <KotobaLevelGroupRow
+                      key={group.id}
+                      group={group}
+                      words={currentWords}
+                      scores={mastery.scores}
+                      lockedWordIds={lockedWordIds}
+                      isOpen={openGroupIds.has(group.id)}
+                      onToggle={handleToggleGroup}
+                      onUnlockGroup={handleUnlockGroup}
+                      onResetGroup={handleResetGroup}
+                      onWordClick={handleWordClick}
+                    />
+                  ))
+                )}
+              </section>
             )}
           </div>
         </main>

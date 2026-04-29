@@ -172,59 +172,74 @@ No UI yet. This is pure logic.
 
 ---
 
-## Sprint 5 - Content Pipeline and Practice Screen (Type Mode)
+## Sprint 5 - Content Pipeline and Practice Screen (Type Mode) ✅ COMPLETE
 
-**Goal:** Word bank and kana character data are generated and committed. A working practice screen in Type mode. The core game loop is playable.
-**Status:** In Progress
-
-| Task | Size | Status | Notes |
-|---|---|---|---|
-| Build `data/kana/characters.ts` | **Medium** | **Done** | Expanded from 208 to 234 characters. Renamed yoon to combination. Added Vu row (5 katakana dakuon), extended combinations (18 katakana: fa/fi/fe/fo, wi/we/wo, tsa-tso, ti/twu, di/dwu, she/che/je), 3 special characters (sokuon x2, long vowel mark). Updated progression groups. Dojo and onboarding charts updated with separate Extended sections using 4 custom display rows. |
-| Build `scripts/build-word-bank.ts` | **Medium** | **Done** | Reads JMDict JSON from `scripts/source/jmdict/`. NFC normalization, greedy two-char-first kana decomposition, structured rejection stats. Deduplicates globally by kana. Generates `data/words/n5.ts` through `n1.ts`. WordBankEntry type updated: `english` renamed to `meaning`, added `kanji: string | null` and `audioFile: string | null`. |
-| Run build script and commit word bank files | **Small** | **Done** | 652 tests passing. Word bank integrity tests validate schema, cross-references, dedup, and minimum counts (N5 >= 600, total >= 5,000). |
+**Goal:** Word bank and kana character data are generated and committed. Kana practice screen wired to real engine. Progression system redesigned.
+**Status:** Complete
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Wire practice screen to engine (Plan 2) | **Medium** | **To Do** | Replace mock game loop with real Sprint 4 engine. Create `usePracticeSession` hook and `unlock.store.ts`. See Sprint 5 plans doc for details. Codex flagged: mastery double-counting risk, counter ownership, hydration race, eager ALL_WORDS import. |
-| Populate romaji variants (Plan 3) | **Small** | **To Do** | Data file from CONTENT.md Section 5 spec. |
-| Implement romaji engine (Plan 3) | **Small** | **To Do** | `isValidRomajiInput`, `getAcceptedRomaji`. Codex flagged: dual-argument API, prefix/partial-input semantics (tri-state evaluation). |
-| Wire wrong answer feedback (Plan 3) | **Small** | **To Do** | Romaji hint on wrong answers. No mnemonic display (deferred). |
-| Build correct answer feedback | **Small** | **To Do** | Already in visual shell, needs engine wiring from Plan 2. |
-| Build English meaning reveal | **Small** | **To Do** | Already in visual shell, works with real data from Plan 2. |
-| Write practice screen tests (Plan 4) | **Medium** | **To Do** | Hook tests, component tests. Word bank integrity tests already done. Codex flagged: over-mocking risk, non-determinism from timers/randomness, missing malformed-data defenses. |
-| Integrate kana character audio | **Medium** | **Deferred** | VOICEVOX is Sprint 10. No audio files available yet. |
-| Build top bar and input mode switcher | **Small** | **Deferred** | AppTopBar already exists in layout. top-bar.tsx stub is unused. |
+| Build `data/kana/characters.ts` | **Medium** | **Done** | Expanded from 208 to 234 characters. Renamed yoon to combination. Added Vu row, extended combinations, 3 special characters. |
+| Build `scripts/build-word-bank.ts` | **Medium** | **Done** | Reads JMDict JSON, NFC normalization, greedy two-char-first decomposition. Generates N5-N1. |
+| Run build script and commit word bank files | **Small** | **Done** | Word bank integrity tests passing. |
+| Build bonus katakana word bank | **Medium** | **Done** | 555 katakana loanwords in `data/words/kt.ts`. Separate from JLPT levels. Included in `ALL_WORDS` for kana selection. |
+| Reorder progression groups | **Medium** | **Done** | H1,H2,K1,K2 pattern. Paired initial unlocks (H1+H2 = 21 chars, K1+K2 = 22 chars). Sokuon and longvowel added to group 1. |
+| Build auto-progression engine | **Medium** | **Done** | `isReadyToProgress()`, `getCurrentStepIndex()`, `getNextUnlockIds()` in engine/unlock.ts. UNLOCK_STEPS defines paired/single group progression. |
+| Wire practice screen to engine | **Medium** | **Done** | `usePracticeSession` hook (191 lines), `unlock.store.ts` (111 lines). Real engine replaces mock game loop. |
+| Remove unused features | **Small** | **Done** | Removed bottom nav, romaji variants, romaji engine. Mnemonics deferred as optional. Settings hints toggle renamed from mnemonics. |
 
 ---
 
-## Sprint 6 - Tap Mode and Swipe Mode
+## Sprint 5B - Kotoba Wiring and Dojo
 
-**Goal:** All three input modes are functional.
+**Goal:** Kotoba dojo wired to real word bank data. Word mastery store built. Kotoba auto-progression: 12 words per level, master to 5 before next level unlocks.
 **Status:** Pending
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Build Tap mode input component | **Medium** | **To Do** | On-screen kana character buttons. Tapping a button submits that character. Grid layout. Works on all screen sizes. |
-| Integrate Tap mode into practice screen | **Small** | **To Do** | Connect Tap input to the same game engine used by Type mode. |
-| Build Swipe mode input component | **Medium** | **To Do** | Detects native mobile swipe keyboard input. Accepts input from the device keyboard the same way Type mode does but optimised for mobile layout. |
-| Integrate Swipe mode into practice screen | **Small** | **To Do** | Same game engine connection as Type and Tap. |
-| Test all three modes end to end | **Medium** | **To Do** | Each mode: correct answer, wrong answer, mode switching mid-session, mobile and desktop. |
+| Design Kotoba level structure from word bank | **Medium** | **To Do** | Split N5-N1 word banks into levels of 12 words each. Levels paired under headings ("Levels 1-2", etc.). Words grouped thematically within levels (not just sequential). This is curriculum design work. |
+| Build word mastery store (Zustand) | **Medium** | **To Do** | Same pattern as character mastery store. Per-word scores, persist to localStorage. Hydration gate. |
+| Build Kotoba auto-progression | **Medium** | **To Do** | 12 words per level. All 12 must reach score 5 before next level auto-unlocks. First level auto-unlocked for fresh users. Uses same pattern as kana `UNLOCK_STEPS`. |
+| Wire Kotoba dojo to real data | **Medium** | **To Do** | Replace fixture data in `kotoba-dojo-client.tsx` with real word bank levels and word mastery store. Level group rows show real progress. |
+| Wire Kotoba practice screen to engine | **Medium** | **To Do** | Replace fixture words in `kotoba-game-window.tsx` with real word selection from mastery-weighted pool. Wire scoring to word mastery store. |
+| Design word mastery schema in Supabase | **Medium** | **To Do** | Table: word_mastery. Fields: user_id, word_id, score, counter, updated_at. RLS policies. |
+| Write Kotoba wiring tests | **Medium** | **To Do** | Word mastery store, auto-progression, level generation, dojo rendering with real data. |
 
 ---
 
-## Sprint 7 - Dojo Screen
+## Sprint 6 - Input Modes (Kana + Kotoba)
 
-**Goal:** The Dojo screen is complete with character progress, collapsible groups, and unlock controls.
+**Goal:** All three input modes functional for both Kana and Kotoba practice.
 **Status:** Pending
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Build Dojo screen layout | **Medium** | **To Do** | Heading: Kana. Subheadings: Seion, Dakuon, Yoon. Each group collapsible via arrow toggle. |
+| Build Tap mode input (Kana) | **Medium** | **To Do** | On-screen kana character buttons. Grid layout. Works on all screen sizes. |
+| Integrate Tap mode into Kana practice | **Small** | **To Do** | Connect Tap input to the same game engine used by Type mode. |
+| Build Swipe mode input (Kana) | **Medium** | **To Do** | Native mobile swipe keyboard input. Optimised for mobile layout. |
+| Integrate Swipe mode into Kana practice | **Small** | **To Do** | Same engine connection as Type and Tap. |
+| Build Kotoba Readings input mode | **Large** | **To Do** | Show kanji/English word. User types/taps/swipes kana reading. Correct: word mastery +1. Same input system as Kana. |
+| Build Kotoba Kanji input mode | **Large** | **To Do** | User produces kanji via keyboard auto-suggestion. Scoring at 4x multiplier. Type/Swipe: plain input field. |
+| Build Kotoba Tap two-stage flow | **Medium** | **To Do** | Stage 1: select kana from tap grid. Stage 2 (Kanji input only): select kanji from options. |
+| Test all modes end to end | **Medium** | **To Do** | Kana + Kotoba: correct/wrong answers, mode switching, mobile/desktop. |
+
+---
+
+## Sprint 7 - Dojo Screens (Kana + Kotoba)
+
+**Goal:** Both Kana and Kotoba dojo screens are complete with real mastery data, progress tracking, and unlock controls.
+**Status:** Pending
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Wire Kana Dojo to mastery store | **Medium** | **To Do** | Replace fixture data with real mastery scores. Read from Zustand store. Dojo reflects live state. |
+| Build Kana Dojo layout | **Medium** | **To Do** | Heading: Kana. Subheadings: Seion, Dakuon, Combination. Each group collapsible via arrow toggle. Progress bars with heatmap colouring from the colour utility built in Sprint 2. |
 | Build character progress bar component | **Small** | **To Do** | Shows mastery score as a filled bar. Heatmap colouring from the colour utility built in Sprint 2. |
 | Build individual character unlock interaction | **Small** | **To Do** | Clicking a locked character shows an unlock prompt. Confirmation required. Cannot be undone. |
-| Build unlock all interaction | **Small** | **To Do** | Clicking a progress bar shows an "Unlock All" option. Two-step confirmation. Cannot be undone. |
-| Connect Dojo to mastery store | **Small** | **To Do** | Read mastery scores from Zustand store. Dojo reflects live state. |
-| Write Dojo screen tests | **Small** | **To Do** | Collapse/expand, locked state, unlock flow, progress bar rendering. |
+| Build bulk unlock interaction | **Small** | **To Do** | Clicking a progress bar shows an "Unlock All" option. Group-level and page-level unlock buttons. Two-step confirmation. Cannot be undone. |
+| Wire Kotoba Dojo to word mastery store | **Medium** | **To Do** | Flat level structure (no units). Levels of 12 words, paired headings ("Levels 1-2", etc.). Real mastery data from word mastery store. |
+| Gate Kotoba Mode behind kana progress | **Small** | **To Do** | Kotoba unlocks when all kana characters are unlocked (score >= 5 or manually unlocked). Show friendly message if not yet unlocked. |
+| Write Dojo tests (Kana + Kotoba) | **Medium** | **To Do** | Collapse/expand, locked state, unlock flow, progress bar rendering, level progression. |
 
 ---
 
@@ -235,9 +250,9 @@ No UI yet. This is pure logic.
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Build Profile screen | **Medium** | **To Do** | Username display, Kotoba JLPT level selector, Kanji JLPT level selector (both with mastery pre-set warning), font selector, font size selector, lo-fi audio toggle, reset progress button. |
-| Build reset progress flow | **Small** | **To Do** | Two-step confirmation. Clear warning that this cannot be undone. Resets all mastery, counters, and unlocks. |
-| Build Settings screen | **Medium** | **To Do** | Input mode selector, mode-specific sub-settings (Type/Swipe: romaji-to-kana or kana-to-romaji). Mnemonic toggle exists in settings dialog but data is deferred. |
+| Build Profile screen | **Medium** | **To Do** | Username display, JLPT level selector (with mastery pre-set warning), font selector, font size selector, lo-fi audio toggle, reset progress button. |
+| Build reset progress flow | **Small** | **To Do** | Two-step confirmation. Clear warning that this cannot be undone. Resets all kana mastery, word mastery, counters, and unlocks. |
+| Build Settings screen | **Medium** | **To Do** | Input mode selector, mode-specific sub-settings (Type/Swipe: romaji-to-kana or kana-to-romaji). Kotoba Input toggle: two-option segmented control (Readings 1x / Kanji 4x). Only shown when Kotoba Mode is unlocked. |
 | Connect Profile and Settings to Supabase | **Medium** | **To Do** | All preferences saved to the user profile record. Loaded on app start. Guest users: saved to localStorage. |
 | Build delete account flow | **Medium** | **To Do** | Server-side account deletion. Typed confirmation (`delete-username`). Cascade deletes all user data. See SECURITY.md Section 5.4. Flagged in Session 49. |
 | Build username change with 30-day cooldown | **Small** | **To Do** | Server validates cooldown via `username_changed_at`. Returns structured error with next-allowed timestamp. Client shows disabled state. Flagged in Session 49. |
@@ -246,18 +261,18 @@ No UI yet. This is pure logic.
 
 ---
 
-## Sprint 9 - Leaderboards
+## Sprint 9 - Leaderboards (Kana + Kotoba)
 
-**Goal:** Global leaderboards are live for all three input modes and the overall board.
+**Goal:** Global leaderboards for Kana and Kotoba modes.
 **Status:** Pending
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Design leaderboard Supabase schema | **Medium** | **To Do** | Table: leaderboard_entries. Fields: user_id, username, input_mode, total_score, updated_at. RLS: anyone can read, only owner can write their own row. |
-| Build leaderboard score sync | **Medium** | **To Do** | On session end, push the updated total mastery score to the leaderboard table. Debounced - not on every keypress. |
-| Build leaderboard screen | **Medium** | **To Do** | Four tabs: Tap, Type, Swipe, Overall. Each shows ranked list with username, input mode indicator, and score. Highlight the current user's row. |
+| Design leaderboard Supabase schema | **Medium** | **To Do** | Separate Kana and Kotoba boards. Table: leaderboard_entries. Fields: user_id, username, input_mode, game_type (kana/kotoba), total_score, updated_at. RLS: anyone can read, only owner can write their own row. |
+| Build leaderboard score sync | **Medium** | **To Do** | On session end, push the updated kana mastery total and word mastery total to the leaderboard table. Debounced - not on every keypress. |
+| Build leaderboard screen | **Medium** | **To Do** | Kana + Kotoba boards side by side (desktop) or game type switcher (mobile). Tap/Type/Swipe tabs per board. Ranked list with username, input mode indicator, and score. Highlight the current user's row. |
 | Build leaderboard rank calculation | **Small** | **To Do** | Rank by total_score descending. Ties resolved by updated_at ascending (earlier score wins on tie). |
-| Write leaderboard tests | **Small** | **To Do** | Correct ranking order, current user highlight, empty state, loading state. |
+| Write leaderboard tests | **Small** | **To Do** | Correct ranking order, current user highlight, empty state, loading state, both game types. |
 
 ---
 
@@ -269,11 +284,11 @@ No UI yet. This is pure logic.
 | Task | Size | Status | Notes |
 |---|---|---|---|
 | Integrate lo-fi background audio | **Small** | **To Do** | Connect audio player component to the settings toggle. Persist preference. Default on. |
-| Generate and integrate word audio via VOICEVOX | **Medium** | **To Do** | Open VOICEVOX on Mac. Run scripts/generate-audio.ts to call local VOICEVOX API for every word in the N5 word bank. Save MP3s to public/audio/words/. Commit to repo. Confirm chosen voice character licence permits use in a free app. Add attribution to credits screen. See CONTENT.md Section 2.2. |
-| Build guest-to-account conversion flow | **Medium** | **To Do** | Guest user clicks "Save Progress" or similar CTA. Prompted to create an account. Local progress migrated to Supabase on account creation. |
+| Generate and integrate word audio via VOICEVOX | **Medium** | **To Do** | Open VOICEVOX on Mac. Run scripts/generate-audio.ts to call local VOICEVOX API for every word in the word bank. Save MP3s to public/audio/words/. Commit to repo. Confirm chosen voice character licence permits use in a free app. Add attribution to credits screen. See CONTENT.md Section 2.2. |
+| Build guest-to-account conversion flow | **Medium** | **To Do** | Guest user clicks "Save Progress" or similar CTA. Prompted to create an account. Local progress (kana mastery + word mastery) migrated to Supabase on account creation. |
 | Accessibility audit | **Medium** | **To Do** | Every interactive element: ARIA labels, keyboard navigation, focus states, touch targets minimum 44x44pt. |
 | Cross-browser and cross-device testing | **Medium** | **To Do** | Chrome, Safari, Firefox. Desktop, tablet, mobile. iOS and Android swipe keyboard behaviour. |
-| Performance audit | **Medium** | **Partial** | Phase 0-2 done: coordinated scene load (cyclist frame-first, landscape waits), AppTopBar moved to persistent layout, session prefetch, intent-based mobile prefetch, next.config optimizations (ETags, staleTimes, removeConsole), vercel.json cache headers, bundle budgets with CI script. Kotoba data split by JLPT level (N5 eager, N4-N1 on demand). Hamburger scroll-through fixed. Remaining: Lighthouse audit, animation jank check, kana dojo data splitting. |
+| Performance audit | **Medium** | **Partial** | Phase 0-2 done: coordinated scene load, AppTopBar persistent layout, session prefetch, intent-based mobile prefetch, next.config optimizations, cache headers, bundle budgets. Remaining: Lighthouse audit, animation jank check, kana/kotoba data splitting. |
 | Error boundary implementation | **Small** | **To Do** | Global error boundary. All screens handle error state with a human-readable message and a recovery action. |
 
 ---
@@ -285,30 +300,12 @@ No UI yet. This is pure logic.
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Set up Stripe account and products | **Medium** | **To Do** | Create Stripe account. Define membership product (details TBD in Phase 2). Wire Stripe into the app but do not activate any paywall. |
+| Set up Stripe account and products | **Medium** | **To Do** | Create Stripe account. Define membership product (details TBD). Wire Stripe into the app but do not activate any paywall. |
+| Activate Stripe membership | **Epic** | **To Do** | Break into smaller tasks at the time. Define pricing model first. |
 | Build credits / attribution screen | **Small** | **To Do** | List VOICEVOX attribution, font licences, and any other third-party credits. |
 | Write privacy policy and terms of service | **Medium** | **To Do** | Plain language. Cover data storage (Supabase), leaderboard visibility of username, and guest mode data loss warning. |
-| Final end-to-end test pass | **Large** | **To Do** | Full user journey: guest entry, sign up, onboarding, practice in all three modes, Dojo, Profile, Settings, Leaderboard. |
+| Final end-to-end test pass | **Large** | **To Do** | Full user journey: guest entry, sign up, onboarding, Kana practice (all three modes), Kotoba practice (Readings + Kanji), Dojo (Kana + Kotoba), Profile, Settings, Leaderboard. |
 | Soft launch on Vercel | **Small** | **To Do** | Share URL with a small group of testers. Monitor for errors. |
-
----
-
-## Phase 2 Backlog - Kana with Kotoba
-
-Not assigned to a sprint. Pulled in once Phase 1 is complete and stable.
-
-| Task | Size | Status | Notes |
-|---|---|---|---|
-| Design word mastery schema in Supabase | **Medium** | **To Do** | Separate from character mastery. Table: word_mastery. Fields: user_id, word_id, score, counter, updated_at. |
-| Build word mastery store (Zustand) | **Medium** | **To Do** | Same logic as character mastery but for words. Frequency-weighted selection. Counter cap at 5. |
-| Build Library screen | **Large** | **To Do** | JLPT N5-N1 word banks. Organised by level and set. Heatmap colouring per word. Remove "Under Construction" placeholder. |
-| Build Kotoba Mode game loop (Readings input) | **Large** | **To Do** | Show English word. User types/taps/swipes kana reading. Uses same input system as Kana game screens. Correct: word mastery increments at 1x. Wrong: same feedback as Kana mode. |
-| Build Kotoba Mode game loop (Kanji input) | **Large** | **To Do** | Same as Readings but user produces kanji via keyboard auto-suggestion. Scoring at 4x multiplier (`KANJI_INPUT_MULTIPLIER`). Type/Swipe: single plain input field (no zero-width-space). Tap: two-stage flow (kana tap first, then kanji selection). |
-| Build Kotoba Tap mode two-stage flow | **Medium** | **To Do** | Tap mode only. Stage 1: select correct kana from tap grid. Stage 2 (Kanji input only): select correct kanji from options. Stage 2 skipped when Readings input is selected. |
-| Add Kotoba Input setting to Settings dialog | **Small** | **To Do** | Two-option segmented control: Readings (1x) / Kanji (4x). Only shown when Kotoba Mode is unlocked. Persists to settings.store.ts. |
-| Build Kotoba leaderboards | **Medium** | **To Do** | Kotoba board. Separate from the main Kana boards. Same ranking logic. Kanji input users accumulate faster due to 4x. |
-| Gate Kotoba Mode behind full Kana mastery | **Small** | **To Do** | Check mastery threshold before allowing access. Show friendly message if not yet unlocked. |
-| Activate Stripe membership | **Epic** | **To Do** | Break into smaller tasks at the time. Define pricing model first. |
 
 ---
 
@@ -336,3 +333,4 @@ Ideas and improvements not tied to a phase. Pulled in when the time is right.
 |---|---|---|
 | 1.0 | April 2026 | Initial sprint board. Sprint 1 active. Sprints 2-11 pending. Phase 2 backlog drafted. |
 | 1.1 | April 2026 | Kanji removed from scope. Phase 3 (Kanji) and Phase 4 (Kanji with Kotoba) backlogs dropped. Game structure simplified to Kana then Kotoba. kotoba_jlpt_level now serves both modes. |
+| 1.2 | April 2026 | Kotoba brought forward from Phase 2 backlog. Phase 2 backlog absorbed into Sprints 5B-9. Sprint 5 closed. Sprint 5B (Kotoba Wiring) added. Sprints 6-9 expanded with Kotoba tasks. Removed: bottom nav, romaji variants/engine, mnemonics (optional in backlog). Kotoba dojo restructured: flat levels of 12 words (no units). |

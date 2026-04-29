@@ -33,8 +33,8 @@ Format per entry:
 ## [2026-04-29] - Session 69
 
 **Sprint:** Sprint 5 - Content Pipeline and Practice Screen (Type Mode)
-**Task completed:** Katakana word bank expansion, progression reorder, auto-progression engine
-**Status:** Partial (engine functions done, hook wiring still needed)
+**Task completed:** Katakana word bank, progression system, feature cleanup, Kotoba dojo restructure, sprint board overhaul
+**Status:** Done (Sprint 5 closed)
 
 ### Changes made
 
@@ -46,16 +46,40 @@ Format per entry:
 - `data/kana/progression-groups.ts`: Reordered from interleaved (H1,K1,H2,K2) to hiragana-leads-by-two (H1,H2,K1,K2,H3,H4,K3,K4...). Added `UNLOCK_STEPS` export defining paired initial unlocks (H1+H2 together = 21 chars, K1+K2 together = 22 chars) then individual groups. Added sokuon and longvowel to seion group 1 (both scripts).
 - `engine/unlock.ts`: Three new pure functions: `isReadyToProgress()` (all unlocked chars at mastery >= 5), `getCurrentStepIndex()` (first incomplete unlock step), `getNextUnlockIds()` (character IDs for the next step). Handles random onboarding selections naturally.
 
+**Feature cleanup (11 files):**
+- Removed bottom nav references from `page-shell.tsx`, `CLAUDE.md`, `theme/spacing.ts`.
+- Removed romaji variants and romaji engine: updated `docs/CONTENT.md` (Section 5 replaced with Hepburn-only policy), `docs/GAME_DESIGN.md`, `docs/ARCHITECTURE.md`, `LangTap_Sprints.md`. Stub files flagged for owner deletion.
+- Renamed `mnemonics` to `hints` in `stores/settings.store.ts`, `components/settings/settings-dialog.tsx`, `components/game/kotoba-game-window.tsx`. Removed `mnemonicsEnabled` from `types/user.types.ts`, `services/profile.service.ts`, and test fixtures. Mnemonics reclassified as optional in sprint backlog.
+
+**Kotoba dojo restructure (3 files):**
+- `components/layout/kotoba-dojo-client.tsx`: Removed unit card grid and unit accordion. Level group rows render directly in a bordered section. Unit-related state, handlers, and imports removed.
+- `components/dojo/kotoba-level-group.tsx`: Added `LevelSections` component that splits word IDs into chunks of 12 with soft "Level N" labels above each chunk.
+- `fixtures/samples/kotoba-dojo-fixtures.ts`: Merged fixture groups in pairs (24 words per group). Reduced `UNIT_RANGES` from 6 to 3 entries.
+
+**Sprint board overhaul (1 file):**
+- `LangTap_Sprints.md`: Sprint 5 closed. Sprint 5B (Kotoba Wiring and Dojo) added. Sprints 6-9 expanded with Kotoba tasks. Phase 2 Backlog absorbed into active sprints and removed. Version history updated to 1.2.
+
+**Pre-existing fixes (2 files):**
+- `components/game/game-window.tsx`: Fixed irregular whitespace ESLint error (literal ZWSP replaced with `​` escape in regex).
+- 5 files formatted with Prettier (pre-existing formatting issues).
+
 ### Tests
-- No new test files yet. Engine functions are pure and testable. Tests to be written before hook wiring.
+- `engine/__tests__/unlock.test.ts`: Updated to match new progression order (H2 after H1, not K1).
+- `components/dojo/__tests__/kotoba-dojo-client.test.tsx`: Updated for flat level structure (no unit cards). Unit-specific tests replaced with level group tests. Tile count updated from 12 to 24.
+- `components/dojo/__tests__/kana-dojo-client.test.tsx`: Added `h-sokuon` to variety fixture unlocks.
+- 2 pre-existing kana dojo help card test failures remain (not caused by this session).
 
 ### Next task
-Wire auto-progression into practice session hook. Write tests for new unlock functions.
+Sprint 5B: Design Kotoba level structure from word bank (curriculum design for thematic word groupings).
 
 ### Notes
-- Katakana word coverage went from 0 (group 1) / 5 (groups 1+2) to 8 / 58 with the KT bank and special chars in group 1.
-- The `jlptLevel` field on KT entries is set to `'N5'` as a placeholder since the `JlptLevel` type was intentionally not modified. The selection engine never filters by level in Kana mode.
-- Fresh user flow: first unlock = H1+H2 (21 hiragana), second unlock = K1+K2 (22 katakana). Random onboarding picks do not skip steps; they make later steps complete faster.
+- Sprint 5 is now closed. All active development moves to Sprint 5B.
+- Kotoba brought forward from Phase 2 to run parallel with Kana in every sprint.
+- Kotoba dojo uses flat levels (12 words each, paired under headings). No units.
+- Katakana word coverage: 0 (group 1) / 5 (groups 1+2) improved to 8 / 58 with KT bank.
+- Fresh user flow: H1+H2 (21 hiragana) first, then K1+K2 (22 katakana). All unlocked chars must reach mastery 5 before next group auto-unlocks.
+- Romaji engine and variants dropped (Hepburn only, no separate engine needed).
+- `jlptLevel` on KT entries uses `'N5'` placeholder. Selection engine is level-agnostic in Kana mode.
 
 ---
 

@@ -77,9 +77,7 @@ function buildPracticePrompt(result: SelectionResult): PracticePrompt | null {
 
 // ── Hook ──────────────────────────────────────
 
-export function usePracticeSession(
-  preferredLevel: JlptLevel = 'N5',
-): UsePracticeSessionReturn {
+export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePracticeSessionReturn {
   const [prompt, setPrompt] = useState<PracticePrompt | null>(null)
   const [isEmpty, setIsEmpty] = useState(false)
   const startedRef = useRef(false)
@@ -141,7 +139,15 @@ export function usePracticeSession(
     }
     startSession()
     resetAllCounters()
-  }, [hasHydrated, scores, manualUnlockIds, bootstrapUnlocks, setSelectedBulk, startSession, resetAllCounters])
+  }, [
+    hasHydrated,
+    scores,
+    manualUnlockIds,
+    bootstrapUnlocks,
+    setSelectedBulk,
+    startSession,
+    resetAllCounters,
+  ])
 
   // Select first prompt after unlock recompute
   useEffect(() => {

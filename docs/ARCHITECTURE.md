@@ -238,7 +238,6 @@ langtap/
 |  |- counter.ts                # Word counter logic
 |  |- distance.ts               # Distance and speed bonus calculation
 |  |- scoring.ts                # Per-character first-attempt scoring
-|  |- romaji.ts                 # Romaji input evaluation and variant matching
 |  |- sokuon.ts                 # Sokuon position detection and validation
 |  |- __tests__/
 |  |  |- selection.test.ts
@@ -277,8 +276,6 @@ langtap/
 |- data/                        # Static content (bundled, not fetched)
 |  |- kana/
 |  |  |- characters.ts          # Full kana character dataset
-|  |  |- mnemonics.ts           # Mnemonic per character
-|  |  |- romaji-variants.ts     # Accepted romaji strings per character ID
 |  |  |- progression-groups.ts  # Unlocking group definitions
 |  |
 |  |- words/
@@ -672,8 +669,6 @@ the current behaviour before making any changes. This protects against regressio
 | Change the mastery scoring formula | `engine/mastery.ts` |
 | Change the unlock threshold | `engine/constants.ts` |
 | Add a new kana character | `data/kana/characters.ts` |
-| Add a mnemonic | `data/kana/mnemonics.ts` |
-| Add a romaji variant | `data/kana/romaji-variants.ts` |
 | Change a button style | `components/ui/button.tsx` |
 | Add a new screen | New folder in `app/(main)/` |
 | Add a new reusable component | `components/` in the appropriate subfolder |

@@ -22,7 +22,10 @@ import { TypeInput } from '@/components/game/type-input'
 import { SwipeInput } from '@/components/game/swipe-input'
 import { TapInput } from '@/components/game/tap-input'
 import { FEEDBACK_FLASH_MS, KOTOBA_DISPLAY_MS } from '@/engine/constants'
-import { getMockKotobaWords, generateKanjiDistractors } from '@/fixtures/samples/kotoba-practice-fixtures'
+import {
+  getMockKotobaWords,
+  generateKanjiDistractors,
+} from '@/fixtures/samples/kotoba-practice-fixtures'
 import type { MockKotobaWord } from '@/fixtures/samples/kotoba-practice-fixtures'
 import {
   isKatakanaChar,

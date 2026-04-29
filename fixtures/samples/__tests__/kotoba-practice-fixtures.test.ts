@@ -4,7 +4,10 @@
 // Depends on: samples/kotoba-practice-fixtures.ts
 // ─────────────────────────────────────────────
 
-import { getMockKotobaWords, generateKanjiDistractors } from '@/fixtures/samples/kotoba-practice-fixtures'
+import {
+  getMockKotobaWords,
+  generateKanjiDistractors,
+} from '@/fixtures/samples/kotoba-practice-fixtures'
 
 const WORDS = getMockKotobaWords()
 

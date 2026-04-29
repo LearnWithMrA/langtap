@@ -121,8 +121,6 @@ Document each track's title, artist, and licence in Section 8 of this document.
 data/
   kana/
     characters.ts         # Full kana character dataset (see Section 4)
-    mnemonics.ts          # Mnemonic string per character (see Section 6)
-    romaji-variants.ts     # All accepted romaji inputs per character (see Section 5)
     progression-groups.ts  # Unlocking group definitions (see GAME_DESIGN.md Section 4.3)
   words/
     n5.ts                 # N5 word bank
@@ -240,82 +238,18 @@ appears in common katakana loanwords from the very beginning: コーヒー, ス�
 
 ---
 
-## 5. Romaji Variants
+## 5. Romaji Input
 
-Some kana characters have multiple valid romaji representations. All valid inputs
-must be accepted in Type and Swipe modes.
+LangTap uses Hepburn romanization exclusively. Each character has a single
+accepted romaji input stored in the `romaji` field of its character object
+in `data/kana/characters.ts`. No variant map is needed.
 
-The variant map follows the same character ID scheme as the character dataset.
-Each entry is keyed by character ID, so when a user is answering a prompt, the app
-already knows which character is being targeted and can look up exactly which romaji
-strings are valid for that specific character. There is no ambiguity: the kana is
-always known when the input is being evaluated, and vice versa.
+This decision targets English-speaking learners. Hepburn is the most intuitive
+system for English speakers (shi, chi, tsu, fu) and avoids confusion from
+alternative romanizations (si, ti, tu, hu).
 
-The full variant map lives in `data/kana/romaji-variants.ts`.
-
-```ts
-// data/kana/romaji-variants.ts
-
-// Key: character ID (from data/kana/characters.ts)
-// Value: all accepted romaji strings for that character, primary first
-type RomajiVariantMap = Record<string, string[]>
-
-const romajiVariants: RomajiVariantMap = {
-  // Hiragana seion with variants
-  'hira-shi':      ['shi', 'si'],
-  'hira-chi':      ['chi', 'ti'],
-  'hira-tsu':      ['tsu', 'tu'],
-  'hira-ji':       ['ji', 'zi'],
-  'hira-fu':       ['fu', 'hu'],
-
-  // Hiragana dakuon with shared sounds (ぢ and づ)
-  'hira-d-ji':     ['ji', 'zi'],       // ぢ shares the ji/zi sound with じ
-  'hira-d-zu':     ['zu', 'du'],       // づ shares the zu sound with ず
-
-  // Katakana equivalents (same IDs, kata- prefix)
-  'kata-shi':      ['shi', 'si'],
-  'kata-chi':      ['chi', 'ti'],
-  'kata-tsu':      ['tsu', 'tu'],
-  'kata-ji':       ['ji', 'zi'],
-  'kata-fu':       ['fu', 'hu'],
-  'kata-d-ji':     ['ji', 'zi'],
-  'kata-d-zu':     ['zu', 'du'],
-
-  // Hiragana combination with multiple valid romaji
-  'hira-y-sha':    ['sha', 'sya'],
-  'hira-y-shu':    ['shu', 'syu'],
-  'hira-y-sho':    ['sho', 'syo'],
-  'hira-y-cha':    ['cha', 'tya'],
-  'hira-y-chu':    ['chu', 'tyu'],
-  'hira-y-cho':    ['cho', 'tyo'],
-  'hira-y-ja':     ['ja', 'jya', 'zya'],
-  'hira-y-ju':     ['ju', 'jyu', 'zyu'],
-  'hira-y-jo':     ['jo', 'jyo', 'zyo'],
-
-  // Katakana combination equivalents follow the same pattern
-  'kata-y-sha':    ['sha', 'sya'],
-  'kata-y-shu':    ['shu', 'syu'],
-  'kata-y-sho':    ['sho', 'syo'],
-  'kata-y-cha':    ['cha', 'tya'],
-  'kata-y-chu':    ['chu', 'tyu'],
-  'kata-y-cho':    ['cho', 'tyo'],
-  'kata-y-ja':     ['ja', 'jya', 'zya'],
-  'kata-y-ju':     ['ju', 'jyu', 'zyu'],
-  'kata-y-jo':     ['jo', 'jyo', 'zyo'],
-
-  // Special characters
-  // Sokuon (っ/ッ) has no standalone romaji entry. Its position in a word is
-  // validated contextually via the doubled consonant in the full romaji string.
-  // Long vowel mark (ー) is entered with a plain hyphen.
-  'kata-longvowel': ['-'],
-}
-```
-
-Characters not present in this map have a single accepted romaji input, which is
-the `romaji` field from their character object. The variant map only needs entries
-for characters where more than one romaji string is valid.
-
-This list must be reviewed and completed before the Type mode sprint.
+The game window builds cumulative romaji breakpoints from the character data
+and compares user input directly. No separate romaji engine is required.
 
 ---
 

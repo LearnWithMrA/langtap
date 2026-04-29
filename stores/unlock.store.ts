@@ -24,9 +24,9 @@ const ALL_IDS = KANA_CHARACTERS.map((c) => c.id)
 const SPECIAL_ROWS = new Set(['sokuon', 'longvowel'])
 const DOJO_CHARACTER_COUNT = KANA_CHARACTERS.filter((c) => !SPECIAL_ROWS.has(c.row)).length
 
-const FIRST_GROUP_IDS = PROGRESSION_GROUPS
-  .filter((g) => g.stage === 'seion' && g.groupIndex === 1)
-  .flatMap((g) => [...g.characterIds])
+const FIRST_GROUP_IDS = PROGRESSION_GROUPS.filter(
+  (g) => g.stage === 'seion' && g.groupIndex === 1,
+).flatMap((g) => [...g.characterIds])
 
 // ── Types ────────────────────────────────────
 
@@ -55,9 +55,9 @@ export const useUnlockStore = create<UnlockState & UnlockActions>()((set, get) =
   recompute: (scores: MasteryScoreMap, manualUnlocks: Set<string>): void => {
     const unlocked = getUnlockedCharacterIds(ALL_IDS, scores, manualUnlocks)
     const unlockedSet = new Set(unlocked)
-    const nonSpecialUnlocked = KANA_CHARACTERS
-      .filter((c) => !SPECIAL_ROWS.has(c.row) && unlockedSet.has(c.id))
-      .length
+    const nonSpecialUnlocked = KANA_CHARACTERS.filter(
+      (c) => !SPECIAL_ROWS.has(c.row) && unlockedSet.has(c.id),
+    ).length
     set({
       unlockedIds: unlockedSet,
       manualUnlocks,
@@ -75,9 +75,9 @@ export const useUnlockStore = create<UnlockState & UnlockActions>()((set, get) =
 
     const finalUnlocked = getUnlockedCharacterIds(ALL_IDS, scores, manual)
     const unlockedSet = new Set(finalUnlocked)
-    const nonSpecialUnlocked = KANA_CHARACTERS
-      .filter((c) => !SPECIAL_ROWS.has(c.row) && unlockedSet.has(c.id))
-      .length
+    const nonSpecialUnlocked = KANA_CHARACTERS.filter(
+      (c) => !SPECIAL_ROWS.has(c.row) && unlockedSet.has(c.id),
+    ).length
 
     set({
       unlockedIds: unlockedSet,
@@ -93,19 +93,13 @@ export const useUnlockStore = create<UnlockState & UnlockActions>()((set, get) =
     const state = get()
     const nextManual = new Set(state.manualUnlocks)
     nextManual.add(characterId)
-    get().recompute(
-      useMasteryStore.getState().scores,
-      nextManual,
-    )
+    get().recompute(useMasteryStore.getState().scores, nextManual)
   },
 
   addManualUnlocks: (characterIds: readonly string[]): void => {
     const state = get()
     const nextManual = new Set(state.manualUnlocks)
     for (const id of characterIds) nextManual.add(id)
-    get().recompute(
-      useMasteryStore.getState().scores,
-      nextManual,
-    )
+    get().recompute(useMasteryStore.getState().scores, nextManual)
   },
 }))

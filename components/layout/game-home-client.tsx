@@ -50,9 +50,7 @@ function deriveKanaStages(
 ): StageProgress[] {
   const stages: Stage[] = ['seion', 'dakuon', 'combination']
   return stages.map((stage) => {
-    const chars = KANA_CHARACTERS.filter(
-      (c) => c.stage === stage && !SPECIAL_ROWS.has(c.row),
-    )
+    const chars = KANA_CHARACTERS.filter((c) => c.stage === stage && !SPECIAL_ROWS.has(c.row))
     const total = chars.length
     const mastered = chars.filter(
       (c) => unlockedIds.has(c.id) && (scores[c.id] ?? 0) >= UNLOCK_THRESHOLD,
@@ -94,10 +92,7 @@ export function GameHomeClient(): ReactNode {
     }
   }, [hasHydrated, scores])
 
-  const kanaStages = useMemo(
-    () => deriveKanaStages(scores, unlockedIds),
-    [scores, unlockedIds],
-  )
+  const kanaStages = useMemo(() => deriveKanaStages(scores, unlockedIds), [scores, unlockedIds])
 
   const kotobaStages: StageProgress[] = useMemo(
     () => [{ label: 'Words', mastered: 0, total: 0, percentage: 0 }],

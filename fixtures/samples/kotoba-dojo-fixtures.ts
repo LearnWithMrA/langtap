@@ -87,14 +87,7 @@ async function loadLevelWords(level: JlptLevel): Promise<LevelTuple> {
 
 // ── Constants ─────────────────────────────────
 
-const UNIT_RANGES: readonly [string, string, string, string, string, string] = [
-  'Levels 1-2',
-  'Levels 3-4',
-  'Levels 5-6',
-  'Levels 7-8',
-  'Levels 9-10',
-  'Levels 11-12',
-]
+const UNIT_RANGES: readonly [string, string, string] = ['Levels 1-2', 'Levels 3-4', 'Levels 5-6']
 
 const UNIT_RANGE_LABELS: readonly [string, string, string] = [
   'Levels 1-4',
@@ -140,10 +133,7 @@ function manualUnlocksForGroup(words: readonly KotobaWord[]): readonly string[] 
 function buildUnits(level: JlptLevel, levelWords: LevelTuple): readonly KotobaUnit[] {
   return levelWords.map((unitGroups, unitIndex): KotobaUnit => {
     const [g1, g2] = unitGroups
-    const rangeLabels: readonly [string, string] = [
-      UNIT_RANGES[unitIndex * 2],
-      UNIT_RANGES[unitIndex * 2 + 1],
-    ]
+    const rangeLabel = UNIT_RANGES[unitIndex]
     return {
       id: `${level}-u${unitIndex + 1}`,
       label: `Unit ${unitIndex + 1}`,
@@ -152,13 +142,8 @@ function buildUnits(level: JlptLevel, levelWords: LevelTuple): readonly KotobaUn
       groups: [
         {
           id: `${level}-u${unitIndex + 1}-g1`,
-          label: rangeLabels[0],
-          wordIds: g1.map((entry) => entry.id),
-        },
-        {
-          id: `${level}-u${unitIndex + 1}-g2`,
-          label: rangeLabels[1],
-          wordIds: g2.map((entry) => entry.id),
+          label: rangeLabel,
+          wordIds: [...g1.map((entry) => entry.id), ...g2.map((entry) => entry.id)],
         },
       ],
     }

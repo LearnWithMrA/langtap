@@ -77,6 +77,68 @@ function Chevron({ open, style }: { open: boolean; style: CSSProperties }): Reac
   )
 }
 
+// ── Constants ────────────────────────────────
+
+const WORDS_PER_LEVEL = 12
+
+// ── Level sections ──────────────────────────
+
+type LevelSectionsProps = {
+  wordIds: readonly string[]
+  words: Readonly<Record<string, KotobaWord>>
+  scores: Readonly<Record<string, number>>
+  lockedWordIds: ReadonlySet<string>
+  groupLabel: string
+  onWordClick: (word: KotobaWord) => void
+}
+
+function parseLevelStart(groupLabel: string): number {
+  const match = groupLabel.match(/(\d+)/)
+  return match ? parseInt(match[1], 10) : 1
+}
+
+function LevelSections({
+  wordIds,
+  words,
+  scores,
+  lockedWordIds,
+  groupLabel,
+  onWordClick,
+}: LevelSectionsProps): ReactNode {
+  const startLevel = parseLevelStart(groupLabel)
+  const chunks: (readonly string[])[] = []
+  for (let i = 0; i < wordIds.length; i += WORDS_PER_LEVEL) {
+    chunks.push(wordIds.slice(i, i + WORDS_PER_LEVEL))
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      {chunks.map((chunk, idx) => (
+        <div key={idx}>
+          <p className="text-sm font-medium text-warm-500 mb-2 ml-1">Level {startLevel + idx}</p>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-[repeat(auto-fill,minmax(144px,1fr))] md:gap-4 justify-items-center">
+            {chunk.map((wordId) => {
+              const word = words[wordId]
+              if (!word) return null
+              const score = scores[wordId] ?? 0
+              const isLocked = lockedWordIds.has(wordId)
+              return (
+                <KotobaWordTile
+                  key={wordId}
+                  word={word}
+                  score={score}
+                  isLocked={isLocked}
+                  onClick={onWordClick}
+                />
+              )
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ── Component ─────────────────────────────────
 
 export function KotobaLevelGroupRow({
@@ -157,23 +219,14 @@ export function KotobaLevelGroupRow({
           {group.wordIds.length === 0 ? (
             <p className="text-sm text-warm-500 text-center py-12">Coming soon</p>
           ) : (
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-[repeat(auto-fill,minmax(144px,1fr))] md:gap-4 justify-items-center">
-              {group.wordIds.map((wordId) => {
-                const word = words[wordId]
-                if (!word) return null
-                const score = scores[wordId] ?? 0
-                const isLocked = lockedWordIds.has(wordId)
-                return (
-                  <KotobaWordTile
-                    key={wordId}
-                    word={word}
-                    score={score}
-                    isLocked={isLocked}
-                    onClick={onWordClick}
-                  />
-                )
-              })}
-            </div>
+            <LevelSections
+              wordIds={group.wordIds}
+              words={words}
+              scores={scores}
+              lockedWordIds={lockedWordIds}
+              groupLabel={group.label}
+              onWordClick={onWordClick}
+            />
           )}
         </div>
       )}

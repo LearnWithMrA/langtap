@@ -2,16 +2,13 @@
 // ─────────────────────────────────────────────
 // File: components/dojo/__tests__/kotoba-dojo-client.test.tsx
 // Purpose: End-to-end tests for KotobaDojoClient orchestration.
-//          Covers: initial render of the tab row and unit grid, tab
-//          keyboard navigation, single-open unit accordion (every
-//          unit is expandable now - there is no "locked unit"
-//          variant), multi-open level-group accordion, word tile
-//          content for kanji-bearing and kana-only entries,
+//          Covers: initial render of the tab row and level groups, tab
+//          keyboard navigation, multi-open level-group accordion,
+//          word tile content for kanji-bearing and kana-only entries,
 //          long-gloss truncation, word popover flow (hero title,
 //          Mark as mastered action, reset two-step), locked word tile
-//          rendering + tap-to-unlock, page / unit / group unlock
-//          buttons, deterministic loading / error / empty state-prop
-//          screens.
+//          rendering + tap-to-unlock, page / group unlock buttons,
+//          deterministic loading / error / empty state-prop screens.
 // Depends on: components/layout/kotoba-dojo-client.tsx
 // ─────────────────────────────────────────────
 
@@ -55,29 +52,20 @@ describe('KotobaDojoClient - ready shell', () => {
     expect(screen.getByRole('tab', { name: 'N5' })).toHaveAttribute('aria-selected', 'true')
   })
 
-  it('renders three expandable N5 unit cards, every one interactive', () => {
+  it('renders three level group rows for N5', () => {
     render(<KotobaDojoClient fixture="variety" />)
-    expect(screen.getByRole('button', { name: /Unit 1,.*Levels 1-4/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Unit 2,.*Levels 5-8/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Unit 3,.*Levels 9-12/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Levels 1-2/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Levels 3-4/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Levels 5-6/ })).toBeInTheDocument()
   })
 
-  it('opens Unit 1 by default and shows the Levels 1-2 group open', () => {
+  it('opens Levels 1-2 by default and shows the word tiles', () => {
     render(<KotobaDojoClient fixture="variety" />)
     expect(screen.getByRole('button', { name: /^Levels 1-2/ })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Levels 1-2' })).toBeInTheDocument()
   })
 
-  it('single-open unit accordion: opening Unit 2 closes Unit 1', async () => {
-    const user = userEvent.setup()
-    render(<KotobaDojoClient fixture="variety" />)
-    const unit2 = screen.getByRole('button', { name: /Unit 2,.*closed/ })
-    await user.click(unit2)
-    expect(screen.getByRole('button', { name: /Unit 2,.*open/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Unit 1,.*closed/ })).toBeInTheDocument()
-  })
-
-  it('multi-open inner level-group accordion: opening Levels 3-4 leaves Levels 1-2 open', async () => {
+  it('multi-open accordion: opening Levels 3-4 leaves Levels 1-2 open', async () => {
     const user = userEvent.setup()
     render(<KotobaDojoClient fixture="variety" />)
     const levels34 = screen.getByRole('button', { name: /^Levels 3-4/ })
@@ -86,11 +74,11 @@ describe('KotobaDojoClient - ready shell', () => {
     expect(screen.getByRole('region', { name: 'Levels 3-4' })).toBeInTheDocument()
   })
 
-  it('renders twelve word tiles for N5 Unit 1 Levels 1-2', () => {
+  it('renders twenty-four word tiles for N5 Levels 1-2', () => {
     render(<KotobaDojoClient fixture="variety" />)
     const region = screen.getByRole('region', { name: 'Levels 1-2' })
     const tiles = within(region).getAllByRole('button')
-    expect(tiles.length).toBe(12)
+    expect(tiles.length).toBe(24)
   })
 
   it('renders kanji, kana, and english for words that have a kanji form', () => {
@@ -264,19 +252,6 @@ describe('KotobaDojoClient - scoped unlock buttons', () => {
     await user.click(screen.getByLabelText(/Unlock all \d+ locked word.*at N5/))
     const dialog = await screen.findByRole('dialog')
     expect(within(dialog).getAllByText(/N5 Kotoba/).length).toBeGreaterThan(0)
-  })
-
-  it('exposes a unit-level unlock button on Unit 1 while words remain locked', () => {
-    render(<KotobaDojoClient fixture="variety" />)
-    expect(screen.getByLabelText(/Unlock \d+ word.*in Unit 1$/)).toBeInTheDocument()
-  })
-
-  it('tapping the unit-level unlock opens a Unit 1 scoped prompt', async () => {
-    const user = userEvent.setup()
-    render(<KotobaDojoClient fixture="variety" />)
-    await user.click(screen.getByLabelText(/Unlock \d+ word.*in Unit 1$/))
-    const dialog = await screen.findByRole('dialog')
-    expect(within(dialog).getAllByText(/Unit 1/).length).toBeGreaterThan(0)
   })
 
   it('exposes a group-level unlock button on Levels 1-2 while words remain locked', () => {

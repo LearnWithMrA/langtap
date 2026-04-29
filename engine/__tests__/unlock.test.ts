@@ -316,14 +316,14 @@ describe('getActiveGroup', () => {
       expect(active!.groupIndex).toBe(1)
     })
 
-    it('returns seion Group 1K after Group 1H is fully unlocked', () => {
+    it('returns seion Group 2H after Group 1H is fully unlocked', () => {
       const group1H = PROGRESSION_GROUPS[0]
       const unlocked = new Set(group1H.characterIds as string[])
       const active = getActiveGroup(PROGRESSION_GROUPS, unlocked)
       expect(active).not.toBeNull()
       expect(active!.stage).toBe('seion')
-      expect(active!.script).toBe('katakana')
-      expect(active!.groupIndex).toBe(1)
+      expect(active!.script).toBe('hiragana')
+      expect(active!.groupIndex).toBe(2)
     })
   })
 })

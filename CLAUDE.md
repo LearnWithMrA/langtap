@@ -83,7 +83,7 @@ theme/                  # Design tokens
   typography.ts         # Font families, sizes, weights
   spacing.ts            # Spacing scale
 types/                  # TypeScript type definitions (one file per domain)
-data/                   # Static data: kana sets, word banks, mnemonics
+data/                   # Static data: kana sets, word banks
   kana/                 # Kana character data (seion, dakuon, yoon)
   words/                # Word bank files (N5-N1, keyed by kana character)
   audio/                # Audio file manifests (not the audio files themselves)

@@ -26,7 +26,11 @@ import { FEEDBACK_FLASH_MS, MEANING_DISPLAY_MS, MEANING_FADE_MS } from '@/engine
 import { evaluateInput } from '@/engine/input'
 import { toKatakana } from '@/fixtures/kana-practice-data'
 import { KANA_CHARACTERS } from '@/data/kana/characters'
-import type { UsePracticeSessionReturn, CharacterResult, PracticeCharacter } from '@/hooks/usePracticeSession'
+import type {
+  UsePracticeSessionReturn,
+  CharacterResult,
+  PracticeCharacter,
+} from '@/hooks/usePracticeSession'
 
 const MAX_WRONG_ATTEMPTS = 3
 const TAP_GRID_SIZE = 10
@@ -53,9 +57,7 @@ function buildTapGrid(
   isKatakana: boolean,
 ): { id: string; kana: string; romaji: string }[] {
   const requiredIds = new Set(wordChars.map((c) => c.id))
-  const required = wordChars.filter(
-    (c, i, arr) => arr.findIndex((x) => x.id === c.id) === i,
-  )
+  const required = wordChars.filter((c, i, arr) => arr.findIndex((x) => x.id === c.id) === i)
 
   const needed = TAP_GRID_SIZE - required.length
   const script = isKatakana ? 'katakana' : 'hiragana'
@@ -67,7 +69,8 @@ function buildTapGrid(
   )
 
   const sameStagePool = KANA_CHARACTERS.filter(
-    (c) => c.script === script && c.romaji !== '' && !requiredIds.has(c.id) && wordStages.has(c.stage),
+    (c) =>
+      c.script === script && c.romaji !== '' && !requiredIds.has(c.id) && wordStages.has(c.stage),
   )
 
   const shuffledSame = [...sameStagePool].sort(() => Math.random() - 0.5)
@@ -217,7 +220,14 @@ export function GameWindow({ mode, session, children }: GameWindowProps): ReactN
       setDirection((prev) => (prev === 'kana-to-romaji' ? 'romaji-to-kana' : 'kana-to-romaji'))
       advanceToNext()
     }, MEANING_DISPLAY_MS)
-  }, [clearTimers, scheduleTimeout, characters.length, buildResults, handleWordComplete, advanceToNext])
+  }, [
+    clearTimers,
+    scheduleTimeout,
+    characters.length,
+    buildResults,
+    handleWordComplete,
+    advanceToNext,
+  ])
 
   const handleWrong = useCallback((): void => {
     clearTimers()
@@ -242,7 +252,7 @@ export function GameWindow({ mode, session, children }: GameWindowProps): ReactN
     (value: string): void => {
       if (wordDone || !prompt) return
 
-      const cleaned = value.replace(/​/g, '')
+      const cleaned = value.replace(/\u200b/g, '')
       let compare = isKanaToRomaji ? cleaned.toLowerCase() : cleaned
       if (!isKanaToRomaji && isKatakana) {
         compare = toKatakana(compare)

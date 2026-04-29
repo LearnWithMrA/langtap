@@ -47,6 +47,7 @@ const VARIETY_UNLOCKED: string[] = [
   'h-ka',
   'h-ki',
   'h-ku',
+  'h-sokuon',
   'h-sa',
   'h-shi',
   'h-su',

@@ -402,19 +402,11 @@ using a physical keyboard. The app compares the typed romaji to the
 expected reading and evaluates correctness.
 
 Example: prompt shows `あ`, user types `a`. Correct.
-Example: prompt shows `し`, user types `shi`. Correct. (`si` is also accepted.)
+Example: prompt shows `し`, user types `shi`. Correct.
 
-Multiple valid romaji inputs must be accepted for characters with variant spellings:
-
-| Character | Accepted inputs |
-|---|---|
-| し | shi, si |
-| ち | chi, ti |
-| つ | tsu, tu |
-| じ | ji, zi |
-| ふ | fu, hu |
-
-This list must be complete and stored in `data/kana/romajiVariants.ts`.
+LangTap uses Hepburn romanization exclusively (shi, chi, tsu, fu). No variant
+romanizations are accepted. Each character has a single accepted romaji input
+from the `romaji` field in `data/kana/characters.ts`.
 
 ### 7.3 Swipe Mode
 
