@@ -523,6 +523,18 @@ export function updateScore(char: KanaCharacter) {
 - Guest users: store state is persisted to localStorage via a Zustand middleware.
 - Logged-in users: store state is synced to Supabase at session end, not on
   every state change.
+- Persisted stores use `skipHydration: true` to prevent server/client mismatch.
+  They expose a `hasHydrated: boolean` field set via `onRehydrateStorage`.
+  Consuming hooks must gate on `hasHydrated` before running logic that depends
+  on stored values.
+- Persisted stores include `version: 1` and a `migrate` function in the persist
+  config. Start with a no-op migrate. Update when the schema changes.
+- `bulkLoad` actions that merge remote data with local state use `max(local, incoming)`
+  for monotonic values (mastery scores) to prevent progress regression from stale
+  server snapshots.
+- Input sanitization: `bulkLoad` actions validate incoming values at the boundary
+  (finite, integer, non-negative) before merging. Invalid values are clamped to safe
+  defaults rather than rejected.
 
 ---
 

@@ -35,3 +35,19 @@ export const UNLOCK_THRESHOLD = 5
 
 /** Maximum value of the per-word counter before reset */
 export const MAX_WORD_COUNTER = 5
+
+// -- Distance -----------------------------------------
+
+/** Maximum response time in ms before speed bonus drops to zero */
+export const MAX_RESPONSE_TIME_MS = 5000
+
+/** Base distance increment per correct answer in metres */
+export const BASE_DISTANCE_INCREMENT = 10
+
+/** Conversion factor from metres to feet */
+export const METRES_TO_FEET = 3.28084
+
+// -- Streak -------------------------------------------
+
+/** Number of consecutive practice days required before a streak starts */
+export const STREAK_START_THRESHOLD = 3

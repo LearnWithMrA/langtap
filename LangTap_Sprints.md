@@ -143,23 +143,32 @@ Gemini is used for image generation only when photographic or painted assets are
 
 ---
 
-## Sprint 4 - Core Game Engine
+**Note on multi-language support:** The engine layer (Sprint 4 onwards) is the
+language-neutral core. Character IDs, mastery scores, word counters, selection
+weights, and unlock thresholds are all agnostic to the target language. Thai is
+the planned second language (the owner speaks Thai). Japanese-specific concepts
+(JLPT levels, kana types, romaji, IME handling) live in the data and UI layers,
+not in the engine. When naming engine abstractions, keep them generic.
+
+---
+
+## Sprint 4 - Core Game Engine ✅ COMPLETE
 
 **Goal:** The mastery system, word counter, and character selection logic are built and tested.
 No UI yet. This is pure logic.
-**Status:** Pending
+**Status:** Complete
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Build character mastery store (Zustand) | **Medium** | **To Do** | State: all kana characters, each with a mastery score. Actions: increment on correct, read score, reset. Persisted to Supabase for logged-in users, localStorage for guests. |
-| Build character unlock logic | **Medium** | **To Do** | Characters start locked. Unlock condition: 5 correct answers. Manual unlock from Dojo. Bulk unlock with confirmation. Logic only - no UI. |
-| Build word counter store | **Medium** | **To Do** | Each word has a hidden counter capped at 5. Increment on show. Reset when all words for a character hit 5. Logic only. |
-| Build character selection algorithm | **Large** | **To Do** | Weighted random selection based on mastery score. Lower score = higher frequency. Only unlocked characters and words with no locked characters are eligible. Prefer words with lower counters. Tested with a range of mastery distributions. |
-| Build unlocking progression sequence | **Medium** | **To Do** | Seion: first 10 hiragana, then first 10 katakana, alternating. Then dakuon. Then yoon. Logic that determines which characters are currently in the active unlocking set. |
-| Build distance/progress mechanic | **Small** | **To Do** | A counter that accumulates metres (or feet based on locale) per correct answer. Rate tied to answer speed. Pure function - no UI. |
-| Build session score tracker | **Small** | **To Do** | Tracks correct answers, wrong answers, and distance for the current session. Resets on new session. |
-| Build streak engine | **Medium** | **To Do** | Pure functions in engine/streak.ts. 3-day start rule, grace-day mechanic, streak state derivation from practice_sessions. See GAME_DESIGN.md Section 8.5. Flagged in Session 49. |
-| Write game engine tests | **Large** | **To Do** | Full test coverage for: mastery scoring, word counter, selection algorithm, unlock sequence, distance counter, streak engine. Edge cases: all characters at max mastery, all words at counter 5, single character unlocked, grace day after grace day. |
+| Build character mastery store (Zustand) | **Medium** | **Done** | Zustand + persist (localStorage key: langtap-mastery, skipHydration, version 1). Actions: increment, bulkLoad (max merge + sanitize), reset, resetAll, getScore, hasEncountered. hasHydrated gate for hydration safety. Types: MasteryScoreMap, CharacterWithMastery, UnlockSource in game.types.ts. WordBankEntry, WordCounterMap in word.types.ts. PromptResult, SelectionResult, SessionScore in session.types.ts. 26 tests passing. |
+| Build character unlock logic | **Medium** | **Done** | isCharacterUnlocked (mastery threshold OR manual), isWordEligible (all chars unlocked, false for empty), isWordEligibleByUnlockedSet (precomputed set variant for selection), getUnlockedCharacterIds (strict dataset contract), getUnlockSource (mastery/manual/mastery_and_manual). Defensive safeScore normalisation for NaN/Infinity/negative. 62 tests passing (shared with progression). |
+| Build word counter store | **Medium** | **Done** | Engine: incrementWordCounter, shouldResetCounters, resetCountersForCharacter, getWordCounterWeight, sanitizeCounter. Store: session-scoped (no persist), in-memory only. resetAll() on session start. bulkLoad is replace-all for session resumption. 42 tests passing. |
+| Build character selection algorithm | **Large** | **Done** | selectNextPrompt orchestrator, buildWordIndex (one-pass eligible word grouping), buildCharacterWeights (mastery weighting on feasible set), weightedRandomDraw (generic, injectable RNG, strict preconditions), selectWordForCharacter (JLPT preference, fallback, counter reset, secondary counter weighting). Returns SelectionResult with updatedCounters. Feasible-set prefilter eliminates retry loops. 31 tests passing including seeded statistical distribution tests. |
+| Build unlocking progression sequence | **Medium** | **Done** | isGroupComplete, getActiveGroup, getActiveCharacterIds, getCompletedGroupCount, getContiguousCompletedCount. All in engine/unlock.ts. Active group is open-mode (does not restrict selection pool). Tested with real PROGRESSION_GROUPS data. 62 tests passing (shared with unlock logic). |
+| Build distance/progress mechanic | **Small** | **Done** | calculateDistanceIncrement (base + speed bonus, invalid inputs to base), convertToFeet, formatDistance (metric m/km, imperial ft/mi, negative clamped to 0). Constants: MAX_RESPONSE_TIME_MS, BASE_DISTANCE_INCREMENT, METRES_TO_FEET, STREAK_START_THRESHOLD. 23 tests passing. |
+| Build session score tracker | **Small** | **Done** | Zustand store (in-memory, no persist). startSession (reset + active), endSession, recordCorrect (count + distance + encountered set), recordWrong (count + encountered set), addDuration, reset. charactersEncountered is Set<string> for automatic uniqueness. 11 tests passing. |
+| Build streak engine | **Medium** | **Done** | deriveStreakState (two-phase: backward chain collection, forward threshold + grace evaluation), getCalendarDays (window rendering with practiced/grace/pre-streak/missed statuses). 3-day start rule enforced. Grace is per-gap reusable. todayStatus: active/pending/broken (no grace state per Codex review). Returns streakDays + preStreakDays sets for calendar. 34 tests passing. |
+| Write game engine tests | **Large** | **Done** | engine/scoring.ts implemented (evaluateCharacterAttempt, evaluateWordResult with max() for duplicate characters). 13 scoring tests. Data integrity already covered by existing characters.test.ts (12 tests). Integration tests embedded in selection (statistical), unlock (progression), and streak (state machine) test files. Full suite: 622 tests passing, 0 failures. 2 skipped (romaji, sokuon - Sprint 5). |
 
 ---
 

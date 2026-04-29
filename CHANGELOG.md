@@ -30,6 +30,264 @@ Format per entry:
 
 ---
 
+## [2026-04-29] - Session 66 (Sprint 4 Summary)
+
+**Sprint:** Sprint 4 - Core Game Engine
+**Task completed:** All 9 tasks (sprint complete)
+**Status:** Done
+
+### Changes made
+
+**Type definitions (3 files):**
+- `types/game.types.ts`: MasteryScoreMap, CharacterWithMastery, UnlockSource ('mastery' | 'manual' | 'mastery_and_manual')
+- `types/word.types.ts`: WordBankEntry, WordCounterMap
+- `types/session.types.ts`: PromptResult, SelectionResult (carries updatedCounters), SessionScore (Set<string> for encountered characters)
+
+**Engine modules (6 files implemented, 1 created):**
+- `engine/constants.ts`: Added MAX_RESPONSE_TIME_MS (5000), BASE_DISTANCE_INCREMENT (10), METRES_TO_FEET (3.28084), STREAK_START_THRESHOLD (3). ANIMATION_WINDOW_SIZE and KANJI_INPUT_MULTIPLIER deferred to consumer sprints.
+- `engine/unlock.ts`: 10 exported functions. isCharacterUnlocked (mastery OR manual), isWordEligible (all chars unlocked, false for empty), isWordEligibleByUnlockedSet (precomputed set variant), getUnlockedCharacterIds (strict dataset contract), getUnlockSource. Progression: isGroupComplete, getActiveGroup, getActiveCharacterIds, getCompletedGroupCount, getContiguousCompletedCount. Internal safeScore normalises NaN/Infinity/negative.
+- `engine/counter.ts`: incrementWordCounter (capped), shouldResetCounters (false for empty), resetCountersForCharacter (existing keys only), getWordCounterWeight (two-sided clamp), sanitizeCounter. Infinity clamps to MAX, NaN to 0.
+- `engine/selection.ts`: selectNextPrompt (orchestrator), buildWordIndex (one-pass eligible word grouping), buildCharacterWeights (mastery weighting on feasible set), weightedRandomDraw (generic, injectable RNG, strict preconditions), selectWordForCharacter (JLPT preference, fallback, counter reset, secondary weighting). Feasible-set prefilter eliminates retry loops. Returns SelectionResult with updatedCounters.
+- `engine/distance.ts`: calculateDistanceIncrement (base + speed bonus, invalid inputs to base), convertToFeet (3.28084), formatDistance (metric m/km, imperial ft/mi).
+- `engine/scoring.ts`: evaluateCharacterAttempt (1 if first + correct, 0 otherwise), evaluateWordResult (max() across duplicate character occurrences).
+- `engine/streak.ts`: Created. deriveStreakState (two-phase: backward chain collection with single-gap bridging, forward threshold + grace evaluation), getCalendarDays (window rendering). Types: DayStatus, StreakState, CalendarDay. UTC-safe date helpers.
+
+**Stores (3 files):**
+- `stores/mastery.store.ts`: Zustand + persist (localStorage, skipHydration, version 1, no-op migrate). bulkLoad uses max(local, incoming). sanitizeScore guard. hasHydrated gate via onRehydrateStorage.
+- `stores/counter.store.ts`: Session-scoped (in-memory, no persist). Delegates to engine functions. resetAll() on session start.
+- `stores/session.store.ts`: Session-scoped. startSession/endSession, recordCorrect/recordWrong, addDuration, reset. charactersEncountered as Set<string>.
+
+**Docs updated:**
+- `docs/ARCHITECTURE.md`: Added store persistence patterns (skipHydration, hasHydrated, version/migrate, max-merge, input sanitization).
+- `docs/GAME_DESIGN.md`: Updated constants reference. Sprint 4 constants now implemented, Phase 2 constants annotated as deferred.
+- `LangTap_Sprints.md`: All 9 tasks marked Done, sprint marked Complete.
+
+### Tests
+- `stores/__tests__/mastery.store.test.ts`: 26 tests. Pass.
+- `engine/__tests__/unlock.test.ts`: 62 tests. Pass.
+- `engine/__tests__/counter.test.ts`: 31 tests. Pass.
+- `stores/__tests__/counter.store.test.ts`: 11 tests. Pass.
+- `engine/__tests__/selection.test.ts`: 31 tests. Pass.
+- `engine/__tests__/distance.test.ts`: 23 tests. Pass.
+- `stores/__tests__/session.store.test.ts`: 11 tests. Pass.
+- `engine/__tests__/streak.test.ts`: 34 tests. Pass.
+- `engine/__tests__/scoring.test.ts`: 13 tests. Pass.
+- **Full suite: 622 tests passing, 0 failures.** 242 new tests (380 to 622).
+
+### Next task
+Sprint 5 - Content Pipeline and Practice Screen (Type Mode)
+
+### Notes
+- All 7 plans were reviewed by Codex before implementation. Key revisions incorporated: sanitizeScore/sanitizeCounter at boundaries, max(local, incoming) merge for mastery, session-scoped counters (no persist), feasible-set prefilter replacing retry loops, seeded LCG PRNG for deterministic statistical tests, two-phase streak algorithm with grace-after-threshold-only rule, todayStatus simplified to active/pending/broken.
+- Pre-existing issues not touched: ESLint warnings in components/game/ (useCallback deps), TypeScript errors in .next/types/ (Next.js cache duplicates).
+- Romaji and sokuon engine modules remain as stubs (Sprint 5 scope).
+
+---
+
+## [2026-04-29] - Session 65
+
+**Sprint:** Sprint 4 - Core Game Engine
+**Task completed:** Write game engine tests (scoring module + integration)
+**Status:** Done
+
+### Changes made
+- `engine/scoring.ts`: Implemented. evaluateCharacterAttempt (1 if first attempt AND correct, 0 otherwise), evaluateWordResult (per unique character: max() across duplicate occurrences, 0 or 1 each). Input correctness is pre-resolved upstream by the game loop.
+- `engine/__tests__/scoring.test.ts`: 13 tests. evaluateCharacterAttempt (4 cases), evaluateWordResult (all correct, all incorrect, mixed, duplicate characters with max semantics, empty array, single character).
+- Data integrity tests confirmed covered by existing data/kana/__tests__/characters.test.ts (12 tests: progression group cross-references, uniqueness, stage/script consistency, contiguous groupIndex).
+
+### Tests
+- `engine/__tests__/scoring.test.ts`: 13 tests. Pass.
+- Full suite: 622 tests passing, 0 failures. 2 skipped (romaji, sokuon - Sprint 5).
+
+### Sprint 4 complete
+All 9 tasks done. 242 new tests added (380 -> 622 total).
+
+### Next task
+Sprint 5 - Content Pipeline and Practice Screen (Type Mode)
+
+### Notes
+- Sprint 4 implemented: 3 type files, 6 engine modules, 3 stores, 8 test suites.
+- Engine modules are pure functions with no React/Supabase/side-effect dependencies.
+- All Codex review findings incorporated: sanitization, max-merge, hydration gates, session-scoped counters, feasible-set prefilter, seeded PRNG for statistical tests, two-phase streak algorithm.
+
+---
+
+## [2026-04-29] - Session 64
+
+**Sprint:** Sprint 4 - Core Game Engine
+**Task completed:** Build streak engine
+**Status:** Done
+
+### Changes made
+- `engine/streak.ts`: Created. Exports: deriveStreakState (two-phase algorithm: backward chain collection with single-gap bridging, forward threshold detection + grace evaluation), getCalendarDays (window-based rendering). Types: DayStatus, StreakState, CalendarDay. Internal UTC-safe date helpers (parseParts, addDays, previousDay) using string splitting instead of native Date.parse.
+- `engine/__tests__/streak.test.ts`: Created. 34 tests covering: no history, 1/2/3-day start rule, basic streaks, grace preservation/breaking/re-enabling, multiple grace days, state machine transitions, pending status, duplicate/unsorted/future/malformed dates, 30-day streak, month/year boundary, grace-before-threshold prevention.
+
+### Tests
+- `engine/__tests__/streak.test.ts`: 34 tests. Pass.
+
+### Next task
+Write game engine tests (engine/scoring.ts, engine/distance.ts integration, data integrity)
+
+### Notes
+- Two-phase algorithm: Phase 1 walks backwards collecting all practiced days and single-gap bridges. Phase 2 walks forward finding the threshold (3 consecutive practice days), then applies grace rules post-threshold.
+- todayStatus simplified to 'active' | 'pending' | 'broken' per Codex review (no 'grace' state for today).
+- Grace is per-gap reusable (re-enabled after each practice day) per GAME_DESIGN.md state machine.
+- No grace allowed before streak starts (3-day threshold must be met with strict consecutive days first).
+- Date helpers avoid native Date.parse to prevent UTC/local timezone ambiguity per Codex review.
+
+---
+
+## [2026-04-29] - Session 63
+
+**Sprint:** Sprint 4 - Core Game Engine
+**Task completed:** Build session score tracker
+**Status:** Done
+
+### Changes made
+- `stores/session.store.ts`: Implemented. In-memory Zustand store. State: correctAnswers, wrongAnswers, distanceMetres, durationSeconds, charactersEncountered (Set<string>), isActive. Actions: startSession (reset + activate), endSession (deactivate, preserve counters), recordCorrect (count + distance + encountered), recordWrong (count + encountered), addDuration, reset.
+- `stores/__tests__/session.store.test.ts`: 11 tests covering all actions, uniqueness in encountered set, reset behaviour.
+
+### Tests
+- `stores/__tests__/session.store.test.ts`: 11 tests. Pass.
+
+### Next task
+Build streak engine (engine/streak.ts)
+
+### Notes
+- Session-scoped, no persist middleware (same rationale as counter store).
+- charactersEncountered uses Set<string> internally for automatic uniqueness per Codex review.
+
+---
+
+## [2026-04-29] - Session 62
+
+**Sprint:** Sprint 4 - Core Game Engine
+**Task completed:** Build distance/progress mechanic
+**Status:** Done
+
+### Changes made
+- `engine/constants.ts`: Added MAX_RESPONSE_TIME_MS (5000), BASE_DISTANCE_INCREMENT (10), METRES_TO_FEET (3.28084), STREAK_START_THRESHOLD (3).
+- `engine/distance.ts`: Implemented. calculateDistanceIncrement (base + speed bonus, wrong = 0, invalid inputs clamp to MAX_RESPONSE_TIME_MS giving base only), convertToFeet, formatDistance (metric m/km, imperial ft/mi, negatives clamped to 0).
+- `engine/__tests__/distance.test.ts`: 23 tests. Speed bonus at 0/1/3/5/10s, wrong answers, NaN/Infinity/negative, invariant [BASE, 2*BASE], convertToFeet, formatDistance metric + imperial + edge cases.
+
+### Tests
+- `engine/__tests__/distance.test.ts`: 23 tests. Pass.
+
+### Next task
+Build session score tracker (stores/session.store.ts)
+
+### Notes
+- Invalid response times (NaN, Infinity, negative) produce base increment per Codex review (conservative, no bonus).
+- METRES_TO_FEET uses exact 3.28084 per Codex review (not rounded 3.281).
+
+---
+
+## [2026-04-29] - Session 61
+
+**Sprint:** Sprint 4 - Core Game Engine
+**Task completed:** Build character selection algorithm
+**Status:** Done
+
+### Changes made
+- `engine/selection.ts`: Implemented. Exports: selectNextPrompt (orchestrator), buildWordIndex (one-pass word grouping by character ID, filtered to eligible words), buildCharacterWeights (mastery weighting on feasible set only), weightedRandomDraw (generic, injectable RNG, strict preconditions: throws on empty/negative/NaN weights), selectWordForCharacter (JLPT preference then fallback then counter reset, secondary counter weighting via drawByCounterWeight). Returns SelectionResult carrying updatedCounters for counter resets. Feasible-set prefilter guarantees drawn character always has at least one word (no retry loops).
+- `engine/__tests__/selection.test.ts`: 31 tests. buildCharacterWeights (6), weightedRandomDraw (8 including seeded statistical distribution), buildWordIndex (3), selectWordForCharacter (6 including counter preference and reset), selectNextPrompt (10 including statistical monotonic distribution and invariant checks).
+
+### Tests
+- `engine/__tests__/selection.test.ts`: 31 tests. Pass.
+
+### Next task
+Build distance/progress mechanic (engine/distance.ts)
+
+### Notes
+- Counter increment for selected words is the caller's responsibility (documented). Engine only handles resets.
+- RNG normalization: raw value clamped to [0, 1-EPSILON], NaN/Infinity treated as 0.
+- Statistical tests use seeded LCG PRNG (createSeededRng) for determinism in CI.
+- Assertions are monotonic (a > b > c) not exact ratios.
+
+---
+
+## [2026-04-29] - Session 60
+
+**Sprint:** Sprint 4 - Core Game Engine
+**Task completed:** Build word counter store
+**Status:** Done
+
+### Changes made
+- `types/word.types.ts`: Already created in Session 58. WordBankEntry, WordCounterMap.
+- `engine/counter.ts`: Implemented. incrementWordCounter (capped at MAX_WORD_COUNTER), shouldResetCounters (false for empty arrays), resetCountersForCharacter (only modifies existing keys), getWordCounterWeight (two-sided clamp), sanitizeCounter (finite integer in 0..MAX_WORD_COUNTER, Infinity clamps to MAX). Pure functions, no mutation.
+- `engine/__tests__/counter.test.ts`: 31 tests. Covers increment, cap, immutability, reset behaviour, weight calculation, sanitization of NaN/Infinity/-Infinity/negative/fractional.
+- `stores/counter.store.ts`: Implemented. Session-scoped (no persist middleware). In-memory only. Actions: increment, resetForCharacter, bulkLoad (replace-all), resetAll, getCounter. Delegates to engine functions internally.
+- `stores/__tests__/counter.store.test.ts`: 11 tests. Covers initial state, increment, reset, bulkLoad, getCounter.
+
+### Tests
+- `engine/__tests__/counter.test.ts`: 31 tests. Pass.
+- `stores/__tests__/counter.store.test.ts`: 11 tests. Pass.
+
+### Next task
+Build character selection algorithm (engine/selection.ts)
+
+### Notes
+- Counter store is session-scoped per Codex review: counters exist for variety within a practice session, not across days. No persist middleware. resetAll() on session start.
+- bulkLoad is replace-all (not merge) since counters are session-scoped. Only used for session resumption edge case.
+- shouldResetCounters returns false for empty arrays (domain safety per Codex review).
+- resetCountersForCharacter does not create entries for unknown IDs (prevents key bloat per Codex review).
+- Infinity clamps to MAX_WORD_COUNTER (semantically "very high"), not to 0. NaN and -Infinity clamp to 0.
+
+---
+
+## [2026-04-29] - Session 59
+
+**Sprint:** Sprint 4 - Core Game Engine
+**Task completed:** Build character unlock logic + Build unlocking progression sequence
+**Status:** Done
+
+### Changes made
+- `engine/unlock.ts`: Implemented. 10 exported functions: isCharacterUnlocked, isWordEligible, isWordEligibleByUnlockedSet (precomputed set variant for selection algorithm), getUnlockedCharacterIds (strict dataset contract, ignores manual IDs not in dataset), getUnlockSource (returns mastery/manual/mastery_and_manual/null), isGroupComplete, getActiveGroup, getActiveCharacterIds, getCompletedGroupCount, getContiguousCompletedCount. Internal safeScore helper normalises NaN/Infinity/negative to 0.
+- `engine/__tests__/unlock.test.ts`: 62 tests covering: threshold boundary (UNLOCK_THRESHOLD-1, UNLOCK_THRESHOLD, above), manual unlock, both conditions, NaN/Infinity/negative scores, empty word guard, word eligibility with mixed unlock sources, unlocked set with dataset-strict filtering, progression group completion, active group detection with real PROGRESSION_GROUPS data, contiguous vs total completion counting.
+
+### Tests
+- `engine/__tests__/unlock.test.ts`: 62 tests. Pass.
+
+### Next task
+Build word counter store (engine/counter.ts + stores/counter.store.ts)
+
+### Notes
+- Plans 2 and 5 combined into a single implementation since progression functions share the file with unlock primitives.
+- isWordEligibleByUnlockedSet added per Codex review for Plan 4 (selection algorithm uses precomputed unlocked set).
+- Empty wordCharacterIds returns false (domain guard per Codex review).
+- Manual unlocks bypass progression stage constraints. Documented in function comments.
+- UnlockSource uses 'mastery_and_manual' instead of 'both' for clarity per Codex review.
+
+---
+
+## [2026-04-29] - Session 58
+
+**Sprint:** Sprint 4 - Core Game Engine
+**Task completed:** Build character mastery store (Zustand)
+**Status:** Done
+
+### Changes made
+- `types/game.types.ts`: Implemented. MasteryScoreMap (Record<string, number>), CharacterWithMastery ({ id, masteryScore }), UnlockSource ('mastery' | 'manual' | 'mastery_and_manual').
+- `types/word.types.ts`: Implemented. WordBankEntry ({ id, kana, english, jlptLevel, characterIds }), WordCounterMap (Record<string, number>).
+- `types/session.types.ts`: Implemented. PromptResult, SelectionResult ({ prompt, updatedCounters }), SessionScore (with Set<string> for charactersEncountered).
+- `stores/mastery.store.ts`: Implemented. Zustand + persist middleware (localStorage key: langtap-mastery, skipHydration: true, version: 1 with no-op migrate). Actions: increment, bulkLoad (max(local, incoming) merge with sanitizeScore guard for NaN/Infinity/negative/fractional), reset, resetAll, getScore (safe default 0), hasEncountered (score > 0). hasHydrated boolean set via onRehydrateStorage callback.
+- `stores/__tests__/mastery.store.test.ts`: Created. 26 tests covering initial state, increment, getScore, reset, resetAll, bulkLoad (including sanitization of NaN/Infinity/negative/fractional and idempotence), hasEncountered.
+
+### Tests
+- `stores/__tests__/mastery.store.test.ts`: 26 tests. Pass.
+
+### Next task
+Build character unlock logic (engine/unlock.ts)
+
+### Notes
+- All three type files (game.types.ts, word.types.ts, session.types.ts) created in this task since they are shared dependencies for Plans 1-7. SelectionResult type carries updatedCounters per Codex review.
+- bulkLoad uses max(local, incoming) merge strategy per Codex review (mastery is monotonic, max is always correct).
+- sanitizeScore clamps to finite integer >= 0 per Codex review.
+- persist version: 1 with no-op migrate scaffolded per Codex review for future migration safety.
+- hasEncountered helper added per Codex review to distinguish "seen" (score > 0) from "key exists" (which includes reset-to-zero characters).
+
+---
+
 ## [2026-04-28] - Session 57
 
 **Sprint:** Sprint 3 - Authentication and Onboarding
