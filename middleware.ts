@@ -7,8 +7,8 @@
 //          code sample that was updated to match Section 4.
 //
 //          Route protection summary (AUTH.md Section 4):
-//            Auth-only:        /leaderboard, /profile, /onboarding/*
-//            Guest or authed:  /practice, /dojo, /library, /settings
+//            Auth-only:        (none)
+//            Guest or authed:  /practice, /dojo, /library, /settings, /leaderboard, /profile
 //            Public:           /, /sign-up, /log-in, /credits, /auth/*
 //
 //          IMPORTANT: middleware is not a security boundary. It can be
@@ -27,9 +27,10 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 // ── Constants ─────────────────────────────────
 
-// Routes that require a full account. Guests are redirected to /log-in.
-// Source of truth: docs/AUTH.md Section 4.
-const AUTHED_ONLY_ROUTES = ['/leaderboard', '/profile']
+// Guests hitting /profile are redirected to /sign-up (they already
+// went through the guest flow, so sign-up is the next step).
+// All other routes are open to guests.
+const GUEST_TO_SIGNUP_ROUTES = ['/profile']
 
 // Auth pages. Authenticated users are redirected to /practice.
 const AUTH_PAGES = ['/sign-up', '/log-in']
@@ -70,11 +71,11 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
   const { pathname } = request.nextUrl
 
-  // Redirect unauthenticated users away from auth-only routes.
-  const isAuthedOnly = AUTHED_ONLY_ROUTES.some((route) => pathname.startsWith(route))
-  if (!user && isAuthedOnly) {
+  // Redirect guests from /profile to /sign-up.
+  const isGuestToSignup = GUEST_TO_SIGNUP_ROUTES.some((route) => pathname.startsWith(route))
+  if (!user && isGuestToSignup) {
     const url = request.nextUrl.clone()
-    url.pathname = '/log-in'
+    url.pathname = '/sign-up'
     return NextResponse.redirect(url)
   }
 

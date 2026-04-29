@@ -25,17 +25,17 @@ export function GuestBanner(): ReactNode {
   }
 
   return (
-    <div className="fixed top-14 left-0 right-0 z-40 bg-warm-100 border-b border-border px-4 py-2 flex items-center justify-between gap-2">
-      <p className="text-sm text-text-secondary">
+    <div className="fixed top-14 left-0 right-0 z-40 bg-[#fff3e0] border-b border-[#f0a166] px-4 py-2 flex items-center justify-center gap-2">
+      <p className="text-sm text-[#7a4a1a] text-center">
         Your progress will be lost when you close this tab.{' '}
-        <Link href="/sign-up" className="text-sage-500 font-medium hover:underline">
+        <Link href="/sign-up" className="text-[#d4700a] font-medium hover:underline">
           Create an account
         </Link>
       </p>
       <button
         type="button"
         onClick={(): void => setDismissed(true)}
-        className="flex-none flex h-7 w-7 items-center justify-center rounded-full text-text-muted hover:bg-warm-200 transition-colors"
+        className="flex-none flex h-7 w-7 items-center justify-center rounded-full text-[#b85c00] hover:bg-[#ffe0b2] transition-colors"
         aria-label="Dismiss banner"
       >
         <svg

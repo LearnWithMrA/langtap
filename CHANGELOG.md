@@ -30,6 +30,24 @@ Format per entry:
 
 ---
 
+## [2026-04-29] - Session 67
+
+**Sprint:** N/A (UI polish)
+**Task completed:** Guest banner styling, route access cleanup
+**Status:** Done
+
+### Changes made
+- `components/layout/guest-banner.tsx`: Centred text (justify-between to justify-center, added text-center). Orange theme (bg #fff3e0, border #f0a166, text #7a4a1a, link #d4700a, dismiss hover #ffe0b2).
+- `middleware.ts`: Removed all auth-only route locks. /leaderboard and all other pages now accessible to guests. /profile redirects guests to /sign-up (not /log-in) since they already went through the guest flow.
+
+### Tests
+- Full suite: 622 tests passing, 0 failures.
+
+### Notes
+- No pages are locked behind login. Guests can explore everything except /profile which sends them to sign-up.
+
+---
+
 ## [2026-04-29] - Session 66 (Sprint 4 Summary)
 
 **Sprint:** Sprint 4 - Core Game Engine
