@@ -517,13 +517,14 @@ On "session end" (or equivalent), in order:
 
    ```
    git add .
-   git commit -m "Sprint X: description"
+   git commit -m "Sprint X: Session N: description"
    git push
    ```
 
-   Fill in the sprint number and a one-line description. The owner
-   runs these commands manually; the AI does not execute git on its
-   own initiative.
+   Fill in the sprint number, session number, and a one-line description.
+   The session number makes it easier to find commits in git history.
+   The owner runs these commands manually; the AI does not execute git
+   on its own initiative.
 6. State clearly what the next task is (the owner will confirm at the
    start of the next session).
 7. Kill the dev server: run `lsof -ti:3000 | xargs kill` to stop the
