@@ -26,6 +26,7 @@ import { FEEDBACK_FLASH_MS, MEANING_DISPLAY_MS, MEANING_FADE_MS } from '@/engine
 import { evaluateInput } from '@/engine/input'
 import { toKatakana } from '@/fixtures/kana-practice-data'
 import { KANA_CHARACTERS } from '@/data/kana/characters'
+import type { Stage } from '@/types/kana.types'
 import type {
   UsePracticeSessionReturn,
   CharacterResult,
@@ -65,7 +66,7 @@ function buildTapGrid(
   const wordStages = new Set(
     wordChars
       .map((c) => KANA_CHARACTERS.find((k) => k.id === c.id)?.stage)
-      .filter((s): s is string => s !== undefined),
+      .filter((s): s is Stage => s !== undefined),
   )
 
   const sameStagePool = KANA_CHARACTERS.filter(
