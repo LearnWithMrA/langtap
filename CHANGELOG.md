@@ -30,6 +30,35 @@ Format per entry:
 
 ---
 
+## [2026-04-29] - Session 69
+
+**Sprint:** Sprint 5 - Content Pipeline and Practice Screen (Type Mode)
+**Task completed:** Katakana word bank expansion, progression reorder, auto-progression engine
+**Status:** Partial (engine functions done, hook wiring still needed)
+
+### Changes made
+
+**Bonus katakana word bank (2 files):**
+- `data/words/kt.ts`: New file. 555 pure katakana loanwords sourced from owner's early prototype and web research (food, tech, sports, fashion, countries, animals, onomatopoeia, wasei-eigo). Deduped against all JLPT levels. Hiragana-containing entries excluded. Character IDs generated via the same decomposition pipeline as the JLPT banks.
+- `data/words/index.ts`: Added `KATAKANA_WORDS` export (separate from JLPT `WORD_BANK`). Included in `ALL_WORDS` for kana selection engine. Kotoba mode untouched.
+
+**Progression reorder and auto-unlock (2 files):**
+- `data/kana/progression-groups.ts`: Reordered from interleaved (H1,K1,H2,K2) to hiragana-leads-by-two (H1,H2,K1,K2,H3,H4,K3,K4...). Added `UNLOCK_STEPS` export defining paired initial unlocks (H1+H2 together = 21 chars, K1+K2 together = 22 chars) then individual groups. Added sokuon and longvowel to seion group 1 (both scripts).
+- `engine/unlock.ts`: Three new pure functions: `isReadyToProgress()` (all unlocked chars at mastery >= 5), `getCurrentStepIndex()` (first incomplete unlock step), `getNextUnlockIds()` (character IDs for the next step). Handles random onboarding selections naturally.
+
+### Tests
+- No new test files yet. Engine functions are pure and testable. Tests to be written before hook wiring.
+
+### Next task
+Wire auto-progression into practice session hook. Write tests for new unlock functions.
+
+### Notes
+- Katakana word coverage went from 0 (group 1) / 5 (groups 1+2) to 8 / 58 with the KT bank and special chars in group 1.
+- The `jlptLevel` field on KT entries is set to `'N5'` as a placeholder since the `JlptLevel` type was intentionally not modified. The selection engine never filters by level in Kana mode.
+- Fresh user flow: first unlock = H1+H2 (21 hiragana), second unlock = K1+K2 (22 katakana). Random onboarding picks do not skip steps; they make later steps complete faster.
+
+---
+
 ## [2026-04-29] - Session 68
 
 **Sprint:** Sprint 5 - Content Pipeline and Practice Screen (Type Mode)

@@ -1,8 +1,9 @@
 // ------------------------------------------------------------
 // File: engine/unlock.ts
-// Purpose: Unlock threshold check, word eligibility, and guided
-//          progression sequence. Determines which characters are
-//          unlocked and which group is currently active.
+// Purpose: Unlock threshold check, word eligibility, guided
+//          progression sequence, and auto-progression logic.
+//          Determines which characters are unlocked, which group
+//          is active, and when the next group should auto-unlock.
 //          Pure functions only. No side effects.
 // Depends on: engine/constants.ts, types/game.types.ts, types/kana.types.ts
 // ------------------------------------------------------------
@@ -146,4 +147,64 @@ export function getContiguousCompletedCount(
     count++
   }
   return count
+}
+
+// ── Auto-progression ────────────────────────
+
+// Returns true when every unlocked character has reached mastery
+// threshold. This is the trigger for auto-unlocking the next group.
+// An empty unlocked set returns false (nothing to progress from).
+export function isReadyToProgress(
+  unlockedIds: Set<string>,
+  masteryScores: MasteryScoreMap,
+): boolean {
+  if (unlockedIds.size === 0) return false
+  for (const id of unlockedIds) {
+    if (safeScore(masteryScores, id) < UNLOCK_THRESHOLD) return false
+  }
+  return true
+}
+
+// Finds the current unlock step index based on which steps are
+// already complete. A step is complete when all groups in it have
+// all their characters unlocked. Returns the index of the first
+// incomplete step, or null if all steps are done.
+export function getCurrentStepIndex(
+  progressionGroups: readonly ProgressionGroup[],
+  unlockSteps: readonly (readonly number[])[],
+  unlockedIds: Set<string>,
+): number | null {
+  for (let i = 0; i < unlockSteps.length; i++) {
+    const step = unlockSteps[i]
+    const stepComplete = step.every((groupIdx) => {
+      const group = progressionGroups[groupIdx]
+      return group && isGroupComplete(group, unlockedIds)
+    })
+    if (!stepComplete) return i
+  }
+  return null
+}
+
+// Returns the character IDs that should be unlocked in the next
+// progression step. Returns an empty array if all steps are done
+// or the player is not ready to progress.
+// Callers should add these IDs to the manual unlock set.
+export function getNextUnlockIds(
+  progressionGroups: readonly ProgressionGroup[],
+  unlockSteps: readonly (readonly number[])[],
+  unlockedIds: Set<string>,
+): readonly string[] {
+  const stepIndex = getCurrentStepIndex(progressionGroups, unlockSteps, unlockedIds)
+  if (stepIndex === null) return []
+
+  const step = unlockSteps[stepIndex]
+  const ids: string[] = []
+  for (const groupIdx of step) {
+    const group = progressionGroups[groupIdx]
+    if (!group) continue
+    for (const id of group.characterIds) {
+      if (!unlockedIds.has(id)) ids.push(id)
+    }
+  }
+  return ids
 }

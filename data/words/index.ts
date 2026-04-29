@@ -5,11 +5,12 @@ import { N4_WORDS } from './n4'
 import { N3_WORDS } from './n3'
 import { N2_WORDS } from './n2'
 import { N1_WORDS } from './n1'
+import { KATAKANA_WORDS } from './kt'
 import type { JlptLevel } from '@/types/user.types'
 import type { WordBankEntry } from '@/types/word.types'
 
 // Level-scoped loading. Use WORD_BANK[level] in route components.
-// ALL_WORDS is for tests and tooling only. Do not import in routes.
+// Kotoba mode uses this. Kana mode uses ALL_WORDS instead.
 export const WORD_BANK: Record<JlptLevel, WordBankEntry[]> = {
   N5: N5_WORDS,
   N4: N4_WORDS,
@@ -18,10 +19,17 @@ export const WORD_BANK: Record<JlptLevel, WordBankEntry[]> = {
   N1: N1_WORDS,
 }
 
+// Bonus katakana loanwords for kana practice.
+// Separate from JLPT levels. Not used by Kotoba mode.
+export { KATAKANA_WORDS }
+
+// ALL_WORDS includes JLPT banks plus bonus katakana words.
+// Used by the kana selection engine and tests.
 export const ALL_WORDS: WordBankEntry[] = [
   ...N5_WORDS,
   ...N4_WORDS,
   ...N3_WORDS,
   ...N2_WORDS,
   ...N1_WORDS,
+  ...KATAKANA_WORDS,
 ]
