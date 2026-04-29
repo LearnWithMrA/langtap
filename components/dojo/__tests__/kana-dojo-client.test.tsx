@@ -32,7 +32,7 @@ describe('KanaDojoClient', () => {
     render(<KanaDojoClient fixture="variety" />)
     expect(screen.getByRole('heading', { name: 'Seion' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Dakuon' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Yoon' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Combination' })).toBeInTheDocument()
   })
 
   it('does not show the help card under the variety fixture', () => {

@@ -35,7 +35,7 @@ export type FixtureKey = 'empty' | 'mid' | 'complete' | 'variety'
 
 // Returns all character ids in a given progression group range for a script.
 function idsInGroups(
-  stage: 'seion' | 'dakuon' | 'yoon',
+  stage: 'seion' | 'dakuon' | 'combination',
   script: 'hiragana' | 'katakana',
   maxGroupIndex: number,
 ): string[] {

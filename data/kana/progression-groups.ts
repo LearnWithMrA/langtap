@@ -151,7 +151,7 @@ const DAKUON_GROUPS: readonly ProgressionGroup[] = [
 const YOON_GROUPS: readonly ProgressionGroup[] = [
   // Group 1: kya, sha, cha rows, first of nya
   {
-    stage: 'yoon',
+    stage: 'combination',
     script: 'hiragana',
     groupIndex: 1,
     characterIds: [
@@ -168,7 +168,7 @@ const YOON_GROUPS: readonly ProgressionGroup[] = [
     ],
   },
   {
-    stage: 'yoon',
+    stage: 'combination',
     script: 'katakana',
     groupIndex: 1,
     characterIds: [
@@ -186,7 +186,7 @@ const YOON_GROUPS: readonly ProgressionGroup[] = [
   },
   // Group 2: rest of nya, hya, mya, start of rya
   {
-    stage: 'yoon',
+    stage: 'combination',
     script: 'hiragana',
     groupIndex: 2,
     characterIds: [
@@ -203,7 +203,7 @@ const YOON_GROUPS: readonly ProgressionGroup[] = [
     ],
   },
   {
-    stage: 'yoon',
+    stage: 'combination',
     script: 'katakana',
     groupIndex: 2,
     characterIds: [
@@ -221,7 +221,7 @@ const YOON_GROUPS: readonly ProgressionGroup[] = [
   },
   // Group 3: ryo, gya, ja, bya
   {
-    stage: 'yoon',
+    stage: 'combination',
     script: 'hiragana',
     groupIndex: 3,
     characterIds: [
@@ -238,7 +238,7 @@ const YOON_GROUPS: readonly ProgressionGroup[] = [
     ],
   },
   {
-    stage: 'yoon',
+    stage: 'combination',
     script: 'katakana',
     groupIndex: 3,
     characterIds: [
@@ -256,13 +256,13 @@ const YOON_GROUPS: readonly ProgressionGroup[] = [
   },
   // Group 4: pya row
   {
-    stage: 'yoon',
+    stage: 'combination',
     script: 'hiragana',
     groupIndex: 4,
     characterIds: ['h-pya', 'h-pyu', 'h-pyo'],
   },
   {
-    stage: 'yoon',
+    stage: 'combination',
     script: 'katakana',
     groupIndex: 4,
     characterIds: ['k-pya', 'k-pyu', 'k-pyo'],
@@ -271,8 +271,44 @@ const YOON_GROUPS: readonly ProgressionGroup[] = [
 
 // ── Main export ───────────────────────────────
 
+// ── Vu dakuon group ──────────────────────────
+
+const VU_GROUPS: readonly ProgressionGroup[] = [
+  {
+    stage: 'dakuon',
+    script: 'katakana',
+    groupIndex: 4,
+    characterIds: ['k-va', 'k-vi', 'k-vu', 'k-ve', 'k-vo'],
+  },
+]
+
+// ── Extended combination groups ──────────────
+
+const EXTENDED_GROUPS: readonly ProgressionGroup[] = [
+  {
+    stage: 'combination',
+    script: 'katakana',
+    groupIndex: 5,
+    characterIds: ['k-fa', 'k-fi', 'k-fe', 'k-fo', 'k-wi', 'k-we', 'k-uxo'],
+  },
+  {
+    stage: 'combination',
+    script: 'katakana',
+    groupIndex: 6,
+    characterIds: ['k-tsa', 'k-tsi', 'k-tse', 'k-tso', 'k-ti', 'k-twu', 'k-dhi', 'k-dwu'],
+  },
+  {
+    stage: 'combination',
+    script: 'katakana',
+    groupIndex: 7,
+    characterIds: ['k-she', 'k-che', 'k-je'],
+  },
+]
+
 export const PROGRESSION_GROUPS: readonly ProgressionGroup[] = [
   ...SEION_GROUPS,
   ...DAKUON_GROUPS,
+  ...VU_GROUPS,
   ...YOON_GROUPS,
+  ...EXTENDED_GROUPS,
 ]

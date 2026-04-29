@@ -16,8 +16,8 @@ import { CharacterGroup } from '@/components/dojo/character-group'
 import { KANA_CHARACTERS } from '@/data/kana/characters'
 import type { KanaCharacter, Stage } from '@/types/kana.types'
 
-const STAGE_ORDER: readonly Stage[] = ['seion', 'dakuon', 'yoon']
-const STAGE_LABELS = { seion: 'Seion', dakuon: 'Dakuon', yoon: 'Yoon' } as const
+const STAGE_ORDER: readonly Stage[] = ['seion', 'dakuon', 'combination']
+const STAGE_LABELS = { seion: 'Seion', dakuon: 'Dakuon', combination: 'Combination' } as const
 
 function charactersByStage(
   script: 'hiragana' | 'katakana',
@@ -25,7 +25,7 @@ function charactersByStage(
   return {
     seion: KANA_CHARACTERS.filter((c) => c.script === script && c.stage === 'seion'),
     dakuon: KANA_CHARACTERS.filter((c) => c.script === script && c.stage === 'dakuon'),
-    yoon: KANA_CHARACTERS.filter((c) => c.script === script && c.stage === 'yoon'),
+    combination: KANA_CHARACTERS.filter((c) => c.script === script && c.stage === 'combination'),
   }
 }
 
@@ -47,7 +47,7 @@ function renderGroup(
     scriptActivity: 'active',
     scriptOpen: true,
     stageOpen: new Set<Stage>(['seion']),
-    stageActivity: { seion: 'active', dakuon: 'future', yoon: 'future' },
+    stageActivity: { seion: 'active', dakuon: 'future', combination: 'future' },
     onToggleScript: () => {},
     onToggleStage: () => {},
     onUnlockScript: () => {},
@@ -81,7 +81,7 @@ describe('CharacterGroup (script wrapper)', () => {
     renderGroup()
     expect(screen.getByRole('heading', { name: 'Seion' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Dakuon' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Yoon' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Combination' })).toBeInTheDocument()
   })
 
   it('calls onToggleScript when the script heading is tapped', async () => {
@@ -109,7 +109,7 @@ describe('CharacterGroup (script wrapper)', () => {
     renderGroup({
       scriptActivity: 'completed',
       lockedIds: NOTHING_LOCKED,
-      stageActivity: { seion: 'completed', dakuon: 'completed', yoon: 'completed' },
+      stageActivity: { seion: 'completed', dakuon: 'completed', combination: 'completed' },
     })
     expect(screen.queryByLabelText(/Unlock \d+ characters in Hiragana/)).not.toBeInTheDocument()
   })

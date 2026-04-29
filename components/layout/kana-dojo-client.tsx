@@ -2,7 +2,7 @@
 // File: components/layout/kana-dojo-client.tsx
 // Purpose: Client island for /dojo/kana. Orchestrates the script-first
 //          hierarchy: two top-level CharacterGroups (Hiragana, Katakana)
-//          with three nested stage blocks each (Seion, Dakuon, Yoon).
+//          with three nested stage blocks each (Seion, Dakuon, Combination).
 //          Consumes a serialisable MasteryState fixture (string[] on the
 //          wire) and rebuilds the locked set internally for O(1) reads.
 //          Derived state per render:
@@ -50,6 +50,7 @@ import {
   hasLockedCharacter,
   hasAnyUnlock,
   CHARACTERS_BY_SCRIPT_STAGE,
+  DOJO_CHARACTERS,
   scriptCharacters,
   lockedInScope,
 } from '@/components/dojo/kana-dojo-helpers'
@@ -63,7 +64,6 @@ import type { BulkResetScope } from '@/components/dojo/bulk-reset-prompt'
 import type { GroupActivity } from '@/components/dojo/group-bar'
 import { UnlockButton } from '@/components/dojo/group-bar'
 import { HelpCard, useHelpDismissed } from '@/components/dojo/help-card'
-import { KANA_CHARACTERS } from '@/data/kana/characters'
 import { MASTERY_THRESHOLD } from '@/engine/mastery'
 import { getFixture } from '@/samples/mastery-fixtures'
 import type { FixtureKey, MasteryState } from '@/samples/mastery-fixtures'
@@ -91,11 +91,11 @@ const SCRIPT_LABELS: Readonly<Record<Script, string>> = {
   katakana: 'Katakana',
 }
 
-const STAGE_ORDER: readonly Stage[] = ['seion', 'dakuon', 'yoon']
+const STAGE_ORDER: readonly Stage[] = ['seion', 'dakuon', 'combination']
 const STAGE_LABELS: Readonly<Record<Stage, string>> = {
   seion: 'Seion',
   dakuon: 'Dakuon',
-  yoon: 'Yoon',
+  combination: 'Combination',
 }
 
 // ── Ready shell (hooks live here) ─────────────
@@ -144,8 +144,8 @@ function KanaDojoReadyShell({ fixture = 'variety' }: { fixture?: FixtureKey }): 
     Readonly<Record<Script, Readonly<Record<Stage, GroupActivity>>>>
   >(() => {
     const out: Record<Script, Record<Stage, GroupActivity>> = {
-      hiragana: { seion: 'normal', dakuon: 'normal', yoon: 'normal' },
-      katakana: { seion: 'normal', dakuon: 'normal', yoon: 'normal' },
+      hiragana: { seion: 'normal', dakuon: 'normal', combination: 'normal' },
+      katakana: { seion: 'normal', dakuon: 'normal', combination: 'normal' },
     }
     for (const script of SCRIPT_ORDER) {
       let activeAssigned = false
@@ -356,11 +356,11 @@ function KanaDojoReadyShell({ fixture = 'variety' }: { fixture?: FixtureKey }): 
   const handleResetAll = useCallback((): void => {
     setBulkResetScope({
       label: 'Kana Dojo',
-      characterIds: KANA_CHARACTERS.map((c) => c.id),
+      characterIds: DOJO_CHARACTERS.map((c) => c.id),
     })
   }, [])
 
-  const showHelp = !helpDismissed && lockedIds.size === KANA_CHARACTERS.length
+  const showHelp = !helpDismissed && lockedIds.size === DOJO_CHARACTERS.length
   const selectedScore = selected ? (mastery.scores[selected.id] ?? 0) : 0
 
   return (
@@ -388,7 +388,7 @@ function KanaDojoReadyShell({ fixture = 'variety' }: { fixture?: FixtureKey }): 
                 color="grey"
                 icon="unlocked"
                 onClick={handleResetAll}
-                ariaLabel={`Reset progress on all ${KANA_CHARACTERS.length} characters across the Dojo`}
+                ariaLabel={`Reset progress on all ${DOJO_CHARACTERS.length} characters across the Dojo`}
               />
             )}
           </div>

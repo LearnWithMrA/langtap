@@ -23,9 +23,11 @@ import type { JlptLevel } from '@/types/user.types'
 export type WordBankEntry = {
   id: string
   kana: string
-  english: string
+  kanji: string | null
+  meaning: string
   jlptLevel: JlptLevel
   characterIds: string[]
+  audioFile: string | null
 }
 
 // ── Counter ──────────────────────────────────

@@ -11,10 +11,13 @@ import { KANA_CHARACTERS } from '@/data/kana/characters'
 import type { KanaCharacter, Script, Stage } from '@/types/kana.types'
 import type { MasteryState } from '@/samples/mastery-fixtures'
 
+const SPECIAL_ROWS = new Set(['sokuon', 'longvowel'])
+export const DOJO_CHARACTERS = KANA_CHARACTERS.filter((c) => !SPECIAL_ROWS.has(c.row))
+
 export function buildLockedSet(state: MasteryState): Set<string> {
   const manual = new Set(state.manuallyUnlocked)
   const locked = new Set<string>()
-  for (const c of KANA_CHARACTERS) {
+  for (const c of DOJO_CHARACTERS) {
     if (manual.has(c.id)) continue
     if ((state.scores[c.id] ?? 0) >= UNLOCK_THRESHOLD) continue
     locked.add(c.id)
@@ -41,10 +44,10 @@ export function groupCharactersByStage(): Readonly<
   Record<Script, Readonly<Record<Stage, readonly KanaCharacter[]>>>
 > {
   const out: Record<Script, Record<Stage, KanaCharacter[]>> = {
-    hiragana: { seion: [], dakuon: [], yoon: [] },
-    katakana: { seion: [], dakuon: [], yoon: [] },
+    hiragana: { seion: [], dakuon: [], combination: [] },
+    katakana: { seion: [], dakuon: [], combination: [] },
   }
-  for (const c of KANA_CHARACTERS) {
+  for (const c of DOJO_CHARACTERS) {
     out[c.script][c.stage].push(c)
   }
   return out
@@ -53,7 +56,7 @@ export function groupCharactersByStage(): Readonly<
 export const CHARACTERS_BY_SCRIPT_STAGE = groupCharactersByStage()
 
 export function scriptCharacters(script: Script): readonly KanaCharacter[] {
-  return KANA_CHARACTERS.filter((c) => c.script === script)
+  return DOJO_CHARACTERS.filter((c) => c.script === script)
 }
 
 export function lockedInScope(

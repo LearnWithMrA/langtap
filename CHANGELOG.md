@@ -30,6 +30,55 @@ Format per entry:
 
 ---
 
+## [2026-04-29] - Session 68
+
+**Sprint:** Sprint 5 - Content Pipeline and Practice Screen (Type Mode)
+**Task completed:** Build `data/kana/characters.ts` (expanded), Build `scripts/build-word-bank.ts`, Run build script and commit word bank files
+**Status:** Partial (crashed mid-test run, recovered in new session)
+
+### Changes made
+
+**Kana character data (3 files):**
+- `types/kana.types.ts`: Stage type `'yoon'` renamed to `'combination'`
+- `data/kana/characters.ts`: Renamed YOON arrays to COMBO. Added Vu row (5 katakana dakuon: va/vi/vu/ve/vo), extended combinations (18 katakana: fa/fi/fe/fo, wi/we/wo, tsa-tso, ti/twu, di/dwu, she/che/je), and 3 special characters (hiragana sokuon, katakana sokuon, long vowel mark). Total: 208 -> 234 characters.
+- `data/kana/progression-groups.ts`: All `stage: 'yoon'` updated to `stage: 'combination'`. Added VU_GROUPS (dakuon group 4), EXTENDED_GROUPS (combination groups 5-7).
+
+**Word bank types (1 file):**
+- `types/word.types.ts`: `english` renamed to `meaning`. Added `kanji: string | null` and `audioFile: string | null`.
+
+**Word bank pipeline (2 files):**
+- `scripts/build-word-bank.ts`: Full implementation. Reads JMDict JSON from `scripts/source/jmdict/`, decomposes kana to character IDs (greedy two-char-first matching), filters (empty kana/meaning, too short, unmapped chars, duplicates), writes N5-N1 output files with stats.
+- `data/words/index.ts`: Real exports replacing placeholder. `WORD_BANK` keyed by JLPT level, `ALL_WORDS` for tests/tooling.
+
+**Generated word bank data (5 files):**
+- `data/words/n5.ts` through `data/words/n1.ts`: ~7,000 lines of generated word entries across all JLPT levels.
+
+**Downstream yoon-to-combination rename (6 files):**
+- `components/dojo/kana-dojo-helpers.ts`: Stage keys updated
+- `components/layout/kana-dojo-client.tsx`: Stage order, labels, and activity maps updated
+- `components/onboarding/kana-chart-selector.tsx`: Stage map, column logic, variable names, UI label updated. Added EXTENDED_ROWS for new combination characters.
+- `samples/mastery-fixtures.ts`: Stage type updated
+- `engine/__tests__/selection.test.ts`: makeWord helper updated to new WordBankEntry shape (meaning, kanji, audioFile)
+- `components/dojo/__tests__/character-group.test.tsx`: Stage labels and activity maps updated
+- `components/dojo/__tests__/kana-dojo-client.test.tsx`: Heading assertion updated
+
+**Tests (2 files):**
+- `data/kana/__tests__/characters.test.ts`: Count updated to 234. Relaxed romaji check for special characters. ID regex broadened. Progression group test excludes specials.
+- `data/words/__tests__/word-bank.test.ts`: New file. Schema validation per level (kana, meaning, min 2 characterIds, correct level). Cross-references (all characterIds exist, no duplicate IDs or kana). Size checks (N5 >= 600, total >= 5,000).
+
+### Tests
+- All test files updated but test suite not yet run (session crashed before completion)
+
+### Next task
+- Run tests, fix any failures, then continue Sprint 5 practice screen tasks
+
+### Notes
+- Session recovered after Cursor deleted files during a reorganisation popup. Rolled back to Sprint 4 commit, re-applied Sprint 5 changes, then Claude crashed mid-test. Duplicate " 2/" folders from the recovery were cleaned up manually.
+- "Yoon" renamed to "combination" throughout the codebase because the stage now includes extended katakana combinations (fa, wi, tsa, etc.) beyond traditional yoon.
+- Special characters (sokuon, long vowel mark) have empty romaji by design since they modify adjacent characters rather than producing standalone sounds.
+
+---
+
 ## [2026-04-29] - Session 67
 
 **Sprint:** N/A (UI polish)

@@ -220,10 +220,10 @@ const DAKUON_KATAKANA: readonly KanaCharacter[] = build('dakuon', 'katakana', [
   ['ポ', 'po', 'pa', 'o'],
 ])
 
-// ── Yoon: Hiragana ────────────────────────────
-// Yoon columns use 'a' | 'u' | 'o' to represent ya, yu, yo endings.
+// ── Combination: Hiragana (traditional yoon) ─
+// Columns use 'a' | 'u' | 'o' to represent ya, yu, yo endings.
 
-const YOON_HIRAGANA: readonly KanaCharacter[] = build('yoon', 'hiragana', [
+const COMBO_HIRAGANA: readonly KanaCharacter[] = build('combination', 'hiragana', [
   // kya row
   ['きゃ', 'kya', 'kya', 'a'],
   ['きゅ', 'kyu', 'kya', 'u'],
@@ -270,9 +270,9 @@ const YOON_HIRAGANA: readonly KanaCharacter[] = build('yoon', 'hiragana', [
   ['ぴょ', 'pyo', 'pya', 'o'],
 ])
 
-// ── Yoon: Katakana ────────────────────────────
+// ── Combination: Katakana (traditional yoon) ─
 
-const YOON_KATAKANA: readonly KanaCharacter[] = build('yoon', 'katakana', [
+const COMBO_KATAKANA: readonly KanaCharacter[] = build('combination', 'katakana', [
   ['キャ', 'kya', 'kya', 'a'],
   ['キュ', 'kyu', 'kya', 'u'],
   ['キョ', 'kyo', 'kya', 'o'],
@@ -308,18 +308,61 @@ const YOON_KATAKANA: readonly KanaCharacter[] = build('yoon', 'katakana', [
   ['ピョ', 'pyo', 'pya', 'o'],
 ])
 
+// ── Dakuon: Vu row (katakana only) ───────────
+// Modern katakana for "v" sounds from loanwords.
+
+const VU_KATAKANA: readonly KanaCharacter[] = build('dakuon', 'katakana', [
+  ['ヴァ', 'va', 'va', 'a'],
+  ['ヴィ', 'vi', 'va', 'i'],
+  ['ヴ', 'vu', 'va', 'u'],
+  ['ヴェ', 've', 'va', 'e'],
+  ['ヴォ', 'vo', 'va', 'o'],
+])
+
+// ── Extended combinations (katakana only) ────
+// Modern katakana combos for foreign sounds not in traditional yoon.
+
+const EXTENDED_KATAKANA: readonly KanaCharacter[] = build('combination', 'katakana', [
+  ['ファ', 'fa', 'fa', 'a'],
+  ['フィ', 'fi', 'fa', 'i'],
+  ['フェ', 'fe', 'fa', 'e'],
+  ['フォ', 'fo', 'fa', 'o'],
+  ['ウィ', 'wi', 'wi', 'i'],
+  ['ウェ', 'we', 'wi', 'e'],
+  ['ウォ', 'wo', 'wi', 'o', 'uxo'],
+  ['ツァ', 'tsa', 'tsa', 'a'],
+  ['ツィ', 'tsi', 'tsa', 'i'],
+  ['ツェ', 'tse', 'tsa', 'e'],
+  ['ツォ', 'tso', 'tsa', 'o'],
+  ['ティ', 'ti', 'ti', 'i'],
+  ['トゥ', 'twu', 'ti', 'u'],
+  ['ディ', 'di', 'di', 'i', 'dhi'],
+  ['ドゥ', 'dwu', 'di', 'u'],
+  ['シェ', 'she', 'she', 'e'],
+  ['チェ', 'che', 'che', 'e'],
+  ['ジェ', 'je', 'je', 'e'],
+])
+
+// ── Special characters ───────────────────────
+
+const SPECIAL: readonly KanaCharacter[] = [
+  { id: 'h-sokuon', kana: 'っ', romaji: '', script: 'hiragana', stage: 'seion', row: 'sokuon', column: 'a' },
+  { id: 'k-sokuon', kana: 'ッ', romaji: '', script: 'katakana', stage: 'seion', row: 'sokuon', column: 'a' },
+  { id: 'k-longvowel', kana: 'ー', romaji: '-', script: 'katakana', stage: 'seion', row: 'longvowel', column: 'a' },
+]
+
 // ── Main export ───────────────────────────────
 
-// The complete chart in canonical chart order: Seion H, Seion K, Dakuon H,
-// Dakuon K, Yoon H, Yoon K. Consumers should index by id via getCharacterById
-// rather than relying on array position.
 export const KANA_CHARACTERS: readonly KanaCharacter[] = [
   ...SEION_HIRAGANA,
   ...SEION_KATAKANA,
   ...DAKUON_HIRAGANA,
   ...DAKUON_KATAKANA,
-  ...YOON_HIRAGANA,
-  ...YOON_KATAKANA,
+  ...VU_KATAKANA,
+  ...COMBO_HIRAGANA,
+  ...COMBO_KATAKANA,
+  ...EXTENDED_KATAKANA,
+  ...SPECIAL,
 ]
 
 // Index built once at module load for O(1) lookup.

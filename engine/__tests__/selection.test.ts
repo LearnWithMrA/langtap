@@ -24,7 +24,7 @@ function makeWord(
   characterIds: string[],
   jlptLevel: 'N5' | 'N4' | 'N3' | 'N2' | 'N1' = 'N5',
 ): WordBankEntry {
-  return { id, kana: id, english: id, jlptLevel, characterIds }
+  return { id, kana: id, kanji: null, meaning: id, jlptLevel, characterIds, audioFile: null }
 }
 
 function makeChar(id: string, masteryScore: number): CharacterWithMastery {

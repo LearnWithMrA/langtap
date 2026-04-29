@@ -20,7 +20,7 @@ import type { OnboardingStore } from '@/stores/onboarding.store'
 // -- Constants ---------------------------------------------------
 
 const SEION_ROWS = ['a', 'ka', 'sa', 'ta', 'na', 'ha', 'ma', 'ya', 'ra', 'wa'] as const
-const DAKUON_ROWS = ['ga', 'za', 'da', 'ba', 'pa'] as const
+const DAKUON_ROWS = ['ga', 'za', 'da', 'ba', 'pa', 'va'] as const
 const YOON_ROWS = [
   'kya',
   'sha',
@@ -36,12 +36,17 @@ const YOON_ROWS = [
 ] as const
 
 const SEION_COLS = ['a', 'i', 'u', 'e', 'o'] as const
-const YOON_COLS = ['a', 'u', 'o'] as const
+
+const EXTENDED_ROWS = [
+  'fa', 'wi', 'tsa', 'ti', 'di', 'she', 'che', 'je',
+] as const
+
+const COMBINATION_ROWS = [...YOON_ROWS, ...EXTENDED_ROWS] as const
 
 const STAGE_ROW_MAP: Record<Stage, readonly string[]> = {
   seion: SEION_ROWS,
   dakuon: DAKUON_ROWS,
-  yoon: YOON_ROWS,
+  combination: COMBINATION_ROWS,
 }
 
 // -- Helpers -----------------------------------------------------
@@ -62,16 +67,17 @@ function buildGrid(characters: KanaCharacter[], stage: Stage): GridRow[] {
   }
 
   const rows = STAGE_ROW_MAP[stage]
-  const cols = stage === 'yoon' ? YOON_COLS : SEION_COLS
 
-  return rows.map((row) => ({
-    rowKey: row,
-    cells: cols.map((col) => lookup.get(`${row}-${col}`) ?? null),
-  }))
+  return rows
+    .map((row) => ({
+      rowKey: row,
+      cells: SEION_COLS.map((col) => lookup.get(`${row}-${col}`) ?? null),
+    }))
+    .filter(({ cells }) => cells.some((c) => c !== null))
 }
 
-function getColumnsForStage(stage: Stage): readonly string[] {
-  return stage === 'yoon' ? YOON_COLS : SEION_COLS
+function getColumnsForStage(): readonly string[] {
+  return SEION_COLS
 }
 
 // -- Sub-components ----------------------------------------------
@@ -87,8 +93,8 @@ function CharacterCell({
   onToggle: () => void
   stage: Stage
 }): ReactNode {
-  const isYoon = stage === 'yoon'
-  const shapeClass = isYoon ? 'rounded-lg' : 'rounded-full'
+  const isCombo = stage === 'combination'
+  const shapeClass = isCombo ? 'rounded-lg' : 'rounded-full'
 
   return (
     <button
@@ -99,7 +105,7 @@ function CharacterCell({
       onClick={onToggle}
       className={`flex flex-col items-center justify-center focus:outline-none ${shapeClass}`}
       style={{
-        width: isYoon
+        width: isCombo
           ? 'clamp(40px, calc(16vw - 8px), 62px)'
           : 'clamp(32px, calc(13vw - 8px), 52px)',
       }}
@@ -110,10 +116,10 @@ function CharacterCell({
           isSelected ? 'bg-[#d8c8e2]' : '',
         ].join(' ')}
         style={{
-          width: isYoon
+          width: isCombo
             ? 'clamp(36px, calc(14vw - 6px), 54px)'
             : 'clamp(27px, calc(11vw - 6px), 44px)',
-          height: isYoon
+          height: isCombo
             ? 'clamp(22px, calc(8vw - 3px), 34px)'
             : 'clamp(27px, calc(11vw - 6px), 44px)',
         }}
@@ -208,7 +214,7 @@ function RowCheckbox({
 const STAGES: { key: Stage; label: string }[] = [
   { key: 'seion', label: 'Seion' },
   { key: 'dakuon', label: 'Dakuon' },
-  { key: 'yoon', label: 'Yoon' },
+  { key: 'combination', label: 'Combination' },
 ]
 
 type KanaChartSelectorProps = {
@@ -226,7 +232,7 @@ export function KanaChartSelector({ onActiveGroupChange }: KanaChartSelectorProp
     () => buildGrid(getCharsByStageAndScript(activeStage, activeScript), activeStage),
     [activeStage, activeScript],
   )
-  const activeCols = getColumnsForStage(activeStage)
+  const activeCols = getColumnsForStage()
 
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds])
 

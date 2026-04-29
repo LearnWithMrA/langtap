@@ -14,8 +14,8 @@ import type { Stage, Script } from '@/types/kana.types'
 // ── Chart integrity ───────────────────────────
 
 describe('KANA_CHARACTERS', () => {
-  it('contains 208 entries (46 seion H + 46 seion K + 25 dakuon H + 25 dakuon K + 33 yoon H + 33 yoon K)', () => {
-    expect(KANA_CHARACTERS).toHaveLength(208)
+  it('contains 234 entries (46+46 seion, 25+25+5 dakuon, 33+33+18 combination, 3 special)', () => {
+    expect(KANA_CHARACTERS).toHaveLength(234)
   })
 
   it('has unique ids', () => {
@@ -34,11 +34,14 @@ describe('KANA_CHARACTERS', () => {
     }
   })
 
-  it('assigns every character a non-empty id, kana, romaji, row, column', () => {
+  it('assigns every character a non-empty id, kana, row, column', () => {
+    const SPECIAL_IDS = new Set(['h-sokuon', 'k-sokuon', 'k-longvowel'])
     for (const c of KANA_CHARACTERS) {
-      expect(c.id).toMatch(/^[hk]-[a-z]+$/)
+      expect(c.id).toMatch(/^[hk]-[a-z-]+$/)
       expect(c.kana.length).toBeGreaterThan(0)
-      expect(c.romaji.length).toBeGreaterThan(0)
+      if (!SPECIAL_IDS.has(c.id)) {
+        expect(c.romaji.length, `${c.id} has empty romaji`).toBeGreaterThan(0)
+      }
       expect(c.row.length).toBeGreaterThan(0)
       expect(c.column.length).toBeGreaterThan(0)
     }
@@ -46,7 +49,7 @@ describe('KANA_CHARACTERS', () => {
 
   it('has every script, stage, row, column in its expected set', () => {
     const SCRIPTS: readonly Script[] = ['hiragana', 'katakana']
-    const STAGES: readonly Stage[] = ['seion', 'dakuon', 'yoon']
+    const STAGES: readonly Stage[] = ['seion', 'dakuon', 'combination']
     for (const c of KANA_CHARACTERS) {
       expect(SCRIPTS).toContain(c.script)
       expect(STAGES).toContain(c.stage)
@@ -91,7 +94,8 @@ describe('PROGRESSION_GROUPS', () => {
     }
   })
 
-  it('assigns every character to exactly one progression group', () => {
+  it('assigns every non-special character to exactly one progression group', () => {
+    const SPECIAL_IDS = new Set(['h-sokuon', 'k-sokuon', 'k-longvowel'])
     const assignments = new Map<string, number>()
     for (const group of PROGRESSION_GROUPS) {
       for (const id of group.characterIds) {
@@ -99,6 +103,7 @@ describe('PROGRESSION_GROUPS', () => {
       }
     }
     for (const c of KANA_CHARACTERS) {
+      if (SPECIAL_IDS.has(c.id)) continue
       expect(
         assignments.get(c.id),
         `character ${c.id} (${c.kana}) is not in any progression group`,

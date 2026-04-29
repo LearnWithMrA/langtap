@@ -17,7 +17,7 @@ export type MasteryScore = number
 export type Script = 'hiragana' | 'katakana'
 
 // Progression stages. Matches GAME_DESIGN.md §4.3.
-export type Stage = 'seion' | 'dakuon' | 'yoon'
+export type Stage = 'seion' | 'dakuon' | 'combination'
 
 // A single character in the kana chart.
 // `id` is stable and must never change once assigned. Components, fixtures,
