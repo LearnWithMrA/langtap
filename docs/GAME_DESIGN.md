@@ -205,7 +205,7 @@ Group 3H:  ぱ ぴ ぷ ぺ ぽ
 Group 3K:  パ ピ プ ペ ポ
 ```
 
-**Stage 3 - Yoon**
+**Stage 3 - Combination (formerly Yoon)**
 
 Hiragana and katakana are interleaved in groups, same pattern as Seion and Dakuon.
 

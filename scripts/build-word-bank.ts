@@ -114,15 +114,82 @@ const LEVELS: JlptLevel[] = ['N5', 'N4', 'N3', 'N2', 'N1']
 const seenKana = new Set<string>()
 const seenIds = new Set<string>()
 const allResults: Record<JlptLevel, OutputEntry[]> = {
-  N5: [], N4: [], N3: [], N2: [], N1: [],
+  N5: [],
+  N4: [],
+  N3: [],
+  N2: [],
+  N1: [],
 }
 
-const stats: Record<JlptLevel, { total: number; accepted: number; rejected: RejectionStats; katakanaOnly: number }> = {
-  N5: { total: 0, accepted: 0, rejected: { emptyKana: 0, emptyMeaning: 0, tooShort: 0, unmappedChar: 0, duplicate: 0, total: 0 }, katakanaOnly: 0 },
-  N4: { total: 0, accepted: 0, rejected: { emptyKana: 0, emptyMeaning: 0, tooShort: 0, unmappedChar: 0, duplicate: 0, total: 0 }, katakanaOnly: 0 },
-  N3: { total: 0, accepted: 0, rejected: { emptyKana: 0, emptyMeaning: 0, tooShort: 0, unmappedChar: 0, duplicate: 0, total: 0 }, katakanaOnly: 0 },
-  N2: { total: 0, accepted: 0, rejected: { emptyKana: 0, emptyMeaning: 0, tooShort: 0, unmappedChar: 0, duplicate: 0, total: 0 }, katakanaOnly: 0 },
-  N1: { total: 0, accepted: 0, rejected: { emptyKana: 0, emptyMeaning: 0, tooShort: 0, unmappedChar: 0, duplicate: 0, total: 0 }, katakanaOnly: 0 },
+const stats: Record<
+  JlptLevel,
+  { total: number; accepted: number; rejected: RejectionStats; katakanaOnly: number }
+> = {
+  N5: {
+    total: 0,
+    accepted: 0,
+    rejected: {
+      emptyKana: 0,
+      emptyMeaning: 0,
+      tooShort: 0,
+      unmappedChar: 0,
+      duplicate: 0,
+      total: 0,
+    },
+    katakanaOnly: 0,
+  },
+  N4: {
+    total: 0,
+    accepted: 0,
+    rejected: {
+      emptyKana: 0,
+      emptyMeaning: 0,
+      tooShort: 0,
+      unmappedChar: 0,
+      duplicate: 0,
+      total: 0,
+    },
+    katakanaOnly: 0,
+  },
+  N3: {
+    total: 0,
+    accepted: 0,
+    rejected: {
+      emptyKana: 0,
+      emptyMeaning: 0,
+      tooShort: 0,
+      unmappedChar: 0,
+      duplicate: 0,
+      total: 0,
+    },
+    katakanaOnly: 0,
+  },
+  N2: {
+    total: 0,
+    accepted: 0,
+    rejected: {
+      emptyKana: 0,
+      emptyMeaning: 0,
+      tooShort: 0,
+      unmappedChar: 0,
+      duplicate: 0,
+      total: 0,
+    },
+    katakanaOnly: 0,
+  },
+  N1: {
+    total: 0,
+    accepted: 0,
+    rejected: {
+      emptyKana: 0,
+      emptyMeaning: 0,
+      tooShort: 0,
+      unmappedChar: 0,
+      duplicate: 0,
+      total: 0,
+    },
+    katakanaOnly: 0,
+  },
 }
 
 for (const level of LEVELS) {

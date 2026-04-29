@@ -154,10 +154,10 @@ type KanaCharacter = {
   id: string            // unique identifier, e.g. "hira-a", "kata-ka", "hira-shi"
   kana: string          // the character itself: "あ", "ア", "し"
   script: 'hiragana' | 'katakana'
-  stage: 'seion' | 'dakuon' | 'yoon'
-  groupIndex: number    // which group within the stage (1-based)
+  stage: 'seion' | 'dakuon' | 'combination'
   romaji: string        // primary romaji, e.g. "a", "ka", "shi"
-  audioFile: string     // filename in public/audio/kana/, e.g. "hira-a.ogg"
+  row: string           // consonant row, e.g. "ka", "kya", "fa"
+  column: string        // vowel column, e.g. "a", "i", "u", "e", "o"
 }
 ```
 
@@ -166,22 +166,40 @@ unlock state, and audio manifest entries. It must be stable and never change
 once assigned.
 
 **Naming convention for IDs:**
-- Hiragana seion: `hira-{romaji}` e.g. `hira-a`, `hira-ka`, `hira-shi`
-- Katakana seion: `kata-{romaji}` e.g. `kata-a`, `kata-ka`, `kata-shi`
-- Hiragana dakuon: `hira-d-{romaji}` e.g. `hira-d-ga`, `hira-d-ji`
-- Katakana dakuon: `kata-d-{romaji}` e.g. `kata-d-ga`, `kata-d-ji`
-- Hiragana yoon: `hira-y-{romaji}` e.g. `hira-y-kya`, `hira-y-shu`
-- Katakana yoon: `kata-y-{romaji}` e.g. `kata-y-kya`, `kata-y-shu`
-- Sokuon hiragana: `hira-sokuon`
-- Sokuon katakana: `kata-sokuon`
-- Long vowel mark: `kata-longvowel`
+- Hiragana: `h-{romaji}` e.g. `h-a`, `h-ka`, `h-shi`, `h-kya`
+- Katakana: `k-{romaji}` e.g. `k-a`, `k-ka`, `k-shi`, `k-kya`
+- Extended katakana with alt ID: `k-{altRomaji}` e.g. `k-uxo` (ウォ), `k-dhi` (ディ)
+- Sokuon: `h-sokuon`, `k-sokuon`
+- Long vowel mark: `k-longvowel`
+
+**Character count:** 234 total (46+46 seion, 25+25+5 dakuon, 33+33+18 combination, 3 special).
+
+**Stage renamed:** The third stage was renamed from `'yoon'` to `'combination'`
+because it now includes extended katakana combinations (fa, wi, tsa, ti, di,
+she, che, je) beyond traditional yoon.
+
+**Extended katakana combinations (katakana only):**
+- fa row: ファ フィ フェ フォ
+- wi row: ウィ ウェ ウォ
+- tsa row: ツァ ツィ ツェ ツォ
+- ti row: ティ トゥ
+- di row: ディ ドゥ
+- she/che/je: シェ チェ ジェ
+
+**Vu row (katakana dakuon):** ヴァ ヴィ ヴ ヴェ ヴォ
+
+**Display grouping for dojo and onboarding:** Extended characters are shown
+in 4 custom rows below the traditional yoon grid, under an "Extended" label:
+1. ヴァ ヴィ ヴ ヴェ ヴォ (va vi vu ve vo)
+2. ファ フィ フェ フォ (fa fi fe fo)
+3. ティ ディ トゥ ドゥ チェ (ti di twu dwu che)
+4. ウィ ウェ ウォ シェ ジェ (wi we wo she je)
 
 ### 4.1 Special Characters: Sokuon and Long Vowel Mark
 
-These two characters are full members of the character set. They appear in the
-Dojo with their own progress bars, have individual mastery scores, go through the
-same 5-correct-answer unlock threshold, and gate any word containing them until
-unlocked.
+These two characters are in the character dataset but are excluded from the
+Dojo display for now. They participate in word decomposition (the build script
+maps っ/ッ to sokuon IDs and ー to longvowel ID) and gate words containing them.
 
 **Sokuon (っ / ッ)**
 
@@ -263,7 +281,7 @@ const romajiVariants: RomajiVariantMap = {
   'kata-d-ji':     ['ji', 'zi'],
   'kata-d-zu':     ['zu', 'du'],
 
-  // Hiragana yoon with multiple valid romaji
+  // Hiragana combination with multiple valid romaji
   'hira-y-sha':    ['sha', 'sya'],
   'hira-y-shu':    ['shu', 'syu'],
   'hira-y-sho':    ['sho', 'syo'],
@@ -274,7 +292,7 @@ const romajiVariants: RomajiVariantMap = {
   'hira-y-ju':     ['ju', 'jyu', 'zyu'],
   'hira-y-jo':     ['jo', 'jyo', 'zyo'],
 
-  // Katakana yoon equivalents follow the same pattern
+  // Katakana combination equivalents follow the same pattern
   'kata-y-sha':    ['sha', 'sya'],
   'kata-y-shu':    ['shu', 'syu'],
   'kata-y-sho':    ['sho', 'syo'],
@@ -334,7 +352,7 @@ const mnemonics: MnemonicMap = {
 - Sound mnemonics (a word that sounds like the reading) are secondary.
 - Keep the language simple; these users are beginners.
 - Avoid mnemonics that require cultural knowledge the user may not have.
-- Every seion, dakuon, and yoon character must have a mnemonic before the
+- Every seion, dakuon, and combination character must have a mnemonic before the
   wrong-answer feedback feature ships. No gaps allowed.
 
 **Sources for mnemonic inspiration:**
@@ -525,7 +543,7 @@ Required attributions at Phase 1 launch:
 
 | Phase | Content required |
 |---|---|
-| Phase 1 - Kana | Full kana character dataset, N5 word bank (minimum 600 words after filtering), VOICEVOX audio for N5 words, mnemonics for all seion (dakuon and yoon mnemonics before those stages ship), lo-fi music tracks |
+| Phase 1 - Kana | Full kana character dataset, N5 word bank (minimum 600 words after filtering), VOICEVOX audio for N5 words, mnemonics for all seion (dakuon and combination mnemonics before those stages ship), lo-fi music tracks |
 | Phase 2 - Kotoba | All word banks already generated in Sprint 5. No new word data needed. VOICEVOX audio for N4-N1 words. |
 
 ---

@@ -78,10 +78,18 @@ Format per entry:
 ### Next task
 - Continue Sprint 5 practice screen tasks (Plan 2: wire practice screen to engine)
 
+### Docs updated
+- `docs/CONTENT.md`: Updated KanaCharacter schema (stage to 'combination', added row/column fields, removed groupIndex/audioFile). Updated ID naming convention to actual `h-`/`k-` prefix format. Documented extended katakana combinations, Vu row, display groupings, and special character exclusion from dojo.
+- `docs/FRONTEND.md`: Updated CharacterGroup description (Yoon to Combination, documented extended section rendering).
+- `docs/GAME_DESIGN.md`: Renamed Stage 3 from "Yoon" to "Combination (formerly Yoon)".
+- `LangTap_Sprints.md`: Sprint 5 status updated to In Progress. First 3 tasks marked Done. Remaining tasks updated with plan references and Codex review notes.
+
 ### Notes
 - Session recovered after Cursor deleted files during a reorganisation popup. Rolled back to Sprint 4 commit, re-applied Sprint 5 changes, then Claude crashed mid-test. Duplicate " 2/" folders from the recovery were cleaned up manually.
 - "Yoon" renamed to "combination" throughout the codebase because the stage now includes extended katakana combinations (fa, wi, tsa, etc.) beyond traditional yoon.
 - Special characters (sokuon, long vowel mark) have empty romaji by design since they modify adjacent characters rather than producing standalone sounds.
+- Codex reviewed all 4 Sprint 5 plans. Key concerns for future work: mastery double-counting risk (Plan 2), counter ownership ambiguity (Plan 2), input-eval contract drift between Plan 2 and Plan 3 (tri-state validator recommended), prefix/partial-input semantics for romaji (Plan 3).
+- Extended display groups exclude tsa row (ツァ ツィ ツェ ツォ) from onboarding/dojo display but characters remain in the dataset and progression groups.
 
 ---
 

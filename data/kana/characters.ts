@@ -346,9 +346,33 @@ const EXTENDED_KATAKANA: readonly KanaCharacter[] = build('combination', 'kataka
 // ── Special characters ───────────────────────
 
 const SPECIAL: readonly KanaCharacter[] = [
-  { id: 'h-sokuon', kana: 'っ', romaji: '', script: 'hiragana', stage: 'seion', row: 'sokuon', column: 'a' },
-  { id: 'k-sokuon', kana: 'ッ', romaji: '', script: 'katakana', stage: 'seion', row: 'sokuon', column: 'a' },
-  { id: 'k-longvowel', kana: 'ー', romaji: '-', script: 'katakana', stage: 'seion', row: 'longvowel', column: 'a' },
+  {
+    id: 'h-sokuon',
+    kana: 'っ',
+    romaji: '',
+    script: 'hiragana',
+    stage: 'seion',
+    row: 'sokuon',
+    column: 'a',
+  },
+  {
+    id: 'k-sokuon',
+    kana: 'ッ',
+    romaji: '',
+    script: 'katakana',
+    stage: 'seion',
+    row: 'sokuon',
+    column: 'a',
+  },
+  {
+    id: 'k-longvowel',
+    kana: 'ー',
+    romaji: '-',
+    script: 'katakana',
+    stage: 'seion',
+    row: 'longvowel',
+    column: 'a',
+  },
 ]
 
 // ── Main export ───────────────────────────────

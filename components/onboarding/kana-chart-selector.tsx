@@ -243,9 +243,7 @@ export function KanaChartSelector({ onActiveGroupChange }: KanaChartSelectorProp
     if (activeStage !== 'combination' || activeScript !== 'katakana') return []
     return EXTENDED_DISPLAY_GROUPS.map(({ key, ids }) => ({
       rowKey: key,
-      chars: ids
-        .map((id) => charById.get(id))
-        .filter((c): c is KanaCharacter => c !== undefined),
+      chars: ids.map((id) => charById.get(id)).filter((c): c is KanaCharacter => c !== undefined),
     }))
   }, [activeStage, activeScript])
 

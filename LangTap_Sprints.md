@@ -175,25 +175,27 @@ No UI yet. This is pure logic.
 ## Sprint 5 - Content Pipeline and Practice Screen (Type Mode)
 
 **Goal:** Word bank and kana character data are generated and committed. A working practice screen in Type mode. The core game loop is playable.
-**Status:** Pending
+**Status:** In Progress
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Build `data/kana/characters.ts` | **Medium** | **To Do** | Full kana character dataset. All hiragana, katakana, dakuon, yoon, sokuon, and long vowel mark. Schema per CONTENT.md Section 4. |
-| Build `scripts/build-word-bank.ts` | **Medium** | **To Do** | Reads `scripts/source/jisho-jlpt-words.xlsx`. Deduplicates across levels. Strips meanings to first clean definition. Applies all filters from CONTENT.md Section 7.3 including relaxed katakana rule. Generates `characterIds`. Outputs katakana word count per level to console. Writes `data/words/n5.ts` through `n1.ts`. |
-| Run build script and commit word bank files | **Small** | **To Do** | Run the script, confirm katakana counts in console output, validate output against schema, commit generated files. N5 minimum 600 words confirmed. |
+| Build `data/kana/characters.ts` | **Medium** | **Done** | Expanded from 208 to 234 characters. Renamed yoon to combination. Added Vu row (5 katakana dakuon), extended combinations (18 katakana: fa/fi/fe/fo, wi/we/wo, tsa-tso, ti/twu, di/dwu, she/che/je), 3 special characters (sokuon x2, long vowel mark). Updated progression groups. Dojo and onboarding charts updated with separate Extended sections using 4 custom display rows. |
+| Build `scripts/build-word-bank.ts` | **Medium** | **Done** | Reads JMDict JSON from `scripts/source/jmdict/`. NFC normalization, greedy two-char-first kana decomposition, structured rejection stats. Deduplicates globally by kana. Generates `data/words/n5.ts` through `n1.ts`. WordBankEntry type updated: `english` renamed to `meaning`, added `kanji: string | null` and `audioFile: string | null`. |
+| Run build script and commit word bank files | **Small** | **Done** | 652 tests passing. Word bank integrity tests validate schema, cross-references, dedup, and minimum counts (N5 >= 600, total >= 5,000). |
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Build practice screen layout | **Medium** | **To Do** | Character display area, input field, distance counter, cycling animation integrated. Mobile-aware: space reserved for native keyboard. |
-| Integrate character selection into practice screen | **Medium** | **To Do** | Connect the game engine to the UI. Display the selected character. Accept keyboard input. |
-| Build correct answer feedback | **Small** | **To Do** | Visual: brief highlight or animation. Distance counter increments. Cycling animation speeds up momentarily. Move to next character. |
-| Build wrong answer feedback | **Medium** | **To Do** | Correct character highlighted orange on input. Short mnemonic shown below (if enabled). English meaning stays hidden. No score change. Brief pause then continue. |
-| Build English meaning reveal | **Small** | **To Do** | Show English meaning only after correct answer is given. Hidden at all other times. |
-| Integrate kana character audio | **Medium** | **To Do** | Play the character's audio on display (or on correct answer - decision to be made at this sprint). Use Wikimedia Commons audio files. |
-| Build top bar and input mode switcher | **Small** | **To Do** | Logo left. Input mode icon right. Tapping the icon opens mode switcher. Switching mode saves to profile. |
-| Build bottom navigation bar | **Small** | **To Do** | Profile, Dojo, Library (locked placeholder), Settings. Active state indicator. |
-| Write practice screen tests | **Medium** | **To Do** | Happy path, loading state, error state, wrong answer flow, correct answer flow. |
+| Wire practice screen to engine (Plan 2) | **Medium** | **To Do** | Replace mock game loop with real Sprint 4 engine. Create `usePracticeSession` hook and `unlock.store.ts`. See Sprint 5 plans doc for details. Codex flagged: mastery double-counting risk, counter ownership, hydration race, eager ALL_WORDS import. |
+| Populate romaji variants (Plan 3) | **Small** | **To Do** | Data file from CONTENT.md Section 5 spec. |
+| Populate mnemonics (Plan 3) | **Medium** | **To Do** | 208+ mnemonic strings keyed by character ID. |
+| Implement romaji engine (Plan 3) | **Small** | **To Do** | `isValidRomajiInput`, `getAcceptedRomaji`. Codex flagged: dual-argument API, prefix/partial-input semantics (tri-state evaluation). |
+| Wire wrong answer feedback (Plan 3) | **Small** | **To Do** | Mnemonic display in game-window. |
+| Build correct answer feedback | **Small** | **To Do** | Already in visual shell, needs engine wiring from Plan 2. |
+| Build English meaning reveal | **Small** | **To Do** | Already in visual shell, works with real data from Plan 2. |
+| Build bottom navigation bar | **Small** | **To Do** | Implement component. |
+| Write practice screen tests (Plan 4) | **Medium** | **To Do** | Hook tests, component tests. Word bank integrity tests already done. Codex flagged: over-mocking risk, non-determinism from timers/randomness, missing malformed-data defenses. |
+| Integrate kana character audio | **Medium** | **Deferred** | VOICEVOX is Sprint 10. No audio files available yet. |
+| Build top bar and input mode switcher | **Small** | **Deferred** | AppTopBar already exists in layout. top-bar.tsx stub is unused. |
 
 ---
 

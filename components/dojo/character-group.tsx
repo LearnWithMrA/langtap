@@ -68,7 +68,17 @@ type StageBlockProps = {
 // ── Helpers ───────────────────────────────────
 
 const YOON_ROW_SET = new Set([
-  'kya', 'sha', 'cha', 'nya', 'hya', 'mya', 'rya', 'gya', 'ja', 'bya', 'pya',
+  'kya',
+  'sha',
+  'cha',
+  'nya',
+  'hya',
+  'mya',
+  'rya',
+  'gya',
+  'ja',
+  'bya',
+  'pya',
 ])
 
 const EXTENDED_DISPLAY_GROUPS = [
@@ -132,52 +142,54 @@ function StageBlock({
           split by a divider. */}
       {isOpen && (
         <div id={controlsId} className="mt-4">
-          {stage === 'combination' ? (() => {
-            const yoonChars = characters.filter((c) => YOON_ROW_SET.has(c.row))
-            const extChars = characters.filter((c) => !YOON_ROW_SET.has(c.row))
-            return (
-              <>
-                {yoonChars.length > 0 && (
-                  <CharacterGrid
-                    characters={yoonChars}
-                    scores={scores}
-                    lockedIds={lockedIds}
-                    onTileClick={onTileClick}
-                  />
-                )}
-                {extChars.length > 0 && (
-                  <>
-                    <p className="text-center text-[13px] font-medium text-[#a3acb3] mt-6 mb-2">
-                      Extended
-                    </p>
-                    <div className="flex flex-col items-center gap-2">
-                      {EXTENDED_DISPLAY_GROUPS.map(({ key, ids }) => (
-                        <div key={key} className="flex justify-center gap-2">
-                          {ids.map((id) => {
-                            const char = charById.get(id)
-                            if (!char) return null
-                            return (
-                              <div
-                                key={char.id}
-                                style={{ width: 'clamp(44px, calc(20vw - 20px), 76px)' }}
-                              >
-                                <CharacterTile
-                                  character={char}
-                                  score={scores[char.id] ?? 0}
-                                  isLocked={lockedIds.has(char.id)}
-                                  onClick={onTileClick}
-                                />
-                              </div>
-                            )
-                          })}
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </>
-            )
-          })() : (
+          {stage === 'combination' ? (
+            ((): ReactNode => {
+              const yoonChars = characters.filter((c) => YOON_ROW_SET.has(c.row))
+              const extChars = characters.filter((c) => !YOON_ROW_SET.has(c.row))
+              return (
+                <>
+                  {yoonChars.length > 0 && (
+                    <CharacterGrid
+                      characters={yoonChars}
+                      scores={scores}
+                      lockedIds={lockedIds}
+                      onTileClick={onTileClick}
+                    />
+                  )}
+                  {extChars.length > 0 && (
+                    <>
+                      <p className="text-center text-[13px] font-medium text-[#a3acb3] mt-6 mb-2">
+                        Extended
+                      </p>
+                      <div className="flex flex-col items-center gap-2">
+                        {EXTENDED_DISPLAY_GROUPS.map(({ key, ids }) => (
+                          <div key={key} className="flex justify-center gap-2">
+                            {ids.map((id) => {
+                              const char = charById.get(id)
+                              if (!char) return null
+                              return (
+                                <div
+                                  key={char.id}
+                                  style={{ width: 'clamp(44px, calc(20vw - 20px), 76px)' }}
+                                >
+                                  <CharacterTile
+                                    character={char}
+                                    score={scores[char.id] ?? 0}
+                                    isLocked={lockedIds.has(char.id)}
+                                    onClick={onTileClick}
+                                  />
+                                </div>
+                              )
+                            })}
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </>
+              )
+            })()
+          ) : (
             <CharacterGrid
               characters={characters}
               scores={scores}

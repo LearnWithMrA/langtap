@@ -485,12 +485,15 @@ Shown on a wrong answer. Contains:
 **CharacterGroup**
 
 Top-level collapsible group for one script (Hiragana or Katakana). When open,
-nests three `StageBlock` sub-sections (Seion, Dakuon, Yoon), each with its
-own `GroupBar` and `CharacterGrid`. Every `GroupBar` (script and stage)
-exposes label, progress bar, percentage, and a tiered unlock action: dark
-blue for the script bar, medium/light blue for stage bars, grey when every
-character in that scope is already unlocked (at which point the action
-becomes "reset progress" and opens `BulkResetPrompt`).
+nests three `StageBlock` sub-sections (Seion, Dakuon, Combination), each with
+its own `GroupBar` and `CharacterGrid`. The Combination stage splits into two
+visual sections: a traditional yoon grid (3 columns) and an Extended section
+below with 4 custom flex rows (vu, fa, ti/di, wi/she) rendered directly with
+`CharacterTile` (no axis labels). Every `GroupBar` (script and stage) exposes
+label, progress bar, percentage, and a tiered unlock action: dark blue for
+the script bar, medium/light blue for stage bars, grey when every character
+in that scope is already unlocked (at which point the action becomes "reset
+progress" and opens `BulkResetPrompt`).
 
 Collapsed by default for scripts the user has not reached. Open by default
 for the current active script; the earliest stage within that script with
