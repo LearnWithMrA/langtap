@@ -67,7 +67,7 @@ export function KotobaGameWindow({
   const topLeft = childArray[0] ?? null
   const topRight = childArray[1] ?? null
   const { playSound } = useKeySound()
-  const hintsEnabled = useSettingsStore((s) => s.mnemonics)
+  const hintsEnabled = useSettingsStore((s) => s.hints)
 
   const isKanjiMode = kotobaInput === 'kanji'
 

@@ -187,12 +187,10 @@ No UI yet. This is pure logic.
 |---|---|---|---|
 | Wire practice screen to engine (Plan 2) | **Medium** | **To Do** | Replace mock game loop with real Sprint 4 engine. Create `usePracticeSession` hook and `unlock.store.ts`. See Sprint 5 plans doc for details. Codex flagged: mastery double-counting risk, counter ownership, hydration race, eager ALL_WORDS import. |
 | Populate romaji variants (Plan 3) | **Small** | **To Do** | Data file from CONTENT.md Section 5 spec. |
-| Populate mnemonics (Plan 3) | **Medium** | **To Do** | 208+ mnemonic strings keyed by character ID. |
 | Implement romaji engine (Plan 3) | **Small** | **To Do** | `isValidRomajiInput`, `getAcceptedRomaji`. Codex flagged: dual-argument API, prefix/partial-input semantics (tri-state evaluation). |
-| Wire wrong answer feedback (Plan 3) | **Small** | **To Do** | Mnemonic display in game-window. |
+| Wire wrong answer feedback (Plan 3) | **Small** | **To Do** | Romaji hint on wrong answers. No mnemonic display (deferred). |
 | Build correct answer feedback | **Small** | **To Do** | Already in visual shell, needs engine wiring from Plan 2. |
 | Build English meaning reveal | **Small** | **To Do** | Already in visual shell, works with real data from Plan 2. |
-| Build bottom navigation bar | **Small** | **To Do** | Implement component. |
 | Write practice screen tests (Plan 4) | **Medium** | **To Do** | Hook tests, component tests. Word bank integrity tests already done. Codex flagged: over-mocking risk, non-determinism from timers/randomness, missing malformed-data defenses. |
 | Integrate kana character audio | **Medium** | **Deferred** | VOICEVOX is Sprint 10. No audio files available yet. |
 | Build top bar and input mode switcher | **Small** | **Deferred** | AppTopBar already exists in layout. top-bar.tsx stub is unused. |
@@ -239,7 +237,7 @@ No UI yet. This is pure logic.
 |---|---|---|---|
 | Build Profile screen | **Medium** | **To Do** | Username display, Kotoba JLPT level selector, Kanji JLPT level selector (both with mastery pre-set warning), font selector, font size selector, lo-fi audio toggle, reset progress button. |
 | Build reset progress flow | **Small** | **To Do** | Two-step confirmation. Clear warning that this cannot be undone. Resets all mastery, counters, and unlocks. |
-| Build Settings screen | **Medium** | **To Do** | Input mode selector, mode-specific sub-settings (Type/Swipe: romaji-to-kana or kana-to-romaji), mnemonic toggle. |
+| Build Settings screen | **Medium** | **To Do** | Input mode selector, mode-specific sub-settings (Type/Swipe: romaji-to-kana or kana-to-romaji). Mnemonic toggle exists in settings dialog but data is deferred. |
 | Connect Profile and Settings to Supabase | **Medium** | **To Do** | All preferences saved to the user profile record. Loaded on app start. Guest users: saved to localStorage. |
 | Build delete account flow | **Medium** | **To Do** | Server-side account deletion. Typed confirmation (`delete-username`). Cascade deletes all user data. See SECURITY.md Section 5.4. Flagged in Session 49. |
 | Build username change with 30-day cooldown | **Small** | **To Do** | Server validates cooldown via `username_changed_at`. Returns structured error with next-allowed timestamp. Client shows disabled state. Flagged in Session 49. |
@@ -328,7 +326,7 @@ Ideas and improvements not tied to a phase. Pulled in when the time is right.
 | Cross-reference JMDict JSON against Jisho Excel | **Small** | **To Do** | Write `scripts/compare-word-sources.ts`. Match on kana across both sources per JLPT level. Output: words only in Excel, words only in JSON, count totals. Useful for validating word bank completeness. Not blocking anything. |
 | JIS kana keyboard mapping | **Medium** | **To Do** | Map physical QWERTY keys to JIS kana layout so users can type kana directly without switching to a Japanese IME. E.g. 1=ぬ, 2=ふ, 3=あ, 4=う, 5=え. Enables romaji-to-kana mode on English keyboards. Alternative to requiring Japanese keyboard setup. |
 | Animation asset upgrade | **Small** | **To Do** | Commission or generate a higher-quality cycling character animation if the initial asset needs replacing. |
-| Mnemonic content expansion | **Medium** | **To Do** | Review and expand the mnemonic library. Ensure all seion, dakuon, and yoon characters have a mnemonic. |
+| Mnemonic content expansion | **Medium** | **Optional** | Memory-aid strings for kana characters. Not part of the core practice loop. Can be added as a future enhancement if user feedback requests it. Data stub exists at `data/kana/mnemonics.ts`. |
 
 ---
 

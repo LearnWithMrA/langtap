@@ -17,7 +17,7 @@ type SettingsState = {
   inputMode: InputMode
   inputDirection: InputDirection
   kotobaInput: KotobaInput
-  mnemonics: boolean
+  hints: boolean
   furigana: boolean
   wordAudio: boolean
   keyClicks: boolean
@@ -30,7 +30,7 @@ type SettingsActions = {
   setInputMode: (mode: InputMode) => void
   setInputDirection: (direction: InputDirection) => void
   setKotobaInput: (input: KotobaInput) => void
-  setMnemonics: (enabled: boolean) => void
+  setHints: (enabled: boolean) => void
   setFurigana: (enabled: boolean) => void
   setWordAudio: (enabled: boolean) => void
   setKeyClicks: (enabled: boolean) => void
@@ -46,7 +46,7 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
       inputMode: 'tap',
       inputDirection: 'alternate',
       kotobaInput: 'readings',
-      mnemonics: true,
+      hints: true,
       furigana: true,
       wordAudio: true,
       keyClicks: false,
@@ -72,8 +72,8 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
         set({ kotobaInput: input })
       },
 
-      setMnemonics: (enabled: boolean): void => {
-        set({ mnemonics: enabled })
+      setHints: (enabled: boolean): void => {
+        set({ hints: enabled })
       },
 
       setFurigana: (enabled: boolean): void => {
@@ -98,7 +98,7 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
         inputMode: state.inputMode,
         inputDirection: state.inputDirection,
         kotobaInput: state.kotobaInput,
-        mnemonics: state.mnemonics,
+        hints: state.hints,
         furigana: state.furigana,
         wordAudio: state.wordAudio,
         keyClicks: state.keyClicks,

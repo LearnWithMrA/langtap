@@ -59,7 +59,7 @@ app/                    # Pages and routes (Next.js App Router)
   page.tsx              # Landing page
 components/             # Reusable UI components
   ui/                   # Primitive components: Button, Input, Card, Modal, ProgressBar
-  layout/               # Layout components: TopBar, BottomNav, PageShell
+  layout/               # Layout components: TopBar, PageShell
   game/                 # Game-specific components: CharacterDisplay, TypeInput, SwipeInput, TapInput, FeedbackOverlay
   dojo/                 # Dojo screen components: CharacterGroup, MasteryBar, UnlockPrompt
   animation/            # Cycling character animation component

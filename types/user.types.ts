@@ -33,7 +33,6 @@ export type UserProfile = {
   inputMode: InputMode
   onboardingComplete: boolean
   notificationsEnabled: boolean
-  mnemonicsEnabled: boolean
   distanceUnit: 'metric' | 'imperial'
   usernameChangedAt: string | null
   createdAt: string

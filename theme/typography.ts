@@ -15,7 +15,7 @@ export const FONT_FAMILY = 'Zen Maru Gothic'
 // -- Font size scale (rem) ---------------------------------------
 
 export const FONT_SIZE = {
-  xs: '0.75rem', // 12px - mnemonic text, captions
+  xs: '0.75rem', // 12px - captions, hint text
   sm: '0.875rem', // 14px - secondary labels, metadata
   base: '1rem', // 16px - body text, UI copy
   lg: '1.125rem', // 18px - slightly prominent labels
@@ -42,7 +42,7 @@ export const LINE_HEIGHT = {
   tight: 1.2, // Display headings, large character prompts
   snug: 1.4, // Card headings, labels
   normal: 1.6, // Body text (default)
-  relaxed: 1.8, // Long-form text, mnemonic descriptions
+  relaxed: 1.8, // Long-form text
 } as const
 
 // -- Mastery-linked font sizing ----------------------------------

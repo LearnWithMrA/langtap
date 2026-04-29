@@ -32,7 +32,7 @@ export const SPACING = {
   8: '2rem', // 32px - page-level padding (desktop)
   11: '2.75rem', // 44px - touch target minimum
   14: '3.5rem', // 56px - TopBar height (h-14)
-  16: '4rem', // 64px - BottomNav height (h-16)
+  16: '4rem', // 64px
 } as const
 
 // -- Max content widths ------------------------------------------

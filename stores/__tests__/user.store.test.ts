@@ -19,7 +19,6 @@ const MOCK_PROFILE = {
   inputMode: 'tap' as const,
   onboardingComplete: false,
   notificationsEnabled: false,
-  mnemonicsEnabled: true,
   distanceUnit: 'metric' as const,
   usernameChangedAt: null,
   createdAt: '2026-04-01T00:00:00Z',

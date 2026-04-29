@@ -138,8 +138,8 @@ export function SettingsDialog(): ReactNode {
   const setInputDirection = useSettingsStore((s) => s.setInputDirection)
   const kotobaInput = useSettingsStore((s) => s.kotobaInput)
   const setKotobaInput = useSettingsStore((s) => s.setKotobaInput)
-  const mnemonics = useSettingsStore((s) => s.mnemonics)
-  const setMnemonics = useSettingsStore((s) => s.setMnemonics)
+  const hints = useSettingsStore((s) => s.hints)
+  const setHints = useSettingsStore((s) => s.setHints)
 
   const wordAudio = useSettingsStore((s) => s.wordAudio)
   const setWordAudio = useSettingsStore((s) => s.setWordAudio)
@@ -307,8 +307,8 @@ export function SettingsDialog(): ReactNode {
           <div className="py-2.5 border-b border-border">
             <SectionLabel>Hints</SectionLabel>
             <Toggle
-              checked={mnemonics}
-              onChange={setMnemonics}
+              checked={hints}
+              onChange={setHints}
               label="Memory hints"
               sublabel="Show hints on wrong answers"
               ariaLabel="Toggle memory hints"

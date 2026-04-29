@@ -21,7 +21,6 @@ type ProfileRow = {
   input_mode: string
   onboarding_complete: boolean
   notifications_enabled: boolean
-  mnemonics_enabled: boolean
   distance_unit: string
   username_changed_at: string | null
   created_at: string
@@ -37,7 +36,6 @@ function mapRowToProfile(row: ProfileRow): UserProfile {
     inputMode: row.input_mode as UserProfile['inputMode'],
     onboardingComplete: row.onboarding_complete,
     notificationsEnabled: row.notifications_enabled,
-    mnemonicsEnabled: row.mnemonics_enabled,
     distanceUnit: row.distance_unit as UserProfile['distanceUnit'],
     usernameChangedAt: row.username_changed_at,
     createdAt: row.created_at,
@@ -52,7 +50,7 @@ export async function loadProfile(userId: string): Promise<ServiceResult<UserPro
   const { data, error } = await supabase
     .from('profiles')
     .select(
-      'id, username, jlpt_level, input_mode, onboarding_complete, notifications_enabled, mnemonics_enabled, distance_unit, username_changed_at, created_at',
+      'id, username, jlpt_level, input_mode, onboarding_complete, notifications_enabled, distance_unit, username_changed_at, created_at',
     )
     .eq('id', userId)
     .single()
@@ -72,7 +70,6 @@ export async function updateProfile(
     input_mode: string
     onboarding_complete: boolean
     notifications_enabled: boolean
-    mnemonics_enabled: boolean
     distance_unit: string
     username_changed_at: string
   }>,
