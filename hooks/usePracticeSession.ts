@@ -64,14 +64,44 @@ function buildCharactersWithMastery(scores: Record<string, number>): CharacterWi
   }))
 }
 
+const SOKUON_IDS = new Set(['h-sokuon', 'k-sokuon'])
+const LONGVOWEL_ID = 'k-longvowel'
+
+function getLastVowel(romaji: string): string {
+  const vowels = 'aiueo'
+  for (let i = romaji.length - 1; i >= 0; i--) {
+    if (vowels.includes(romaji[i])) return romaji[i]
+  }
+  return 'u'
+}
+
+function getFirstConsonant(romaji: string): string {
+  const vowels = 'aiueo'
+  if (romaji.length > 0 && !vowels.includes(romaji[0])) return romaji[0]
+  return 't'
+}
+
 function buildPracticePrompt(result: SelectionResult): PracticePrompt | null {
   const { word } = result.prompt
-  const characters: PracticeCharacter[] = []
+  const chars: { id: string; kana: string; romaji: string }[] = []
   for (const charId of word.characterIds) {
     const char = getCharacterById(charId)
     if (!char) return null
-    characters.push({ id: char.id, kana: char.kana, romaji: char.romaji })
+    chars.push({ id: char.id, kana: char.kana, romaji: char.romaji })
   }
+
+  const characters: PracticeCharacter[] = chars.map((c, i) => {
+    if (SOKUON_IDS.has(c.id)) {
+      const next = chars[i + 1]
+      return { id: c.id, kana: c.kana, romaji: next ? getFirstConsonant(next.romaji) : 't' }
+    }
+    if (c.id === LONGVOWEL_ID) {
+      const prev = chars[i - 1]
+      return { id: c.id, kana: c.kana, romaji: prev ? getLastVowel(prev.romaji) : 'u' }
+    }
+    return c
+  })
+
   return { word, characters, targetCharacterId: result.prompt.characterId }
 }
 

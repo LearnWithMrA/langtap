@@ -30,6 +30,30 @@ Format per entry:
 
 ---
 
+## [2026-04-30] - Session 70B
+
+**Sprint:** Cross-sprint bug fixes and content polish
+**Task completed:** Sokuon/longvowel always-unlocked, context-dependent romaji, meaning formatting
+**Status:** Done
+
+### Changes made
+- engine/unlock.ts: Added ALWAYS_UNLOCKED set (h-sokuon, k-sokuon, k-longvowel). These three characters are always unlocked regardless of progression state or manual unlocks.
+- data/kana/progression-groups.ts: Removed h-sokuon from H_SEION_9, removed k-sokuon and k-longvowel from K_SEION_9. These characters no longer need to be unlocked through progression.
+- hooks/usePracticeSession.ts: Added context-dependent romaji computation in buildPracticePrompt. Sokuon gets the first consonant of the next character (e.g. "k" for けっこう). Longvowel gets the last vowel of the previous character (e.g. "o" for コー). Fixes blank tap tiles and incorrect type/swipe input for words containing these characters.
+- data/kana/characters.ts: Reverted sokuon romaji back to empty string (context-dependent romaji computed at word level, not character level).
+- data/words/n5.ts, n4.ts, n3.ts, n2.ts, n1.ts: Reformatted all ~7000 word meanings. Capitalized first letter of each meaning. Replaced comma separators with " / " for multiple meanings. Capitalized first letter after each " / ". Fixed parenthesized prefix entries.
+
+### Tests
+- All 649 tests passing, 0 failures
+
+### Next task
+Sprint 5B: Kotoba Wiring and Dojo
+
+### Notes
+Sokuon and longvowel are special characters that don't function independently. Their romaji representation depends on the word they appear in. The engine now computes this at word level in buildPracticePrompt rather than storing a fixed romaji on the character. English meaning formatting done at source data level (not display-time) so future expansions inherit the format.
+
+---
+
 ## [2026-04-30] - Session 70
 
 **Sprint:** Cross-sprint bug fixes, performance, and polish
