@@ -12,7 +12,7 @@ import { useWordMasteryStore } from '@/stores/word-mastery.store'
 // ── Helpers ──────────────────────────────────
 
 function resetStore(): void {
-  useWordMasteryStore.setState({ scores: {}, hasHydrated: false })
+  useWordMasteryStore.setState({ scores: {}, manuallyUnlockedWords: [], hasHydrated: false })
 }
 
 // ── Tests ────────────────────────────────────
@@ -98,6 +98,60 @@ describe('word mastery store', () => {
       useWordMasteryStore.getState().reset('1198180')
       expect(useWordMasteryStore.getState().scores['1381380']).toBe(5)
     })
+
+    it('adds the word to manuallyUnlockedWords so it stays visible', () => {
+      useWordMasteryStore.setState({ scores: { '1198180': 10 } })
+      useWordMasteryStore.getState().reset('1198180')
+      expect(useWordMasteryStore.getState().manuallyUnlockedWords).toContain('1198180')
+    })
+
+    it('does not duplicate if word is already manually unlocked', () => {
+      useWordMasteryStore.setState({
+        scores: { '1198180': 10 },
+        manuallyUnlockedWords: ['1198180'],
+      })
+      useWordMasteryStore.getState().reset('1198180')
+      const count = useWordMasteryStore
+        .getState()
+        .manuallyUnlockedWords.filter((id) => id === '1198180').length
+      expect(count).toBe(1)
+    })
+  })
+
+  // -- setScore --
+
+  describe('setScore', () => {
+    it('sets a score to an exact value', () => {
+      useWordMasteryStore.getState().setScore('1198180', 45)
+      expect(useWordMasteryStore.getState().scores['1198180']).toBe(45)
+    })
+
+    it('overwrites an existing score', () => {
+      useWordMasteryStore.setState({ scores: { '1198180': 5 } })
+      useWordMasteryStore.getState().setScore('1198180', 20)
+      expect(useWordMasteryStore.getState().scores['1198180']).toBe(20)
+    })
+
+    it('sanitizes negative values to 0', () => {
+      useWordMasteryStore.getState().setScore('1198180', -3)
+      expect(useWordMasteryStore.getState().scores['1198180']).toBe(0)
+    })
+
+    it('sanitizes NaN to 0', () => {
+      useWordMasteryStore.getState().setScore('1198180', NaN)
+      expect(useWordMasteryStore.getState().scores['1198180']).toBe(0)
+    })
+
+    it('sanitizes fractional values to integers', () => {
+      useWordMasteryStore.getState().setScore('1198180', 7.9)
+      expect(useWordMasteryStore.getState().scores['1198180']).toBe(7)
+    })
+
+    it('does not affect other words', () => {
+      useWordMasteryStore.setState({ scores: { '1198180': 5, '1381380': 3 } })
+      useWordMasteryStore.getState().setScore('1198180', 20)
+      expect(useWordMasteryStore.getState().scores['1381380']).toBe(3)
+    })
   })
 
   // -- resetAll --
@@ -113,6 +167,15 @@ describe('word mastery store', () => {
       useWordMasteryStore.setState({ scores: { '1198180': 10 } })
       useWordMasteryStore.getState().resetAll()
       expect(useWordMasteryStore.getState().getScore('1198180')).toBe(0)
+    })
+
+    it('clears manuallyUnlockedWords', () => {
+      useWordMasteryStore.setState({
+        scores: { '1198180': 10 },
+        manuallyUnlockedWords: ['1198180', '1381380'],
+      })
+      useWordMasteryStore.getState().resetAll()
+      expect(useWordMasteryStore.getState().manuallyUnlockedWords).toEqual([])
     })
   })
 
@@ -192,6 +255,107 @@ describe('word mastery store', () => {
     it('returns true for word with score > 0', () => {
       useWordMasteryStore.setState({ scores: { '1198180': 1 } })
       expect(useWordMasteryStore.getState().hasEncountered('1198180')).toBe(true)
+    })
+  })
+
+  // -- addManualUnlock --
+
+  describe('addManualUnlock', () => {
+    it('adds a word ID to the manual unlock list', () => {
+      useWordMasteryStore.getState().addManualUnlock('1198180')
+      expect(useWordMasteryStore.getState().manuallyUnlockedWords).toEqual(['1198180'])
+    })
+
+    it('does not duplicate an already-unlocked word', () => {
+      useWordMasteryStore.setState({ manuallyUnlockedWords: ['1198180'] })
+      useWordMasteryStore.getState().addManualUnlock('1198180')
+      expect(useWordMasteryStore.getState().manuallyUnlockedWords).toEqual(['1198180'])
+    })
+
+    it('preserves existing unlocks when adding a new one', () => {
+      useWordMasteryStore.setState({ manuallyUnlockedWords: ['1198180'] })
+      useWordMasteryStore.getState().addManualUnlock('1381380')
+      expect(useWordMasteryStore.getState().manuallyUnlockedWords).toContain('1198180')
+      expect(useWordMasteryStore.getState().manuallyUnlockedWords).toContain('1381380')
+    })
+  })
+
+  // -- addManualUnlocks --
+
+  describe('addManualUnlocks', () => {
+    it('adds multiple word IDs at once', () => {
+      useWordMasteryStore.getState().addManualUnlocks(['1198180', '1381380', '1383240'])
+      const unlocked = useWordMasteryStore.getState().manuallyUnlockedWords
+      expect(unlocked).toHaveLength(3)
+      expect(unlocked).toContain('1198180')
+      expect(unlocked).toContain('1381380')
+      expect(unlocked).toContain('1383240')
+    })
+
+    it('deduplicates against existing unlocks', () => {
+      useWordMasteryStore.setState({ manuallyUnlockedWords: ['1198180'] })
+      useWordMasteryStore.getState().addManualUnlocks(['1198180', '1381380'])
+      const unlocked = useWordMasteryStore.getState().manuallyUnlockedWords
+      expect(unlocked).toHaveLength(2)
+    })
+
+    it('is a no-op for an empty array', () => {
+      useWordMasteryStore.setState({ manuallyUnlockedWords: ['1198180'] })
+      useWordMasteryStore.getState().addManualUnlocks([])
+      expect(useWordMasteryStore.getState().manuallyUnlockedWords).toEqual(['1198180'])
+    })
+
+    it('returns the same reference when nothing changes', () => {
+      useWordMasteryStore.setState({ manuallyUnlockedWords: ['1198180'] })
+      const before = useWordMasteryStore.getState().manuallyUnlockedWords
+      useWordMasteryStore.getState().addManualUnlocks(['1198180'])
+      const after = useWordMasteryStore.getState().manuallyUnlockedWords
+      expect(before).toBe(after)
+    })
+  })
+
+  // -- initial manuallyUnlockedWords --
+
+  describe('initial manuallyUnlockedWords', () => {
+    it('starts with an empty array', () => {
+      expect(useWordMasteryStore.getState().manuallyUnlockedWords).toEqual([])
+    })
+  })
+
+  // -- v2 migration --
+
+  describe('v2 migration', () => {
+    it('defaults manuallyUnlockedWords to [] when migrating from v1', () => {
+      const v1State = { scores: { '1198180': 5 } } as Record<string, unknown>
+      const { migrate } = (
+        useWordMasteryStore as unknown as {
+          persist: {
+            getOptions: () => {
+              migrate: (state: unknown, version: number) => unknown
+            }
+          }
+        }
+      ).persist.getOptions()
+      const migrated = migrate(v1State, 1) as { manuallyUnlockedWords: string[] }
+      expect(migrated.manuallyUnlockedWords).toEqual([])
+    })
+
+    it('preserves existing manuallyUnlockedWords when migrating from v2', () => {
+      const v2State = {
+        scores: { '1198180': 5 },
+        manuallyUnlockedWords: ['1198180'],
+      }
+      const { migrate } = (
+        useWordMasteryStore as unknown as {
+          persist: {
+            getOptions: () => {
+              migrate: (state: unknown, version: number) => unknown
+            }
+          }
+        }
+      ).persist.getOptions()
+      const migrated = migrate(v2State, 2) as { manuallyUnlockedWords: string[] }
+      expect(migrated.manuallyUnlockedWords).toEqual(['1198180'])
     })
   })
 })

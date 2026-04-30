@@ -1,40 +1,30 @@
 // ─────────────────────────────────────────────
 // File: components/layout/kotoba-dojo-client.tsx
 // Purpose: Client island for /dojo/kotoba. Orchestrates the JLPT-level
-//          tab row, the unit-card grid for the active level, the
-//          single-open unit accordion (opening one unit collapses the
-//          previously open unit), the multi-open level-group rows
-//          inside the open unit, and all four unlock flows:
-//          - page scope: green-dark "Unlock All" next to the heading,
-//            opens a bulk prompt for every locked word at the active
-//            JLPT level.
-//          - unit scope: green-medium lock button on each unlocked
-//            unit card, opens a bulk prompt for that unit's words.
-//          - group scope: green-light lock button on each level-group
-//            row, opens a bulk prompt for that group's words.
-//          - word scope: tapping a locked tile opens the single-step
-//            unlock prompt; tapping an unlocked tile opens the word
-//            detail popover.
-//          Accepts a fixture key and a state prop so the shell can
-//          render deterministic loading / error / empty screens for
-//          tests and design review without waiting on real data.
-//          Real mastery wiring, Supabase persistence, and URL
-//          deep-linking land in Sprint 4.
+//          tab row and the level-group accordion rows. Reads mastery
+//          scores and manual unlocks from useWordMasteryStore. Level
+//          data comes from the real word bank and kotoba-levels.
+//          N5 loads eagerly (default tab). N4-N1 lazy-load on tab
+//          switch with race-safe async handling.
+//          Unlock flows (page, group, word scope) write to the store.
+//          Keeps a `state` prop for deterministic loading/error/empty
+//          shells in tests.
 // Depends on: components/dojo/kotoba-level-tabs.tsx,
-//             components/dojo/kotoba-unit-card.tsx,
 //             components/dojo/kotoba-level-group.tsx,
 //             components/dojo/kotoba-word-popover.tsx,
 //             components/dojo/kotoba-unlock-prompt.tsx,
 //             components/dojo/kotoba-bulk-unlock-prompt.tsx,
+//             components/dojo/kotoba-bulk-reset-prompt.tsx,
 //             components/dojo/group-bar.tsx,
+//             data/words/kotoba-dojo-data.ts,
+//             stores/word-mastery.store.ts,
 //             engine/constants.ts,
-//             samples/kotoba-dojo-fixtures.ts,
 //             types/kotoba.types.ts
 // ─────────────────────────────────────────────
 
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { KotobaLevelTabs } from '@/components/dojo/kotoba-level-tabs'
@@ -52,14 +42,14 @@ import {
   KotobaEmptyShell,
 } from '@/components/dojo/kotoba-dojo-shells'
 import { buildLockedWordSet, lockedIdsInGroup } from '@/components/dojo/kotoba-dojo-helpers'
-import { MASTERY_THRESHOLD } from '@/engine/mastery'
-import { getN5Fixture, getLevelFixture } from '@/fixtures/samples/kotoba-dojo-fixtures'
-import type { KotobaLevelFixture } from '@/fixtures/samples/kotoba-dojo-fixtures'
+import { KOTOBA_MASTERY_THRESHOLD } from '@/engine/constants'
+import { useWordMasteryStore } from '@/stores/word-mastery.store'
+import { getN5DojoData, loadKotobaDojoData } from '@/data/words/kotoba-dojo-data'
+import type { KotobaDojoLevelData } from '@/data/words/kotoba-dojo-data'
 import { JLPT_LABELS } from '@/types/kotoba.types'
 import type {
   JlptLevel,
   KotobaClientState,
-  KotobaFixtureKey,
   KotobaLevelGroup,
   KotobaMasteryState,
   KotobaWord,
@@ -68,49 +58,39 @@ import type {
 // ── Types ─────────────────────────────────────
 
 type KotobaDojoClientProps = {
-  fixture?: KotobaFixtureKey
   state?: KotobaClientState
 }
 
 // ── Ready screen ──────────────────────────────
 
-type ReadyShellProps = {
-  fixtureKey: KotobaFixtureKey
-}
+function ReadyShell(): ReactNode {
+  const scores = useWordMasteryStore((s) => s.scores)
+  const manuallyUnlockedWords = useWordMasteryStore((s) => s.manuallyUnlockedWords)
 
-function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
-  const n5Data = useMemo(() => getN5Fixture(), [])
-  const [levelData, setLevelData] = useState<Readonly<Record<string, KotobaLevelFixture>>>(() => ({
-    n5: n5Data,
-  }))
+  const n5Data = useMemo(() => getN5DojoData(), [])
+  const [levelDataCache, setLevelDataCache] = useState<
+    Readonly<Record<string, KotobaDojoLevelData>>
+  >(() => ({ n5: n5Data }))
+
   const [activeLevel, setActiveLevel] = useState<JlptLevel>('n5')
   const [levelLoading, setLevelLoading] = useState(false)
+  const requestedLevelRef = useRef<JlptLevel>('n5')
 
-  const currentFixture = levelData[activeLevel]
-  const currentUnits = useMemo(() => currentFixture?.units ?? [], [currentFixture])
-  const currentWords = useMemo(() => currentFixture?.words ?? {}, [currentFixture])
-  const allGroups = useMemo(() => currentUnits.flatMap((u) => u.groups), [currentUnits])
+  const currentData = levelDataCache[activeLevel]
+  const currentGroups = useMemo(() => currentData?.groups ?? [], [currentData])
+  const currentWords = useMemo(() => currentData?.words ?? {}, [currentData])
 
-  const [mastery, setMastery] = useState<KotobaMasteryState>(() => {
-    if (fixtureKey === 'empty') {
-      return { scores: {}, manuallyUnlockedUnits: [], manuallyUnlockedWords: [] }
-    }
-    if (fixtureKey === 'complete') {
-      return {
-        scores: n5Data.completeScores,
-        manuallyUnlockedUnits: [],
-        manuallyUnlockedWords: n5Data.allWordIds,
-      }
-    }
-    return {
-      scores: n5Data.scores,
+  const mastery: KotobaMasteryState = useMemo(
+    () => ({
+      scores,
       manuallyUnlockedUnits: [],
-      manuallyUnlockedWords: [...n5Data.manualUnlocks],
-    }
-  })
+      manuallyUnlockedWords,
+    }),
+    [scores, manuallyUnlockedWords],
+  )
 
   const [openGroupIds, setOpenGroupIds] = useState<ReadonlySet<string>>(() => {
-    const firstGroup = currentUnits[0]?.groups[0]
+    const firstGroup = n5Data.groups[0]
     return firstGroup ? new Set([firstGroup.id]) : new Set()
   })
 
@@ -125,45 +105,32 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
   )
 
   const lockedAtLevel = useMemo(
-    () => allGroups.flatMap((g) => lockedIdsInGroup(g, lockedWordIds)),
-    [allGroups, lockedWordIds],
+    () => currentGroups.flatMap((g) => lockedIdsInGroup(g, lockedWordIds)),
+    [currentGroups, lockedWordIds],
   )
 
   const handleLevelChange = useCallback(
     (level: JlptLevel): void => {
+      requestedLevelRef.current = level
       setActiveLevel(level)
 
-      const existing = levelData[level]
+      const existing = levelDataCache[level]
       if (existing) {
-        const firstGroup = existing.units[0]?.groups[0]
+        const firstGroup = existing.groups[0]
         setOpenGroupIds(firstGroup ? new Set([firstGroup.id]) : new Set())
         return
       }
 
       setLevelLoading(true)
-      getLevelFixture(level).then((fix) => {
-        setLevelData((prev) => ({ ...prev, [level]: fix }))
-
-        if (fixtureKey === 'variety') {
-          setMastery((prev) => ({
-            ...prev,
-            scores: { ...prev.scores, ...fix.scores },
-            manuallyUnlockedWords: [...prev.manuallyUnlockedWords, ...fix.manualUnlocks],
-          }))
-        } else if (fixtureKey === 'complete') {
-          setMastery((prev) => ({
-            ...prev,
-            scores: { ...prev.scores, ...fix.completeScores },
-            manuallyUnlockedWords: [...prev.manuallyUnlockedWords, ...fix.allWordIds],
-          }))
-        }
-
-        const firstGroup = fix.units[0]?.groups[0]
+      loadKotobaDojoData(level).then((data) => {
+        if (requestedLevelRef.current !== level) return
+        setLevelDataCache((prev) => ({ ...prev, [level]: data }))
+        const firstGroup = data.groups[0]
         setOpenGroupIds(firstGroup ? new Set([firstGroup.id]) : new Set())
         setLevelLoading(false)
       })
     },
-    [levelData, fixtureKey],
+    [levelDataCache],
   )
 
   const handleToggleGroup = useCallback((groupId: string): void => {
@@ -175,7 +142,6 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
     })
   }, [])
 
-  // Tile click: locked → unlock prompt; unlocked → detail popover.
   const handleWordClick = useCallback(
     (word: KotobaWord): void => {
       if (lockedWordIds.has(word.id)) {
@@ -187,53 +153,21 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
     [lockedWordIds],
   )
 
-  // Reset clears the score but keeps the word in the manual set so the
-  // tile stays visible as unlocked-at-0 rather than flipping back to
-  // the padlock state. Matches the Kana handleResetCharacter contract.
   const handleResetWord = useCallback((wordId: string): void => {
-    setMastery((prev) => {
-      const nextScores = { ...prev.scores }
-      delete nextScores[wordId]
-      const manual = new Set(prev.manuallyUnlockedWords)
-      manual.add(wordId)
-      return {
-        ...prev,
-        scores: nextScores,
-        manuallyUnlockedWords: [...manual],
-      }
-    })
+    useWordMasteryStore.getState().reset(wordId)
   }, [])
 
   const handleMarkMastered = useCallback((wordId: string): void => {
-    setMastery((prev) => ({
-      ...prev,
-      scores: {
-        ...prev.scores,
-        [wordId]: MASTERY_THRESHOLD + 5,
-      },
-    }))
+    useWordMasteryStore.getState().setScore(wordId, KOTOBA_MASTERY_THRESHOLD + 5)
   }, [])
 
   const handleIndividualUnlock = useCallback((wordId: string): void => {
-    setMastery((prev) => {
-      if (prev.manuallyUnlockedWords.includes(wordId)) return prev
-      return {
-        ...prev,
-        manuallyUnlockedWords: [...prev.manuallyUnlockedWords, wordId],
-      }
-    })
+    useWordMasteryStore.getState().addManualUnlock(wordId)
     setPendingUnlockWord(null)
   }, [])
 
   const handleBulkUnlockConfirm = useCallback((wordIds: readonly string[]): void => {
-    setMastery((prev) => {
-      const existing = new Set(prev.manuallyUnlockedWords)
-      for (const id of wordIds) existing.add(id)
-      return {
-        ...prev,
-        manuallyUnlockedWords: [...existing],
-      }
-    })
+    useWordMasteryStore.getState().addManualUnlocks(wordIds)
     setBulkScope(null)
   }, [])
 
@@ -255,45 +189,33 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
   }, [activeLevel, lockedAtLevel])
 
   const handleBulkResetConfirm = useCallback((wordIds: readonly string[]): void => {
-    setMastery((prev) => {
-      const nextScores = { ...prev.scores }
-      const manual = new Set(prev.manuallyUnlockedWords)
-      for (const id of wordIds) {
-        delete nextScores[id]
-        manual.add(id)
-      }
-      return {
-        ...prev,
-        scores: nextScores,
-        manuallyUnlockedWords: [...manual],
-      }
-    })
+    const store = useWordMasteryStore.getState()
+    for (const id of wordIds) {
+      store.reset(id)
+    }
     setBulkResetScope(null)
   }, [])
 
   const handleBulkMarkMastered = useCallback((wordIds: readonly string[]): void => {
-    setMastery((prev) => {
-      const nextScores = { ...prev.scores }
-      for (const id of wordIds) {
-        nextScores[id] = MASTERY_THRESHOLD + 5
-      }
-      return { ...prev, scores: nextScores }
-    })
+    const store = useWordMasteryStore.getState()
+    for (const id of wordIds) {
+      store.setScore(id, KOTOBA_MASTERY_THRESHOLD + 5)
+    }
     setBulkResetScope(null)
   }, [])
 
   const handleResetLevel = useCallback((): void => {
-    const allIds = allGroups.flatMap((g) => [...g.wordIds])
+    const allIds = currentGroups.flatMap((g) => [...g.wordIds])
     if (allIds.length === 0) return
     setBulkResetScope({ label: `${JLPT_LABELS[activeLevel]} Kotoba`, wordIds: allIds })
-  }, [activeLevel, allGroups])
+  }, [activeLevel, currentGroups])
 
   const handleResetGroup = useCallback((group: KotobaLevelGroup): void => {
     if (group.wordIds.length === 0) return
     setBulkResetScope({ label: group.label, wordIds: group.wordIds })
   }, [])
 
-  const selectedScore = selectedWord ? (mastery.scores[selectedWord.id] ?? 0) : 0
+  const selectedScore = selectedWord ? (scores[selectedWord.id] ?? 0) : 0
 
   return (
     <div
@@ -363,15 +285,15 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
               </div>
             ) : (
               <section className="rounded-xl border border-warm-200 bg-surface-raised">
-                {allGroups.length === 0 ? (
+                {currentGroups.length === 0 ? (
                   <p className="text-sm text-warm-500 text-center py-12">Coming soon</p>
                 ) : (
-                  allGroups.map((group) => (
+                  currentGroups.map((group) => (
                     <KotobaLevelGroupRow
                       key={group.id}
                       group={group}
                       words={currentWords}
-                      scores={mastery.scores}
+                      scores={scores}
                       lockedWordIds={lockedWordIds}
                       isOpen={openGroupIds.has(group.id)}
                       onToggle={handleToggleGroup}
@@ -419,12 +341,9 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
 
 // ── Root dispatcher ───────────────────────────
 
-export function KotobaDojoClient({
-  fixture = 'variety',
-  state = 'ready',
-}: KotobaDojoClientProps): ReactNode {
+export function KotobaDojoClient({ state = 'ready' }: KotobaDojoClientProps): ReactNode {
   if (state === 'loading') return <KotobaLoadingShell />
   if (state === 'error') return <KotobaErrorShell />
   if (state === 'empty') return <KotobaEmptyShell />
-  return <ReadyShell fixtureKey={fixture} />
+  return <ReadyShell />
 }

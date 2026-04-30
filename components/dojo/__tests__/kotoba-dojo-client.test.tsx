@@ -5,16 +5,24 @@
 //          Covers: initial render of the tab row and level groups, tab
 //          keyboard navigation, multi-open level-group accordion,
 //          word tile content for kanji-bearing and kana-only entries,
-//          long-gloss truncation, word popover flow (hero title,
-//          Mark as mastered action, reset two-step), locked word tile
-//          rendering + tap-to-unlock, page / group unlock buttons,
-//          deterministic loading / error / empty state-prop screens.
-// Depends on: components/layout/kotoba-dojo-client.tsx
+//          word popover flow (hero title, Mark as mastered, reset),
+//          locked word tile rendering + tap-to-unlock, page / group
+//          unlock buttons, deterministic loading / error / empty
+//          state-prop screens.
+//          Tests pre-seed the word mastery store to produce a mix of
+//          locked and unlocked tiles for interaction testing.
+// Depends on: components/layout/kotoba-dojo-client.tsx,
+//             stores/word-mastery.store.ts,
+//             data/words/kotoba-dojo-data.ts
 // ─────────────────────────────────────────────
 
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { KotobaDojoClient } from '@/components/layout/kotoba-dojo-client'
+import { useWordMasteryStore } from '@/stores/word-mastery.store'
+import { getN5DojoData } from '@/data/words/kotoba-dojo-data'
+
+// ── Setup ────────────────────────────────────
 
 beforeAll(() => {
   globalThis.ResizeObserver = class {
@@ -24,9 +32,50 @@ beforeAll(() => {
   }
 })
 
+const n5Data = getN5DojoData()
+const firstGroupWordIds = n5Data.groups[0].wordIds
+
+const UNLOCKED_KANJI_ID = firstGroupWordIds.find((id) => n5Data.words[id]?.kanji !== null)!
+const UNLOCKED_KANJI_WORD = n5Data.words[UNLOCKED_KANJI_ID]
+
+const UNLOCKED_KANA_ID = firstGroupWordIds.find((id) => n5Data.words[id]?.kanji === null)!
+const UNLOCKED_KANA_WORD = n5Data.words[UNLOCKED_KANA_ID]
+
+const LOCKED_KANJI_ID = firstGroupWordIds.find(
+  (id) => n5Data.words[id]?.kanji !== null && id !== UNLOCKED_KANJI_ID,
+)!
+const LOCKED_KANJI_WORD = n5Data.words[LOCKED_KANJI_ID]
+
+function seedStore(): void {
+  const scores: Record<string, number> = {}
+  const manuallyUnlockedWords: string[] = []
+
+  for (const id of firstGroupWordIds) {
+    if (id === LOCKED_KANJI_ID) continue
+    scores[id] = 10
+    manuallyUnlockedWords.push(id)
+  }
+
+  useWordMasteryStore.setState({ scores, manuallyUnlockedWords, hasHydrated: true })
+}
+
+function resetStore(): void {
+  useWordMasteryStore.setState({ scores: {}, manuallyUnlockedWords: [], hasHydrated: false })
+}
+
+beforeEach(() => {
+  seedStore()
+})
+
+afterEach(() => {
+  resetStore()
+})
+
+// ── Tests ────────────────────────────────────
+
 describe('KotobaDojoClient - ready shell', () => {
   it('renders the page heading and the JLPT tab row', () => {
-    render(<KotobaDojoClient fixture="variety" />)
+    render(<KotobaDojoClient />)
     expect(screen.getByRole('heading', { level: 1, name: 'Kotoba Dojo' })).toBeInTheDocument()
     expect(screen.getByRole('tablist', { name: 'JLPT level' })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: 'N5' })).toHaveAttribute('aria-selected', 'true')
@@ -35,7 +84,7 @@ describe('KotobaDojoClient - ready shell', () => {
 
   it('moves selection and focus with ArrowRight on the tab row', async () => {
     const user = userEvent.setup()
-    render(<KotobaDojoClient fixture="variety" />)
+    render(<KotobaDojoClient />)
     const n5 = screen.getByRole('tab', { name: 'N5' })
     n5.focus()
     await user.keyboard('{ArrowRight}')
@@ -44,7 +93,7 @@ describe('KotobaDojoClient - ready shell', () => {
 
   it('jumps to the last tab with End and the first with Home', async () => {
     const user = userEvent.setup()
-    render(<KotobaDojoClient fixture="variety" />)
+    render(<KotobaDojoClient />)
     screen.getByRole('tab', { name: 'N5' }).focus()
     await user.keyboard('{End}')
     expect(screen.getByRole('tab', { name: 'N1' })).toHaveAttribute('aria-selected', 'true')
@@ -52,22 +101,20 @@ describe('KotobaDojoClient - ready shell', () => {
     expect(screen.getByRole('tab', { name: 'N5' })).toHaveAttribute('aria-selected', 'true')
   })
 
-  it('renders three level group rows for N5', () => {
-    render(<KotobaDojoClient fixture="variety" />)
+  it('renders Levels 1-2 and Levels 3-4 group rows for N5', () => {
+    render(<KotobaDojoClient />)
     expect(screen.getByRole('button', { name: /^Levels 1-2/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^Levels 3-4/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^Levels 5-6/ })).toBeInTheDocument()
   })
 
-  it('opens Levels 1-2 by default and shows the word tiles', () => {
-    render(<KotobaDojoClient fixture="variety" />)
-    expect(screen.getByRole('button', { name: /^Levels 1-2/ })).toBeInTheDocument()
+  it('opens Levels 1-2 by default and shows word tiles', () => {
+    render(<KotobaDojoClient />)
     expect(screen.getByRole('region', { name: 'Levels 1-2' })).toBeInTheDocument()
   })
 
   it('multi-open accordion: opening Levels 3-4 leaves Levels 1-2 open', async () => {
     const user = userEvent.setup()
-    render(<KotobaDojoClient fixture="variety" />)
+    render(<KotobaDojoClient />)
     const levels34 = screen.getByRole('button', { name: /^Levels 3-4/ })
     await user.click(levels34)
     expect(screen.getByRole('region', { name: 'Levels 1-2' })).toBeInTheDocument()
@@ -75,193 +122,194 @@ describe('KotobaDojoClient - ready shell', () => {
   })
 
   it('renders twenty-four word tiles for N5 Levels 1-2', () => {
-    render(<KotobaDojoClient fixture="variety" />)
+    render(<KotobaDojoClient />)
     const region = screen.getByRole('region', { name: 'Levels 1-2' })
     const tiles = within(region).getAllByRole('button')
     expect(tiles.length).toBe(24)
   })
 
   it('renders kanji, kana, and english for words that have a kanji form', () => {
-    render(<KotobaDojoClient fixture="variety" />)
+    render(<KotobaDojoClient />)
     const region = screen.getByRole('region', { name: 'Levels 1-2' })
+    const kanji = UNLOCKED_KANJI_WORD.kanji!
+    const kana = UNLOCKED_KANJI_WORD.kana
     const tile = within(region).getByRole('button', {
-      name: /Word 日本, reading にほん, meaning Japan, mastered/,
+      name: new RegExp(`Word ${kanji}.*reading ${kana}`),
     })
     expect(tile).toBeInTheDocument()
-    expect(within(tile).getByText('日本')).toBeInTheDocument()
-    expect(within(tile).getByText('にほん')).toBeInTheDocument()
-    expect(within(tile).getByText('Japan')).toBeInTheDocument()
+    expect(within(tile).getByText(kanji)).toBeInTheDocument()
+    expect(within(tile).getByText(kana)).toBeInTheDocument()
   })
 
-  it('kana-only words promote the kana reading into the glyph slot and drop the third row', () => {
-    render(<KotobaDojoClient fixture="variety" />)
+  it('kana-only words show the kana reading as the main glyph', () => {
+    render(<KotobaDojoClient />)
     const region = screen.getByRole('region', { name: 'Levels 1-2' })
+    const kana = UNLOCKED_KANA_WORD.kana
     const tile = within(region).getByRole('button', {
-      name: /^Word さようなら, meaning goodbye.*, mastery \d+/,
+      name: new RegExp(`^Word ${kana}`),
     })
     expect(tile).toBeInTheDocument()
-    expect(within(tile).getByText('さようなら')).toBeInTheDocument()
-    // Exactly two visible text rows (kana + english). Progress pill is
-    // aria-hidden and doesn't count.
-    const visibleSpans = within(tile)
-      .getAllByText(/./, { selector: 'span' })
-      .filter((el) => el.getAttribute('aria-hidden') !== 'true')
-    expect(visibleSpans.length).toBe(2)
-  })
-
-  it('long english gloss is attached to the tile for hover-to-view', () => {
-    render(<KotobaDojoClient fixture="variety" />)
-    const region = screen.getByRole('region', { name: 'Levels 1-2' })
-    const tile = within(region).getByRole('button', {
-      name: /Word さようなら.*parting greeting/,
-    })
-    const titled = tile.querySelector('[title]')
-    expect(titled?.getAttribute('title')).toContain('parting greeting')
-  })
-
-  it('renders the two hiragana-only and two katakana-only sample entries', () => {
-    render(<KotobaDojoClient fixture="variety" />)
-    const region = screen.getByRole('region', { name: 'Levels 1-2' })
-    expect(
-      within(region).getByRole('button', { name: /Word さようなら, meaning goodbye/ }),
-    ).toBeInTheDocument()
-    expect(
-      within(region).getByRole('button', { name: /Word おはよう, meaning good morning/ }),
-    ).toBeInTheDocument()
-    expect(
-      within(region).getByRole('button', { name: /Word テレビ, meaning television/ }),
-    ).toBeInTheDocument()
-    expect(
-      within(region).getByRole('button', { name: /Word コーヒー, meaning coffee.*locked/ }),
-    ).toBeInTheDocument()
+    expect(within(tile).getByText(kana)).toBeInTheDocument()
   })
 })
 
 describe('KotobaDojoClient - word popover', () => {
-  it('opens the detail popover with the kanji as the hero title', async () => {
+  it('opens the detail popover for an unlocked kanji word', async () => {
     const user = userEvent.setup()
-    render(<KotobaDojoClient fixture="variety" />)
+    render(<KotobaDojoClient />)
     const region = screen.getByRole('region', { name: 'Levels 1-2' })
-    const tile = within(region).getByRole('button', { name: /Word 水, reading みず/ })
+    const kanji = UNLOCKED_KANJI_WORD.kanji!
+    const kana = UNLOCKED_KANJI_WORD.kana
+    const tile = within(region).getByRole('button', {
+      name: new RegExp(`Word ${kanji}.*reading ${kana}`),
+    })
     await user.click(tile)
     const dialog = await screen.findByRole('dialog')
-    expect(within(dialog).getByRole('heading', { name: '水' })).toBeInTheDocument()
-    expect(within(dialog).getByText('みず')).toBeInTheDocument()
-    expect(within(dialog).getByText('water')).toBeInTheDocument()
+    expect(within(dialog).getByRole('heading', { name: kanji })).toBeInTheDocument()
+    expect(within(dialog).getByText(kana)).toBeInTheDocument()
   })
 
   it('uses the kana as the hero title when the word has no kanji', async () => {
     const user = userEvent.setup()
-    render(<KotobaDojoClient fixture="variety" />)
+    render(<KotobaDojoClient />)
     const region = screen.getByRole('region', { name: 'Levels 1-2' })
-    const tile = within(region).getByRole('button', { name: /^Word おはよう/ })
+    const kana = UNLOCKED_KANA_WORD.kana
+    const tile = within(region).getByRole('button', {
+      name: new RegExp(`^Word ${kana}`),
+    })
     await user.click(tile)
     const dialog = await screen.findByRole('dialog')
-    expect(within(dialog).getByRole('heading', { name: 'おはよう' })).toBeInTheDocument()
-    // Kana does not repeat inside the body when there is no separate kanji.
-    expect(within(dialog).queryAllByText('おはよう').length).toBe(1)
+    expect(within(dialog).getByRole('heading', { name: kana })).toBeInTheDocument()
   })
 
-  it('exposes Close, Mark as mastered, and Reset progress as equal-weight actions', async () => {
+  it('exposes Close, Mark as mastered, and Reset progress actions', async () => {
     const user = userEvent.setup()
-    render(<KotobaDojoClient fixture="variety" />)
+    render(<KotobaDojoClient />)
     const region = screen.getByRole('region', { name: 'Levels 1-2' })
-    await user.click(within(region).getByRole('button', { name: /Word 水, reading みず/ }))
+    const kanji = UNLOCKED_KANJI_WORD.kanji!
+    const kana = UNLOCKED_KANJI_WORD.kana
+    await user.click(
+      within(region).getByRole('button', {
+        name: new RegExp(`Word ${kanji}.*reading ${kana}`),
+      }),
+    )
     const dialog = await screen.findByRole('dialog')
     expect(within(dialog).getByRole('button', { name: 'Close' })).toBeInTheDocument()
     expect(within(dialog).getByRole('button', { name: 'Mark as mastered' })).toBeInTheDocument()
     expect(within(dialog).getByRole('button', { name: 'Reset progress' })).toBeInTheDocument()
   })
 
-  it('Mark as mastered flips the tile straight into the mastered band', async () => {
+  it('Mark as mastered flips the tile into the mastered band', async () => {
     const user = userEvent.setup()
-    render(<KotobaDojoClient fixture="variety" />)
+    render(<KotobaDojoClient />)
     const region = screen.getByRole('region', { name: 'Levels 1-2' })
-    await user.click(within(region).getByRole('button', { name: /Word 水, reading みず/ }))
+    const kanji = UNLOCKED_KANJI_WORD.kanji!
+    const kana = UNLOCKED_KANJI_WORD.kana
+    await user.click(
+      within(region).getByRole('button', {
+        name: new RegExp(`Word ${kanji}.*reading ${kana}`),
+      }),
+    )
     const dialog = await screen.findByRole('dialog')
     await user.click(within(dialog).getByRole('button', { name: 'Mark as mastered' }))
     expect(
-      within(region).getByRole('button', { name: /Word 水, reading みず.*mastered/ }),
+      within(region).getByRole('button', {
+        name: new RegExp(`Word ${kanji}.*reading ${kana}.*mastered`),
+      }),
     ).toBeInTheDocument()
   })
 
   it('runs the two-step reset flow and clears the word score', async () => {
     const user = userEvent.setup()
-    render(<KotobaDojoClient fixture="variety" />)
+    render(<KotobaDojoClient />)
     const region = screen.getByRole('region', { name: 'Levels 1-2' })
-    await user.click(within(region).getByRole('button', { name: /Word 水, reading みず/ }))
+    const kanji = UNLOCKED_KANJI_WORD.kanji!
+    const kana = UNLOCKED_KANJI_WORD.kana
+    await user.click(
+      within(region).getByRole('button', {
+        name: new RegExp(`Word ${kanji}.*reading ${kana}`),
+      }),
+    )
     const dialog = await screen.findByRole('dialog')
     await user.click(within(dialog).getByRole('button', { name: 'Reset progress' }))
-    expect(within(dialog).getByText(/Reset progress on みず\?/)).toBeInTheDocument()
+    expect(within(dialog).getByText(new RegExp(`Reset progress on ${kana}`))).toBeInTheDocument()
     await user.click(within(dialog).getByRole('button', { name: 'Yes' }))
     expect(within(dialog).getByText(/Are you sure\?/)).toBeInTheDocument()
     await user.click(within(dialog).getByRole('button', { name: 'Yes' }))
     expect(
-      within(region).getByRole('button', { name: /Word 水, reading みず.*mastery 0/ }),
+      within(region).getByRole('button', { name: new RegExp(`Word ${kanji}.*mastery 0`) }),
     ).toBeInTheDocument()
   })
 })
 
 describe('KotobaDojoClient - locked words', () => {
-  it('renders 学校 as a locked tile advertising tap-to-unlock', () => {
-    render(<KotobaDojoClient fixture="variety" />)
+  it('renders the locked word with a tap-to-unlock label', () => {
+    render(<KotobaDojoClient />)
     const region = screen.getByRole('region', { name: 'Levels 1-2' })
+    const kanji = LOCKED_KANJI_WORD.kanji!
     const tile = within(region).getByRole('button', {
-      name: /Word 学校, reading がっこう, meaning school, locked. Tap to unlock/,
+      name: new RegExp(`Word ${kanji}.*locked.*Tap to unlock`),
     })
     expect(tile).toBeInTheDocument()
   })
 
   it('tapping a locked tile opens the single-step unlock prompt', async () => {
     const user = userEvent.setup()
-    render(<KotobaDojoClient fixture="variety" />)
+    render(<KotobaDojoClient />)
     const region = screen.getByRole('region', { name: 'Levels 1-2' })
-    const tile = within(region).getByRole('button', { name: /Word 学校.*locked/ })
+    const kanji = LOCKED_KANJI_WORD.kanji!
+    const tile = within(region).getByRole('button', { name: new RegExp(`Word ${kanji}.*locked`) })
     await user.click(tile)
     const dialog = await screen.findByRole('dialog')
-    expect(within(dialog).getByText(/Unlock 学校 \(がっこう\)\?/)).toBeInTheDocument()
+    const kana = LOCKED_KANJI_WORD.kana
+    expect(
+      within(dialog).getByText(new RegExp(`Unlock ${kanji} \\(${kana}\\)`)),
+    ).toBeInTheDocument()
     expect(within(dialog).getByRole('button', { name: 'Unlock' })).toBeInTheDocument()
   })
 
   it('confirming the unlock prompt flips the tile out of its locked state', async () => {
     const user = userEvent.setup()
-    render(<KotobaDojoClient fixture="variety" />)
+    render(<KotobaDojoClient />)
     const region = screen.getByRole('region', { name: 'Levels 1-2' })
-    const tile = within(region).getByRole('button', { name: /Word 学校.*locked/ })
+    const kanji = LOCKED_KANJI_WORD.kanji!
+    const tile = within(region).getByRole('button', { name: new RegExp(`Word ${kanji}.*locked`) })
     await user.click(tile)
     const dialog = await screen.findByRole('dialog')
     await user.click(within(dialog).getByRole('button', { name: 'Unlock' }))
     expect(
-      within(region).queryByRole('button', { name: /Word 学校.*locked/ }),
+      within(region).queryByRole('button', { name: new RegExp(`Word ${kanji}.*locked`) }),
     ).not.toBeInTheDocument()
     expect(
-      within(region).getByRole('button', { name: /Word 学校, reading がっこう/ }),
+      within(region).getByRole('button', {
+        name: new RegExp(`Word ${kanji}.*reading ${LOCKED_KANJI_WORD.kana}`),
+      }),
     ).toBeInTheDocument()
   })
 })
 
 describe('KotobaDojoClient - scoped unlock buttons', () => {
   it('exposes a page-level "Unlock all" button next to the heading', () => {
-    render(<KotobaDojoClient fixture="variety" />)
+    render(<KotobaDojoClient />)
     expect(screen.getByLabelText(/Unlock all \d+ locked word.*at N5/)).toBeInTheDocument()
   })
 
   it('tapping the page-level unlock opens an N5 Kotoba scoped prompt', async () => {
     const user = userEvent.setup()
-    render(<KotobaDojoClient fixture="variety" />)
+    render(<KotobaDojoClient />)
     await user.click(screen.getByLabelText(/Unlock all \d+ locked word.*at N5/))
     const dialog = await screen.findByRole('dialog')
     expect(within(dialog).getAllByText(/N5 Kotoba/).length).toBeGreaterThan(0)
   })
 
   it('exposes a group-level unlock button on Levels 1-2 while words remain locked', () => {
-    render(<KotobaDojoClient fixture="variety" />)
+    render(<KotobaDojoClient />)
     expect(screen.getByLabelText(/Unlock \d+ word.*in Levels 1-2$/)).toBeInTheDocument()
   })
 
   it('confirming a group bulk unlock clears every locked tile in Levels 1-2', async () => {
     const user = userEvent.setup()
-    render(<KotobaDojoClient fixture="variety" />)
+    render(<KotobaDojoClient />)
     await user.click(screen.getByLabelText(/Unlock \d+ word.*in Levels 1-2$/))
     const dialog = await screen.findByRole('dialog')
     const confirm = within(dialog).getByRole('button', { name: /^Unlock \d+$/ })

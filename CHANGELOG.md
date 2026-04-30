@@ -30,6 +30,37 @@ Format per entry:
 
 ---
 
+## [2026-04-30] - Session 75
+
+**Sprint:** Sprint 5B - Kotoba Wiring and Dojo
+**Task completed:** Wire Kotoba dojo to real data
+**Status:** Done
+
+### Changes made
+- `stores/word-mastery.store.ts`: Extended with `manuallyUnlockedWords: string[]`, `addManualUnlock()`, `addManualUnlocks()`, `setScore()`. Reset now preserves manual unlock (tile stays visible at score 0). Proper v2 migration defaults missing field. Updated `partialize` to persist new field.
+- `data/words/kotoba-dojo-data.ts`: New. Adapter that converts WordBankEntry to KotobaWord (`meaning` to `english`, JLPT case mapping via canonical `jlptToLowercase`). Builds level groups from real kotoba-levels data (pairs of 2). N5 eager via `getN5DojoData()`, N4-N1 lazy via `loadKotobaDojoData()` with cache.
+- `components/layout/kotoba-dojo-client.tsx`: Full ReadyShell rewrite. Removed all fixture imports. Reads scores and manual unlocks from `useWordMasteryStore`. Real level/word data via adapter. Race-safe tab switching via `requestedLevelRef`. `fixture` prop removed, `state` prop preserved for test determinism.
+- `components/dojo/kotoba-word-tile.tsx`: Fixed mastery threshold: switched from `isMastered` (kana, threshold 40) to `isWordMastered` (kotoba, threshold 15). Progress pill and border colours now use word-specific functions (`getWordMasteryHeatClass`, `wordProgressBarBorderClass`).
+- `components/dojo/kotoba-level-group.tsx`: Fixed progress bar calculation: switched from `MASTERY_THRESHOLD` (40) to `KOTOBA_MASTERY_THRESHOLD` (15) so group percentages reflect word mastery correctly.
+- `app/(main)/dojo/kotoba/page.tsx`: Removed `fixture` prop from route render.
+
+### Tests
+- `stores/__tests__/word-mastery.store.test.ts`: 45 tests (was 26). New: setScore, addManualUnlock, addManualUnlocks, reset semantics, resetAll clearing manual unlocks, v2 migration.
+- `data/words/__tests__/kotoba-dojo-data.test.ts`: New. 17 tests covering JLPT case mapping, type conversion, level grouping, word lookup map.
+- `components/dojo/__tests__/kotoba-dojo-client.test.tsx`: Rewired from fixture props to store pre-seeding. Tests use real N5 word data. 24 tests.
+- All 734 tests passing (was 675).
+
+### Next task
+Wire Kotoba practice screen to engine
+
+### Notes
+- Codex staff review identified 5 blind spots. All addressed: robust v2 migration, canonical JLPT mapper with invariant tests, race-safe async tab loading via requestedLevelRef, manual unlock semantics codified in store header, state prop preserved for test determinism.
+- Word tile and level group were using the kana mastery threshold (40) for word progress. Fixed to use KOTOBA_MASTERY_THRESHOLD (15). This was a pre-existing bug that would have produced misleading progress bars with real data.
+- N5 has 29 level groups (57 levels paired by 2). N4: 27. N3: 72. N2: 74. N1: 143.
+- `act()` warnings in kotoba dojo tests are from Zustand store subscription re-renders. These are warnings, not errors, and do not indicate broken behavior.
+
+---
+
 ## [2026-04-30] - Session 74
 
 **Sprint:** Sprint 5B - Kotoba Wiring and Dojo

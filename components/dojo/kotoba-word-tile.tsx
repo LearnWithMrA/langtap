@@ -25,11 +25,11 @@
 
 import { useLayoutEffect, useRef, type CSSProperties, type ReactNode } from 'react'
 import {
-  MASTERY_THRESHOLD,
-  isMastered,
-  progressBarBorderClass,
-  progressBarFillClass,
+  isWordMastered,
+  wordProgressBarBorderClass,
+  getWordMasteryHeatClass,
 } from '@/engine/mastery'
+import { KOTOBA_MASTERY_THRESHOLD } from '@/engine/constants'
 import type { KotobaWord } from '@/types/kotoba.types'
 
 // ── Types ─────────────────────────────────────
@@ -47,22 +47,22 @@ function buildAriaLabel(word: KotobaWord, score: number, isLocked: boolean): str
   const head = word.kanji ? `Word ${word.kanji}, reading ${word.kana}` : `Word ${word.kana}`
   const gloss = `, meaning ${word.english}`
   if (isLocked) return `${head}${gloss}, locked. Tap to unlock.`
-  if (isMastered(score)) return `${head}${gloss}, mastered, mastery ${score}.`
+  if (isWordMastered(score)) return `${head}${gloss}, mastered, mastery ${score}.`
   return `${head}${gloss}, mastery ${score}.`
 }
 
 function pillFillPercent(score: number): number {
   if (score <= 0) return 0
-  return Math.min(100, Math.round((score / MASTERY_THRESHOLD) * 100))
+  return Math.min(100, Math.round((score / KOTOBA_MASTERY_THRESHOLD) * 100))
 }
 
 // ── Component ─────────────────────────────────
 
 export function KotobaWordTile({ word, score, isLocked, onClick }: KotobaWordTileProps): ReactNode {
-  const mastered = !isLocked && isMastered(score)
+  const mastered = !isLocked && isWordMastered(score)
   const fill = pillFillPercent(score)
-  const fillClass = progressBarFillClass(score)
-  const borderClass = progressBarBorderClass(score)
+  const fillClass = getWordMasteryHeatClass(score)
+  const borderClass = wordProgressBarBorderClass(score)
   const wrapperRef = useRef<HTMLDivElement>(null)
   const primaryRef = useRef<HTMLSpanElement>(null)
 

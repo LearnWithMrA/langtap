@@ -22,7 +22,8 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { KotobaWordTile } from '@/components/dojo/kotoba-word-tile'
 import { UnlockButton } from '@/components/dojo/group-bar'
-import { MASTERY_THRESHOLD, progressBarFillClassFromPercent } from '@/engine/mastery'
+import { progressBarFillClassFromPercent } from '@/engine/mastery'
+import { KOTOBA_MASTERY_THRESHOLD } from '@/engine/constants'
 import type { KotobaLevelGroup, KotobaWord } from '@/types/kotoba.types'
 
 // ── Types ─────────────────────────────────────
@@ -46,8 +47,11 @@ function groupProgressPercent(
   scores: Readonly<Record<string, number>>,
 ): number {
   if (wordIds.length === 0) return 0
-  const total = wordIds.reduce((acc, id) => acc + Math.min(scores[id] ?? 0, MASTERY_THRESHOLD), 0)
-  return Math.round((total / (wordIds.length * MASTERY_THRESHOLD)) * 100)
+  const total = wordIds.reduce(
+    (acc, id) => acc + Math.min(scores[id] ?? 0, KOTOBA_MASTERY_THRESHOLD),
+    0,
+  )
+  return Math.round((total / (wordIds.length * KOTOBA_MASTERY_THRESHOLD)) * 100)
 }
 
 function countLockedInGroup(
