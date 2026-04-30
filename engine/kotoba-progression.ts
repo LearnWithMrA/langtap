@@ -2,12 +2,12 @@
 // File: engine/kotoba-progression.ts
 // Purpose: Kotoba word progression logic. Words unlock in steps
 //          of 6, flowing continuously through all levels.
-//          First 6 words always unlocked. Master all 6 (score 5+)
+//          First 6 words always unlocked. Master all 6 (score 3+)
 //          to unlock the next 6. Pure functions only.
 // Depends on: engine/constants.ts, types/word.types.ts
 // ------------------------------------------------------------
 
-import { UNLOCK_THRESHOLD } from '@/engine/constants'
+import { KOTOBA_UNLOCK_THRESHOLD } from '@/engine/constants'
 import type { WordMasteryScoreMap } from '@/types/word.types'
 
 // ── Constants ───────────────────────────────
@@ -35,7 +35,7 @@ export function isKotobaStepComplete(
 ): boolean {
   const stepWords = getStepWordIds(allWordIds, stepIndex)
   if (stepWords.length === 0) return false
-  return stepWords.every((id) => (wordScores[id] ?? 0) >= UNLOCK_THRESHOLD)
+  return stepWords.every((id) => (wordScores[id] ?? 0) >= KOTOBA_UNLOCK_THRESHOLD)
 }
 
 // ── Step unlock ─────────────────────────────

@@ -30,8 +30,14 @@ export const TAP_REMINDER_THRESHOLD = 5
 
 // -- Mastery ------------------------------------------------
 
-/** Mastery score required to unlock a character */
+/** Mastery score required to unlock a kana character */
 export const UNLOCK_THRESHOLD = 5
+
+/** Mastery score required to unlock next Kotoba word step */
+export const KOTOBA_UNLOCK_THRESHOLD = 3
+
+/** Mastery score for a word to be considered fully mastered */
+export const KOTOBA_MASTERY_THRESHOLD = 15
 
 /** Maximum value of the per-word counter before reset */
 export const MAX_WORD_COUNTER = 5

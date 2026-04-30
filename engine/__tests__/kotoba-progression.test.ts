@@ -54,22 +54,22 @@ describe('isKotobaStepComplete', () => {
   })
 
   it('returns false when some words in the step are below threshold', () => {
-    const scores = { w1: 5, w2: 5, w3: 5, w4: 5, w5: 5, w6: 4 }
+    const scores = { w1: 3, w2: 3, w3: 3, w4: 3, w5: 3, w6: 2 }
     expect(isKotobaStepComplete(0, WORDS, scores)).toBe(false)
   })
 
   it('returns true when all words in step 0 are at threshold', () => {
-    const scores = { w1: 5, w2: 5, w3: 5, w4: 5, w5: 5, w6: 5 }
+    const scores = { w1: 3, w2: 3, w3: 3, w4: 3, w5: 3, w6: 3 }
     expect(isKotobaStepComplete(0, WORDS, scores)).toBe(true)
   })
 
   it('checks the correct slice for step 1', () => {
-    const scores = { w7: 5, w8: 5, w9: 5, w10: 5, w11: 5, w12: 5 }
+    const scores = { w7: 3, w8: 3, w9: 3, w10: 3, w11: 3, w12: 3 }
     expect(isKotobaStepComplete(1, WORDS, scores)).toBe(true)
   })
 
   it('handles a final step smaller than 6', () => {
-    const scores = { w13: 5, w14: 5, w15: 5, w16: 5 }
+    const scores = { w13: 3, w14: 3, w15: 3, w16: 3 }
     expect(isKotobaStepComplete(2, WORDS, scores)).toBe(true)
   })
 
@@ -90,12 +90,12 @@ describe('isKotobaStepUnlocked', () => {
   })
 
   it('step 1 unlocks when step 0 is complete', () => {
-    const scores = { w1: 5, w2: 5, w3: 5, w4: 5, w5: 5, w6: 5 }
+    const scores = { w1: 3, w2: 3, w3: 3, w4: 3, w5: 3, w6: 3 }
     expect(isKotobaStepUnlocked(1, WORDS, scores, EMPTY_MANUAL)).toBe(true)
   })
 
   it('step 2 requires step 1 complete', () => {
-    const scores = { w1: 5, w2: 5, w3: 5, w4: 5, w5: 5, w6: 5 }
+    const scores = { w1: 3, w2: 3, w3: 3, w4: 3, w5: 3, w6: 3 }
     expect(isKotobaStepUnlocked(2, WORDS, scores, EMPTY_MANUAL)).toBe(false)
   })
 
@@ -126,13 +126,13 @@ describe('getActiveKotobaStepIndex', () => {
   })
 
   it('returns 1 when step 0 is complete', () => {
-    const scores = { w1: 5, w2: 5, w3: 5, w4: 5, w5: 5, w6: 5 }
+    const scores = { w1: 3, w2: 3, w3: 3, w4: 3, w5: 3, w6: 3 }
     expect(getActiveKotobaStepIndex(WORDS, scores, EMPTY_MANUAL)).toBe(1)
   })
 
   it('returns null when all steps are complete', () => {
     const scores: Record<string, number> = {}
-    for (const w of WORDS) scores[w] = 5
+    for (const w of WORDS) scores[w] = 3
     expect(getActiveKotobaStepIndex(WORDS, scores, EMPTY_MANUAL)).toBeNull()
   })
 
@@ -155,7 +155,7 @@ describe('getUnlockedKotobaWordIds', () => {
   })
 
   it('returns step 0 and 1 words when step 0 is complete', () => {
-    const scores = { w1: 5, w2: 5, w3: 5, w4: 5, w5: 5, w6: 5 }
+    const scores = { w1: 3, w2: 3, w3: 3, w4: 3, w5: 3, w6: 3 }
     const result = getUnlockedKotobaWordIds(WORDS, scores, EMPTY_MANUAL)
     expect(result).toEqual(
       new Set(['w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8', 'w9', 'w10', 'w11', 'w12']),
@@ -172,7 +172,7 @@ describe('getUnlockedKotobaWordIds', () => {
 
   it('returns all words when all steps complete', () => {
     const scores: Record<string, number> = {}
-    for (const w of WORDS) scores[w] = 5
+    for (const w of WORDS) scores[w] = 3
     const result = getUnlockedKotobaWordIds(WORDS, scores, EMPTY_MANUAL)
     expect(result).toEqual(new Set(WORDS))
   })

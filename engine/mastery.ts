@@ -6,6 +6,7 @@
 // Depends on: types/kana.types.ts
 // ─────────────────────────────────────────────
 
+import { KOTOBA_MASTERY_THRESHOLD } from '@/engine/constants'
 import type { MasteryScore } from '@/types/kana.types'
 
 // ── Heat class ────────────────────────────────
@@ -20,6 +21,31 @@ export function getMasteryHeatClass(score: MasteryScore): string {
   if (score <= 19) return 'bg-heat-3'
   if (score <= 39) return 'bg-heat-4'
   return 'bg-heat-5'
+}
+
+// ── Word heat class ──────────────────────────
+
+export function getWordMasteryHeatClass(score: MasteryScore): string {
+  if (score === 0) return 'bg-heat-0'
+  if (score <= 2) return 'bg-heat-1'
+  if (score <= 5) return 'bg-heat-2'
+  if (score <= 9) return 'bg-heat-3'
+  if (score <= 14) return 'bg-heat-4'
+  return 'bg-heat-5'
+}
+
+export function isWordMastered(score: MasteryScore): boolean {
+  return score >= KOTOBA_MASTERY_THRESHOLD
+}
+
+export function wordProgressBarBorderClass(score: MasteryScore): string {
+  if (score >= KOTOBA_MASTERY_THRESHOLD) return 'border-[color:var(--color-heat-gold)]'
+  if (score === 0) return 'border-heat-0'
+  if (score <= 2) return 'border-heat-1'
+  if (score <= 5) return 'border-heat-2'
+  if (score <= 9) return 'border-heat-3'
+  if (score <= 14) return 'border-heat-4'
+  return 'border-heat-5'
 }
 
 // ── Mastery threshold ─────────────────────────
