@@ -326,7 +326,6 @@ export function KotobaGameWindow({
       kanaBreakpoints,
       feedbackState,
       wordDone,
-      readingDone,
       currentWord,
       completedCount,
       wrongAttemptsMap,
@@ -336,6 +335,7 @@ export function KotobaGameWindow({
       handleReadingDone,
       isKanjiMode,
       hasKanji,
+      schedule,
     ],
   )
 

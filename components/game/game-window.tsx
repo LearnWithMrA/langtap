@@ -125,7 +125,7 @@ export function GameWindow({
   const generationRef = useRef(0)
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
 
-  const characters = prompt?.characters ?? []
+  const characters = useMemo(() => prompt?.characters ?? [], [prompt])
   const isKatakana = characters.length > 0 && isKatakanaChar(characters[0].kana)
   const isKanaToRomaji = direction === 'kana-to-romaji'
   const currentCharIndex = Math.min(completedCount, characters.length - 1)
