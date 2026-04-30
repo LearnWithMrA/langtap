@@ -367,13 +367,13 @@ files during a coding sprint without explicit instruction from the owner.
 
 ### 7.2 Word Bank Size Reference
 
-| Level | Source words (JSON) | After filtering | Categories | Kotoba lessons |
+| Level | Source words (JSON) | After filtering | Categories | Kotoba levels |
 |---|---|---|---|---|
-| N5 | 684 | 684 | 49 | Pending (categories done) |
-| N4 | 640 | 640 | 57 | Pending (categories done) |
-| N3 | 1,730 | 1,717 | 108 | Pending (categories done) |
-| N2 | 1,812 | 1,776 | 136 | Pending (categories done) |
-| N1 | 3,427 | 3,426 | 151 | Pending (categories done) |
+| N5 | 684 | 684 | 49 | 57 levels |
+| N4 | 640 | 640 | 57 | 54 levels (last has 4) |
+| N3 | 1,730 | 1,717 | 108 | 144 levels (last has 1) |
+| N2 | 1,812 | 1,776 | 136 | 148 levels |
+| N1 | 3,427 | 3,426 | 151 | 286 levels (last has 6) |
 
 Filtering only rejects entries with empty meanings or unmappable characters.
 No minimum length filter or kana deduplication is applied.

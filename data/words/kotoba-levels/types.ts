@@ -8,7 +8,6 @@ import type { JlptLevel } from '@/types/kotoba.types'
 // ── Types ─────────────────────────────────────
 
 export type KotobaLevel = {
-  theme: string
   wordIds: readonly string[]
 }
 

@@ -198,11 +198,7 @@ No UI yet. This is pure logic.
 | Task | Size | Status | Notes |
 |---|---|---|---|
 | Categorise all word banks by theme | **Large** | **Done** | New workflow: categorise-first, then build lessons. All 5 JLPT levels categorised into markdown files in `data/words/kotoba-levels/categories/`. N5: 684 words, 49 categories. N4: 640 words, 57 categories. N3: 1,717 words, 108 categories. N2: 1,776 words, 136 categories. N1: 3,426 words, 151 categories. All validated: 0 duplicates, 0 missing. Old level files (n5.ts, n4.ts, n3.ts) removed pending rebuild. Session 73. |
-| Build N5 Kotoba lessons from categories | **Medium** | **To Do** | Review N5 categories, split into lessons of 12 with English comment above each. Write to `data/words/kotoba-levels/n5.ts`. |
-| Build N4 Kotoba lessons from categories | **Medium** | **To Do** | Same process for N4 (640 words, 53 lessons). |
-| Build N3 Kotoba lessons from categories | **Large** | **To Do** | Same process for N3 (1,717 words, 143 lessons). |
-| Build N2 Kotoba lessons from categories | **Large** | **To Do** | Same process for N2 (1,776 words, 148 lessons). |
-| Build N1 Kotoba lessons from categories | **Large** | **To Do** | Same process for N1 (3,426 words, 285 lessons). |
+| Build all Kotoba levels from categories | **Large** | **Done** | Built `scripts/build-kotoba-levels.ts` to read categories in order, split by 12, write TypeScript. Removed `theme` from KotobaLevel type (unused). N5: 57 levels. N4: 54 levels (last has 4). N3: 144 levels (last has 1). N2: 148 levels. N1: 286 levels (last has 6). All validated: 0 duplicates, 0 missing. Session 73. |
 | Build word mastery store (Zustand) | **Medium** | **To Do** | Same pattern as character mastery store. Per-word scores, persist to localStorage. Hydration gate. |
 | Build Kotoba auto-progression | **Medium** | **To Do** | 12 words per level. All 12 must reach score 5 before next level auto-unlocks. First level auto-unlocked for fresh users. Uses same pattern as kana `UNLOCK_STEPS`. |
 | Wire Kotoba dojo to real data | **Medium** | **To Do** | Replace fixture data in `kotoba-dojo-client.tsx` with real word bank levels and word mastery store. Level group rows show real progress. |
