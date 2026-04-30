@@ -30,6 +30,15 @@ export type WordBankEntry = {
   audioFile: string | null
 }
 
+// ── Mastery ─────────────────────────────────
+
+/**
+ * Map of word ID to mastery score.
+ * Score is a non-negative integer with no upper bound.
+ * A higher score means the word is better known.
+ */
+export type WordMasteryScoreMap = Record<string, number>
+
 // ── Counter ──────────────────────────────────
 
 /**

@@ -33,7 +33,7 @@ Format per entry:
 ## [2026-04-30] - Session 73
 
 **Sprint:** Sprint 5B - Kotoba Wiring and Dojo
-**Task completed:** Categorise all word banks by theme + build all Kotoba levels
+**Task completed:** Categorise all word banks + build all Kotoba levels + word mastery store
 **Status:** Done
 
 ### Changes made
@@ -55,11 +55,15 @@ Format per entry:
 - `LangTap_Sprints.md`: Merged categorise + build tasks into two completed tasks.
 - `scripts/kotoba-level-helper.ts`: Prettier formatting fix only.
 
+- `stores/word-mastery.store.ts`: New. Zustand store for word mastery scores. Same pattern as character mastery store. Persist to localStorage, hydration gate, sanitization.
+- `stores/__tests__/word-mastery.store.test.ts`: New. 26 tests covering increment, getScore, reset, resetAll, bulkLoad, hasEncountered, sanitization.
+- `types/word.types.ts`: Added `WordMasteryScoreMap` type.
+
 ### Tests
-- All 649 tests passing. No new tests (content-only session).
+- All 675 tests passing (26 new word mastery store tests).
 
 ### Next task
-Build word mastery store (Zustand)
+Build Kotoba auto-progression
 
 ### Notes
 - Workflow evolved during session: started with manual themed pairing (categorise words, group into 24s, split into lessons of 12 with theme names). This was too slow and fiddly. Simplified to: order categories fundamental-to-abstract, concatenate all words, split every 12. No theme names needed. Script automates the whole process.
