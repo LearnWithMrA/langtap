@@ -484,6 +484,26 @@ Every level must feel like a lesson, not a random list. Words in a level share a
 clear theme that a learner would recognise: "Family", "Food and Drink", "Time",
 "Colours", "At the Office", etc.
 
+**Two-stage process (categorise first, then build levels):**
+
+1. **Stage 1: Categorise.** Go through ALL words in the JLPT level and tag each
+   with a theme category. Search the full pool for each theme, not just the next
+   chunk in alphabetical order. Output: a list of theme categories with word
+   counts. Categories with 24+ words will become multiple levels. Categories with
+   fewer than 12 can be merged with related categories.
+
+2. **Stage 2: Build levels.** Take each category and split into levels of 12.
+   If a category has leftover words (e.g. 15 words = 1 level + 3 extras),
+   redistribute extras into related categories. Use the helper script
+   (`scripts/kotoba-level-helper.ts add`) to validate each level before writing
+   (prevents duplicates and invalid IDs). Show the theme name and all 12 English
+   meanings before adding so the owner can spot check.
+
+**Why two stages:** Reading words sequentially and grouping as you go produces
+good early levels but degrades as the remaining pool becomes random leftovers.
+Categorising first ensures every word is placed by theme, not by position in the
+word list.
+
 Rules for thematic grouping:
 - Each level has exactly 12 words. No exceptions.
 - Every word in the JLPT level must appear in exactly one Kotoba level. No gaps,
