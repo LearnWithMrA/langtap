@@ -24,8 +24,10 @@ const ALL_IDS = KANA_CHARACTERS.map((c) => c.id)
 const SPECIAL_ROWS = new Set(['sokuon', 'longvowel'])
 const DOJO_CHARACTER_COUNT = KANA_CHARACTERS.filter((c) => !SPECIAL_ROWS.has(c.row)).length
 
+const MIN_UNLOCKED_FOR_PRACTICE = 15
+
 const FIRST_GROUP_IDS = PROGRESSION_GROUPS.filter(
-  (g) => g.stage === 'seion' && g.groupIndex === 1,
+  (g) => g.stage === 'seion' && g.script === 'hiragana' && g.groupIndex === 1,
 ).flatMap((g) => [...g.characterIds])
 
 // ── Types ────────────────────────────────────
@@ -69,7 +71,7 @@ export const useUnlockStore = create<UnlockState & UnlockActions>()((set, get) =
     const manual = new Set(manualUnlockIds)
     const unlocked = getUnlockedCharacterIds(ALL_IDS, scores, manual)
 
-    if (unlocked.size === 0) {
+    if (unlocked.size < MIN_UNLOCKED_FOR_PRACTICE) {
       for (const id of FIRST_GROUP_IDS) manual.add(id)
     }
 

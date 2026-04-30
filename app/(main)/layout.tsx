@@ -17,6 +17,8 @@ import { AppTopBar } from '@/components/layout/app-top-bar'
 import { GuestBanner } from '@/components/layout/guest-banner'
 import { SettingsDialog } from '@/components/settings/settings-dialog'
 import { SessionPrefetch } from '@/components/performance/session-prefetch'
+import { StoreHydrator } from '@/components/performance/store-hydrator'
+import { AuthModalProvider } from '@/components/layout/auth-modal-provider'
 
 export default function MainLayout({ children }: { children: ReactNode }): ReactNode {
   return (
@@ -25,6 +27,8 @@ export default function MainLayout({ children }: { children: ReactNode }): React
       <GuestBanner />
       {children}
       <SettingsDialog />
+      <AuthModalProvider />
+      <StoreHydrator />
       <SessionPrefetch />
     </>
   )

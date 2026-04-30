@@ -30,6 +30,55 @@ Format per entry:
 
 ---
 
+## [2026-04-30] - Session 70
+
+**Sprint:** Cross-sprint bug fixes, performance, and polish
+**Task completed:** Page transition performance, progression restructure, UX fixes
+**Status:** Done
+
+### Changes made
+- CLAUDE.md: Removed dev server start/kill from session protocol
+- stores/onboarding.store.ts: Changed inputMode default from 'type' to null so step 3 has no pre-selection
+- app/(onboarding)/onboarding/step-3/page.tsx: Disabled "Start practising" button until input mode selected, added null guard
+- hooks/usePracticeSession.ts: Fixed practice screen "unlock characters" flicker by resetting isEmpty when unlockedIds updates, then collapsed bootstrap + prompt selection into single pass, then moved bootstrap to layout-level StoreHydrator, then computed initial prompt synchronously in useState initializer
+- components/game/game-window.tsx: Added onCharacterCorrect prop, wired to onWordComplete so kana practice counter increments. Removed "Unlock characters" and loading intermediate screens
+- components/layout/practice-client.tsx: Passed onCharacterCorrect to GameWindow, removed sceneReady gating on landscape animation
+- components/dashboard/streak-calendar.tsx: Changed inactive day circle colour from #B0B5BE to #D0D3D8 (all light grey)
+- components/layout/game-home-client.tsx: Fixed mastered count to use MASTERY_THRESHOLD (40) instead of UNLOCK_THRESHOLD (5). Added 3 kotoba progress bars based on user's JLPT level. Removed sceneReady gating, removed per-page store hydration, aligned cyclist position with practice/landing pages
+- components/layout/kotoba-dojo-client.tsx: Added Practice button (green-themed) linking to /practice?mode=kotoba
+- components/dojo/kotoba-level-tabs.tsx: Changed active tab from mint-500 to sage-400/85 (lighter green)
+- data/kana/progression-groups.ts: Restructured all progression groups from 10-char pairs to first-10 then 5-by-5 alternating H/K. Sokuon/longvowel/n moved to end of seion groups. UNLOCK_STEPS updated to single-group steps
+- stores/unlock.store.ts: Auto-unlock now only grabs first 10 hiragana (H_SEION_1). Threshold changed from 0 to 15 unlocked chars to trigger auto-unlock
+- components/performance/store-hydrator.tsx: New component. Centralizes mastery/onboarding store hydration and unlock bootstrap at layout level
+- components/performance/session-prefetch.tsx: Reduced prefetch delay from 2000ms to 500ms
+- components/animation/cycling-character.tsx: Added module-level framesLoadedOnce cache so re-mounts skip frame loading wait
+- components/layout/landing-scene.tsx: Removed sceneReady gating, landscape animates immediately
+- components/dashboard/mode-panel.tsx: Replaced router.push with Link for prefetch. Expanded state initialized from matchMedia in useState (no useEffect flash)
+- components/dashboard/practice-cta.tsx: Replaced router.push with Link for prefetch
+- components/ui/landing-cta.tsx: Converted from router.push buttons to Link components for prefetch
+- components/onboarding/kana-chart-selector.tsx: Removed vu row from EXTENDED_DISPLAY_GROUPS (was showing dakuon chars under combination tab)
+- app/(onboarding)/layout.tsx: Added scaleIn 500ms fade animation for smooth entry
+- stores/auth-modal.store.ts: New store for controlling auth modal visibility from any component
+- components/layout/auth-modal-provider.tsx: New component rendering auth modal overlay in (main) layout
+- components/layout/guest-banner.tsx: Changed "Create an account" from Link to sign-up modal trigger
+- components/layout/app-top-bar.tsx: Profile icon/link opens sign-up modal for guests instead of navigating to /sign-up
+- app/(main)/layout.tsx: Added StoreHydrator and AuthModalProvider
+- components/layout/kana-dojo-client.tsx: Removed per-page store hydration and loading shell guard
+- engine/__tests__/unlock.test.ts: Updated test for new progression order (Group 2 is now katakana)
+- LangTap_Sprints.md: Added Sprint 12 (Page Transition Speed and Rendering Performance) with 9 detailed tasks
+
+### Tests
+- engine/__tests__/unlock.test.ts: Pass (updated for new progression order)
+- All 647 tests passing, 0 failures
+
+### Next task
+Sprint 5B: Kotoba Wiring and Dojo
+
+### Notes
+Performance improvements modelled on kana-dojo (kanadojo.com) architecture. Major changes: store hydration centralized to layout (one-time, not per-page), landscape animation decoupled from cyclist frame loading, cyclist frame cache prevents re-loading on navigation, navigation buttons converted from router.push to Link for prefetch, auth flows use modal overlays instead of page navigation. Remaining performance work (route segments, shared scene layout, Suspense boundaries, cache headers, view transitions) tracked in Sprint 12.
+
+---
+
 ## [2026-04-29] - Session 69
 
 **Sprint:** Sprint 5 - Content Pipeline and Practice Screen (Type Mode)

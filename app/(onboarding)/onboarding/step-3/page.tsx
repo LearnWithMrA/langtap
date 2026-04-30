@@ -32,6 +32,7 @@ export default function OnboardingStep3Page(): ReactNode {
   const { user } = useAuth()
   const completeOnboarding = useOnboardingStore((s: OnboardingStore) => s.completeOnboarding)
   const onboardingComplete = useOnboardingStore((s: OnboardingStore) => s.onboardingComplete)
+  const inputMode = useOnboardingStore((s: OnboardingStore) => s.inputMode)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -49,13 +50,18 @@ export default function OnboardingStep3Page(): ReactNode {
   }
 
   async function handleStart(): Promise<void> {
+    const {
+      jlptLevel,
+      inputMode: selectedMode,
+      selectedCharacterIds,
+    } = useOnboardingStore.getState()
+    if (!selectedMode) return
     setSaving(true)
-    const { jlptLevel, inputMode, selectedCharacterIds } = useOnboardingStore.getState()
 
     if (user) {
       await updateProfile(user.id, {
         jlpt_level: jlptLevel,
-        input_mode: inputMode,
+        input_mode: selectedMode,
         onboarding_complete: true,
       })
 
@@ -64,7 +70,7 @@ export default function OnboardingStep3Page(): ReactNode {
       }
     }
 
-    useSettingsStore.getState().setInputMode(inputMode)
+    useSettingsStore.getState().setInputMode(selectedMode)
     completeOnboarding()
     router.push('/home')
   }
@@ -111,7 +117,7 @@ export default function OnboardingStep3Page(): ReactNode {
       <div className="mt-5">
         <KeyButton
           onClick={handleStart}
-          disabled={saving}
+          disabled={saving || !inputMode}
           className="w-full bg-[#c4b0d0] text-white py-3 text-base font-bold shadow-[0_4px_0_0_#a68fb8] focus:!ring-[#c4b0d0]"
         >
           {saving ? 'Saving...' : 'Start practising'}

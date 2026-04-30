@@ -41,7 +41,7 @@
 
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import {
@@ -108,19 +108,6 @@ const STAGE_LABELS: Readonly<Record<Stage, string>> = {
 // Kotoba client.
 
 function KanaDojoReadyShell(): ReactNode {
-  // ── Store hydration ──
-  const hasHydrated = useMasteryStore((s) => s.hasHydrated)
-
-  useEffect(() => {
-    if (!hasHydrated) {
-      useMasteryStore.persist.rehydrate()
-    }
-  }, [hasHydrated])
-
-  useEffect(() => {
-    useOnboardingStore.persist.rehydrate()
-  }, [])
-
   // ── Mastery state derived from stores ──
   const scores = useMasteryStore((s) => s.scores)
   const selectedCharacterIds = useOnboardingStore((s) => s.selectedCharacterIds)
@@ -382,10 +369,6 @@ function KanaDojoReadyShell(): ReactNode {
       characterIds: DOJO_CHARACTERS.map((c) => c.id),
     })
   }, [])
-
-  // Show loading shell until the mastery store has rehydrated from
-  // localStorage, preventing a flash of "all locked" state.
-  if (!hasHydrated) return <KanaLoadingShell />
 
   const showHelp = !helpDismissed
   const selectedScore = selected ? (mastery.scores[selected.id] ?? 0) : 0

@@ -106,18 +106,13 @@ export function PracticeClient(): ReactNode {
   const searchParams = useSearchParams()
   const gameType = (searchParams.get('mode') === 'kotoba' ? 'kotoba' : 'kana') as GameType
   const [mode, setMode] = useState<InputMode>('tap')
-  const [sceneReady, setSceneReady] = useState(false)
   const kotobaInput = useSettingsStore((s) => s.kotobaInput)
   const prefersReducedMotion = useReducedMotion()
   const { counters, incrementCorrect } = usePracticeCounters()
   const kanaSession = usePracticeSession('N5')
 
-  const handleAllFramesLoaded = useCallback((): void => {
-    setSceneReady(true)
-  }, [])
-
   const sceneSpeed = prefersReducedMotion ? 'stopped' : 'idle'
-  const animated = sceneReady && !prefersReducedMotion
+  const animated = !prefersReducedMotion
 
   const handleCharacterCorrect = useCallback((): void => {
     incrementCorrect(mode)
@@ -133,10 +128,10 @@ export function PracticeClient(): ReactNode {
       />
 
       <div
-        className="absolute bottom-[calc(12svh-max(7.73vw,62.7px))] left-[3%] md:left-[8%] z-[3]"
+        className="absolute bottom-[calc(12svh-max(7.73vw,62.7px))] -left-[2%] md:left-[3%] z-[3]"
         aria-hidden="true"
       >
-        <CyclingCharacter speed={sceneSpeed} onAllFramesLoaded={handleAllFramesLoaded} />
+        <CyclingCharacter speed={sceneSpeed} />
       </div>
 
       {/* Audio player: bottom right */}
@@ -156,7 +151,7 @@ export function PracticeClient(): ReactNode {
             <DistanceCounter value={counters[mode]} />
           </KotobaGameWindow>
         ) : (
-          <GameWindow mode={mode} session={kanaSession}>
+          <GameWindow mode={mode} session={kanaSession} onCharacterCorrect={handleCharacterCorrect}>
             <ModeDropdown mode={mode} onModeChange={setMode} gameType="kana" />
             <DistanceCounter value={counters[mode]} />
           </GameWindow>

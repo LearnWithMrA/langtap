@@ -78,12 +78,29 @@ function buildPracticePrompt(result: SelectionResult): PracticePrompt | null {
 // ── Hook ──────────────────────────────────────
 
 export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePracticeSessionReturn {
-  const [prompt, setPrompt] = useState<PracticePrompt | null>(null)
-  const [isEmpty, setIsEmpty] = useState(false)
-  const startedRef = useRef(false)
+  const initRef = useRef(false)
+
+  const [{ prompt, isEmpty }] = useState(() => {
+    const { bootstrapped, unlockedIds: ids } = useUnlockStore.getState()
+    if (!bootstrapped || ids.size === 0) {
+      return { prompt: null as PracticePrompt | null, isEmpty: !bootstrapped }
+    }
+    const s = useMasteryStore.getState().scores
+    const cwm = buildCharactersWithMastery(s)
+    const wordBank = WORD_BANK[preferredLevel]
+    const result = selectNextPrompt(cwm, wordBank, {}, ids, preferredLevel)
+    if (!result) return { prompt: null as PracticePrompt | null, isEmpty: true }
+    useCounterStore.getState().bulkLoad(result.updatedCounters)
+    const built = buildPracticePrompt(result)
+    initRef.current = true
+    return { prompt: built, isEmpty: !built }
+  })
+
+  const [currentPrompt, setPrompt] = useState<PracticePrompt | null>(prompt)
+  const [currentIsEmpty, setIsEmpty] = useState(isEmpty)
 
   const scores = useMasteryStore((s) => s.scores)
-  const hasHydrated = useMasteryStore((s) => s.hasHydrated)
+  const bootstrapped = useUnlockStore((s) => s.bootstrapped)
   const increment = useMasteryStore((s) => s.increment)
 
   const counters = useCounterStore((s) => s.counters)
@@ -96,11 +113,9 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
   const recordWrong = useSessionStore((s) => s.recordWrong)
 
   const unlockedIds = useUnlockStore((s) => s.unlockedIds)
-  const bootstrapUnlocks = useUnlockStore((s) => s.bootstrap)
   const recomputeUnlocks = useUnlockStore((s) => s.recompute)
 
   const manualUnlockIds = useOnboardingStore((s) => s.selectedCharacterIds)
-  const setSelectedBulk = useOnboardingStore((s) => s.setSelectedBulk)
 
   const selectNext = useCallback(
     (currentCounters: Record<string, number>): void => {
@@ -122,42 +137,37 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
     [scores, unlockedIds, preferredLevel, bulkLoadCounters],
   )
 
-  // Trigger mastery store rehydration from localStorage
+  // Fallback: if bootstrap wasn't ready at init time, select once it is
   useEffect(() => {
-    if (!hasHydrated) {
-      useMasteryStore.persist.rehydrate()
-    }
-  }, [hasHydrated])
-
-  // Bootstrap: wait for hydration, then auto-unlock first group if needed
-  useEffect(() => {
-    if (!hasHydrated || startedRef.current) return
-    startedRef.current = true
-    const resolvedManual = bootstrapUnlocks(scores, manualUnlockIds)
-    if (resolvedManual.length !== manualUnlockIds.length) {
-      setSelectedBulk(resolvedManual as string[])
-    }
+    if (!bootstrapped || initRef.current) return
+    initRef.current = true
     startSession()
     resetAllCounters()
-  }, [
-    hasHydrated,
-    scores,
-    manualUnlockIds,
-    bootstrapUnlocks,
-    setSelectedBulk,
-    startSession,
-    resetAllCounters,
-  ])
 
-  // Select first prompt after unlock recompute
-  useEffect(() => {
-    if (!startedRef.current || prompt !== null || isEmpty) return
     if (unlockedIds.size === 0) {
       setIsEmpty(true)
       return
     }
-    selectNext(counters)
-  }, [unlockedIds, prompt, isEmpty, selectNext, counters])
+    const cwm = buildCharactersWithMastery(scores)
+    const wordBank = WORD_BANK[preferredLevel]
+    const result = selectNextPrompt(cwm, wordBank, {}, unlockedIds, preferredLevel)
+    if (!result) {
+      setIsEmpty(true)
+      return
+    }
+    bulkLoadCounters(result.updatedCounters)
+    const built = buildPracticePrompt(result)
+    setPrompt(built)
+    setIsEmpty(!built)
+  }, [
+    bootstrapped,
+    unlockedIds,
+    scores,
+    startSession,
+    resetAllCounters,
+    preferredLevel,
+    bulkLoadCounters,
+  ])
 
   const handleWordComplete = useCallback(
     (results: CharacterResult[]): void => {
@@ -175,11 +185,11 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
         }
       }
 
-      if (prompt) {
-        incrementCounter(prompt.word.id)
+      if (currentPrompt) {
+        incrementCounter(currentPrompt.word.id)
       }
     },
-    [increment, recordCorrect, recordWrong, incrementCounter, prompt],
+    [increment, recordCorrect, recordWrong, incrementCounter, currentPrompt],
   )
 
   const advanceToNext = useCallback((): void => {
@@ -188,9 +198,9 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
   }, [recomputeUnlocks, scores, manualUnlockIds, selectNext, counters])
 
   return {
-    prompt,
-    isLoading: !hasHydrated,
-    isEmpty,
+    prompt: currentPrompt,
+    isLoading: !bootstrapped,
+    isEmpty: currentIsEmpty,
     handleWordComplete,
     advanceToNext,
   }

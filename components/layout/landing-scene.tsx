@@ -13,7 +13,6 @@
 
 'use client'
 
-import { useCallback, useState } from 'react'
 import type { ReactNode } from 'react'
 import { LandscapeBackground } from '@/components/layout/landscape-background'
 import { CyclingCharacter } from '@/components/animation/cycling-character'
@@ -27,17 +26,10 @@ type LandingSceneProps = {
 // -- Component ----------------------------------------------
 
 export function LandingScene({ children }: LandingSceneProps): ReactNode {
-  const [sceneReady, setSceneReady] = useState(false)
-
-  const handleAllFramesLoaded = useCallback((): void => {
-    setSceneReady(true)
-  }, [])
-
   return (
     <div className="theme-day relative w-full overflow-hidden">
       <section className="relative h-svh">
-        {/* Landscape starts static, animates once cyclist frames are loaded */}
-        <LandscapeBackground speed="idle" animated={sceneReady} />
+        <LandscapeBackground speed="idle" animated />
 
         {/* Mascot riding along the dark green mid-hill path.
             Bottom offset compensates for the PNG's transparent bottom padding
@@ -47,10 +39,10 @@ export function LandingScene({ children }: LandingSceneProps): ReactNode {
             (with address bar showing) rather than the large-viewport 100vh,
             which overflows and creates a small unwanted scroll. */}
         <div
-          className="absolute bottom-[calc(12svh-max(7.73vw,62.7px))] left-[3%] md:left-[8%] z-[3]"
+          className="absolute bottom-[calc(12svh-max(7.73vw,62.7px))] -left-[2%] md:left-[3%] z-[3]"
           aria-hidden="true"
         >
-          <CyclingCharacter speed="idle" onAllFramesLoaded={handleAllFramesLoaded} />
+          <CyclingCharacter speed="idle" />
         </div>
 
         {/* Content overlay (hero copy, etc.) - positioned in the sky above the hills */}

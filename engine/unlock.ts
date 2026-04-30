@@ -12,6 +12,8 @@ import { UNLOCK_THRESHOLD } from '@/engine/constants'
 import type { MasteryScoreMap, UnlockSource } from '@/types/game.types'
 import type { ProgressionGroup } from '@/types/kana.types'
 
+const ALWAYS_UNLOCKED = new Set(['h-sokuon', 'k-sokuon', 'k-longvowel'])
+
 // ── Helpers ──────────────────────────────────
 
 // Normalizes a score for unlock evaluation.
@@ -31,6 +33,7 @@ export function isCharacterUnlocked(
   masteryScores: MasteryScoreMap,
   manualUnlocks: Set<string>,
 ): boolean {
+  if (ALWAYS_UNLOCKED.has(characterId)) return true
   if (safeScore(masteryScores, characterId) >= UNLOCK_THRESHOLD) return true
   if (manualUnlocks.has(characterId)) return true
   return false

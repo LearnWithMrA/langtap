@@ -11,7 +11,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useKeySound } from '@/hooks/useKeySound'
 import type { StageProgress, LeaderboardGlance } from '@/types/dashboard.types'
 import { formatScore } from '@/components/dashboard/dashboard-helpers'
@@ -76,18 +76,14 @@ export function ModePanel({
   inputMode,
   locked = false,
 }: ModePanelProps): ReactNode {
-  const router = useRouter()
   const { playSound } = useKeySound()
   const theme = THEMES[variant]
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches,
+  )
   const [modeOpen, setModeOpen] = useState(false)
   const [currentMode, setCurrentMode] = useState(inputMode)
   const dropdownRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const isLarge = window.matchMedia('(min-width: 1024px)').matches
-    if (isLarge) setExpanded(true)
-  }, [])
 
   const closeDropdown = useCallback((): void => setModeOpen(false), [])
 
@@ -198,21 +194,23 @@ export function ModePanel({
       <div ref={dropdownRef} className={`${expanded ? 'mt-auto' : ''} relative`}>
         <div className="flex rounded-xl shadow-[0_4px_0_0_rgba(0,0,0,0.15)] overflow-hidden">
           {/* Play button */}
-          <button
-            type="button"
-            onClick={(): void => {
-              if (locked) return
-              playSound('key-click')
-              router.push(theme.route)
-            }}
-            disabled={locked}
-            aria-label={
-              locked ? `${theme.label} locked` : `Start practising ${theme.label.toLowerCase()}`
-            }
-            className={`flex-1 text-white text-sm font-bold py-3 ${theme.button} !shadow-none ${theme.buttonHover} active:brightness-90 transition-all duration-75 min-h-[48px] disabled:cursor-not-allowed`}
-          >
-            {locked ? 'Complete Kana to unlock' : theme.ctaLabel}
-          </button>
+          {locked ? (
+            <span
+              aria-label={`${theme.label} locked`}
+              className={`flex-1 text-white text-sm font-bold py-3 ${theme.button} !shadow-none text-center min-h-[48px] flex items-center justify-center cursor-not-allowed opacity-70`}
+            >
+              Complete Kana to unlock
+            </span>
+          ) : (
+            <Link
+              href={theme.route}
+              onClick={(): void => playSound('key-click')}
+              aria-label={`Start practising ${theme.label.toLowerCase()}`}
+              className={`flex-1 text-white text-sm font-bold py-3 ${theme.button} !shadow-none ${theme.buttonHover} active:brightness-90 transition-all duration-75 min-h-[48px] text-center flex items-center justify-center`}
+            >
+              {theme.ctaLabel}
+            </Link>
+          )}
           {/* Mode dropdown trigger */}
           {!locked && (
             <button

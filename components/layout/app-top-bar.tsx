@@ -25,6 +25,8 @@ import { LogoLt } from '@/components/ui/logo-lt'
 import { useEasterEgg } from '@/hooks/useEasterEgg'
 import { useKeySound } from '@/hooks/useKeySound'
 import { useSettingsStore } from '@/stores/settings.store'
+import { useAuthModalStore } from '@/stores/auth-modal.store'
+import { useAuth } from '@/hooks/useAuth'
 
 // -- Inline SVG icons (use currentColor for theme support) ---
 
@@ -126,6 +128,8 @@ export function AppTopBar(): ReactNode {
   const { isActive: easterEggActive } = useEasterEgg()
   const { playSound } = useKeySound()
   const openSettings = useSettingsStore((s) => s.openSettings)
+  const openSignUp = useAuthModalStore((s) => s.openSignUp)
+  const { isGuest } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
@@ -302,13 +306,28 @@ export function AppTopBar(): ReactNode {
           >
             <IconSettings />
           </button>
-          <Link
-            href="/profile"
-            className={[ICON_LINK, 'text-warm-800 hover:text-sage-400 hover:bg-white/10'].join(' ')}
-            aria-label="Profile"
-          >
-            <IconProfile />
-          </Link>
+          {isGuest ? (
+            <button
+              type="button"
+              onClick={openSignUp}
+              className={[ICON_LINK, 'text-warm-800 hover:text-sage-400 hover:bg-white/10'].join(
+                ' ',
+              )}
+              aria-label="Profile"
+            >
+              <IconProfile />
+            </button>
+          ) : (
+            <Link
+              href="/profile"
+              className={[ICON_LINK, 'text-warm-800 hover:text-sage-400 hover:bg-white/10'].join(
+                ' ',
+              )}
+              aria-label="Profile"
+            >
+              <IconProfile />
+            </Link>
+          )}
         </div>
 
         {/* Desktop: full text links (768px+) */}
@@ -385,15 +404,28 @@ export function AppTopBar(): ReactNode {
             >
               <IconSettings />
             </button>
-            <Link
-              href="/profile"
-              className={[ICON_LINK, 'text-warm-800 hover:text-sage-400 hover:bg-white/10'].join(
-                ' ',
-              )}
-              aria-label="Profile"
-            >
-              <IconProfile />
-            </Link>
+            {isGuest ? (
+              <button
+                type="button"
+                onClick={openSignUp}
+                className={[ICON_LINK, 'text-warm-800 hover:text-sage-400 hover:bg-white/10'].join(
+                  ' ',
+                )}
+                aria-label="Profile"
+              >
+                <IconProfile />
+              </button>
+            ) : (
+              <Link
+                href="/profile"
+                className={[ICON_LINK, 'text-warm-800 hover:text-sage-400 hover:bg-white/10'].join(
+                  ' ',
+                )}
+                aria-label="Profile"
+              >
+                <IconProfile />
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -446,16 +478,29 @@ export function AppTopBar(): ReactNode {
           >
             Leaderboard
           </Link>
-          <Link
-            href="/profile"
-            onClick={(): void => setMenuOpen(false)}
-            className={[
-              'text-2xl font-medium transition-colors duration-150',
-              'text-warm-800 hover:text-sage-400',
-            ].join(' ')}
-          >
-            Profile
-          </Link>
+          {isGuest ? (
+            <button
+              type="button"
+              onClick={(): void => {
+                setMenuOpen(false)
+                openSignUp()
+              }}
+              className="text-2xl font-medium transition-colors duration-150 text-warm-800 hover:text-sage-400"
+            >
+              Profile
+            </button>
+          ) : (
+            <Link
+              href="/profile"
+              onClick={(): void => setMenuOpen(false)}
+              className={[
+                'text-2xl font-medium transition-colors duration-150',
+                'text-warm-800 hover:text-sage-400',
+              ].join(' ')}
+            >
+              Profile
+            </Link>
+          )}
         </div>
       )}
     </>

@@ -43,6 +43,7 @@ type InputMode = 'type' | 'tap' | 'swipe'
 type GameWindowProps = {
   mode: InputMode
   session: UsePracticeSessionReturn
+  onCharacterCorrect?: () => void
   children?: ReactNode
 }
 
@@ -96,7 +97,12 @@ function buildTapGrid(
 
 // ── Component ─────────────────────────────────
 
-export function GameWindow({ mode, session, children }: GameWindowProps): ReactNode {
+export function GameWindow({
+  mode,
+  session,
+  onCharacterCorrect,
+  children,
+}: GameWindowProps): ReactNode {
   const childArray = Array.isArray(children) ? children : children ? [children] : []
   const topLeft = childArray[0] ?? null
   const topRight = childArray[1] ?? null
@@ -215,6 +221,7 @@ export function GameWindow({ mode, session, children }: GameWindowProps): ReactN
 
     const results = buildResults()
     handleWordComplete(results)
+    onCharacterCorrect?.()
 
     scheduleTimeout((): void => setShowMeaning(true), MEANING_FADE_MS)
     scheduleTimeout((): void => {
@@ -227,6 +234,7 @@ export function GameWindow({ mode, session, children }: GameWindowProps): ReactN
     characters.length,
     buildResults,
     handleWordComplete,
+    onCharacterCorrect,
     advanceToNext,
   ])
 
@@ -372,22 +380,8 @@ export function GameWindow({ mode, session, children }: GameWindowProps): ReactN
 
   // ── Loading and empty states ──────────────────
 
-  if (isLoading) {
-    return (
-      <div className="bg-[#faf5e4] rounded-2xl shadow-[0_6px_0_0_#d4c9b0] w-full max-w-md mx-auto p-6 md:p-8">
-        <p className="text-center text-warm-400 py-8">Loading...</p>
-      </div>
-    )
-  }
-
-  if (isEmpty || !prompt) {
-    return (
-      <div className="bg-[#faf5e4] rounded-2xl shadow-[0_6px_0_0_#d4c9b0] w-full max-w-md mx-auto p-6 md:p-8">
-        <p className="text-center text-warm-600 py-8 font-medium">
-          Unlock characters in the Dojo to start practising
-        </p>
-      </div>
-    )
+  if (isLoading || isEmpty || !prompt) {
+    return null
   }
 
   // ── Render ────────────────────────────────────

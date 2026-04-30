@@ -11,7 +11,9 @@ import type { ReactNode } from 'react'
 export default function OnboardingLayout({ children }: { children: ReactNode }): ReactNode {
   return (
     <div className="min-h-dvh bg-onboarding-bg flex items-start md:items-center justify-center p-4 pt-8 md:pt-4">
-      <div className="w-full">{children}</div>
+      <div className="w-full" style={{ animation: 'scaleIn 500ms ease-out' }}>
+        {children}
+      </div>
     </div>
   )
 }

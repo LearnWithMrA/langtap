@@ -1,43 +1,32 @@
 // ─────────────────────────────────────────────
 // File: components/ui/landing-cta.tsx
 // Purpose: Client island for the landing page call-to-action buttons.
-//          Handles navigation to sign-up and guest practice entry.
-//          Kept as a client component so router.push() is available
-//          and guest-session initialisation can be added here later.
-// Depends on: components/ui/button.tsx
+//          Uses Next.js Link for prefetching so onboarding loads instantly.
+// Depends on: next/link
 // ─────────────────────────────────────────────
 
-'use client'
-
 import type { ReactNode } from 'react'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 
 // ── Component ─────────────────────────────────
 
 export function LandingCta(): ReactNode {
-  const router = useRouter()
-
   return (
     <div className="flex flex-col gap-3 w-full">
-      <Button
-        variant="primary"
-        size="lg"
+      <Link
+        href="/sign-up"
         aria-label="Create a LangTap account"
-        onClick={() => router.push('/sign-up')}
-        className="w-full"
+        className="w-full bg-sage-500 text-white hover:bg-sage-600 focus:ring-sage-300 px-6 py-4 text-lg min-h-11 rounded-xl font-semibold text-center transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2"
       >
         Create an account
-      </Button>
-      <Button
-        variant="secondary"
-        size="lg"
+      </Link>
+      <Link
+        href="/onboarding/step-1"
         aria-label="Play as a guest without creating an account"
-        onClick={() => router.push('/onboarding/step-1')}
-        className="w-full"
+        className="w-full bg-sage-100 text-sage-600 hover:bg-sage-200 focus:ring-sage-300 px-6 py-4 text-lg min-h-11 rounded-xl font-semibold text-center transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2"
       >
         Play as guest
-      </Button>
+      </Link>
     </div>
   )
 }

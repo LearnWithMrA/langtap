@@ -39,7 +39,6 @@ const SEION_COLS = ['a', 'i', 'u', 'e', 'o'] as const
 const YOON_COLS = ['a', 'u', 'o'] as const
 
 const EXTENDED_DISPLAY_GROUPS = [
-  { key: 'vu', ids: ['k-va', 'k-vi', 'k-vu', 'k-ve', 'k-vo'] },
   { key: 'fa', ids: ['k-fa', 'k-fi', 'k-fe', 'k-fo'] },
   { key: 'ti-di', ids: ['k-ti', 'k-dhi', 'k-twu', 'k-dwu', 'k-che'] },
   { key: 'wi-she', ids: ['k-wi', 'k-we', 'k-uxo', 'k-she', 'k-je'] },

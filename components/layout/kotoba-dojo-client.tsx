@@ -36,6 +36,7 @@
 
 import { useCallback, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
+import Link from 'next/link'
 import { KotobaLevelTabs } from '@/components/dojo/kotoba-level-tabs'
 import { KotobaLevelGroupRow } from '@/components/dojo/kotoba-level-group'
 import { KotobaWordPopover } from '@/components/dojo/kotoba-word-popover'
@@ -325,6 +326,17 @@ function ReadyShell({ fixtureKey }: ReadyShellProps): ReactNode {
                 ariaLabel={`Reset progress on all words at ${JLPT_LABELS[activeLevel]}`}
               />
             )}
+            <Link
+              href="/practice?mode=kotoba"
+              className="inline-flex items-center justify-center px-3 font-bold text-white bg-sage-600/85 hover:bg-sage-700/85 active:translate-y-[2px] active:border-b-[2px] transition-colors border-b-[clamp(2px,calc(1.25vw-2px),4px)] border-b-[color:var(--color-sage-600)]"
+              style={{
+                height: 'clamp(30px, calc(6.25vw + 10px), 40px)',
+                borderRadius: 'clamp(6px, 2vw, 8px)',
+                fontSize: 'clamp(11px, calc(2.5vw), 14px)',
+              }}
+            >
+              Practice
+            </Link>
           </div>
 
           <KotobaLevelTabs

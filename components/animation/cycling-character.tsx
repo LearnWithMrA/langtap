@@ -45,6 +45,8 @@ const FRAME_PATHS: string[] = Array.from(
   (_, i) => `/images/cyclist/${String(i + 1).padStart(2, '0')}.png`,
 )
 
+let framesLoadedOnce = false
+
 // -- PNG sprite-sheet animation -----------------------------
 
 export function CyclingCharacter({
@@ -52,13 +54,22 @@ export function CyclingCharacter({
   onAllFramesLoaded,
 }: CyclingCharacterProps): React.ReactElement {
   const [frameIndex, setFrameIndex] = useState(0)
-  const [allLoaded, setAllLoaded] = useState(false)
+  const [allLoaded, setAllLoaded] = useState(framesLoadedOnce)
   const loadedCount = useRef(0)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const calledRef = useRef(false)
+
+  useEffect(() => {
+    if (framesLoadedOnce && !calledRef.current) {
+      calledRef.current = true
+      onAllFramesLoaded?.()
+    }
+  }, [onAllFramesLoaded])
 
   const handleFrameLoad = useCallback((): void => {
     loadedCount.current += 1
-    if (loadedCount.current >= FRAME_COUNT) {
+    if (loadedCount.current >= FRAME_COUNT && !framesLoadedOnce) {
+      framesLoadedOnce = true
       setAllLoaded(true)
       onAllFramesLoaded?.()
     }

@@ -4,21 +4,22 @@
 //          screen. Reminds them to create an account. Dismissal
 //          hides the banner for the current session only (React
 //          state, not persisted). See FRONTEND.md Section 11.
-// Depends on: hooks/useAuth.ts
+// Depends on: hooks/useAuth.ts, stores/auth-modal.store.ts
 // ------------------------------------------------------------
 
 'use client'
 
 import { useState } from 'react'
 import type { ReactNode } from 'react'
-import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
+import { useAuthModalStore } from '@/stores/auth-modal.store'
 
 // ── Component ─────────────────────────────────
 
 export function GuestBanner(): ReactNode {
   const { isGuest, isLoading } = useAuth()
   const [dismissed, setDismissed] = useState(false)
+  const openSignUp = useAuthModalStore((s) => s.openSignUp)
 
   if (isLoading || !isGuest || dismissed) {
     return null
@@ -28,9 +29,13 @@ export function GuestBanner(): ReactNode {
     <div className="fixed top-14 left-0 right-0 z-40 bg-[#fff3e0] border-b border-[#f0a166] px-4 py-2 flex items-center justify-center gap-2">
       <p className="text-sm text-[#7a4a1a] text-center">
         Your progress will be lost when you close this tab.{' '}
-        <Link href="/sign-up" className="text-[#d4700a] font-medium hover:underline">
+        <button
+          type="button"
+          onClick={openSignUp}
+          className="text-[#d4700a] font-medium hover:underline"
+        >
           Create an account
-        </Link>
+        </button>
       </p>
       <button
         type="button"

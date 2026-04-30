@@ -117,7 +117,7 @@ function DayCircle({ day, cellSize }: { day: HeatmapDay | null; cellSize: number
   const hasBlueFlame = day.streakFlame === 'blue'
   const practiced = day.charactersPracticed > 0
 
-  let bgColor = '#B0B5BE'
+  let bgColor = '#D0D3D8'
   if (isFuture) {
     bgColor = '#D0D3D8'
   } else if (hasBlueFlame) {

@@ -16,7 +16,7 @@ import type { ReactNode } from 'react'
 // ── Constants ─────────────────────────────────
 
 const SESSION_KEY = 'langtap-prefetch-done'
-const DELAY_MS = 2000
+const DELAY_MS = 500
 
 const CORE_ROUTES = ['/home', '/dojo/kana', '/dojo/kotoba', '/practice', '/leaderboard', '/profile']
 

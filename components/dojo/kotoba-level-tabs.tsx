@@ -97,7 +97,7 @@ export function KotobaLevelTabs({ active, onChange, tabPanelId }: KotobaLevelTab
               'border-b-[4px] transition-transform duration-75',
               'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-500',
               isActive
-                ? 'bg-mint-500 text-white border-b-[color:var(--color-sage-600)] active:translate-y-[1px] active:border-b-[2px]'
+                ? 'bg-sage-400/85 text-white border-b-sage-500/85 active:translate-y-[1px] active:border-b-[2px]'
                 : 'bg-sage-100 text-warm-700 border-b-sage-200 hover:bg-sage-200 active:translate-y-[1px] active:border-b-[2px]',
             ].join(' ')}
           >

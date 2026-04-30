@@ -20,7 +20,7 @@ export type OnboardingStore = OnboardingState & OnboardingActions
 type OnboardingState = {
   jlptLevel: JlptLevel
   selectedCharacterIds: string[]
-  inputMode: InputMode
+  inputMode: InputMode | null
   onboardingComplete: boolean
 }
 
@@ -42,7 +42,7 @@ export const useOnboardingStore = create<OnboardingState & OnboardingActions>()(
     (set) => ({
       jlptLevel: 'N5',
       selectedCharacterIds: [],
-      inputMode: 'type',
+      inputMode: null,
       onboardingComplete: false,
 
       setJlptLevel: (level: JlptLevel): void => {

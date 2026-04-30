@@ -18,7 +18,7 @@
 
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import type { ReactNode } from 'react'
 import { useReducedMotion } from 'motion/react'
 import { LandscapeBackground } from '@/components/layout/landscape-background'
@@ -30,7 +30,7 @@ import { useUnlockStore } from '@/stores/unlock.store'
 import { useSettingsStore } from '@/stores/settings.store'
 import { useOnboardingStore } from '@/stores/onboarding.store'
 import { KANA_CHARACTERS } from '@/data/kana/characters'
-import { UNLOCK_THRESHOLD } from '@/engine/constants'
+import { MASTERY_THRESHOLD } from '@/engine/mastery'
 import type { StageProgress, LeaderboardGlance, HeatmapDay } from '@/types/dashboard.types'
 import type { Stage } from '@/types/kana.types'
 
@@ -53,7 +53,7 @@ function deriveKanaStages(
     const chars = KANA_CHARACTERS.filter((c) => c.stage === stage && !SPECIAL_ROWS.has(c.row))
     const total = chars.length
     const mastered = chars.filter(
-      (c) => unlockedIds.has(c.id) && (scores[c.id] ?? 0) >= UNLOCK_THRESHOLD,
+      (c) => unlockedIds.has(c.id) && (scores[c.id] ?? 0) >= MASTERY_THRESHOLD,
     ).length
     const percentage = total > 0 ? Math.round((mastered / total) * 100) : 0
     return { label: STAGE_LABELS[stage], mastered, total, percentage }
@@ -67,59 +67,48 @@ const EMPTY_HEATMAP: readonly HeatmapDay[] = []
 
 export function GameHomeClient(): ReactNode {
   const prefersReducedMotion = useReducedMotion()
-  const [sceneReady, setSceneReady] = useState(false)
 
-  const hasHydrated = useMasteryStore((s) => s.hasHydrated)
   const scores = useMasteryStore((s) => s.scores)
   const unlockedIds = useUnlockStore((s) => s.unlockedIds)
   const allKanaUnlocked = useUnlockStore((s) => s.allKanaUnlocked)
   const inputMode = useSettingsStore((s) => s.inputMode)
 
   useEffect(() => {
-    if (!hasHydrated) {
-      useMasteryStore.persist.rehydrate()
-    }
-  }, [hasHydrated])
-
-  useEffect(() => {
-    useOnboardingStore.persist.rehydrate()
-  }, [])
-
-  useEffect(() => {
-    if (hasHydrated) {
-      const manual = new Set(useOnboardingStore.getState().selectedCharacterIds)
-      useUnlockStore.getState().recompute(scores, manual)
-    }
-  }, [hasHydrated, scores])
+    const manual = new Set(useOnboardingStore.getState().selectedCharacterIds)
+    useUnlockStore.getState().recompute(scores, manual)
+  }, [scores])
 
   const kanaStages = useMemo(() => deriveKanaStages(scores, unlockedIds), [scores, unlockedIds])
 
-  const kotobaStages: StageProgress[] = useMemo(
-    () => [{ label: 'Words', mastered: 0, total: 0, percentage: 0 }],
-    [],
-  )
+  const jlptLevel = useOnboardingStore((s) => s.jlptLevel)
 
-  const handleAllFramesLoaded = useCallback((): void => {
-    setSceneReady(true)
-  }, [])
+  const kotobaStages: StageProgress[] = useMemo(() => {
+    const levels: string[] = ['N5', 'N4', 'N3', 'N2', 'N1']
+    const startIndex = levels.indexOf(jlptLevel ?? 'N5')
+    return levels.slice(startIndex, startIndex + 3).map((level) => ({
+      label: level,
+      mastered: 0,
+      total: 0,
+      percentage: 0,
+    }))
+  }, [jlptLevel])
 
   const sceneSpeed = prefersReducedMotion ? 'stopped' : 'idle'
-  const mascotSpeed = prefersReducedMotion ? 'stopped' : 'idle'
-  const animated = sceneReady && !prefersReducedMotion
+  const animated = !prefersReducedMotion
 
   return (
     <div className="theme-day relative w-full min-h-svh overflow-y-auto">
-      <div className="fixed inset-0 z-0">
+      <div className="fixed inset-0 z-0 overflow-hidden">
         <LandscapeBackground
           speed={sceneSpeed}
           staticHills={prefersReducedMotion ?? false}
           animated={animated}
         />
         <div
-          className="absolute bottom-[calc(12svh-max(7.73vw,62.7px))] -left-[1%] md:left-[3%] z-[3]"
+          className="absolute bottom-[calc(12svh-max(7.73vw,62.7px))] -left-[2%] md:left-[3%] z-[3]"
           aria-hidden="true"
         >
-          <CyclingCharacter speed={mascotSpeed} onAllFramesLoaded={handleAllFramesLoaded} />
+          <CyclingCharacter speed={sceneSpeed} />
         </div>
       </div>
 
