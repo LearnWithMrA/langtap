@@ -473,7 +473,69 @@ Required attributions at Phase 1 launch:
 
 ---
 
-## 11. Content Roadmap by Phase
+## 11. Kotoba Level Design Principles
+
+Kotoba levels are the curriculum layer on top of the word bank. Each JLPT level's
+words are split into levels of exactly 12 words. Levels are paired under headings
+("Levels 1-2", "Levels 3-4", etc.) in the Kotoba Dojo UI. The level structure
+lives in `data/words/kotoba-levels.ts`.
+
+### 11.1 Thematic Grouping
+
+Every level must feel like a lesson, not a random list. Words in a level share a
+clear theme that a learner would recognise: "Family", "Food and Drink", "Time",
+"Colours", "At the Office", etc.
+
+Rules for thematic grouping:
+- Each level has exactly 12 words. No exceptions.
+- Every word in the JLPT level must appear in exactly one Kotoba level. No gaps,
+  no duplicates.
+- Themes should be concrete and nameable. If you cannot name the theme in 3 words
+  or fewer, the grouping is too loose.
+- Prefer grouping nouns with related adjectives and verbs. "Food and Drink" can
+  include "delicious" and "to eat" alongside "bread" and "rice".
+- When a word fits multiple themes equally well, place it in the theme that has
+  fewer words (balance first).
+- The final level in each JLPT group must have exactly 12 words. If the word bank
+  does not divide evenly by 12, add new words to the word bank source files to
+  reach a clean multiple. Added words must follow the same schema and belong to
+  the correct JLPT level.
+
+### 11.2 Level Ordering
+
+Levels are ordered from most fundamental to most specialised:
+- Early levels (1-6): core survival vocabulary (greetings, numbers, family, time,
+  food, directions).
+- Middle levels: daily life topics (transport, shopping, weather, school, home).
+- Later levels: abstract and specialised topics (emotions, opinions, formal
+  language, technical terms).
+
+This ordering means a new player who works through levels sequentially encounters
+the most useful words first.
+
+### 11.3 Level Naming
+
+Each level has a short theme label (max 25 characters) used in the Dojo UI.
+Examples: "Greetings", "Family", "Numbers", "Food and Drink", "At School".
+Labels are stored alongside the level data and displayed as the level group
+heading.
+
+### 11.4 Cross-Language Applicability
+
+This level design system applies to all future languages added to LangTap, not
+just Japanese. When expanding to a new language:
+- Use the same 12-words-per-level structure.
+- Apply the same thematic grouping rules.
+- Follow the same ordering principle (fundamental to specialised).
+- Use the same frequency tier system (see Section 13) to split the word bank
+  into 5 tiers equivalent to N5-N1.
+- Theme labels should be consistent across languages where possible. If Japanese
+  has a "Family" level and Thai has equivalent family vocabulary, use the same
+  label. This keeps the product experience consistent.
+
+---
+
+## 12. Content Roadmap by Phase
 
 | Phase | Content required |
 |---|---|

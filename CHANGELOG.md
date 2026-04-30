@@ -30,6 +30,35 @@ Format per entry:
 
 ---
 
+## [2026-04-30] - Session 71
+
+**Sprint:** Sprint 5B - Kotoba Wiring and Dojo
+**Task completed:** Design N5 Kotoba level structure, ESLint warning cleanup, sokuon/longvowel always-unlocked, context-dependent romaji, meaning formatting
+**Status:** Done
+
+### Changes made
+- data/words/kotoba-levels.ts: New file. 54 thematic levels of 12 words each for N5 (648 words). Themes: Greetings, Family, Relatives, Numbers, Colours, Days, Time, Seasons, Months, Counting Days, Food, Drinks, Dining, Body, Health, Animals, Weather, Directions, Places, Home, School, Reading, Language, Transport, Shopping, Clothing, Accessories, Actions, Movement, Communication, Life Events, Learning, Media, Entertainment, Emotions, Descriptions, Question Words, Connecting Words, Pointing Words, Amounts, and more. 6 N5 words noted for future expansion.
+- docs/CONTENT.md: Added Section 11 - Kotoba Level Design Principles. Covers thematic grouping rules, 12-words-per-level structure, ordering, naming, and cross-language applicability.
+- engine/unlock.ts: Added ALWAYS_UNLOCKED set (h-sokuon, k-sokuon, k-longvowel). These characters are always unlocked regardless of progression.
+- data/kana/progression-groups.ts: Removed sokuon/longvowel from progression groups (no longer need unlocking).
+- data/kana/characters.ts: Reverted sokuon romaji to empty string (context-dependent, computed at word level).
+- hooks/usePracticeSession.ts: Added context-dependent romaji for sokuon (first consonant of next char) and longvowel (last vowel of previous char) in buildPracticePrompt.
+- data/words/n5.ts, n4.ts, n3.ts, n2.ts, n1.ts: Reformatted all ~7000 meanings. Capitalized, comma separators replaced with " / ".
+- components/game/game-window.tsx: Wrapped characters in useMemo to fix exhaustive-deps warnings.
+- components/game/kotoba-game-window.tsx: Added missing schedule dependency, removed unused readingDone dependency.
+- LangTap_Sprints.md: Split "Design Kotoba level structure" into per-JLPT-level tasks (N5 Done, N4-N1 To Do). Updated performance audit notes.
+
+### Tests
+- All 649 tests passing, 0 failures, 0 ESLint warnings
+
+### Next task
+Design N4 Kotoba level structure
+
+### Notes
+N5 level design used manual thematic curation. Each level feels like a lesson (e.g. "Food", "At School", "Emotions") rather than a random word list. The same process applies to N4-N1 with increasingly specialised themes at higher levels. Sokuon and longvowel are now always unlocked and have context-dependent romaji computed per word.
+
+---
+
 ## [2026-04-30] - Session 70B
 
 **Sprint:** Cross-sprint bug fixes and content polish
