@@ -8,14 +8,16 @@
 
 import { N5_LEVELS } from './kotoba-levels/n5'
 import { N4_LEVELS } from './kotoba-levels/n4'
+import { N3_LEVELS } from './kotoba-levels/n3'
 
 // ── Re-exports ───────────────────────────────
 
 export type { KotobaLevel, KotobaLevelSet } from './kotoba-levels/types'
 
-export { N5_LEVELS, N4_LEVELS }
+export { N5_LEVELS, N4_LEVELS, N3_LEVELS }
 
 export const KOTOBA_LEVELS = [
   { jlpt: 'n5' as const, levels: N5_LEVELS },
   { jlpt: 'n4' as const, levels: N4_LEVELS },
+  { jlpt: 'n3' as const, levels: N3_LEVELS },
 ] as const

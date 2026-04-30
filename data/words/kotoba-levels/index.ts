@@ -7,3 +7,4 @@
 export type { KotobaLevel, KotobaLevelSet } from './types'
 export { N5_LEVELS } from './n5'
 export { N4_LEVELS } from './n4'
+export { N3_LEVELS } from './n3'
