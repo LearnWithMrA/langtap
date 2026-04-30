@@ -3,21 +3,13 @@
 // Purpose: Aggregates all Kotoba level definitions from per-JLPT files.
 //          Each level contains exactly 12 word IDs grouped by theme.
 //          See docs/CONTENT.md Section 11 for design principles.
+//          Level files are being rebuilt with categorise-first workflow.
+//          Re-add imports as each level file is completed.
 // Depends on: data/words/kotoba-levels/
 // ─────────────────────────────────────────────
-
-import { N5_LEVELS } from './kotoba-levels/n5'
-import { N4_LEVELS } from './kotoba-levels/n4'
-import { N3_LEVELS } from './kotoba-levels/n3'
 
 // ── Re-exports ───────────────────────────────
 
 export type { KotobaLevel, KotobaLevelSet } from './kotoba-levels/types'
 
-export { N5_LEVELS, N4_LEVELS, N3_LEVELS }
-
-export const KOTOBA_LEVELS = [
-  { jlpt: 'n5' as const, levels: N5_LEVELS },
-  { jlpt: 'n4' as const, levels: N4_LEVELS },
-  { jlpt: 'n3' as const, levels: N3_LEVELS },
-] as const
+export const KOTOBA_LEVELS = [] as const

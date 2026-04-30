@@ -197,11 +197,12 @@ No UI yet. This is pure logic.
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Design N5 Kotoba level structure | **Medium** | **Redo** | Previous attempt had quality issues in later levels (sequential chunking, not full-pool theming). Redo with categorise-first approach: tag all 684 words by theme, then split categories into levels of 12. File: `data/words/kotoba-levels/n5.ts`. |
-| Design N4 Kotoba level structure | **Medium** | **Redo** | Same issue as N5. First ~40 levels solid, last ~13 degraded. Redo all 53 levels with categorise-first approach. File: `data/words/kotoba-levels/n4.ts`. |
-| Design N3 Kotoba level structure | **Large** | **Redo** | Same issue, worse at scale (1,717 words). First ~30 levels solid, rest degraded. Redo all 143 levels with categorise-first approach. Update `scripts/kotoba-level-helper.ts` with a categorise stage. Show theme + English meanings before adding so owner can spot check. |
-| Design N2 Kotoba level structure | **Large** | **To Do** | Same process. N2 has 1,776 words (~148 levels). Include any unassigned N3 words. File: `data/words/kotoba-levels/n2.ts`. |
-| Design N1 Kotoba level structure | **Large** | **To Do** | Same process. N1 has 3,427 words (~285 levels). Include any unassigned N2 words. File: `data/words/kotoba-levels/n1.ts`. |
+| Categorise all word banks by theme | **Large** | **Done** | New workflow: categorise-first, then build lessons. All 5 JLPT levels categorised into markdown files in `data/words/kotoba-levels/categories/`. N5: 684 words, 49 categories. N4: 640 words, 57 categories. N3: 1,717 words, 108 categories. N2: 1,776 words, 136 categories. N1: 3,426 words, 151 categories. All validated: 0 duplicates, 0 missing. Old level files (n5.ts, n4.ts, n3.ts) removed pending rebuild. Session 73. |
+| Build N5 Kotoba lessons from categories | **Medium** | **To Do** | Review N5 categories, split into lessons of 12 with English comment above each. Write to `data/words/kotoba-levels/n5.ts`. |
+| Build N4 Kotoba lessons from categories | **Medium** | **To Do** | Same process for N4 (640 words, 53 lessons). |
+| Build N3 Kotoba lessons from categories | **Large** | **To Do** | Same process for N3 (1,717 words, 143 lessons). |
+| Build N2 Kotoba lessons from categories | **Large** | **To Do** | Same process for N2 (1,776 words, 148 lessons). |
+| Build N1 Kotoba lessons from categories | **Large** | **To Do** | Same process for N1 (3,426 words, 285 lessons). |
 | Build word mastery store (Zustand) | **Medium** | **To Do** | Same pattern as character mastery store. Per-word scores, persist to localStorage. Hydration gate. |
 | Build Kotoba auto-progression | **Medium** | **To Do** | 12 words per level. All 12 must reach score 5 before next level auto-unlocks. First level auto-unlocked for fresh users. Uses same pattern as kana `UNLOCK_STEPS`. |
 | Wire Kotoba dojo to real data | **Medium** | **To Do** | Replace fixture data in `kotoba-dojo-client.tsx` with real word bank levels and word mastery store. Level group rows show real progress. |

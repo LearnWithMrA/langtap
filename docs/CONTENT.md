@@ -132,9 +132,13 @@ data/
     kotoba-levels.ts      # Aggregator: imports and re-exports all level sets
     kotoba-levels/        # Per-JLPT Kotoba level definitions
       types.ts            # KotobaLevel, KotobaLevelSet types
-      n5.ts               # N5 levels (57 levels, 684 words)
-      n4.ts               # N4 levels (53 levels, 636 words)
       index.ts            # Re-exports all level sets and types
+      categories/         # Thematic word categories (review stage, not code)
+        n5.md             # N5 categories (684 words, 49 categories)
+        n4.md             # N4 categories (640 words, 57 categories)
+        n3.md             # N3 categories (1,717 words, 108 categories)
+        n2.md             # N2 categories (1,776 words, 136 categories)
+        n1.md             # N1 categories (3,426 words, 151 categories)
   audio/
     word-manifest.ts      # Maps each word ID to its audio file path
 
@@ -363,13 +367,13 @@ files during a coding sprint without explicit instruction from the owner.
 
 ### 7.2 Word Bank Size Reference
 
-| Level | Source words (JSON) | After filtering | Kotoba levels |
-|---|---|---|---|
-| N5 | 684 | 684 | 57 levels (0 unassigned) |
-| N4 | 640 | 640 | 53 levels (3 unassigned) |
-| N3 | 1,730 | 1,717 | TBD |
-| N2 | 1,812 | 1,776 | TBD |
-| N1 | 3,427 | 3,427 | TBD |
+| Level | Source words (JSON) | After filtering | Categories | Kotoba lessons |
+|---|---|---|---|---|
+| N5 | 684 | 684 | 49 | Pending (categories done) |
+| N4 | 640 | 640 | 57 | Pending (categories done) |
+| N3 | 1,730 | 1,717 | 108 | Pending (categories done) |
+| N2 | 1,812 | 1,776 | 136 | Pending (categories done) |
+| N1 | 3,427 | 3,426 | 151 | Pending (categories done) |
 
 Filtering only rejects entries with empty meanings or unmappable characters.
 No minimum length filter or kana deduplication is applied.

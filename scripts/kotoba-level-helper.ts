@@ -98,7 +98,9 @@ function search(level: string, keywords: string): void {
     })
   })
 
-  console.log(`\nSearch "${keywords}" (${results.length} results from ${available.length} available):`)
+  console.log(
+    `\nSearch "${keywords}" (${results.length} results from ${available.length} available):`,
+  )
   for (const w of results.slice(0, 30)) {
     console.log(`  ${w.id} | ${w.kana} | ${w.meaning.slice(0, 55)}`)
   }
@@ -249,7 +251,9 @@ function suggest(level: string, themeKeywords?: string): void {
 
   if (bestTheme) {
     console.log(`\nBest available theme: "${bestTheme}" (${bestCount} matches)`)
-    console.log(`Run: npx tsx scripts/kotoba-level-helper.ts suggest ${level} "${themes.find((t) => t[0] === bestTheme)![1]}"`)
+    console.log(
+      `Run: npx tsx scripts/kotoba-level-helper.ts suggest ${level} "${themes.find((t) => t[0] === bestTheme)![1]}"`,
+    )
   } else {
     console.log(`\nNo theme has 12+ matches. ${available.length} words remaining.`)
     console.log('Showing first 24 available words:')
@@ -302,7 +306,9 @@ function addLevel(level: string, theme: string, idsStr: string): void {
   writeFileSync(filePath, newContent)
 
   console.log(`\n✅ Added level "${theme}" with ${ids.length} words`)
-  console.log(`  Assigned: ${assigned.size + ids.length}, Remaining: ${wordIds.size - assigned.size - ids.length}`)
+  console.log(
+    `  Assigned: ${assigned.size + ids.length}, Remaining: ${wordIds.size - assigned.size - ids.length}`,
+  )
 }
 
 // ── CLI ───────────────────────────────────────

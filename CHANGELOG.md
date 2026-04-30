@@ -30,6 +30,43 @@ Format per entry:
 
 ---
 
+## [2026-04-30] - Session 73
+
+**Sprint:** Sprint 5B - Kotoba Wiring and Dojo
+**Task completed:** Categorise all word banks by theme
+**Status:** Done
+
+### Changes made
+- `data/words/kotoba-levels/categories/n5.md`: N5 categories (684 words, 49 categories). Built manually.
+- `data/words/kotoba-levels/categories/n4.md`: N4 categories (640 words, 57 categories). Built by agent.
+- `data/words/kotoba-levels/categories/n3.md`: N3 categories (1,717 words, 108 categories). Built by agent.
+- `data/words/kotoba-levels/categories/n2.md`: N2 categories (1,776 words, 136 categories). Built by agent.
+- `data/words/kotoba-levels/categories/n1.md`: N1 categories (3,426 words, 151 categories). Built by two agents (split), combined and cleaned.
+- `data/words/kotoba-levels/n5.ts`: Removed (old level file, pending rebuild from categories).
+- `data/words/kotoba-levels/n4.ts`: Removed (old level file, pending rebuild from categories).
+- `data/words/kotoba-levels/n3.ts`: Removed (old level file, pending rebuild from categories).
+- `data/words/kotoba-levels/index.ts`: Cleared imports of removed level files. Types still exported.
+- `data/words/kotoba-levels.ts`: Cleared imports and set KOTOBA_LEVELS to empty array pending rebuild.
+- `docs/CONTENT.md`: Added categories folder to structure, added two-stage workflow docs, updated word bank size table.
+- `LangTap_Sprints.md`: Replaced old N5/N4/N3 redo tasks + N2/N1 tasks with single "Categorise all word banks" (Done) and five "Build lessons from categories" tasks (To Do).
+- `scripts/kotoba-level-helper.ts`: Prettier formatting fix only.
+
+### Tests
+- All 649 tests passing. No new tests (content-only session).
+
+### Next task
+Build N5 Kotoba lessons from categories
+
+### Notes
+- Workflow change: moved from sequential chunking (grab words, theme as you go) to categorise-first (tag all words by theme, then split into lessons of 12). This prevents late-level quality degradation.
+- Category files are markdown for human review. Format: `- english meaning [wordId]` grouped under `## Category Name (count)` headers.
+- N1 required special handling: too large for a single agent. Split into two halves, combined, then cleaned up (removed 69 invalid IDs, added 136 missing words, deduplicated 1).
+- All 5 levels validated: 8,243 words total, 0 duplicates, 0 missing across all files.
+- Old level files were removed by the owner. Imports updated so TypeScript compiles cleanly.
+- "Levels" may be renamed to "lessons" in a future session (terminology change discussed but not implemented).
+
+---
+
 ## [2026-04-30] - Session 72
 
 **Sprint:** Sprint 5B - Kotoba Wiring and Dojo
