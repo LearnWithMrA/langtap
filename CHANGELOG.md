@@ -30,6 +30,36 @@ Format per entry:
 
 ---
 
+## [2026-04-30] - Session 72
+
+**Sprint:** Sprint 5B - Kotoba Wiring and Dojo
+**Task completed:** Design N4 Kotoba level structure, word bank filter removal, file restructure
+**Status:** Done
+
+### Changes made
+- `scripts/build-word-bank.ts`: Removed 2-character minimum filter and kana deduplication filter. All words now included. Fixed duplicate ID generation for entries sharing the same jmdict_seq and kana (e.g. かたい with three different kanji).
+- `data/words/n5.ts` through `n1.ts`: Regenerated all word banks. N5: 654 to 684 (+30), N4: 603 to 640 (+37), N3: ~1470 to 1717 (+~247), N2: ~1575 to 1776 (+~201), N1: unchanged.
+- `data/words/kotoba-levels/`: New subfolder. Level definitions split into per-JLPT files (`n5.ts`, `n4.ts`, `types.ts`, `index.ts`).
+- `data/words/kotoba-levels/n5.ts`: N5 levels rebuilt from scratch. 57 levels, 684 words, 0 unassigned. New words (single-char vocab, alternate kanji readings) integrated into themed levels.
+- `data/words/kotoba-levels/n4.ts`: N4 levels built. 53 levels, 636 words, 3 unassigned (あ, およぎかた, へん). 50 themed levels from fundamental (keigo, family) to specialised (grammar, comparisons), plus 3 levels for newly added words.
+- `data/words/kotoba-levels.ts`: Converted to aggregator that imports from the subfolder.
+- `data/words/__tests__/word-bank.test.ts`: Updated tests. Changed min characterIds from 2 to 1 (single-char words now valid). Replaced kana uniqueness test with cross-level ID uniqueness test.
+- `docs/CONTENT.md`: Updated Section 7.2 (word bank sizes), Section 7.3 (filtering rules), Section 3 (folder structure), Section 11.1 (unassigned word carry-forward policy).
+- `LangTap_Sprints.md`: Updated N5 and N4 level tasks to Done, updated N3/N2/N1 task descriptions with correct word counts and carry-forward note.
+
+### Tests
+- `data/words/__tests__/word-bank.test.ts`: 649 tests passing, 0 failures
+
+### Next task
+Design N3 Kotoba level structure
+
+### Notes
+- Word bank filters removed: the 2-character minimum and kana deduplication were filtering out legitimate vocabulary. Single-char words (き=tree, め=eye) are valid vocab for Kotoba mode, and same-kana words with different kanji (あつい: 暑い/熱い/厚い) are genuinely different words.
+- Unassigned words carry forward: when a JLPT level's word count doesn't divide evenly by 12, leftover words should be assigned to levels in the next JLPT group where they fit thematically.
+- Prettier reformats the compact single-line level format back to multi-line. The files are still much smaller than the original monolithic kotoba-levels.ts thanks to the per-JLPT split.
+
+---
+
 ## [2026-04-30] - Session 71
 
 **Sprint:** Sprint 5B - Kotoba Wiring and Dojo

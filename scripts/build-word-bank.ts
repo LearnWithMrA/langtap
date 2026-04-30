@@ -43,9 +43,7 @@ type OutputEntry = {
 type RejectionStats = {
   emptyKana: number
   emptyMeaning: number
-  tooShort: number
   unmappedChar: number
-  duplicate: number
   total: number
 }
 
@@ -111,7 +109,6 @@ function isKatakanaOnly(kana: string): boolean {
 // ── Main pipeline ────────────────────────────
 
 const LEVELS: JlptLevel[] = ['N5', 'N4', 'N3', 'N2', 'N1']
-const seenKana = new Set<string>()
 const seenIds = new Set<string>()
 const allResults: Record<JlptLevel, OutputEntry[]> = {
   N5: [],
@@ -131,9 +128,7 @@ const stats: Record<
     rejected: {
       emptyKana: 0,
       emptyMeaning: 0,
-      tooShort: 0,
       unmappedChar: 0,
-      duplicate: 0,
       total: 0,
     },
     katakanaOnly: 0,
@@ -144,9 +139,7 @@ const stats: Record<
     rejected: {
       emptyKana: 0,
       emptyMeaning: 0,
-      tooShort: 0,
       unmappedChar: 0,
-      duplicate: 0,
       total: 0,
     },
     katakanaOnly: 0,
@@ -157,9 +150,7 @@ const stats: Record<
     rejected: {
       emptyKana: 0,
       emptyMeaning: 0,
-      tooShort: 0,
       unmappedChar: 0,
-      duplicate: 0,
       total: 0,
     },
     katakanaOnly: 0,
@@ -170,9 +161,7 @@ const stats: Record<
     rejected: {
       emptyKana: 0,
       emptyMeaning: 0,
-      tooShort: 0,
       unmappedChar: 0,
-      duplicate: 0,
       total: 0,
     },
     katakanaOnly: 0,
@@ -183,9 +172,7 @@ const stats: Record<
     rejected: {
       emptyKana: 0,
       emptyMeaning: 0,
-      tooShort: 0,
       unmappedChar: 0,
-      duplicate: 0,
       total: 0,
     },
     katakanaOnly: 0,
@@ -222,23 +209,13 @@ for (const level of LEVELS) {
       continue
     }
 
-    if (charIds.length < 2) {
-      levelStats.rejected.tooShort++
-      levelStats.rejected.total++
-      continue
-    }
-
-    if (seenKana.has(kana)) {
-      levelStats.rejected.duplicate++
-      levelStats.rejected.total++
-      continue
-    }
-
-    seenKana.add(kana)
-
     const baseId = entry.jmdict_seq
-    const id = seenIds.has(baseId) ? `${baseId}-${kana}` : baseId
-    seenIds.add(baseId)
+    let id = seenIds.has(baseId) ? `${baseId}-${kana}` : baseId
+    if (seenIds.has(id)) {
+      const kanji = entry.kanji.trim()
+      id = kanji ? `${baseId}-${kanji}` : `${baseId}-${kana}-${seenIds.size}`
+    }
+    seenIds.add(id)
 
     const kanji = entry.kanji.trim() || null
 
@@ -339,9 +316,7 @@ for (const level of LEVELS) {
     const parts: string[] = []
     if (r.emptyKana) parts.push(`emptyKana=${r.emptyKana}`)
     if (r.emptyMeaning) parts.push(`emptyMeaning=${r.emptyMeaning}`)
-    if (r.tooShort) parts.push(`tooShort=${r.tooShort}`)
     if (r.unmappedChar) parts.push(`unmappedChar=${r.unmappedChar}`)
-    if (r.duplicate) parts.push(`duplicate=${r.duplicate}`)
     console.log(`  rejected: ${r.total} (${parts.join(', ')})`)
   }
 }

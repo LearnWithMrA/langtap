@@ -31,12 +31,12 @@ describe('word bank schema', () => {
         }
       })
 
-      it('every entry has at least 2 characterIds', () => {
+      it('every entry has at least 1 characterId', () => {
         for (const word of WORD_BANK[level]) {
           expect(
             word.characterIds.length,
             `word ${word.id} (${word.kana}) has ${word.characterIds.length} characterIds`,
-          ).toBeGreaterThanOrEqual(2)
+          ).toBeGreaterThanOrEqual(1)
         }
       })
 
@@ -70,11 +70,11 @@ describe('word bank cross-references', () => {
     }
   })
 
-  it('no duplicate kana strings across levels', () => {
+  it('no duplicate word IDs across all levels', () => {
     const seen = new Set<string>()
     for (const word of ALL_WORDS) {
-      expect(seen.has(word.kana), `duplicate kana "${word.kana}" (word ${word.id})`).toBe(false)
-      seen.add(word.kana)
+      expect(seen.has(word.id), `duplicate ID "${word.id}" (${word.kana})`).toBe(false)
+      seen.add(word.id)
     }
   })
 })

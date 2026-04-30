@@ -123,12 +123,18 @@ data/
     characters.ts         # Full kana character dataset (see Section 4)
     progression-groups.ts  # Unlocking group definitions (see GAME_DESIGN.md Section 4.3)
   words/
-    n5.ts                 # N5 word bank
-    n4.ts                 # N4 word bank
-    n3.ts                 # N3 word bank
-    n2.ts                 # N2 word bank
-    n1.ts                 # N1 word bank
+    n5.ts                 # N5 word bank (generated)
+    n4.ts                 # N4 word bank (generated)
+    n3.ts                 # N3 word bank (generated)
+    n2.ts                 # N2 word bank (generated)
+    n1.ts                 # N1 word bank (generated)
     index.ts              # Re-exports all banks, keyed by JLPT level
+    kotoba-levels.ts      # Aggregator: imports and re-exports all level sets
+    kotoba-levels/        # Per-JLPT Kotoba level definitions
+      types.ts            # KotobaLevel, KotobaLevelSet types
+      n5.ts               # N5 levels (57 levels, 684 words)
+      n4.ts               # N4 levels (53 levels, 636 words)
+      index.ts            # Re-exports all level sets and types
   audio/
     word-manifest.ts      # Maps each word ID to its audio file path
 
@@ -357,41 +363,33 @@ files during a coding sprint without explicit instruction from the owner.
 
 ### 7.2 Word Bank Size Reference
 
-| Level | Source words (JSON) | Expected after filtering |
-|---|---|---|
-| N5 | TBC | TBC |
-| N4 | TBC | TBC |
-| N3 | TBC | TBC |
-| N2 | TBC | TBC |
-| N1 | 3,427 | ~3,000 |
+| Level | Source words (JSON) | After filtering | Kotoba levels |
+|---|---|---|---|
+| N5 | 684 | 684 | 57 levels (0 unassigned) |
+| N4 | 640 | 640 | 53 levels (3 unassigned) |
+| N3 | 1,730 | 1,717 | TBD |
+| N2 | 1,812 | 1,776 | TBD |
+| N1 | 3,427 | 3,427 | TBD |
 
-Counts for N5-N2 to be confirmed once all JSON files are committed to the repo.
-The build script outputs final counts to the console after each run.
+Filtering only rejects entries with empty meanings or unmappable characters.
+No minimum length filter or kana deduplication is applied.
 
 ### 7.3 Word Bank Filtering Rules
 
 The build script applies these filters automatically:
 - Entry must have a kana reading.
 - Entry must have at least one English meaning.
-- Minimum word length: 2 kana characters.
-- Proper nouns are excluded.
-- Entries with only kanji and no kana reading are excluded.
-- Deduplicate across levels: keep each word at its lowest JLPT level only.
+- Entry must decompose into known kana characters from `data/kana/characters.ts`.
 
-**Relaxed filter for katakana-only words:**
-Katakana-only words (pure loanwords where every character in the Reading field is
-katakana or the long vowel mark ー) are not filtered by JLPT level. All katakana-only
-words from all sheets are included in the word bank regardless of their assigned level.
-This is because loanwords do not carry vocabulary difficulty in the same way native
-Japanese words do, and early katakana character groups have very few eligible words
-without this relaxation.
+Words with the same kana reading but different kanji are kept as separate entries
+(e.g. あつい 暑い "hot weather" and あつい 熱い "hot to touch" are different words).
+Single-character words (e.g. き 木 "tree", め 目 "eye") are included. In Kana Mode
+they produce a quick prompt; in Kotoba Mode they are valid vocabulary with distinct
+kanji meanings.
 
-Analysis of the source file confirms the problem at early unlock stages:
-- Group 1K unlocked only (ア イ ウ エ オ カ キ ク ケ コ): 2 eligible katakana words
-  (ケーキ, カー). Without relaxation these two words repeat constantly.
-- Group 1K + 2K unlocked (adding サ-ト): 29 eligible words. Workable variety.
-- The window of dangerously thin pool is short but real. Relaxing the JLPT filter
-  for katakana-only words costs nothing and solves it entirely.
+**Katakana-only words** are not filtered by JLPT level. All katakana-only words from
+all source files are included regardless of their assigned level, because loanwords
+do not carry the same vocabulary difficulty as native Japanese words.
 
 **Kana Mode word selection behaviour:**
 In Kana Mode the entire word bank across all levels is available as the selection pool.
@@ -490,16 +488,16 @@ Rules for thematic grouping:
 - Each level has exactly 12 words. No exceptions.
 - Every word in the JLPT level must appear in exactly one Kotoba level. No gaps,
   no duplicates.
+- If the word count does not divide evenly by 12, a small number of words may be
+  left unassigned. Unassigned words should be carried forward and assigned to the
+  next JLPT level's Kotoba levels where they fit thematically (e.g. unassigned
+  N4 words can be placed into N3 levels).
 - Themes should be concrete and nameable. If you cannot name the theme in 3 words
   or fewer, the grouping is too loose.
 - Prefer grouping nouns with related adjectives and verbs. "Food and Drink" can
   include "delicious" and "to eat" alongside "bread" and "rice".
 - When a word fits multiple themes equally well, place it in the theme that has
   fewer words (balance first).
-- The final level in each JLPT group must have exactly 12 words. If the word bank
-  does not divide evenly by 12, add new words to the word bank source files to
-  reach a clean multiple. Added words must follow the same schema and belong to
-  the correct JLPT level.
 
 ### 11.2 Level Ordering
 
