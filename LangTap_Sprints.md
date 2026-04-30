@@ -199,7 +199,7 @@ No UI yet. This is pure logic.
 |---|---|---|---|
 | Design N5 Kotoba level structure | **Medium** | **Done** | 57 levels of 12 words (684 words, 0 unassigned). Rebuilt after removing word bank filters. File: `data/words/kotoba-levels/n5.ts`. Principles documented in `docs/CONTENT.md` Section 11. |
 | Design N4 Kotoba level structure | **Medium** | **Done** | 53 levels of 12 words (636 words, 3 unassigned: あ, およぎかた, へん). File: `data/words/kotoba-levels/n4.ts`. Unassigned words to be carried forward to N3 levels. |
-| Design N3 Kotoba level structure | **Large** | **To Do** | Same process as N5/N4. N3 has 1,717 words (~143 levels). Include 3 unassigned N4 words. Themes will be more specialised. File: `data/words/kotoba-levels/n3.ts`. |
+| Design N3 Kotoba level structure | **Large** | **In Progress** | N3 has 1,717 words (143 levels). 97 good levels built, 553 words remaining (~46 levels). Bad alphabetical levels stripped. Use `scripts/kotoba-level-helper.ts add` for validation only (prevents dups/invalid IDs). Build levels by reading word list and grouping thematically, same as N4. Show theme + English meanings before adding so owner can spot check. |
 | Design N2 Kotoba level structure | **Large** | **To Do** | Same process. N2 has 1,776 words (~148 levels). Include any unassigned N3 words. File: `data/words/kotoba-levels/n2.ts`. |
 | Design N1 Kotoba level structure | **Large** | **To Do** | Same process. N1 has 3,427 words (~285 levels). Include any unassigned N2 words. File: `data/words/kotoba-levels/n1.ts`. |
 | Build word mastery store (Zustand) | **Medium** | **To Do** | Same pattern as character mastery store. Per-word scores, persist to localStorage. Hydration gate. |
