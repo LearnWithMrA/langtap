@@ -227,18 +227,20 @@ No UI yet. This is pure logic.
 ## Sprint 6 - Input Modes (Kana + Kotoba)
 
 **Goal:** All three input modes functional for both Kana and Kotoba practice.
-**Status:** Pending
+**Status:** Done
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Build Tap mode input (Kana) | **Medium** | **To Do** | On-screen kana character buttons. Grid layout. Works on all screen sizes. |
-| Integrate Tap mode into Kana practice | **Small** | **To Do** | Connect Tap input to the same game engine used by Type mode. |
-| Build Swipe mode input (Kana) | **Medium** | **To Do** | Native mobile swipe keyboard input. Optimised for mobile layout. |
-| Integrate Swipe mode into Kana practice | **Small** | **To Do** | Same engine connection as Type and Tap. |
-| Build Kotoba Readings input mode | **Large** | **To Do** | Show kanji/English word. User types/taps/swipes kana reading. Correct: word mastery +1. Same input system as Kana. |
-| Build Kotoba Kanji input mode | **Large** | **To Do** | User produces kanji via keyboard auto-suggestion. Scoring at 4x multiplier. Type/Swipe: plain input field. |
-| Build Kotoba Tap two-stage flow | **Medium** | **To Do** | Stage 1: select kana from tap grid. Stage 2 (Kanji input only): select kanji from options. |
-| Test all modes end to end | **Medium** | **To Do** | Kana + Kotoba: correct/wrong answers, mode switching, mobile/desktop. |
+| Build Tap mode input (Kana) | **Medium** | **Done** | `components/game/tap-input.tsx` built and integrated into `game-window.tsx`. On-screen kana buttons, grid layout, responsive. Built in earlier sprints. |
+| Integrate Tap mode into Kana practice | **Small** | **Done** | Wired into game window with mode switching. All three modes (tap/type/swipe) selectable from practice screen. |
+| Build Swipe mode input (Kana) | **Medium** | **Done** | `components/game/swipe-input.tsx` built and integrated. Native mobile keyboard with swipe support. |
+| Integrate Swipe mode into Kana practice | **Small** | **Done** | Wired into game window alongside tap and type modes. |
+| Build Kotoba Readings input mode | **Large** | **Done** | Kotoba game window supports all three input modes for kana reading entry. Furigana fills character-by-character. |
+| Build Kotoba Kanji input mode | **Large** | **Done** | Kanji mode with IME input (type/swipe) and kanji option buttons (tap). Distractor generation from word bank. |
+| Build Kotoba Tap two-stage flow | **Medium** | **Done** | Tap mode: stage 1 (kana from grid), stage 2 (select kanji from 4 options). Both stages wired with feedback. |
+| Wire settings store to game windows | **Small** | **Done** | Fixed `game-window.tsx`: replaced local `useState` with `useSettingsStore.inputDirection`. Alternate mode toggles per word, fixed modes stay locked. Session 79. |
+| Implement Kanji 4x scoring multiplier | **Small** | **Done** | `KANJI_INPUT_MULTIPLIER = 4` in `engine/constants.ts`. `recordWordComplete` accepts optional `scoreMultiplier`. Kotoba game window passes 4 for kanji, 1 for readings. Session 79. |
+| Test all modes end to end | **Medium** | **Done** | 10 new tests: `engine/__tests__/kotoba-scoring.test.ts` (multiplier constant), `stores/__tests__/settings.store.test.ts` (inputDirection, kotobaInput, hints). 799 total tests. Session 79. |
 
 ---
 

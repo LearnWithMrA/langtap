@@ -21,7 +21,7 @@ import type { ReactNode } from 'react'
 import { TypeInput } from '@/components/game/type-input'
 import { SwipeInput } from '@/components/game/swipe-input'
 import { TapInput } from '@/components/game/tap-input'
-import { FEEDBACK_FLASH_MS, KOTOBA_DISPLAY_MS } from '@/engine/constants'
+import { FEEDBACK_FLASH_MS, KOTOBA_DISPLAY_MS, KANJI_INPUT_MULTIPLIER } from '@/engine/constants'
 import {
   isKatakanaChar,
   KOTOBA_HIRAGANA_TAP,
@@ -200,11 +200,12 @@ export function KotobaGameWindow({
     clearTimers()
     generationRef.current++
     const wasClean = wrongAttemptsMap.every((c) => c === 0)
-    recordWordComplete(wasClean)
+    const multiplier = isKanjiMode ? KANJI_INPUT_MULTIPLIER : 1
+    recordWordComplete(wasClean, multiplier)
     setWordDone(true)
     setFeedbackState('correct')
     schedule(advanceWord, KOTOBA_DISPLAY_MS)
-  }, [clearTimers, schedule, advanceWord, wrongAttemptsMap, recordWordComplete])
+  }, [clearTimers, schedule, advanceWord, wrongAttemptsMap, recordWordComplete, isKanjiMode])
 
   const handleReadingDone = useCallback((): void => {
     setReadingDone(true)

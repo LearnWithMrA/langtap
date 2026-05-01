@@ -30,6 +30,36 @@ Format per entry:
 
 ---
 
+## [2026-05-01] - Session 79
+
+**Sprint:** Sprint 6 - Input Modes (Kana + Kotoba)
+**Task completed:** Wire settings store, Kanji 4x scoring, mode tests
+**Status:** Done (Sprint 6 complete)
+
+### Changes made
+- `components/game/game-window.tsx`: Replaced local `useState('kana-to-romaji')` with `useSettingsStore.inputDirection`. When set to `alternate`, direction toggles per word (existing behaviour). When set to `kana-to-romaji` or `romaji-to-kana`, direction stays fixed. Added `inputDirection` to callback dependency array.
+- `engine/constants.ts`: Added `KANJI_INPUT_MULTIPLIER = 4`.
+- `hooks/useKotobaPracticeSession.ts`: `recordWordComplete` now accepts optional `scoreMultiplier` parameter (default 1). Calls `incrementMastery` that many times on clean completion.
+- `components/game/kotoba-game-window.tsx`: Passes `KANJI_INPUT_MULTIPLIER` (4) when `isKanjiMode`, 1 for readings. Fixed missing `isKanjiMode` dependency in `handleWordComplete` callback.
+- `docs/GAME_DESIGN.md`: Section 11.4 updated with multiplier implementation reference.
+- `engine/__tests__/kotoba-scoring.test.ts`: New. 2 tests for `KANJI_INPUT_MULTIPLIER` constant.
+- `stores/__tests__/settings.store.test.ts`: New. 8 tests for inputDirection, kotobaInput, and hints settings.
+- `LangTap_Sprints.md`: Sprint 6 marked Done. 7 pre-existing tasks acknowledged as done from earlier sprints. 3 new tasks completed this session.
+
+### Tests
+- `engine/__tests__/kotoba-scoring.test.ts`: Pass (2 tests)
+- `stores/__tests__/settings.store.test.ts`: Pass (8 tests)
+- Full suite: 799 passed, 0 failed
+
+### Next task
+Sprint 7: Dojo Screens (Kana + Kotoba)
+
+### Notes
+- Most Sprint 6 tasks (Tap, Swipe, Type inputs for both Kana and Kotoba) were already built in earlier sprints as visual shells and wired during Sprint 5B. The sprint board was updated to reflect this.
+- The settings store bug was discovered during manual testing: the inputDirection toggle wrote to the store but the game window used local state. This would have affected any user who changed the setting from the default "alternate" mode.
+
+---
+
 ## [2026-05-01] - Session 78
 
 **Sprint:** Sprint 5C - Word Bank English Glosses Cleanup

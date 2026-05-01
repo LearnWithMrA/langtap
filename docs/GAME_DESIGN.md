@@ -670,7 +670,8 @@ export const KANJI_INPUT_MULTIPLIER = 4
 ### 11.4 Kotoba Scoring
 
 - Correct first-attempt answer: word mastery score increments by 1
-  (Readings) or 4 (Kanji).
+  (Readings) or 4 (Kanji). The multiplier is `KANJI_INPUT_MULTIPLIER`
+  in `engine/constants.ts`, passed via `recordWordComplete(wasClean, 4)`.
 - Wrong first-attempt answer: no points. Same feedback pattern as
   Kana mode (orange highlight, audio, mnemonic if enabled).
 - Reattempt: awards no points regardless of input type.

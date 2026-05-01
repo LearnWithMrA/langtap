@@ -42,6 +42,9 @@ export const KOTOBA_MASTERY_THRESHOLD = 15
 /** Maximum value of the per-word counter before reset */
 export const MAX_WORD_COUNTER = 5
 
+/** Scoring multiplier for Kanji input mode in Kotoba practice */
+export const KANJI_INPUT_MULTIPLIER = 4
+
 // -- Distance -----------------------------------------
 
 /** Maximum response time in ms before speed bonus drops to zero */

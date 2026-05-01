@@ -44,7 +44,7 @@ export type UseKotobaPracticeReturn = {
   isLoading: boolean
   isEmpty: boolean
   kanjiDistractors: string[]
-  recordWordComplete: (wasClean: boolean) => void
+  recordWordComplete: (wasClean: boolean, scoreMultiplier?: number) => void
   advanceToNext: () => void
 }
 
@@ -175,10 +175,12 @@ export function useKotobaPracticeSession(jlptLevel: JlptLevel = 'N5'): UseKotoba
   }, [hasHydrated, unlockedWordIds, selectAndBuild])
 
   const recordWordComplete = useCallback(
-    (wasClean: boolean): void => {
+    (wasClean: boolean, scoreMultiplier: number = 1): void => {
       if (!currentPrompt) return
       if (wasClean) {
-        incrementMastery(currentPrompt.id)
+        for (let i = 0; i < scoreMultiplier; i++) {
+          incrementMastery(currentPrompt.id)
+        }
       }
       incrementCounter(currentPrompt.id)
     },

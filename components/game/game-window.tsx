@@ -26,6 +26,7 @@ import { FEEDBACK_FLASH_MS, MEANING_DISPLAY_MS, MEANING_FADE_MS } from '@/engine
 import { evaluateInput } from '@/engine/input'
 import { toKatakana } from '@/fixtures/kana-practice-data'
 import { KANA_CHARACTERS } from '@/data/kana/characters'
+import { useSettingsStore } from '@/stores/settings.store'
 import type { Stage } from '@/types/kana.types'
 import type {
   UsePracticeSessionReturn,
@@ -109,8 +110,16 @@ export function GameWindow({
 
   const { prompt, isLoading, isEmpty, handleWordComplete, advanceToNext } = session
 
+  const inputDirection = useSettingsStore((s) => s.inputDirection)
+
   type Direction = 'kana-to-romaji' | 'romaji-to-kana'
-  const [direction, setDirection] = useState<Direction>('kana-to-romaji')
+  const [alternateDirection, setAlternateDirection] = useState<Direction>('kana-to-romaji')
+  const direction: Direction =
+    inputDirection === 'alternate'
+      ? alternateDirection
+      : inputDirection === 'romaji-to-kana'
+        ? 'romaji-to-kana'
+        : 'kana-to-romaji'
   const [inputValue, setInputValue] = useState('')
   const [completedCount, setCompletedCount] = useState(0)
   const [feedbackState, setFeedbackState] = useState<'idle' | 'correct' | 'wrong'>('idle')
@@ -225,7 +234,11 @@ export function GameWindow({
 
     scheduleTimeout((): void => setShowMeaning(true), MEANING_FADE_MS)
     scheduleTimeout((): void => {
-      setDirection((prev) => (prev === 'kana-to-romaji' ? 'romaji-to-kana' : 'kana-to-romaji'))
+      if (inputDirection === 'alternate') {
+        setAlternateDirection((prev) =>
+          prev === 'kana-to-romaji' ? 'romaji-to-kana' : 'kana-to-romaji',
+        )
+      }
       advanceToNext()
     }, MEANING_DISPLAY_MS)
   }, [
@@ -236,6 +249,7 @@ export function GameWindow({
     handleWordComplete,
     onCharacterCorrect,
     advanceToNext,
+    inputDirection,
   ])
 
   const handleWrong = useCallback((): void => {
