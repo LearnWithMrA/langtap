@@ -103,12 +103,20 @@ Examples:
 The weight is a relative value. Normalise all weights in the eligible pool to
 produce a probability distribution, then draw from it.
 
-### 2.5 Word Mastery Score (Phase 2+)
+### 2.5 Word Mastery Score
 
-In Phase 2, individual words gain their own mastery score following identical rules.
-Word mastery is tracked separately from character mastery.
-The selection algorithm for words follows the same frequency weighting formula.
-Word mastery is only relevant in Kotoba Mode. It does not affect Phase 1.
+Individual words have their own mastery score following identical rules to
+character mastery. Word mastery is tracked separately from character mastery
+in `stores/word-mastery.store.ts` (localStorage) and the `word_mastery`
+Supabase table.
+
+The selection algorithm (`engine/kotoba-selection.ts`) combines mastery weight
+(`1 / (score + 1)`) with counter weight to prioritise low-mastery, recently
+unseen words. Word mastery increments by 1 when all characters in the word
+are correct on first attempt. Wrong attempts on any character result in no
+mastery change for that word.
+
+Word mastery is only relevant in Kotoba Mode. It does not affect Kana practice.
 
 ---
 
@@ -591,7 +599,7 @@ N5 vocabulary and a user practising N1 vocabulary are on the same leaderboard.
 
 ---
 
-## 11. Kotoba Mode (Phase 2)
+## 11. Kotoba Mode
 
 ### 11.1 Overview
 
@@ -599,6 +607,12 @@ In Kotoba Mode, the user practises vocabulary rather than individual
 kana characters. An English word is shown and the user provides the
 Japanese equivalent. The input system varies by input mode and by
 the Kotoba input setting.
+
+Word selection uses `engine/kotoba-selection.ts` with mastery-weighted
+frequency: low-mastery, recently unseen words appear more often. Words
+unlock in steps of 6 via `engine/kotoba-progression.ts`. The practice
+hook `hooks/useKotobaPracticeSession.ts` bridges selection, progression,
+and the word mastery store.
 
 Kotoba Mode is gated behind full Kana mastery (all characters unlocked
 and practised). It has its own leaderboard, separate from the Kana

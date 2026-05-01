@@ -30,6 +30,41 @@ Format per entry:
 
 ---
 
+## [2026-05-01] - Session 76
+
+**Sprint:** Sprint 5B - Kotoba Wiring and Dojo
+**Task completed:** Design word mastery schema, Wire Kotoba practice screen to engine, Write Kotoba wiring tests
+**Status:** Done (Sprint 5B complete)
+
+### Changes made
+- `supabase/migrations/20260501120000_create_word_mastery.sql`: New migration creating `word_mastery` (per-word mastery scores with `updated_at` trigger) and `word_manual_unlocks` (write-once word unlocks) tables. RLS enabled on both, standard user-owns-row policies, no DELETE. Indexes on `user_id` for RLS scans.
+- `services/word-mastery.service.ts`: New service with `loadWordMastery`, `syncWordMastery`, `loadWordManualUnlocks`, `syncWordManualUnlocks`. Follows `unlock.service.ts` pattern (ServiceResult, delta upsert, empty-check short-circuit).
+- `types/kotoba.types.ts`: Added `KotobaPromptCharacter` and `KotobaPrompt` view-model types. Decouples the game window from `WordBankEntry` and `MockKotobaWord`.
+- `engine/kotoba-selection.ts`: New pure-function selection engine. `buildKotobaWordPool` (mastery + counter weighting), `selectNextKotobaWord` (returns `KotobaSelectionResult` with explicit `updatedCounters` and `didReset`), `generateKotobaDistractors` (kanji distractors from word bank).
+- `hooks/useKotobaPracticeSession.ts`: New hook orchestrating Kotoba practice. Hydration-aware (gates on `useWordMasteryStore.hasHydrated`). Builds `KotobaPrompt` from `WordBankEntry` via `getCharacterById` with sokuon/longvowel romaji handling. Exposes `recordWordComplete(wasClean)` for mastery scoring (clean = all first-attempt), `advanceToNext`, `kanjiDistractors`.
+- `components/game/kotoba-game-window.tsx`: Replaced fixture imports (`getMockKotobaWords`, `generateKanjiDistractors`, `MockKotobaWord`) with `useKotobaPracticeSession` hook. Added loading and empty state renders. Wired `recordWordComplete` in `handleWordComplete` with `wasClean` derived from `wrongAttemptsMap`.
+- `docs/BACKEND.md`: Added Sections 2.8 (word_mastery), 2.9 (word_manual_unlocks), 4.6 (word-mastery.service.ts), 5.2 (updated_at trigger). Updated data flow (Section 3.1) and guest migration (Section 3.3) to include word mastery.
+- `docs/GAME_DESIGN.md`: Updated Section 2.5 (word mastery is now implemented, not Phase 2 future). Updated Section 11.1 (Kotoba mode references real engine files).
+- `LangTap_Sprints.md`: All three remaining Sprint 5B tasks marked Done. Sprint status changed to Done.
+- `engine/__tests__/kotoba-selection.test.ts`: 21 tests covering pool building, weighted selection, counter exhaustion/reset, distractor generation, input immutability, locked word exclusion, deterministic RNG.
+- `services/__tests__/word-mastery.service.test.ts`: 12 tests covering load/sync for scores and manual unlocks, empty delta, error handling.
+
+### Tests
+- `engine/__tests__/kotoba-selection.test.ts`: Pass (21 tests)
+- `services/__tests__/word-mastery.service.test.ts`: Pass (12 tests)
+- Full suite: 767 passed, 0 failed
+
+### Next task
+Sprint 6: Input Modes (Kana + Kotoba), starting with "Build Tap mode input (Kana)"
+
+### Notes
+- Codex reviewed the plan before implementation. Nine points addressed: KotobaPrompt view-model contract (point 1), separate counter store (point 2, existing `useCounterStore` already handles this), explicit selection result (point 3), `updated_at` trigger (point 4), userId kept in service APIs for consistency with existing services (point 5, noted for future cross-cutting refactor), resequenced tasks (point 6), `if not exists` in migration (point 7), hydration gating (point 8), expanded test invariants (point 9).
+- The existing `mastery` table (kana) has the same `updated_at` gap (no trigger). A future migration can add the same trigger pattern for consistency.
+- The `word_counters` table already existed from the initial migration. No new counter table was needed for Kotoba.
+- Sprint 5B is now fully complete. All 7 tasks done across Sessions 73-76.
+
+---
+
 ## [2026-04-30] - Session 75
 
 **Sprint:** Sprint 5B - Kotoba Wiring and Dojo

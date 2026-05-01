@@ -36,9 +36,11 @@ Every table created in this project follows this rule without exception.
 |---|---|
 | `profiles` | User preferences, Kotoba JLPT level, Kanji JLPT level, input mode, settings |
 | `mastery` | Per-character mastery scores per user |
+| `word_mastery` | Per-word mastery scores per user (Kotoba mode) |
 | `word_counters` | Per-word show counters per user |
 | `leaderboard` | Cumulative mastery scores for global ranking |
 | `unlock_state` | Which characters each user has unlocked |
+| `word_manual_unlocks` | Which words each user has manually unlocked (Kotoba mode) |
 | `practice_sessions` | Daily practice activity for streak mechanic and heatmap calendar |
 
 All tables are in the `public` schema. All have RLS enabled.
@@ -276,6 +278,63 @@ column tracks the last username change. Server enforces
 a change. Returns a structured error with the exact next-allowed
 timestamp if the cooldown has not elapsed.
 
+### 2.8 word_mastery
+
+Stores one mastery score per user per word. Kotoba mode equivalent of the
+`mastery` table. Every correct first-attempt answer writes here.
+
+```sql
+create table public.word_mastery (
+  id           bigint generated always as identity primary key,
+  user_id      uuid not null references auth.users(id) on delete cascade,
+  word_id      text not null,  -- matches ID from data/words/ word bank files
+  score        integer not null default 0 check (score >= 0),
+  updated_at   timestamptz not null default now(),
+  unique (user_id, word_id)
+);
+
+create index word_mastery_user_id_idx on public.word_mastery using btree (user_id);
+
+alter table public.word_mastery enable row level security;
+alter table public.word_mastery force row level security;
+```
+
+RLS policies: same pattern as `mastery`. User reads, inserts, and updates
+only their own rows. No DELETE policy.
+
+An `updated_at` trigger (`set_word_mastery_updated_at`) runs before every
+UPDATE to set `updated_at = now()`. The default `now()` only applies on
+INSERT; the trigger ensures updates are timestamped correctly.
+
+The `unique(user_id, word_id)` constraint creates a composite index that
+covers the primary upsert query pattern. The standalone `user_id` index
+supports RLS policy scans.
+
+### 2.9 word_manual_unlocks
+
+Tracks which words each user has manually unlocked. A word is considered
+unlocked if it falls within the active progression step (via the
+kotoba-progression engine) OR if it appears in this table.
+
+```sql
+create table public.word_manual_unlocks (
+  id           bigint generated always as identity primary key,
+  user_id      uuid not null references auth.users(id) on delete cascade,
+  word_id      text not null,
+  created_at   timestamptz not null default now(),
+  unique (user_id, word_id)
+);
+
+create index word_manual_unlocks_user_id_idx
+  on public.word_manual_unlocks using btree (user_id);
+
+alter table public.word_manual_unlocks enable row level security;
+alter table public.word_manual_unlocks force row level security;
+```
+
+RLS policies: user reads and inserts only their own rows. No UPDATE policy
+(write-once semantics). No DELETE policy.
+
 ---
 
 ## 3. Data Flow
@@ -286,19 +345,23 @@ timestamp if the cooldown has not elapsed.
 App starts
   -> Load user profile from Supabase (services/profile.service.ts)
   -> Load mastery scores from Supabase (services/mastery.service.ts)
+  -> Load word mastery scores from Supabase (services/word-mastery.service.ts)
   -> Load word counters from Supabase (services/counter.service.ts)
   -> Load manual unlocks from Supabase (services/unlock.service.ts)
+  -> Load word manual unlocks from Supabase (services/word-mastery.service.ts)
   -> Hydrate Zustand stores with loaded data
   -> Compute unlock state from mastery + manual_unlocks
+  -> Compute word unlock state from word mastery + word_manual_unlocks
   -> Begin practice session
 
 During practice
   -> Engine runs entirely in memory from Zustand store state
   -> No Supabase calls during active typing
-  -> Mastery scores and counters update in Zustand only
+  -> Mastery scores, word mastery scores, and counters update in Zustand only
 
 Session ends (user navigates away or closes tab)
   -> Sync mastery store delta to Supabase (upsert changed rows only)
+  -> Sync word mastery store delta to Supabase (upsert changed rows only)
   -> Sync word counter delta to Supabase (upsert changed rows only)
   -> Sync leaderboard total score to Supabase
 ```
@@ -344,9 +407,11 @@ Guest state migration on account creation:
   1. Read all mastery scores from localStorage
   2. Read all word counters from localStorage
   3. Read all manual unlocks from localStorage
-  4. Upsert all to Supabase
-  5. Clear localStorage game state
-  6. Hydrate stores from Supabase
+  4. Read all word mastery scores from localStorage
+  5. Read all word manual unlocks from localStorage
+  6. Upsert all to Supabase
+  7. Clear localStorage game state
+  8. Hydrate stores from Supabase
 ```
 
 ---
@@ -396,13 +461,21 @@ getOverallLeaderboard(): Promise<ServiceResult<LeaderboardEntry[]>>
 upsertScore(userId: string, entry: LeaderboardEntry): Promise<ServiceResult<void>>
 ```
 
-### 4.5 services/unlock.service.ts (Sprint 4)
-
-Not yet implemented. Interface planned:
+### 4.5 services/unlock.service.ts
 
 ```ts
 loadManualUnlocks(userId: string): Promise<ServiceResult<string[]>>
+syncManualUnlocks(userId: string, characterIds: string[]): Promise<ServiceResult<void>>
 addManualUnlock(userId: string, characterId: string): Promise<ServiceResult<void>>
+```
+
+### 4.6 services/word-mastery.service.ts
+
+```ts
+loadWordMastery(userId: string): Promise<ServiceResult<WordMasteryScoreMap>>
+syncWordMastery(userId: string, changedScores: WordMasteryScoreMap): Promise<ServiceResult<void>>
+loadWordManualUnlocks(userId: string): Promise<ServiceResult<string[]>>
+syncWordManualUnlocks(userId: string, wordIds: string[]): Promise<ServiceResult<void>>
 ```
 
 ---
@@ -438,6 +511,33 @@ create trigger on_auth_user_created
 
 The default username (`user_` plus the first 8 characters of the UUID) is shown
 during onboarding with a prompt to choose a real username.
+
+### 5.2 Word Mastery updated_at Trigger
+
+A trigger sets `updated_at = now()` on every UPDATE to `word_mastery`. The
+column default (`now()`) only applies on INSERT; without this trigger,
+`updated_at` would stay frozen at insert time after subsequent score changes.
+
+```sql
+create or replace function public.set_word_mastery_updated_at()
+returns trigger
+language plpgsql
+security definer set search_path = public, pg_temp
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+create trigger word_mastery_set_updated_at
+  before update on public.word_mastery
+  for each row execute procedure public.set_word_mastery_updated_at();
+```
+
+Note: the existing `mastery` table (kana) has the same `updated_at` gap.
+A future migration can add the same trigger pattern to `mastery` for
+consistency.
 
 ---
 

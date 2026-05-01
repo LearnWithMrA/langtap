@@ -94,6 +94,26 @@ export type KotobaMasteryState = {
 // deterministically without racing on fetches.
 export type KotobaClientState = 'ready' | 'loading' | 'error' | 'empty'
 
+// ── Practice prompt (view-model) ──────────────
+
+// A single character breakdown for the practice input flow.
+// Maps 1:1 to entries in WordBankEntry.characterIds.
+export type KotobaPromptCharacter = {
+  kana: string
+  romaji: string
+}
+
+// View-model consumed by KotobaGameWindow. Built from a WordBankEntry
+// by the useKotobaPracticeSession hook. Components never touch
+// WordBankEntry directly.
+export type KotobaPrompt = {
+  id: string
+  kanji: string | null
+  kana: string
+  english: string
+  characters: readonly KotobaPromptCharacter[]
+}
+
 // ── Fixture shape ─────────────────────────────
 
 // Full visual-shell payload. The route file picks a fixture key; the client

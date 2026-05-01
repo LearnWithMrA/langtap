@@ -8,10 +8,10 @@
 //          Kanji: show English + row of 4 kanji options, user enters
 //          kana reading then taps the correct kanji.
 // Depends on: engine/constants.ts,
+//             hooks/useKotobaPracticeSession.ts,
 //             components/game/type-input.tsx,
 //             components/game/swipe-input.tsx,
-//             components/game/tap-input.tsx,
-//             samples/kotoba-practice-fixtures.ts
+//             components/game/tap-input.tsx
 // ─────────────────────────────────────────────
 
 'use client'
@@ -23,22 +23,18 @@ import { SwipeInput } from '@/components/game/swipe-input'
 import { TapInput } from '@/components/game/tap-input'
 import { FEEDBACK_FLASH_MS, KOTOBA_DISPLAY_MS } from '@/engine/constants'
 import {
-  getMockKotobaWords,
-  generateKanjiDistractors,
-} from '@/fixtures/samples/kotoba-practice-fixtures'
-import type { MockKotobaWord } from '@/fixtures/samples/kotoba-practice-fixtures'
-import {
   isKatakanaChar,
   KOTOBA_HIRAGANA_TAP,
   KOTOBA_KATAKANA_TAP,
 } from '@/components/game/tap-grids'
 import { useKeySound } from '@/hooks/useKeySound'
 import { useSettingsStore } from '@/stores/settings.store'
+import { useKotobaPracticeSession } from '@/hooks/useKotobaPracticeSession'
+import type { KotobaPrompt } from '@/types/kotoba.types'
 
 // ── Constants ─────────────────────────────────
 
 const MAX_WRONG_ATTEMPTS = 3
-const MOCK_WORDS = getMockKotobaWords()
 
 // ── Types ─────────────────────────────────────
 
@@ -54,8 +50,8 @@ type Props = {
 
 // ── Helpers ───────────────────────────────────
 
-function isKatakanaWord(word: MockKotobaWord): boolean {
-  return isKatakanaChar(word.characters[0].kana)
+function isKatakanaPrompt(word: KotobaPrompt): boolean {
+  return word.characters.length > 0 && isKatakanaChar(word.characters[0].kana)
 }
 
 // ── Main export ──────────────────────────────
@@ -74,9 +70,19 @@ export function KotobaGameWindow({
 
   const isKanjiMode = kotobaInput === 'kanji'
 
+  // ── Practice session ──────────────────────
+
+  const {
+    prompt: currentWord,
+    isLoading,
+    isEmpty,
+    kanjiDistractors,
+    recordWordComplete,
+    advanceToNext,
+  } = useKotobaPracticeSession()
+
   // ── State ─────────────────────────────────
 
-  const [wordIndex, setWordIndex] = useState(0)
   const [inputValue, setInputValue] = useState('')
   const [completedCount, setCompletedCount] = useState(0)
   const [feedbackState, setFeedbackState] = useState<'idle' | 'correct' | 'wrong'>('idle')
@@ -98,10 +104,10 @@ export function KotobaGameWindow({
 
   // ── Derived ───────────────────────────────
 
-  const currentWord = MOCK_WORDS[wordIndex]
-  const hasKanji = !currentWord.isKanaOnly && currentWord.kanji !== null
+  const hasKanji = currentWord !== null && currentWord.kanji !== null
 
   const kanaBreakpoints = useMemo((): string[] => {
+    if (!currentWord) return []
     const result: string[] = []
     let cumulative = ''
     for (const char of currentWord.characters) {
@@ -111,13 +117,15 @@ export function KotobaGameWindow({
     return result
   }, [currentWord])
 
-  const fullKanaAnswer = kanaBreakpoints[kanaBreakpoints.length - 1]
-  const currentCharIndex = Math.min(completedCount, currentWord.characters.length - 1)
-  const currentChar = currentWord.characters[currentCharIndex]
+  const fullKanaAnswer = kanaBreakpoints[kanaBreakpoints.length - 1] ?? ''
+  const charCount = currentWord?.characters.length ?? 0
+  const currentCharIndex = Math.min(completedCount, Math.max(charCount - 1, 0))
+  const currentChar = currentWord?.characters[currentCharIndex] ?? null
 
   const TAP_GRID_SIZE = 10
   const tapGrid = useMemo(() => {
-    const pool = isKatakanaWord(currentWord) ? KOTOBA_KATAKANA_TAP : KOTOBA_HIRAGANA_TAP
+    if (!currentWord) return []
+    const pool = isKatakanaPrompt(currentWord) ? KOTOBA_KATAKANA_TAP : KOTOBA_HIRAGANA_TAP
     const needed = currentWord.characters.map((c) => c.kana)
     const uniqueNeeded = [...new Set(needed)]
 
@@ -136,11 +144,10 @@ export function KotobaGameWindow({
   }, [currentWord])
 
   const kanjiOptions = useMemo((): string[] => {
-    if (!isKanjiMode || !hasKanji || !currentWord.kanji) return []
-    const distractors = generateKanjiDistractors(currentWord.kanji, 3)
-    const all = [currentWord.kanji, ...distractors]
+    if (!isKanjiMode || !hasKanji || !currentWord?.kanji) return []
+    const all = [currentWord.kanji, ...kanjiDistractors]
     return all.sort(() => Math.random() - 0.5)
-  }, [currentWord, isKanjiMode, hasKanji])
+  }, [currentWord, isKanjiMode, hasKanji, kanjiDistractors])
 
   // ── Helpers ───────────────────────────────
 
@@ -179,8 +186,8 @@ export function KotobaGameWindow({
 
   const advanceWord = useCallback((): void => {
     resetAll()
-    setWordIndex((prev) => (prev + 1) % MOCK_WORDS.length)
-  }, [resetAll])
+    advanceToNext()
+  }, [resetAll, advanceToNext])
 
   useEffect((): void => {
     resetAll()
@@ -192,18 +199,20 @@ export function KotobaGameWindow({
   const handleWordComplete = useCallback((): void => {
     clearTimers()
     generationRef.current++
+    const wasClean = wrongAttemptsMap.every((c) => c === 0)
+    recordWordComplete(wasClean)
     setWordDone(true)
     setFeedbackState('correct')
     schedule(advanceWord, KOTOBA_DISPLAY_MS)
-  }, [clearTimers, schedule, advanceWord])
+  }, [clearTimers, schedule, advanceWord, wrongAttemptsMap, recordWordComplete])
 
   const handleReadingDone = useCallback((): void => {
     setReadingDone(true)
-    setCompletedCount(currentWord.characters.length)
+    setCompletedCount(charCount)
     if (!isKanjiMode || !hasKanji) {
       handleWordComplete()
     }
-  }, [currentWord.characters.length, isKanjiMode, hasKanji, handleWordComplete])
+  }, [charCount, isKanjiMode, hasKanji, handleWordComplete])
 
   const handleWrong = useCallback((): void => {
     clearTimers()
@@ -226,7 +235,7 @@ export function KotobaGameWindow({
 
   const handleTap = useCallback(
     (id: string, value: string): void => {
-      if (wordDone || readingDone) return
+      if (wordDone || readingDone || !currentChar) return
       setTapFeedbackId(id)
 
       if (value === currentChar.kana) {
@@ -236,7 +245,7 @@ export function KotobaGameWindow({
         if ((wrongAttemptsMap[currentCharIndex] ?? 0) === 0) {
           onCharacterCorrect?.()
         }
-        if (newCompleted === currentWord.characters.length) {
+        if (newCompleted === charCount) {
           handleReadingDone()
         } else {
           clearTimers()
@@ -254,10 +263,10 @@ export function KotobaGameWindow({
       }
     },
     [
-      currentChar.kana,
+      currentChar,
       currentCharIndex,
       completedCount,
-      currentWord.characters.length,
+      charCount,
       wordDone,
       readingDone,
       wrongAttemptsMap,
@@ -285,7 +294,7 @@ export function KotobaGameWindow({
         const hasKanjiChar = /[一-鿿㐀-䶿]/.test(cleaned)
         if (!hasKanjiChar) return
 
-        if (cleaned === currentWord.kanji) {
+        if (cleaned === currentWord?.kanji) {
           handleWordComplete()
         } else {
           setKanjiWrongCount((prev) => prev + 1)
@@ -343,7 +352,7 @@ export function KotobaGameWindow({
 
   const handleKanjiTap = useCallback(
     (kanji: string): void => {
-      if (!readingDone || wordDone || !currentWord.kanji) return
+      if (!readingDone || wordDone || !currentWord?.kanji) return
       setSelectedKanji(kanji)
       playSound(kanji === currentWord.kanji ? 'e' : 'o')
 
@@ -362,7 +371,7 @@ export function KotobaGameWindow({
     [
       readingDone,
       wordDone,
-      currentWord.kanji,
+      currentWord?.kanji,
       onCharacterCorrect,
       handleWordComplete,
       schedule,
@@ -382,7 +391,7 @@ export function KotobaGameWindow({
   // ── Kanji option style ────────────────────
 
   function kanjiOptionClass(kanji: string): string {
-    if (wordDone && kanji === currentWord.kanji)
+    if (wordDone && kanji === currentWord?.kanji)
       return 'bg-feedback-correct shadow-[0_3px_0_0_#2e9a73]'
     if (selectedKanji === kanji && kanjiFeedback === 'correct')
       return 'bg-sky-400 shadow-[0_3px_0_0_var(--color-sky-600)]'
@@ -393,6 +402,26 @@ export function KotobaGameWindow({
   }
 
   // ── Render ────────────────────────────────
+
+  if (isLoading) {
+    return (
+      <div className="bg-[#faf5e4] rounded-2xl shadow-[0_6px_0_0_#d4c9b0] w-full max-w-md mx-auto p-6 md:p-8">
+        <p className="text-warm-400 text-center" role="status" aria-label="Loading Kotoba practice">
+          Loading...
+        </p>
+      </div>
+    )
+  }
+
+  if (isEmpty || !currentWord) {
+    return (
+      <div className="bg-[#faf5e4] rounded-2xl shadow-[0_6px_0_0_#d4c9b0] w-full max-w-md mx-auto p-6 md:p-8">
+        <p className="text-warm-400 text-center" role="status" aria-label="No words available">
+          No words unlocked yet. Practice more kana to unlock Kotoba.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="bg-[#faf5e4] rounded-2xl shadow-[0_6px_0_0_#d4c9b0] w-full max-w-md mx-auto p-6 md:p-8">
