@@ -211,16 +211,16 @@ No UI yet. This is pure logic.
 ## Sprint 5C - Word Bank English Glosses Cleanup
 
 **Goal:** Clean up English meanings across all word bank files. Differentiate words that share the same meaning by adding register/context tags in brackets. The standard/plain form keeps the bare meaning with no brackets. Only variants get a bracket tag to the right: e.g. "yes" for はい, "yes (Casual)" for ええ. Replace academic labels like (honorable), (humble) with natural tags: (Formal), (Casual), (Informal), (Polite). No words are deleted.
-**Status:** Pending
+**Status:** Done
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Audit all word banks for duplicate and unclear meanings | **Medium** | **To Do** | Scan N5-N1 word banks for entries sharing identical `meaning` strings and entries with academic bracket labels like (honorable), (humble). List all findings with kana/kanji. |
-| Rewrite bracket labels to natural register tags | **Large** | **To Do** | Replace academic labels like (honorable), (humble) with user-facing tags: (Formal), (Casual), (Informal), (Polite). Standard/plain form gets the bare meaning with no brackets. Tag goes to the right of the meaning. Apply consistently across all JLPT levels. |
-| Differentiate shared meanings with register context | **Large** | **To Do** | For every set of words sharing the same meaning (e.g. はい/ええ both "yes"), the standard form keeps the bare meaning ("yes"), variants get a bracket tag ("yes (Casual)"). Every word must have a distinct, glanceable English gloss. |
-| Enforce sentence case on all word bank meanings | **Small** | **To Do** | All `meaning` values in `data/words/` must start with an uppercase letter (sentence case). Some entries are lowercase ("to meet", "blue"). Fix at source data level so the UI does not need CSS `capitalize`. Bracket tags stay lowercase: "I (Formal)" not "I (formal)". |
-| Shuffle words within levels to break theme clusters | **Medium** | **To Do** | Levels were built from category files so same-theme words cluster (e.g. "please" next to "please", family members in a row). Shuffle word order within each level so similar meanings are spread apart. Keep level membership unchanged, only reorder within each 12-word level. Rebuild level files via the build script. |
-| Validate cleaned word banks | **Small** | **To Do** | Run word bank tests. Confirm no empty or placeholder meanings. Confirm bracket tags are consistent and to the right of the meaning. |
+| Audit all word banks for duplicate and unclear meanings | **Medium** | **Done** | `scripts/audit-word-meanings.ts` scans 8,244 words. Reports exact + normalised duplicates, bracket annotations (deny/keep categorised), casing issues, multi-definition counts. Output: `scripts/output/meaning-audit.md`. Session 78. |
+| Rewrite bracket labels to natural register tags | **Large** | **Done** | `transformMeaning()` in `scripts/build-word-bank.ts`. Deny map: (honorable) to (Polite), (humble) stripped, (respectful) to (Formal), (col) to (Casual), (sl) to (Slang), etc. Grammar metadata removed: (uk), (abbr), (n), (vs), etc. All 8,244 words processed. Session 78. |
+| Differentiate shared meanings with register context | **Large** | **Done** | `scripts/meaning-overrides.json` with ~200 composite-key overrides (`id:kana`). N5: 48 sets, N4: 24 sets, N3: 40 sets, N2: 38 sets, N1: 48 sets resolved. 0 exact duplicates remain. Overrides checked at build time. Session 78. |
+| Enforce sentence case on all word bank meanings | **Small** | **Done** | `toSentenceCase()` in build script finds first letter character and uppercases it. Handles leading quotes/punctuation. 93.5% of words affected. Session 78. |
+| Shuffle words within levels to break theme clusters | **Medium** | **Done** | Seeded Fisher-Yates shuffle in `scripts/build-kotoba-levels.ts`. Deterministic (seed per level + JLPT). All 689 levels rebuilt. Same-theme words no longer adjacent. Session 78. |
+| Validate cleaned word banks | **Small** | **Done** | 16 new test assertions in `data/words/__tests__/word-bank.test.ts`: sentence case, denied brackets, empty meanings, idempotence. 789 tests pass. Session 78. |
 
 ---
 

@@ -353,6 +353,8 @@ the word bank. This is a one-time automated content pipeline, not application co
 2. Run `scripts/build-word-bank.ts` which:
    - Reads each JSON file (`n5.json` through `n1.json`)
    - Maps `jmdict_seq` to `id`, `kana` to `kana`, `kanji` (empty string to null) to `kanji`, `waller_definition` to `meaning`
+   - Checks `scripts/meaning-overrides.json` for manual overrides (keyed by `id:kana`). Overrides take priority over the raw JMDict definition.
+   - Applies `transformMeaning()`: strips denied bracket labels (honorable, humble, etc.) and replaces with natural register tags (Polite, Formal, Casual). Removes grammar metadata brackets (uk, abbr, n, vs). Applies sentence case.
    - Applies the JLPT level from the source filename
    - Applies all filtering rules from Section 7.3
    - Generates `characterIds` by mapping each kana character in the `kana` field to its ID in `data/kana/characters.ts`
@@ -390,6 +392,25 @@ Words with the same kana reading but different kanji are kept as separate entrie
 Single-character words (e.g. き 木 "tree", め 目 "eye") are included. In Kana Mode
 they produce a quick prompt; in Kotoba Mode they are valid vocabulary with distinct
 kanji meanings.
+
+### 7.4 Meaning Conventions
+
+All English meanings follow these rules:
+
+- **Sentence case:** Every meaning starts with an uppercase letter. "To meet",
+  "Blue (noun)", not "to meet", "blue (noun)".
+- **Standard form has no tag:** The most common/standard word keeps the bare
+  meaning. Only variants get a bracket tag to the right: "Yes" for はい,
+  "Yes (Casual)" for ええ.
+- **Natural register tags:** (Polite), (Formal), (Casual), (Slang), (Archaic),
+  (Feminine), (Masculine). Never (honorable), (humble), (hum), (pol), (col).
+- **No grammar metadata:** (n), (vs), (vt), (vi), (uk), (abbr) are stripped
+  during build. Users don't need part-of-speech labels.
+- **No exact duplicates:** Every word within a JLPT level has a unique meaning
+  string. The audit script (`scripts/audit-word-meanings.ts`) verifies this.
+- **Overrides file:** `scripts/meaning-overrides.json` contains ~200 manual
+  meaning overrides keyed by `id:kana`. The build script checks overrides
+  before applying the mechanical transform.
 
 **Katakana-only words** are not filtered by JLPT level. All katakana-only words from
 all source files are included regardless of their assigned level, because loanwords

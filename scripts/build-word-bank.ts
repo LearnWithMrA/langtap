@@ -7,7 +7,7 @@
 // Depends on: data/kana/characters.ts, scripts/source/jmdict/*.json
 // ------------------------------------------------------------
 
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -100,6 +100,97 @@ function decomposeKana(kana: string): string[] | null {
   return ids
 }
 
+// ── Meaning overrides ───────────────────────
+
+const OVERRIDES_PATH = join(__dirname, 'meaning-overrides.json')
+const overrides: Record<string, string> = existsSync(OVERRIDES_PATH)
+  ? JSON.parse(readFileSync(OVERRIDES_PATH, 'utf-8'))
+  : {}
+
+function getOverrideKey(id: string, kana: string): string {
+  return `${id}:${kana}`
+}
+
+// ── Meaning transforms ──────────────────────
+
+const DENY_MAP: Record<string, string> = {
+  honorable: 'Polite',
+  humble: '',
+  hum: '',
+  hon: 'Polite',
+  respectful: 'Formal',
+  polite: 'Polite',
+  pol: 'Polite',
+  col: 'Casual',
+  informal: 'Casual',
+  sl: 'Slang',
+  vulg: 'Vulgar',
+  arch: 'Archaic',
+  obs: 'Archaic',
+  derog: 'Derogatory',
+  fem: 'Feminine',
+  male: 'Masculine',
+}
+
+const REMOVE_BRACKETS = new Set([
+  'uk',
+  'abbr',
+  'exp',
+  'conj',
+  'int',
+  'pn',
+  'ctr',
+  'suf',
+  'pref',
+  'n',
+  'vs',
+  'vt',
+  'vi',
+  'adj',
+  'adv',
+  'X',
+])
+
+function toSentenceCase(s: string): string {
+  for (let i = 0; i < s.length; i++) {
+    if (/[a-zA-Z]/.test(s[i])) {
+      return s.slice(0, i) + s[i].toUpperCase() + s.slice(i + 1)
+    }
+  }
+  return s
+}
+
+function transformMeaning(raw: string): string {
+  let meaning = raw.trim()
+  const tags: string[] = []
+
+  meaning = meaning.replace(/\(([^)]+)\)/g, (_match, inner: string) => {
+    const lower = inner.toLowerCase().trim()
+
+    if (lower in DENY_MAP) {
+      const registerTag = DENY_MAP[lower]
+      if (registerTag && !tags.includes(registerTag)) tags.push(registerTag)
+      return ''
+    }
+
+    if (REMOVE_BRACKETS.has(lower)) return ''
+
+    return `(${inner})`
+  })
+
+  meaning = meaning.replace(/\s{2,}/g, ' ').trim()
+  meaning = meaning.replace(/^[,\s]+/, '').replace(/[,\s]+$/, '')
+  meaning = meaning.replace(/,\s*,/g, ',')
+
+  meaning = toSentenceCase(meaning)
+
+  if (tags.length > 0) {
+    meaning = `${meaning} (${tags.join(', ')})`
+  }
+
+  return meaning
+}
+
 // ── Filtering ────────────────────────────────
 
 function isKatakanaOnly(kana: string): boolean {
@@ -188,7 +279,7 @@ for (const level of LEVELS) {
 
   for (const entry of entries) {
     const kana = entry.kana.normalize('NFC').trim()
-    const meaning = entry.waller_definition.trim()
+    const rawMeaning = entry.waller_definition.trim()
 
     if (!kana) {
       levelStats.rejected.emptyKana++
@@ -196,7 +287,7 @@ for (const level of LEVELS) {
       continue
     }
 
-    if (!meaning) {
+    if (!rawMeaning) {
       levelStats.rejected.emptyMeaning++
       levelStats.rejected.total++
       continue
@@ -218,6 +309,9 @@ for (const level of LEVELS) {
     seenIds.add(id)
 
     const kanji = entry.kanji.trim() || null
+
+    const overrideKey = getOverrideKey(id, kana)
+    const meaning = overrides[overrideKey] ?? transformMeaning(rawMeaning)
 
     if (isKatakanaOnly(kana)) {
       levelStats.katakanaOnly++

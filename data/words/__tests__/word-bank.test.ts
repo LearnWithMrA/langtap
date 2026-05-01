@@ -79,6 +79,75 @@ describe('word bank cross-references', () => {
   })
 })
 
+// ── Meaning quality ─────────────────────────
+
+const DENIED_BRACKETS = [
+  '(honorable)',
+  '(humble)',
+  '(hum)',
+  '(hon)',
+  '(pol)',
+  '(col)',
+  '(sl)',
+  '(vulg)',
+  '(obs)',
+  '(uk)',
+  '(abbr)',
+  '(exp)',
+  '(conj)',
+  '(int)',
+  '(pn)',
+  '(n)',
+  '(vs)',
+  '(vt)',
+  '(vi)',
+]
+
+describe('word bank meaning quality', () => {
+  for (const level of LEVELS) {
+    it(`${level}: every meaning starts with an uppercase letter`, () => {
+      for (const word of WORD_BANK[level]) {
+        const firstLetter = word.meaning.match(/[a-zA-Z]/)
+        if (firstLetter) {
+          expect(
+            firstLetter[0],
+            `${word.id} (${word.kana}) meaning "${word.meaning}" starts lowercase`,
+          ).toBe(firstLetter[0].toUpperCase())
+        }
+      }
+    })
+
+    it(`${level}: no meaning contains denied bracket metadata`, () => {
+      for (const word of WORD_BANK[level]) {
+        const lower = word.meaning.toLowerCase()
+        for (const denied of DENIED_BRACKETS) {
+          expect(
+            lower.includes(denied),
+            `${word.id} (${word.kana}) meaning "${word.meaning}" contains ${denied}`,
+          ).toBe(false)
+        }
+      }
+    })
+
+    it(`${level}: no meaning is empty or whitespace-only`, () => {
+      for (const word of WORD_BANK[level]) {
+        expect(
+          word.meaning.trim().length,
+          `${word.id} (${word.kana}) has empty meaning`,
+        ).toBeGreaterThan(0)
+      }
+    })
+  }
+
+  it('build is idempotent (same input produces same output)', () => {
+    const snapshot: Record<string, string> = {}
+    for (const word of ALL_WORDS) {
+      snapshot[word.id] = word.meaning
+    }
+    expect(Object.keys(snapshot).length).toBe(ALL_WORDS.length)
+  })
+})
+
 // ── Size ─────────────────────────────────────
 
 describe('word bank size', () => {

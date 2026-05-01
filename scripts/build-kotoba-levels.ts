@@ -17,6 +17,32 @@ const ROOT = join(__dirname, '..')
 // ── Constants ─────────────────────────────────
 
 const WORDS_PER_LEVEL = 12
+const SHUFFLE_SEED_BASE = 42
+
+// ── Seeded shuffle ───────────────────────────
+
+function seededRng(seed: number): () => number {
+  let s = seed
+  return (): number => {
+    s = (s * 1103515245 + 12345) & 0x7fffffff
+    return s / 0x7fffffff
+  }
+}
+
+function shuffleLevel(ids: string[], levelIndex: number, jlptLevel: string): string[] {
+  const seed = SHUFFLE_SEED_BASE + levelIndex * 997 + jlptLevel.charCodeAt(1)
+  const rng = seededRng(seed)
+  const result = [...ids]
+
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1))
+    const temp = result[i]
+    result[i] = result[j]
+    result[j] = temp
+  }
+
+  return result
+}
 
 // ── Main ──────────────────────────────────────
 
@@ -84,7 +110,8 @@ function build(level: string): void {
 
   const levels: string[][] = []
   for (let i = 0; i < ids.length; i += WORDS_PER_LEVEL) {
-    levels.push(ids.slice(i, i + WORDS_PER_LEVEL))
+    const chunk = ids.slice(i, i + WORDS_PER_LEVEL)
+    levels.push(shuffleLevel(chunk, levels.length, level))
   }
 
   const lines: string[] = []

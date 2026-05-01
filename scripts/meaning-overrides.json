@@ -1,0 +1,627 @@
+{
+  "1612860:そうして": "And then",
+  "1006730:そして": "And",
+
+  "2220600:おふろ": "Bath (Polite)",
+  "1500100:ふろ": "Bath",
+
+  "1342540:はじめ": "Beginning (first time)",
+  "1342540-はじめ:はじめ": "Beginning (start)",
+
+  "1588880:おおきい": "Big",
+  "1412890:おおきな": "Large",
+
+  "1287410:くろ": "Black (noun)",
+  "1287420:くろい": "Black",
+
+  "1318970:じしょ": "Dictionary",
+  "1315140:じびき": "Dictionary (old-fashioned)",
+
+  "1583090:はち": "Eight",
+  "1583095:やっつ": "Eight (things)",
+
+  "1482110:ばん": "Evening",
+  "1542790:ゆうがた": "Late afternoon",
+
+  "1584350:まいげつ": "Every month",
+  "1584350-まいつき:まいつき": "Every month (alt.)",
+
+  "1584360:まいねん": "Every year",
+  "1584360-まいとし:まいとし": "Every year (alt.)",
+
+  "1202170:みなさん": "Everyone (Polite)",
+  "1202150:みんな": "Everyone",
+
+  "1268060:ご": "Five",
+  "1268070:いつつ": "Five (things)",
+
+  "1579470:し": "Four",
+  "1579470-よん:よん": "Four (alt.)",
+  "1307040:よっつ": "Four (things)",
+
+  "2820690:いい": "Good",
+  "1605820:よい": "Good (Written)",
+
+  "2842390:わたくし": "I (Formal)",
+  "1311110:わたし": "I",
+
+  "1042610:キロ": "Kilo",
+  "1042620:キログラム": "Kilogram",
+
+  "1347750:ちいさい": "Small",
+  "2136180:ちいさな": "Little",
+
+  "1407460:おおい": "Many",
+  "1415870:たくさん": "A lot",
+
+  "1428280:あさ": "Morning",
+  "1269060:ごぜん": "AM, morning",
+
+  "1242130:ちかい": "Near",
+  "1242160:ちかく": "Nearby",
+
+  "1578150:きゅう": "Nine",
+  "1578150-く:く": "Nine (alt.)",
+  "1243600:ここのつ": "Nine (things)",
+
+  "1160790:いち": "One",
+  "1160820:ひとつ": "One (thing)",
+
+  "1000320:あそこ": "Over there",
+  "1483185-あっち:あっち": "Over there (Casual)",
+  "1006780:そちら": "That way (Polite)",
+  "1006780-そっち:そっち": "That way (Casual)",
+  "1277140:むこう": "Across, beyond",
+
+  "1184270:ください": "Please (request)",
+  "1189130:どうぞ": "Please, go ahead",
+
+  "1138960:ラジカセ": "Radio cassette",
+  "1138900:ラジオカセット": "Radio cassette player",
+
+  "1390020:かわ": "River",
+  "1390020-かわ:かわ": "River (large)",
+
+  "1604230:まるい": "Round",
+  "1604230-まるい:まるい": "Circular",
+
+  "1319210:しち": "Seven",
+  "1319210-なな:なな": "Seven (alt.)",
+  "1319220:ななつ": "Seven (things)",
+
+  "1585310:ろく": "Six",
+  "1585315:むっつ": "Six (things)",
+
+  "1579840:じゅう": "Ten",
+  "1579840-とお:とお": "Ten (alt.)",
+
+  "2847612:あれ": "That (over there)",
+  "1006830:その": "That (describing)",
+  "2216210:それ": "That",
+
+  "1582920:この": "This (describing)",
+  "2216120:これ": "This",
+
+  "1004500:こちら": "This way (Polite)",
+  "1004500-こっち:こっち": "This way (Casual)",
+
+  "1579350:さん": "Three",
+  "1299740:みっつ": "Three (things)",
+
+  "1157170:する": "To do",
+  "1012980:やる": "To do (Casual)",
+
+  "1578850:いく": "To go",
+  "1578850-ゆく:ゆく": "To go (Literary)",
+
+  "1259290:みる": "To see",
+  "1259290-みる:みる": "To watch",
+
+  "1461140:に": "Two",
+  "1461160:ふたつ": "Two (things)",
+
+  "1587610:いや": "Disliked, unwanted",
+  "1495000:まずい": "Bad tasting",
+
+  "1013190:より": "Than, from",
+  "1516930:ほう": "Direction, side",
+
+  "1005900:じゃ": "Well then",
+  "1005900-じゃあ:じゃあ": "Well then (Casual)",
+
+  "2846738:なん": "What",
+  "1577100:なに": "What (standalone)",
+
+  "1189360-どっち:どっち": "Which (Casual)",
+  "1920240:どの": "Which",
+
+  "1474900:しろ": "White (noun)",
+  "1474910:しろい": "White",
+
+  "1416830:だれ": "Who",
+  "1189370:どなた": "Who (Polite)",
+
+  "1576760:きいろ": "Yellow (noun)",
+  "1182030:きいろい": "Yellow",
+
+  "1001140:ええ": "Yes (Casual)",
+  "1010080:はい": "Yes",
+
+  "2839962:ゼロ": "Zero",
+  "1557630:れい": "Zero (kanji)",
+
+  "1245570:くうこう": "Airport",
+  "1485520:ひこうじょう": "Airfield",
+
+  "2772770:やはり": "As expected",
+  "1012810:やっぱり": "As expected (Casual)",
+
+  "1340460:できるだけ": "As much as possible",
+  "1375620:なるべく": "If possible, preferably",
+
+  "1053350:コンピュータ": "Computer",
+  "1053350-コンピューター:コンピューター": "Computer (alt.)",
+
+  "1372800:ずいぶん": "Quite, considerably",
+  "1484930:ひじょうに": "Extremely",
+  "1293700:もっとも": "Most",
+
+  "1193950:かじ": "House fire",
+  "1193610:ひ": "Fire, flame",
+
+  "1257110:かたい": "Hard, firm",
+  "1257110-かたい:かたい": "Hard, stiff",
+  "1257110-固い:かたい": "Solid, rigid",
+
+  "1283500:こうこう": "High school",
+  "1283860:こうとうがっこう": "Senior high school (Formal)",
+
+  "2853889:けれど": "However",
+  "2853889-けれども:けれども": "However (Formal)",
+
+  "1040060:ガス": "Gas",
+  "1040250:ガソリン": "Petrol, gasoline",
+
+  "1145990:レポート": "Report",
+  "1145990-リポート:リポート": "Report (alt.)",
+
+  "2429350:おかねもち": "Rich person (Polite)",
+  "1242970:かねもち": "Rich person",
+
+  "1075500:ソフト": "Soft (loanword)",
+  "1605630:やわらかい": "Soft",
+
+  "1238680:おどろく": "To be startled",
+  "1226360:びっくり": "To be surprised",
+
+  "1199890:こわす": "To break (something)",
+  "1208020:われる": "To break, to crack",
+
+  "1510650:かえる": "To change (something)",
+  "1510790:かわる": "To change (itself)",
+
+  "1421900:いたす": "To do (Modest)",
+  "1157090:なさる": "To do (Polite)",
+  "1589060:おこなう": "To carry out",
+
+  "1352320-あげる:あげる": "To give (to someone)",
+  "1269130:くれる": "To give (to me)",
+
+  "1378520:いきる": "To live, to be alive",
+  "1378860:せいかつ": "Lifestyle, daily life",
+
+  "1310260:したく": "Preparations",
+  "1341670:じゅんび": "Preparation, setup",
+
+  "1587290:いただく": "To receive (Formal)",
+  "1535910:もらう": "To receive",
+
+  "1310640:やむ": "To stop (naturally)",
+  "1310680:やめる": "To stop, to quit",
+
+  "1305700:うかがう": "To visit (Formal)",
+  "1518070:たずねる": "To visit, to look for",
+  "1219680:よる": "To stop by",
+
+  "1155180:いない": "Within (range)",
+  "1457730:うち": "Within, inside",
+
+  "2088240:せい": "Raw, life",
+  "1378450:なま": "Raw, uncooked",
+
+  "1352150:かみ": "Upper part, first volume",
+  "1352170:じょう": "Superior quality",
+
+  "1242590:かね": "Money, metal",
+  "1242600:きん": "Gold",
+
+  "1269410-うしろ:うしろ": "Behind",
+  "2147630:ご": "After, later",
+  "1269330:のち": "Afterwards, later on",
+
+  "1344150:しょもつ": "Books, written works",
+  "1370410:としょ": "Library books",
+
+  "1584160:ほほ": "Cheek",
+  "1584160-ほお:ほお": "Cheek (alt.)",
+
+  "1175570:えん": "Yen, circle",
+  "1216250-まる:まる": "Circle, round shape",
+
+  "1533330:めん": "Cotton (fabric)",
+  "1533340:わた": "Cotton, padding",
+
+  "1199330:かい": "Time, occurrence",
+  "1445150:たび": "Each time, whenever",
+  "1445160:ど": "Degree, time (counter)",
+
+  "1477680:はったつ": "Development (of skills)",
+  "1477720:はってん": "Expansion, growth",
+
+  "2078590:けん": "Eaves (counter)",
+  "1260330:のき": "Eaves",
+
+  "1537250:の": "Field, plain",
+  "1476520:はたけ": "Farm field",
+
+  "1207500:がく": "Amount, framed picture",
+  "1207510:ひたい": "Forehead",
+
+  "1538900-ただ:ただ": "Merely, only",
+  "1007230:たった": "Just, only",
+
+  "1229880:きゅう": "Sphere, ball",
+  "1240530-たま:たま": "Ball, globe",
+
+  "1578790:いき": "Going, bound for",
+  "1578790-ゆき:ゆき": "Going (alt.)",
+
+  "1278400:こうふく": "Happiness, wellbeing",
+  "1278380:さいわい": "Fortunately, luckily",
+
+  "1582710:にほん": "Japan",
+  "1582710-にっぽん:にっぽん": "Japan (alt.)",
+
+  "1505390:もじ": "Character, letter",
+  "1505390-もんじ:もんじ": "Character (alt.)",
+
+  "1582870:としつき": "Months and years",
+  "1582870-ねんげつ:ねんげつ": "Months and years (alt.)",
+
+  "2423740-ぶ:ぶ": "Nothing, nil",
+  "1956960:む": "Nothingness, void",
+
+  "1580820:かず": "Number, amount",
+  "1580825:すう": "Number, figure (counter)",
+
+  "1333150:くさい": "Smelly, stinky",
+  "1599760-におい:におい": "Smell, scent",
+
+  "1949190:た": "Other, another",
+  "1203260-ほか:ほか": "Other, besides",
+
+  "1584100:かたがた": "People (Polite)",
+  "1584105:ほうぼう": "Here and there, everywhere",
+
+  "1252050:けい": "Total, plan",
+  "1115900:プラン": "Plan",
+
+  "1582960:つゆ": "Rainy season",
+  "1582960-ばいう:ばいう": "Rainy season (alt.)",
+
+  "1456420:どくしょ": "Reading (books)",
+  "1456130:よみ": "Reading, pronunciation",
+
+  "1243940:く": "Phrase, verse",
+  "1505090:ぶん": "Sentence, text",
+
+  "1590145:かげ": "Shadow, silhouette",
+  "1590150:かげ": "Shade, behind",
+
+  "1594530:しまい": "End, finishing",
+  "1579490:しまい": "Sisters",
+
+  "1158500:い": "Stomach (organ)",
+  "1002610-おなか:おなか": "Tummy, belly",
+
+  "1183510:おんど": "Temperature (general)",
+  "1221950:きおん": "Air temperature",
+
+  "1583470:しな": "Item, article",
+  "2648780:ひん": "Quality, dignity",
+
+  "1583460:えがく": "To depict, to portray",
+  "1583460-かく:かく": "To draw, to paint",
+
+  "1589780:かえる": "To replace, to swap",
+  "1589780-かえる:かえる": "To exchange, to convert",
+
+  "1588760:える": "To gain, to obtain",
+  "1454500:うる": "To be able to, to obtain",
+
+  "1922780:ふ": "Non-, un- (prefix)",
+  "2423740:ぶ": "Non-, un- (prefix, alt.)",
+
+  "2080200:げ": "Lower, inferior",
+  "2080210:しも": "Lower part, downstream",
+
+  "1381750:せいねん": "Young person",
+  "1420070:だんし": "Young man, boy",
+
+  "1596830:たく": "To cook (rice)",
+  "1322540:にる": "To simmer, to stew",
+
+  "1434020:つる": "To hang, to suspend",
+  "1433980:つるす": "To hang up, to dangle",
+
+  "1602880:ふやす": "To increase",
+  "1602880-ふやす:ふやす": "To increase (breed)",
+
+  "1600650-はかる:はかる": "To measure (weight)",
+  "1600650-測る:はかる": "To measure (length)",
+
+  "1258660:けんしゅう": "Training (professional)",
+  "1087100:トレーニング": "Training (exercise)",
+
+  "1024950:ウーマン": "Woman (loanword)",
+  "1344980:おんなのひと": "Woman",
+
+  "1025010:ウール": "Wool (loanword)",
+  "1546530:ようもう": "Wool",
+
+  "1576060-いっさくねん:いっさくねん": "Year before last",
+  "1576060-おととし:おととし": "Year before last (Casual)",
+
+  "1603930:まじる": "To be mixed in",
+  "1603930-まじる:まじる": "To mingle with",
+
+  "1603920:まざる": "To be blended",
+  "1603920-まざる:まざる": "To be mixed together",
+
+  "1578780:こうよう": "Autumn leaves",
+  "2857870:もみじ": "Maple, red leaves",
+
+  "2657130:とどまる": "To stay, to remain",
+  "1310620-とまる:とまる": "To stop, to settle",
+
+  "1240825-つとめる:つとめる": "To serve, to work for",
+  "1240820:つとめる": "To strive, to endeavour",
+
+  "1190370:かそく": "Acceleration",
+  "1190390:かそくど": "Rate of acceleration",
+
+  "1388030:せんぞ": "Ancestor",
+  "1396820:そせん": "Forebear, ancestor (Written)",
+
+  "1042150:キャンパス": "Campus",
+  "1279600:こうてい": "Schoolyard",
+
+  "1409560:たいせき": "Volume (space)",
+  "1545420:ようせき": "Capacity (container)",
+
+  "1599430:なかみ": "Contents, filling",
+  "1599430-なかみ:なかみ": "Contents (alt. kanji)",
+
+  "1576050-いっさくじつ:いっさくじつ": "Day before yesterday (Formal)",
+  "1576050-おととい:おととい": "Day before yesterday",
+
+  "1582430:にぶい": "Dull, blunt",
+  "2838553:のろい": "Slow, sluggish",
+
+  "2841455:じゅうきょ": "Residence (Formal)",
+  "1595750:すまい": "Home, dwelling",
+
+  "1219060:きそ": "Foundation, basics",
+  "1219170:きばん": "Base, foundation",
+
+  "1169720:いんりょく": "Attraction, pull",
+  "1336980:じゅうりょく": "Gravity",
+
+  "1283400:こうきゅう": "High class, luxury",
+  "1283850:こうとう": "Higher, advanced",
+
+  "1014210:アイデア": "Idea",
+  "1014210-アイディア:アイディア": "Idea (alt.)",
+
+  "2856157:インキ": "Ink (old-fashioned)",
+  "1521510:すみ": "Ink (Japanese)",
+
+  "1023100:インタビュー": "Interview (media)",
+  "1533510:めんせつ": "Interview (job)",
+
+  "2261490-おじさん:おじさん": "Uncle (older)",
+  "2261490-小父さん:おじさん": "Middle-aged man",
+  "2261490-叔父さん:おじさん": "Uncle (younger)",
+
+  "1320410:しっけ": "Humidity",
+  "1320410-しっき:しっき": "Moisture, dampness",
+
+  "1012510:もしかしたら": "Perhaps, maybe",
+  "1012530:もしかすると": "It could be that",
+
+  "1437290:てきかく": "Precise, accurate",
+  "1437290-てきかく:てきかく": "Precise (alt. kanji)",
+
+  "1058760:サンプル": "Sample (loanword)",
+  "1260100:みほん": "Sample, specimen",
+
+  "1360040:ねまき": "Sleepwear",
+  "1360040-ねまき:ねまき": "Sleepwear (alt. kanji)",
+
+  "2149640:おまたせしました": "Sorry for the wait (Casual)",
+  "1002360:おまちどおさま": "Sorry for the wait",
+
+  "1307090:しかく": "Square (shape)",
+  "1307100:しかくい": "Square-shaped",
+  "1377920:せいほうけい": "Perfect square",
+
+  "1591210:きじゅん": "Standard, criteria",
+  "1591210-きじゅん:きじゅん": "Standard (alt. kanji)",
+
+  "1356930:じょうき": "Steam, vapour",
+  "1448600:ゆげ": "Steam (visible)",
+
+  "1375190:せい": "Surname",
+  "1604730:みょうじ": "Family name",
+
+  "1596830-たく:たく": "To cook (rice)",
+  "1322540-にる:にる": "To stew, to simmer",
+
+  "1602880-ふやす:ふやす": "To grow, to breed",
+
+  "1600650-はかる:はかる": "To weigh",
+  "1600650-測る:はかる": "To measure",
+
+  "1258660-けんしゅう:けんしゅう": "Professional training",
+  "1087100-トレーニング:トレーニング": "Exercise training",
+
+  "1025010-ウール:ウール": "Wool (fabric)",
+  "1546530-ようもう:ようもう": "Sheep wool",
+
+  "1194480:かげつ": "Counter for months",
+  "1294940:さい": "Counter for age",
+  "1356740:じょう": "Counter for tatami mats",
+
+  "1006730-そして:そして": "And (Literary)",
+  "1508350:ならびに": "As well as",
+
+  "-お:お": "At, in (Classical)",
+  "1178920:おいて": "At, in, on",
+
+  "1546250:ようけん": "Business, errand",
+  "1104780:ビジネス": "Business (commercial)",
+
+  "1374510:ぜせい": "Correction, reform",
+  "1436710:ていせい": "Correction, revision",
+
+  "1956680:ちょ": "Authored by, literary work",
+  "1597470:ちゃく": "Arrival, counter for clothing",
+
+  "1449960:とうぎ": "Debate, deliberation",
+  "1449980:とうろん": "Discussion, debate",
+
+  "1254220:けつい": "Resolve, determination",
+  "1254370:けつだん": "Decision, judgement",
+
+  "1157640:いけん": "Different opinion",
+  "1158150:いろん": "Objection, dissent",
+
+  "1264580:げんろん": "Free speech, discourse",
+  "1561660:ろんぎ": "Discussion, argument",
+
+  "1602190-ひゃっかじてん:ひゃっかじてん": "Encyclopedia",
+  "1602190-百科辞典:ひゃっかじてん": "Encyclopedia (alt. kanji)",
+
+  "1416520:だっしゅつ": "Escape, breakout",
+  "1450470:とうぼう": "Flight, desertion",
+
+  "1328650:ことに": "Especially, particularly",
+  "1599150:とりわけ": "Above all, in particular",
+
+  "1002250:おせじ": "Flattery (Polite)",
+  "1374060:せじ": "Flattery, compliment",
+
+  "1414210:おおみず": "Flood, high water",
+  "1279930:こうずい": "Flood, deluge",
+
+  "1250360:けいせい": "Formation, creation",
+  "1254900:けっせい": "Formation (of a group)",
+
+  "1612620-あちこち:あちこち": "Here and there",
+  "1612620-彼方此方:あちらこちら": "Here and there (Formal)",
+
+  "1420630:ちせい": "Intellect",
+  "1758380:りこん": "Intelligence, cleverness",
+
+  "1549560:りし": "Interest (financial)",
+  "1549600:りそく": "Interest (on a loan)",
+
+  "1191990-いえぬし:いえぬし": "Landlord (house owner)",
+  "1421150:じぬし": "Landowner",
+
+  "1361480:しん": "New (prefix)",
+  "1091340:ニュー": "New (loanword)",
+
+  "1396970-あらすじ:あらすじ": "Plot summary",
+  "1413490:おおすじ": "Outline, gist",
+
+  "1604740:みんぞく": "Ethnic group, people",
+  "1604745:みんぞく": "Folk customs",
+
+  "1012510-もしかしたら:もしかしたら": "Perhaps, maybe",
+  "1012530-もしかすると:もしかすると": "It could be that",
+
+  "1577650-かん:かん": "Pipe, tube",
+  "1449590:つつ": "Cylinder, barrel",
+
+  "1298260:さく": "Strategy, tactic",
+  "1517020:ほうさく": "Plan, policy",
+
+  "1001720-おねがいします:おねがいします": "Please (Polite)",
+  "1189140:なにとぞ": "Please (Formal)",
+
+  "1215000:かんてん": "Viewpoint",
+  "1260070:みかた": "Way of looking, perspective",
+  "1259870:けんち": "Point of view, standpoint",
+
+  "1598620:たっとい": "Precious, noble",
+  "1598620-たっとい:たっとい": "Valuable, esteemed",
+
+  "1366170:しんど": "Rate of progress",
+  "1365960:すすみ": "Progress, advancement",
+
+  "1282440:こうにゅう": "Purchase (Formal)",
+  "1282470:こうばい": "Buying, procurement",
+
+  "1323050:しゃぜつ": "Refusal, declining",
+  "1318990:じたい": "Withdrawal, stepping aside",
+
+  "1226880:きゃくほん": "Script, screenplay",
+  "1060830:シナリオ": "Scenario",
+
+  "1001790:おみや": "Shrine (Polite)",
+  "1322660:やしろ": "Shinto shrine",
+
+  "1581310:かわ": "Side",
+  "1581310-がわ:がわ": "Side (suffix)",
+
+  "1562710:わら": "Straw (rice)",
+  "1071540:ストロー": "Straw (drinking)",
+
+  "1310150:しじ": "Support, backing",
+  "1496990:ふよう": "Financial support",
+
+  "1586820-ありがとう:ありがとう": "Thank you",
+  "1058250:サンキュー": "Thanks (Casual)",
+
+  "1206950:がくせつ": "Theory (academic)",
+  "1550160:りろん": "Theory",
+
+  "1330490:おさまる": "To settle, to be paid",
+  "1330490-おさまる:おさまる": "To be delivered, to fit in",
+
+  "2827352-こたえる:こたえる": "To endure, to withstand",
+  "2827352-こらえる:こらえる": "To bear, to put up with",
+  "1211310-たえる:たえる": "To stand, to resist",
+
+  "1515650:ほうじる": "To report, to inform",
+  "1515660:ほうずる": "To inform (Classical)",
+
+  "1570710:かける": "To soar, to fly",
+  "1244720:かける": "To run, to gallop",
+
+  "1598820:とどめる": "To keep, to hold in place",
+  "1598820-とどめる:とどめる": "To stop, to put an end to",
+
+  "1374940:せいふく": "Uniform (clothing)",
+  "1137430:ユニフォーム": "Uniform (loanword)",
+
+  "2545840:つてこと": "Verbal message (archaic)",
+  "1582180:でんごん": "Message, word",
+
+  "1605980:よほど": "Very much, considerably",
+  "2830551:よっぽど": "Considerably (Casual)",
+
+  "1587140:いくさ": "War, battle (archaic)",
+  "1587140-いくさ:いくさ": "Battle, warfare"
+}

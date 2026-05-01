@@ -30,6 +30,37 @@ Format per entry:
 
 ---
 
+## [2026-05-01] - Session 78
+
+**Sprint:** Sprint 5C - Word Bank English Glosses Cleanup
+**Task completed:** All 6 Sprint 5C tasks
+**Status:** Done (Sprint 5C complete)
+
+### Changes made
+- `scripts/audit-word-meanings.ts`: New audit script. Scans 8,244 words across N5-N1 for exact + normalised duplicates, bracket annotations (categorised by deny/keep), casing issues, and multi-definition counts. Output to `scripts/output/meaning-audit.md`.
+- `scripts/build-word-bank.ts`: Added `transformMeaning()` pipeline: deny-list bracket replacement (honorable to Polite, humble stripped, col to Casual, etc.), grammar metadata removal (uk, abbr, n, vs, etc.), sentence case via `toSentenceCase()`. Added override loading from `scripts/meaning-overrides.json` with composite keys (`id:kana`). Overrides take priority over mechanical transforms.
+- `scripts/meaning-overrides.json`: New file with ~200 manual meaning overrides covering all 5 JLPT levels. Every exact duplicate set resolved: N5 (48 sets), N4 (24), N3 (40), N2 (38), N1 (48). 0 exact duplicates remain.
+- `scripts/build-kotoba-levels.ts`: Added seeded Fisher-Yates shuffle. Each 12-word level is deterministically reordered using a seed derived from level index + JLPT level. Same-theme words no longer cluster together.
+- `data/words/n5.ts` through `n1.ts`: Regenerated with transformed meanings. 93.5% of words affected by sentence case. All denied brackets removed. Register tags applied.
+- `data/words/kotoba-levels/n5.ts` through `n1.ts`: Regenerated with shuffled word order within each level. All 689 levels rebuilt.
+- `data/words/__tests__/word-bank.test.ts`: 16 new assertions for meaning quality: sentence case, denied bracket absence, empty meaning check, idempotence.
+- `docs/CONTENT.md`: Added Section 7.4 (Meaning Conventions). Updated Section 7.1 (build pipeline) to document transforms and overrides.
+- `LangTap_Sprints.md`: All 6 Sprint 5C tasks marked Done.
+
+### Tests
+- `data/words/__tests__/word-bank.test.ts`: Pass (46 tests, 16 new)
+- Full suite: 789 passed, 0 failed
+
+### Next task
+Sprint 6: Input Modes (Kana + Kotoba), starting with "Build Tap mode input (Kana)"
+
+### Notes
+- Codex review identified 9 blind spots before implementation. All addressed: normalised duplicate detection, non-greedy bracket parsing with deny/allow lists, no auto-truncation of numbered senses (manual curation via overrides instead), composite override keys for stability, robust sentence case with leading-token awareness, seeded deterministic shuffle, progression compatibility verified (word IDs not indices), validation suite with uniqueness + idempotence assertions.
+- The meaning overrides file is the authoritative source for differentiated meanings. It should be reviewed when new words are added or JMDict sources are updated.
+- Numbered sense entries (1)...(2)... remain in N3-N1 as-is (91 words). These need individual curation via overrides in a future pass if they look cluttered in the UI.
+
+---
+
 ## [2026-05-01] - Session 77
 
 **Sprint:** Post-5B fixes and Sprint 5C planning
