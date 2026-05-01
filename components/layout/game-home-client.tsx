@@ -70,7 +70,6 @@ export function GameHomeClient(): ReactNode {
 
   const scores = useMasteryStore((s) => s.scores)
   const unlockedIds = useUnlockStore((s) => s.unlockedIds)
-  const allKanaUnlocked = useUnlockStore((s) => s.allKanaUnlocked)
   const inputMode = useSettingsStore((s) => s.inputMode)
 
   useEffect(() => {
@@ -133,7 +132,6 @@ export function GameHomeClient(): ReactNode {
                 stages={kotobaStages}
                 leaderboard={EMPTY_LEADERBOARD}
                 inputMode={inputMode}
-                locked={!allKanaUnlocked}
               />
             </div>
           </div>

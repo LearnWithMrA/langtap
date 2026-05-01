@@ -524,6 +524,10 @@ export function updateScore(char: KanaCharacter) {
   They expose a `hasHydrated: boolean` field set via `onRehydrateStorage`.
   Consuming hooks must gate on `hasHydrated` before running logic that depends
   on stored values.
+- `components/performance/store-hydrator.tsx` centralises hydration at layout
+  level. It rehydrates `useMasteryStore`, `useWordMasteryStore`, and
+  `useOnboardingStore` once, then bootstraps the unlock store. Pages never
+  call `.persist.rehydrate()` themselves.
 - Persisted stores include `version: 1` and a `migrate` function in the persist
   config. Start with a no-op migrate. Update when the schema changes.
 - `bulkLoad` actions that merge remote data with local state use `max(local, incoming)`

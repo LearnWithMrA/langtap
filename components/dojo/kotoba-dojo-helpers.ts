@@ -3,26 +3,20 @@
 // Purpose: Utility functions for the Kotoba Dojo page. Builds the
 //          locked word set and finds locked IDs at various scopes
 //          (unit, group, level).
-// Depends on: engine/constants.ts, types/kotoba.types.ts
+// Depends on: types/kotoba.types.ts
 // ─────────────────────────────────────────────
 
-import { UNLOCK_THRESHOLD } from '@/engine/constants'
-import type {
-  KotobaLevelGroup,
-  KotobaMasteryState,
-  KotobaUnit,
-  KotobaWord,
-} from '@/types/kotoba.types'
+import type { KotobaLevelGroup, KotobaUnit, KotobaWord } from '@/types/kotoba.types'
 
 export function buildLockedWordSet(
   words: Readonly<Record<string, KotobaWord>>,
-  mastery: KotobaMasteryState,
+  progressionUnlockedIds: ReadonlySet<string>,
+  manuallyUnlockedWordIds: ReadonlySet<string>,
 ): Set<string> {
-  const manual = new Set(mastery.manuallyUnlockedWords)
   const locked = new Set<string>()
   for (const id of Object.keys(words)) {
-    if (manual.has(id)) continue
-    if ((mastery.scores[id] ?? 0) >= UNLOCK_THRESHOLD) continue
+    if (progressionUnlockedIds.has(id)) continue
+    if (manuallyUnlockedWordIds.has(id)) continue
     locked.add(id)
   }
   return locked

@@ -43,6 +43,7 @@ import {
 } from '@/components/dojo/kotoba-dojo-shells'
 import { buildLockedWordSet, lockedIdsInGroup } from '@/components/dojo/kotoba-dojo-helpers'
 import { KOTOBA_MASTERY_THRESHOLD } from '@/engine/constants'
+import { getUnlockedKotobaWordIds } from '@/engine/kotoba-progression'
 import { useWordMasteryStore } from '@/stores/word-mastery.store'
 import { getN5DojoData, loadKotobaDojoData } from '@/data/words/kotoba-dojo-data'
 import type { KotobaDojoLevelData } from '@/data/words/kotoba-dojo-data'
@@ -51,7 +52,6 @@ import type {
   JlptLevel,
   KotobaClientState,
   KotobaLevelGroup,
-  KotobaMasteryState,
   KotobaWord,
 } from '@/types/kotoba.types'
 
@@ -80,15 +80,6 @@ function ReadyShell(): ReactNode {
   const currentGroups = useMemo(() => currentData?.groups ?? [], [currentData])
   const currentWords = useMemo(() => currentData?.words ?? {}, [currentData])
 
-  const mastery: KotobaMasteryState = useMemo(
-    () => ({
-      scores,
-      manuallyUnlockedUnits: [],
-      manuallyUnlockedWords,
-    }),
-    [scores, manuallyUnlockedWords],
-  )
-
   const [openGroupIds, setOpenGroupIds] = useState<ReadonlySet<string>>(() => {
     const firstGroup = n5Data.groups[0]
     return firstGroup ? new Set([firstGroup.id]) : new Set()
@@ -99,9 +90,18 @@ function ReadyShell(): ReactNode {
   const [bulkScope, setBulkScope] = useState<KotobaBulkUnlockScope | null>(null)
   const [bulkResetScope, setBulkResetScope] = useState<KotobaBulkResetScope | null>(null)
 
+  const allWordIds = useMemo(() => currentGroups.flatMap((g) => [...g.wordIds]), [currentGroups])
+
+  const manualUnlockSet = useMemo(() => new Set(manuallyUnlockedWords), [manuallyUnlockedWords])
+
+  const progressionUnlockedIds = useMemo(
+    () => getUnlockedKotobaWordIds(allWordIds, scores, manualUnlockSet),
+    [allWordIds, scores, manualUnlockSet],
+  )
+
   const lockedWordIds = useMemo(
-    () => buildLockedWordSet(currentWords, mastery),
-    [currentWords, mastery],
+    () => buildLockedWordSet(currentWords, progressionUnlockedIds, manualUnlockSet),
+    [currentWords, progressionUnlockedIds, manualUnlockSet],
   )
 
   const lockedAtLevel = useMemo(

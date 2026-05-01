@@ -12,8 +12,10 @@ import {
   isKotobaStepUnlocked,
   getActiveKotobaStepIndex,
   getUnlockedKotobaWordIds,
+  buildAutoMasteryScores,
   KOTOBA_STEP_SIZE,
 } from '@/engine/kotoba-progression'
+import { KOTOBA_MASTERY_THRESHOLD } from '@/engine/constants'
 
 // ── Fixtures ────────────────────────────────
 
@@ -180,5 +182,56 @@ describe('getUnlockedKotobaWordIds', () => {
   it('returns empty set for empty word list', () => {
     const result = getUnlockedKotobaWordIds([], {}, EMPTY_MANUAL)
     expect(result).toEqual(new Set())
+  })
+})
+
+// ── buildAutoMasteryScores ──────────────────
+
+const LEVEL_WORD_IDS: Record<string, readonly string[]> = {
+  N5: ['n5-a', 'n5-b', 'n5-c'],
+  N4: ['n4-a', 'n4-b'],
+  N3: ['n3-a'],
+  N2: ['n2-a', 'n2-b'],
+  N1: ['n1-a'],
+}
+
+describe('buildAutoMasteryScores', () => {
+  it('returns empty map when N5 is selected (nothing below)', () => {
+    const result = buildAutoMasteryScores('N5', LEVEL_WORD_IDS)
+    expect(Object.keys(result)).toHaveLength(0)
+  })
+
+  it('masters all N5 words when N4 is selected', () => {
+    const result = buildAutoMasteryScores('N4', LEVEL_WORD_IDS)
+    expect(Object.keys(result)).toHaveLength(3)
+    expect(result['n5-a']).toBe(KOTOBA_MASTERY_THRESHOLD)
+    expect(result['n5-b']).toBe(KOTOBA_MASTERY_THRESHOLD)
+    expect(result['n5-c']).toBe(KOTOBA_MASTERY_THRESHOLD)
+  })
+
+  it('masters N5 and N4 words when N3 is selected', () => {
+    const result = buildAutoMasteryScores('N3', LEVEL_WORD_IDS)
+    expect(Object.keys(result)).toHaveLength(5)
+    expect(result['n5-a']).toBe(KOTOBA_MASTERY_THRESHOLD)
+    expect(result['n4-a']).toBe(KOTOBA_MASTERY_THRESHOLD)
+    expect(result['n4-b']).toBe(KOTOBA_MASTERY_THRESHOLD)
+  })
+
+  it('masters everything below N1', () => {
+    const result = buildAutoMasteryScores('N1', LEVEL_WORD_IDS)
+    expect(Object.keys(result)).toHaveLength(8)
+    expect(result['n1-a']).toBeUndefined()
+  })
+
+  it('does not include words at the selected level', () => {
+    const result = buildAutoMasteryScores('N3', LEVEL_WORD_IDS)
+    expect(result['n3-a']).toBeUndefined()
+    expect(result['n2-a']).toBeUndefined()
+    expect(result['n1-a']).toBeUndefined()
+  })
+
+  it('returns empty map for empty level data', () => {
+    const result = buildAutoMasteryScores('N4', {})
+    expect(Object.keys(result)).toHaveLength(0)
   })
 })

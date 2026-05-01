@@ -208,6 +208,22 @@ No UI yet. This is pure logic.
 
 ---
 
+## Sprint 5C - Word Bank English Glosses Cleanup
+
+**Goal:** Clean up English meanings across all word bank files. Differentiate words that share the same meaning by adding register/context tags in brackets. The standard/plain form keeps the bare meaning with no brackets. Only variants get a bracket tag to the right: e.g. "yes" for はい, "yes (Casual)" for ええ. Replace academic labels like (honorable), (humble) with natural tags: (Formal), (Casual), (Informal), (Polite). No words are deleted.
+**Status:** Pending
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Audit all word banks for duplicate and unclear meanings | **Medium** | **To Do** | Scan N5-N1 word banks for entries sharing identical `meaning` strings and entries with academic bracket labels like (honorable), (humble). List all findings with kana/kanji. |
+| Rewrite bracket labels to natural register tags | **Large** | **To Do** | Replace academic labels like (honorable), (humble) with user-facing tags: (Formal), (Casual), (Informal), (Polite). Standard/plain form gets the bare meaning with no brackets. Tag goes to the right of the meaning. Apply consistently across all JLPT levels. |
+| Differentiate shared meanings with register context | **Large** | **To Do** | For every set of words sharing the same meaning (e.g. はい/ええ both "yes"), the standard form keeps the bare meaning ("yes"), variants get a bracket tag ("yes (Casual)"). Every word must have a distinct, glanceable English gloss. |
+| Enforce sentence case on all word bank meanings | **Small** | **To Do** | All `meaning` values in `data/words/` must start with an uppercase letter (sentence case). Some entries are lowercase ("to meet", "blue"). Fix at source data level so the UI does not need CSS `capitalize`. Bracket tags stay lowercase: "I (Formal)" not "I (formal)". |
+| Shuffle words within levels to break theme clusters | **Medium** | **To Do** | Levels were built from category files so same-theme words cluster (e.g. "please" next to "please", family members in a row). Shuffle word order within each level so similar meanings are spread apart. Keep level membership unchanged, only reorder within each 12-word level. Rebuild level files via the build script. |
+| Validate cleaned word banks | **Small** | **To Do** | Run word bank tests. Confirm no empty or placeholder meanings. Confirm bracket tags are consistent and to the right of the meaning. |
+
+---
+
 ## Sprint 6 - Input Modes (Kana + Kotoba)
 
 **Goal:** All three input modes functional for both Kana and Kotoba practice.

@@ -30,6 +30,40 @@ Format per entry:
 
 ---
 
+## [2026-05-01] - Session 77
+
+**Sprint:** Post-5B fixes and Sprint 5C planning
+**Task completed:** Remove Kotoba gate, auto-mastery on JLPT selection, fix Kotoba dojo lock logic, fix practice loading flicker, Sprint 5C tasks
+**Status:** Done
+
+### Changes made
+- `components/layout/game-home-client.tsx`: Removed `allKanaUnlocked` gate on Kotoba ModePanel. Kotoba is now accessible immediately after onboarding.
+- `engine/kotoba-progression.ts`: New `buildAutoMasteryScores(selectedLevel, levelWordIds)` function. Returns a score map with all words below the selected JLPT level set to KOTOBA_MASTERY_THRESHOLD. 6 tests added.
+- `app/(onboarding)/onboarding/step-3/page.tsx`: Wired auto-mastery into onboarding completion. N5 = nothing, N4 = all N5 mastered, N3 = N5+N4 mastered, etc. Uses `bulkLoad` on the word mastery store.
+- `components/performance/store-hydrator.tsx`: Added `useWordMasteryStore.persist.rehydrate()` alongside existing mastery and onboarding rehydration. Fixed permanent "Loading..." state on Kotoba practice.
+- `components/dojo/kotoba-dojo-helpers.ts`: `buildLockedWordSet` now takes progression-unlocked IDs and manual unlock set instead of a raw score threshold. Removed `UNLOCK_THRESHOLD` import.
+- `components/layout/kotoba-dojo-client.tsx`: Computes unlocked word set via `getUnlockedKotobaWordIds` from the progression engine. First 6 words now correctly show as unlocked for new users. Removed unused `KotobaMasteryState` type and `mastery` object.
+- `hooks/useKotobaPracticeSession.ts`: Fixed flicker by computing initial prompt synchronously in `useState` initializer (matching the kana `usePracticeSession` pattern from Session 70). Falls back to `useEffect` only on cold page load.
+- `components/dojo/__tests__/kotoba-dojo-client.test.tsx`: Updated test seed to use step-based progression model (step 0 scored, step 1 unlocked, step 2+ locked). Fixed duplicate-kanji assertion ambiguity for 私.
+- `docs/GAME_DESIGN.md`: Section 11.1 updated (no kana gate). Section 11.5 updated (auto-mastery implementation details).
+- `docs/ARCHITECTURE.md`: Added StoreHydrator documentation (centralised hydration of mastery, word mastery, and onboarding stores at layout level).
+- `LangTap_Sprints.md`: Added Sprint 5C (Word Bank English Glosses Cleanup) with 6 tasks: audit, rewrite bracket labels, differentiate shared meanings, enforce sentence case, shuffle within levels, validate.
+
+### Tests
+- `engine/__tests__/kotoba-progression.test.ts`: Pass (31 tests, 6 new for buildAutoMasteryScores)
+- `components/dojo/__tests__/kotoba-dojo-client.test.tsx`: Pass (24 tests, updated seed)
+- Full suite: 773 passed, 0 failed
+
+### Next task
+Sprint 5C: Word Bank English Glosses Cleanup, starting with "Audit all word banks for duplicate and unclear meanings"
+
+### Notes
+- Three bugs fixed: (1) Kotoba practice stuck on "Loading..." because word mastery store was never rehydrated at layout level, (2) Kotoba dojo showing all words as locked because lock logic used kana UNLOCK_THRESHOLD (5) instead of the progression engine, (3) practice screen flickering on load because initial prompt was computed in useEffect instead of synchronously.
+- Kotoba mode is now fully open from onboarding. No kana mastery gate.
+- Auto-mastery only runs during onboarding step 3. The profile preferences card (JLPT level change in settings) is Sprint 8 work.
+
+---
+
 ## [2026-05-01] - Session 76
 
 **Sprint:** Sprint 5B - Kotoba Wiring and Dojo

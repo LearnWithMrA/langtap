@@ -32,31 +32,35 @@ beforeAll(() => {
   }
 })
 
+import { KOTOBA_STEP_SIZE } from '@/engine/kotoba-progression'
+import { KOTOBA_UNLOCK_THRESHOLD } from '@/engine/constants'
+
 const n5Data = getN5DojoData()
 const firstGroupWordIds = n5Data.groups[0].wordIds
 
-const UNLOCKED_KANJI_ID = firstGroupWordIds.find((id) => n5Data.words[id]?.kanji !== null)!
+const step0Ids = firstGroupWordIds.slice(0, KOTOBA_STEP_SIZE)
+const step1Ids = firstGroupWordIds.slice(KOTOBA_STEP_SIZE, KOTOBA_STEP_SIZE * 2)
+const step2Ids = firstGroupWordIds.slice(KOTOBA_STEP_SIZE * 2, KOTOBA_STEP_SIZE * 3)
+
+const unlockedStepIds = [...step0Ids, ...step1Ids]
+
+const UNLOCKED_KANJI_ID = unlockedStepIds.find((id) => n5Data.words[id]?.kanji !== null)!
 const UNLOCKED_KANJI_WORD = n5Data.words[UNLOCKED_KANJI_ID]
 
-const UNLOCKED_KANA_ID = firstGroupWordIds.find((id) => n5Data.words[id]?.kanji === null)!
+const UNLOCKED_KANA_ID = unlockedStepIds.find((id) => n5Data.words[id]?.kanji === null)!
 const UNLOCKED_KANA_WORD = n5Data.words[UNLOCKED_KANA_ID]
 
-const LOCKED_KANJI_ID = firstGroupWordIds.find(
-  (id) => n5Data.words[id]?.kanji !== null && id !== UNLOCKED_KANJI_ID,
-)!
+const LOCKED_KANJI_ID = step2Ids.find((id) => n5Data.words[id]?.kanji !== null)!
 const LOCKED_KANJI_WORD = n5Data.words[LOCKED_KANJI_ID]
 
 function seedStore(): void {
   const scores: Record<string, number> = {}
-  const manuallyUnlockedWords: string[] = []
 
-  for (const id of firstGroupWordIds) {
-    if (id === LOCKED_KANJI_ID) continue
-    scores[id] = 10
-    manuallyUnlockedWords.push(id)
+  for (const id of step0Ids) {
+    scores[id] = KOTOBA_UNLOCK_THRESHOLD + 1
   }
 
-  useWordMasteryStore.setState({ scores, manuallyUnlockedWords, hasHydrated: true })
+  useWordMasteryStore.setState({ scores, manuallyUnlockedWords: [], hasHydrated: true })
 }
 
 function resetStore(): void {
@@ -237,7 +241,9 @@ describe('KotobaDojoClient - word popover', () => {
     expect(within(dialog).getByText(/Are you sure\?/)).toBeInTheDocument()
     await user.click(within(dialog).getByRole('button', { name: 'Yes' }))
     expect(
-      within(region).getByRole('button', { name: new RegExp(`Word ${kanji}.*mastery 0`) }),
+      within(region).getByRole('button', {
+        name: new RegExp(`Word ${kanji}.*reading ${kana}.*mastery 0`),
+      }),
     ).toBeInTheDocument()
   })
 })

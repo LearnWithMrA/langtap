@@ -614,9 +614,9 @@ unlock in steps of 6 via `engine/kotoba-progression.ts`. The practice
 hook `hooks/useKotobaPracticeSession.ts` bridges selection, progression,
 and the word mastery store.
 
-Kotoba Mode is gated behind full Kana mastery (all characters unlocked
-and practised). It has its own leaderboard, separate from the Kana
-boards.
+Kotoba Mode is available from the start. There is no kana mastery gate.
+Users can practise vocabulary immediately after onboarding. It has its
+own leaderboard, separate from the Kana boards.
 
 ### 11.2 Kotoba Input Setting
 
@@ -685,15 +685,17 @@ export const KANJI_INPUT_MULTIPLIER = 4
 - The user selects a Kotoba JLPT level during onboarding (and can
   change it in Profile).
 - Word selection in Kotoba Mode is strictly filtered to the selected
-  level and above. Unlike Kana Mode, this is a hard filter, not a
-  preference.
-- When the user sets or changes their Kotoba JLPT level, all words
-  at levels below the selected level are automatically set to mastered
-  (score set to a high value). This allows experienced users to skip
-  vocabulary they already know.
+  level. Unlike Kana Mode, this is a hard filter, not a preference.
+- When the user completes onboarding (or changes their JLPT level),
+  all words at levels below the selected level are automatically set
+  to mastered (score set to KOTOBA_MASTERY_THRESHOLD). This is
+  implemented via `buildAutoMasteryScores()` in
+  `engine/kotoba-progression.ts`, called from onboarding step 3.
+- N5 selected: nothing auto-mastered, first 6 words unlocked.
+  N4 selected: all N5 words mastered, first 6 N4 words unlocked.
+  N3 selected: all N5 + N4 words mastered, first 6 N3 unlocked. Etc.
 - The user is shown a clear message when setting this level:
-  "Words below this level will be marked as mastered. To reset,
-  change your level in Profile settings."
+  "Words below this level will be marked as mastered."
 - Changing the level to a lower value does not un-master previously
   mastered words. Resetting progress from Profile is the only way to
   clear mastery scores.

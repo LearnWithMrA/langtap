@@ -102,6 +102,37 @@ function buildKotobaPrompt(word: WordBankEntry): KotobaPrompt | null {
 export function useKotobaPracticeSession(jlptLevel: JlptLevel = 'N5'): UseKotobaPracticeReturn {
   const initRef = useRef(false)
 
+  const levels = KOTOBA_LEVELS[jlptLevel]
+  const wordBank = WORD_BANK[jlptLevel]
+
+  const [{ prompt: initialPrompt, isEmpty: initialIsEmpty }] = useState(() => {
+    const { hasHydrated, scores, manuallyUnlockedWords } = useWordMasteryStore.getState()
+    if (!hasHydrated) {
+      return { prompt: null as KotobaPrompt | null, isEmpty: false }
+    }
+
+    const ids = getAllWordIds(levels)
+    const manual = new Set(manuallyUnlockedWords)
+    const unlocked = getUnlockedKotobaWordIds(ids, scores, manual)
+
+    if (unlocked.size === 0) {
+      return { prompt: null as KotobaPrompt | null, isEmpty: true }
+    }
+
+    const result = selectNextKotobaWord(unlocked, wordBank, scores, {})
+    if (!result) {
+      return { prompt: null as KotobaPrompt | null, isEmpty: true }
+    }
+
+    useCounterStore.getState().bulkLoad(result.updatedCounters)
+    const built = buildKotobaPrompt(result.word)
+    initRef.current = true
+    return { prompt: built, isEmpty: !built }
+  })
+
+  const [currentPrompt, setCurrentPrompt] = useState<KotobaPrompt | null>(initialPrompt)
+  const [currentIsEmpty, setCurrentIsEmpty] = useState(initialIsEmpty)
+
   const wordScores = useWordMasteryStore((s) => s.scores)
   const manualUnlocks = useWordMasteryStore((s) => s.manuallyUnlockedWords)
   const hasHydrated = useWordMasteryStore((s) => s.hasHydrated)
@@ -111,19 +142,13 @@ export function useKotobaPracticeSession(jlptLevel: JlptLevel = 'N5'): UseKotoba
   const bulkLoadCounters = useCounterStore((s) => s.bulkLoad)
   const incrementCounter = useCounterStore((s) => s.increment)
 
-  const levels = KOTOBA_LEVELS[jlptLevel]
   const allWordIds = useMemo(() => getAllWordIds(levels), [levels])
-  const wordBank = WORD_BANK[jlptLevel]
-
   const manualUnlockSet = useMemo(() => new Set(manualUnlocks), [manualUnlocks])
 
   const unlockedWordIds = useMemo(
     () => getUnlockedKotobaWordIds(allWordIds, wordScores, manualUnlockSet),
     [allWordIds, wordScores, manualUnlockSet],
   )
-
-  const [currentPrompt, setCurrentPrompt] = useState<KotobaPrompt | null>(null)
-  const [currentIsEmpty, setCurrentIsEmpty] = useState(false)
 
   const selectAndBuild = useCallback(
     (currentCounters: WordCounterMap): KotobaPrompt | null => {

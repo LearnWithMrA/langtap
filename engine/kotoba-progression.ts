@@ -7,8 +7,12 @@
 // Depends on: engine/constants.ts, types/word.types.ts
 // ------------------------------------------------------------
 
-import { KOTOBA_UNLOCK_THRESHOLD } from '@/engine/constants'
+import { KOTOBA_UNLOCK_THRESHOLD, KOTOBA_MASTERY_THRESHOLD } from '@/engine/constants'
 import type { WordMasteryScoreMap } from '@/types/word.types'
+
+// ── JLPT ordering ──────────────────────────
+
+const JLPT_RANK: Record<string, number> = { N5: 0, N4: 1, N3: 2, N2: 3, N1: 4 }
 
 // ── Constants ───────────────────────────────
 
@@ -92,4 +96,25 @@ export function getUnlockedKotobaWordIds(
     }
   }
   return result
+}
+
+// ── Auto-mastery for JLPT level selection ───
+
+export function buildAutoMasteryScores(
+  selectedLevel: string,
+  levelWordIds: Record<string, readonly string[]>,
+): WordMasteryScoreMap {
+  const selectedRank = JLPT_RANK[selectedLevel] ?? 0
+  const scores: WordMasteryScoreMap = {}
+
+  for (const [level, wordIds] of Object.entries(levelWordIds)) {
+    const rank = JLPT_RANK[level] ?? 0
+    if (rank < selectedRank) {
+      for (const id of wordIds) {
+        scores[id] = KOTOBA_MASTERY_THRESHOLD
+      }
+    }
+  }
+
+  return scores
 }

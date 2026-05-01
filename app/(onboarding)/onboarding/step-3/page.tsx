@@ -24,6 +24,9 @@ import { useAuth } from '@/hooks/useAuth'
 import { updateProfile } from '@/services/profile.service'
 import { syncManualUnlocks } from '@/services/unlock.service'
 import { useSettingsStore } from '@/stores/settings.store'
+import { useWordMasteryStore } from '@/stores/word-mastery.store'
+import { buildAutoMasteryScores } from '@/engine/kotoba-progression'
+import { N5_LEVELS, N4_LEVELS, N3_LEVELS, N2_LEVELS, N1_LEVELS } from '@/data/words/kotoba-levels'
 
 // -- Component ---------------------------------------------------
 
@@ -68,6 +71,18 @@ export default function OnboardingStep3Page(): ReactNode {
       if (selectedCharacterIds.length > 0) {
         await syncManualUnlocks(user.id, selectedCharacterIds)
       }
+    }
+
+    const levelWordIds: Record<string, readonly string[]> = {
+      N5: N5_LEVELS.flatMap((l) => [...l.wordIds]),
+      N4: N4_LEVELS.flatMap((l) => [...l.wordIds]),
+      N3: N3_LEVELS.flatMap((l) => [...l.wordIds]),
+      N2: N2_LEVELS.flatMap((l) => [...l.wordIds]),
+      N1: N1_LEVELS.flatMap((l) => [...l.wordIds]),
+    }
+    const autoMastery = buildAutoMasteryScores(jlptLevel, levelWordIds)
+    if (Object.keys(autoMastery).length > 0) {
+      useWordMasteryStore.getState().bulkLoad(autoMastery)
     }
 
     useSettingsStore.getState().setInputMode(selectedMode)
