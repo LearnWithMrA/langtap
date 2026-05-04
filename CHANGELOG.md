@@ -30,6 +30,39 @@ Format per entry:
 
 ---
 
+## 2026-05-04 - Session 83
+
+**Sprint:** Sprint 7B - Tutorial and Guidance System (COMPLETE)
+**Task completed:** Dojo banner tips (kana + kotoba), tutorial system tests, guest cap fixes, daily limit task added
+**Status:** Done (Sprint 7B complete)
+
+### Changes made
+- `components/dojo/help-card.tsx`: Refactored to sequential tip system. `useTipProgress` tracks tip index in localStorage. `useKanaTips` (2 tips), `useKotobaTips` (2 tips), backward-compat `useHelpDismissed`. HelpCard now accepts `title`, `body`, `icon`, `iconBg`, `buttonClass` props
+- `components/layout/kana-dojo-client.tsx`: Wired `useKanaTips` with sequential tips. First: welcome + unlock hint. Second: reset hint
+- `components/layout/kotoba-dojo-client.tsx`: Added `useKotobaTips` with blue-themed HelpCard (言 icon). Two tips: welcome + explore
+- `components/game/__tests__/tutorial-system.test.tsx`: New. 8 integration tests covering dialogue themes, skip trial, dialogue seen tracking, guest cap combined distance
+- `engine/constants.ts`: Guest cap raised from 15 to 30m combined across kana + kotoba
+- `components/layout/practice-client.tsx`: Cap check uses combined `kana + kotoba` distance. Game window greys out entirely at cap (`pointer-events-none opacity-50`)
+- `components/layout/guest-banner.tsx`: Uses combined distance. Resets `dismissed` on route change via `usePathname`. Non-dismissable removed (dismiss still works but resets on navigation)
+- `components/layout/__tests__/guest-banner.test.tsx`: Updated for combined 30m cap. Mock `usePathname`
+- `components/dojo/__tests__/kana-dojo-client.test.tsx`: Updated for new HelpCard aria labels and two-tip dismiss flow
+- `LangTap_Sprints.md`: Sprint 7B all tasks marked Done. Free tier daily cap task added to Sprint 11
+
+### Tests
+- Full suite: 854 tests, 0 failures
+- New: 8 tutorial system tests
+
+### Next task
+Sprint 8 - Profile, Settings, and Supabase Progress Sync
+
+### Notes
+- Sprint 7B is now complete. All 12 tasks done across sessions 80-83
+- Guest cap changed from 15m per-mode to 30m combined across kana + kotoba. Aligns with future freemium model where limits are total, not per-mode
+- Guest game window now fully disabled at cap (greyed out, no interaction) instead of just suppressing the distance counter
+- Free tier daily distance cap added as Sprint 11 task (needs daily reset logic + membership CTA)
+
+---
+
 ## 2026-05-04 - Session 82
 
 **Sprint:** Sprint 7B - Tutorial and Guidance System

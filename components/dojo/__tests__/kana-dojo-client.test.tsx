@@ -103,21 +103,22 @@ describe('KanaDojoClient', () => {
   it('shows the welcome card on first visit regardless of unlock state', () => {
     seedVarietyState()
     render(<KanaDojoClient />)
-    expect(screen.getByRole('complementary', { name: 'Getting started' })).toBeInTheDocument()
+    expect(screen.getByRole('complementary', { name: 'Dojo tip' })).toBeInTheDocument()
   })
 
   it('shows the welcome card when all characters are locked', () => {
     seedEmptyState()
     render(<KanaDojoClient />)
-    expect(screen.getByRole('complementary', { name: 'Getting started' })).toBeInTheDocument()
+    expect(screen.getByRole('complementary', { name: 'Dojo tip' })).toBeInTheDocument()
   })
 
-  it('hides the welcome card after it is dismissed', async () => {
+  it('hides all tips after dismissing both', async () => {
     const user = userEvent.setup()
     seedEmptyState()
     render(<KanaDojoClient />)
-    await user.click(screen.getByRole('button', { name: 'Dismiss welcome card' }))
-    expect(screen.queryByRole('complementary', { name: 'Getting started' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Dismiss tip' }))
+    await user.click(screen.getByRole('button', { name: 'Dismiss tip' }))
+    expect(screen.queryByRole('complementary', { name: 'Dojo tip' })).not.toBeInTheDocument()
   })
 
   it('opens the unlock prompt when a locked tile is tapped', async () => {

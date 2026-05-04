@@ -42,6 +42,7 @@ import {
   KotobaEmptyShell,
 } from '@/components/dojo/kotoba-dojo-shells'
 import { buildLockedWordSet, lockedIdsInGroup } from '@/components/dojo/kotoba-dojo-helpers'
+import { HelpCard, useKotobaTips } from '@/components/dojo/help-card'
 import { KOTOBA_MASTERY_THRESHOLD } from '@/engine/constants'
 import { getUnlockedKotobaWordIds } from '@/engine/kotoba-progression'
 import { useWordMasteryStore } from '@/stores/word-mastery.store'
@@ -66,6 +67,7 @@ type KotobaDojoClientProps = {
 function ReadyShell(): ReactNode {
   const scores = useWordMasteryStore((s) => s.scores)
   const manuallyUnlockedWords = useWordMasteryStore((s) => s.manuallyUnlockedWords)
+  const { currentTip: kotobaTip, advance: advanceTip } = useKotobaTips()
 
   const n5Data = useMemo(() => getN5DojoData(), [])
   const [levelDataCache, setLevelDataCache] = useState<
@@ -260,6 +262,19 @@ function ReadyShell(): ReactNode {
               Practice
             </Link>
           </div>
+
+          {kotobaTip && (
+            <div className="mb-4">
+              <HelpCard
+                title={kotobaTip.title}
+                body={kotobaTip.body}
+                icon="言"
+                iconBg="bg-[#d0e4f5]"
+                buttonClass="bg-[#5a82a8] hover:bg-[#4a7298] border-b-[#3a6288]"
+                onDismiss={advanceTip}
+              />
+            </div>
+          )}
 
           <KotobaLevelTabs
             active={activeLevel}

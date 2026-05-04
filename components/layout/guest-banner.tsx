@@ -9,8 +9,9 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
+import { usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthModalStore } from '@/stores/auth-modal.store'
 import { useGuestDistanceStore } from '@/stores/guest-distance.store'
@@ -20,15 +21,17 @@ import { GUEST_TRIAL_DISTANCE_CAP } from '@/engine/constants'
 
 export function GuestBanner(): ReactNode {
   const { isGuest, isLoading } = useAuth()
+  const pathname = usePathname()
   const [dismissed, setDismissed] = useState(false)
+
+  useEffect(() => {
+    setDismissed(false)
+  }, [pathname])
   const openSignUp = useAuthModalStore((s) => s.openSignUp)
-  const kanaDistance = useGuestDistanceStore((s) => s.distances.kana)
-  const kotobaDistance = useGuestDistanceStore((s) => s.distances.kotoba)
+  const distances = useGuestDistanceStore((s) => s.distances)
+  const isOverCap = distances.kana + distances.kotoba >= GUEST_TRIAL_DISTANCE_CAP
 
-  const isOverCap =
-    kanaDistance >= GUEST_TRIAL_DISTANCE_CAP || kotobaDistance >= GUEST_TRIAL_DISTANCE_CAP
-
-  if (isLoading || !isGuest || dismissed || !isOverCap) {
+  if (isLoading || !isGuest || !isOverCap || dismissed) {
     return null
   }
 

@@ -216,9 +216,10 @@ export function PracticeClient(): ReactNode {
     gameType === 'kotoba' && hasSeenKotobaTrial && !hasSeenKotobaBanner && !activeDialogue
 
   // ── Guest trial cap ─────────────────────────
-  const guestDistance = useGuestDistanceStore((s) => s.distances[gameType])
+  const guestDistances = useGuestDistanceStore((s) => s.distances)
   const addGuestDistance = useGuestDistanceStore((s) => s.addDistance)
-  const isOverCap = isGuest && guestDistance >= GUEST_TRIAL_DISTANCE_CAP
+  const totalGuestDistance = guestDistances.kana + guestDistances.kotoba
+  const isOverCap = isGuest && totalGuestDistance >= GUEST_TRIAL_DISTANCE_CAP
 
   useEffect(() => {
     if (trialSession.isComplete && !hasSeenTrial) markTrialSeen()
@@ -321,6 +322,25 @@ export function PracticeClient(): ReactNode {
             <ModeDropdown mode={mode} onModeChange={setMode} gameType="kotoba" />
             <span className="text-base font-bold text-[#4a6a8a] tracking-wider">Trial</span>
           </KotobaGameWindow>
+        ) : isOverCap ? (
+          <div className="opacity-50 pointer-events-none">
+            {gameType === 'kotoba' ? (
+              <KotobaGameWindow mode={mode} kotobaInput={kotobaInput}>
+                <ModeDropdown mode={mode} onModeChange={setMode} gameType={gameType} />
+                <DistanceCounter value={counters[mode]} />
+              </KotobaGameWindow>
+            ) : (
+              <GameWindow
+                key={kanaSession.prompt?.word.id ?? 'kana'}
+                mode={mode}
+                session={kanaSession}
+                allowedCharIds={kanaSession.practiceIds}
+              >
+                <ModeDropdown mode={mode} onModeChange={setMode} gameType="kana" />
+                <DistanceCounter value={counters[mode]} />
+              </GameWindow>
+            )}
+          </div>
         ) : gameType === 'kotoba' ? (
           <>
             {showKotobaBanner && (
@@ -339,7 +359,7 @@ export function PracticeClient(): ReactNode {
             <KotobaGameWindow
               mode={mode}
               kotobaInput={kotobaInput}
-              onCharacterCorrect={isOverCap ? undefined : handleCharacterCorrect}
+              onCharacterCorrect={handleCharacterCorrect}
             >
               <ModeDropdown mode={mode} onModeChange={setMode} gameType="kotoba" />
               <DistanceCounter value={counters[mode]} />
@@ -383,7 +403,7 @@ export function PracticeClient(): ReactNode {
               mode={mode}
               session={kanaSession}
               allowedCharIds={kanaSession.practiceIds}
-              onCharacterCorrect={isOverCap ? undefined : handleCharacterCorrect}
+              onCharacterCorrect={handleCharacterCorrect}
             >
               <ModeDropdown mode={mode} onModeChange={setMode} gameType="kana" />
               <DistanceCounter value={counters[mode]} />

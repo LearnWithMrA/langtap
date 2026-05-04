@@ -69,8 +69,8 @@ export const WORD_PROMPT_RATIO = 0.6
 
 // -- Guest trial cap ----------------------------------
 
-/** Maximum cumulative distance (metres) a guest can practise per game type */
-export const GUEST_TRIAL_DISTANCE_CAP = 15
+/** Maximum cumulative distance (metres) a guest can practise across all modes */
+export const GUEST_TRIAL_DISTANCE_CAP = 30
 
 // -- Streak -------------------------------------------
 

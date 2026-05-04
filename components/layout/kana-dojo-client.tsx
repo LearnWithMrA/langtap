@@ -68,7 +68,7 @@ import { BulkResetPrompt } from '@/components/dojo/bulk-reset-prompt'
 import type { BulkResetScope } from '@/components/dojo/bulk-reset-prompt'
 import type { GroupActivity } from '@/components/dojo/group-bar'
 import { UnlockButton } from '@/components/dojo/group-bar'
-import { HelpCard, useHelpDismissed } from '@/components/dojo/help-card'
+import { HelpCard, useKanaTips } from '@/components/dojo/help-card'
 import { MASTERY_THRESHOLD } from '@/engine/mastery'
 import { useMasteryStore } from '@/stores/mastery.store'
 import { useOnboardingStore } from '@/stores/onboarding.store'
@@ -128,7 +128,7 @@ function KanaDojoReadyShell(): ReactNode {
   const [bulkScope, setBulkScope] = useState<BulkUnlockScope | null>(null)
   const [bulkResetScope, setBulkResetScope] = useState<BulkResetScope | null>(null)
 
-  const { dismissed: helpDismissed, dismiss: dismissHelp } = useHelpDismissed()
+  const { dismissed: helpDismissed, currentTip, advance: dismissHelp } = useKanaTips()
 
   const lockedIds = useMemo(() => buildLockedSet(mastery), [mastery])
   const tileStates = useMemo(() => buildTileStates(mastery), [mastery])
@@ -425,7 +425,9 @@ function KanaDojoReadyShell(): ReactNode {
 
           {showHelp && (
             <div className="mb-6">
-              <HelpCard onDismiss={dismissHelp} />
+              {currentTip && (
+                <HelpCard title={currentTip.title} body={currentTip.body} onDismiss={dismissHelp} />
+              )}
             </div>
           )}
 
