@@ -15,7 +15,8 @@ import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react'
 
 // ── Constants ─────────────────────────────────
 
-const TYPEWRITER_SPEED_MS = 50
+const TYPEWRITER_SPEED_MS = 70
+const PAGE_LOAD_DELAY_MS = 800
 
 const MASCOT_IMAGES: Record<MascotPose, string> = {
   neutral: '/images/mascot/mascot-neutral.png',
@@ -83,6 +84,7 @@ export function DialogueOverlay({
   onSkip,
   skipLabel,
 }: DialogueOverlayProps): ReactNode {
+  const [ready, setReady] = useState(false)
   const [messageIndex, setMessageIndex] = useState(0)
   const [charCount, setCharCount] = useState(0)
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -96,9 +98,14 @@ export function DialogueOverlay({
 
   useEffect(() => {
     dialogRef.current?.focus()
+    const delay = setTimeout((): void => setReady(true), PAGE_LOAD_DELAY_MS)
+    return (): void => {
+      clearTimeout(delay)
+    }
   }, [])
 
   useEffect(() => {
+    if (!ready) return
     if (!isTypingCurrent) {
       if (messageIndex < messages.length - 1) {
         const pause = setTimeout((): void => {
@@ -117,7 +124,7 @@ export function DialogueOverlay({
     return (): void => {
       clearInterval(timer)
     }
-  }, [isTypingCurrent, currentMessage.length, messageIndex, messages.length])
+  }, [ready, isTypingCurrent, currentMessage.length, messageIndex, messages.length])
 
   useEffect(() => {
     if (bubbleRef.current?.scrollTo) {

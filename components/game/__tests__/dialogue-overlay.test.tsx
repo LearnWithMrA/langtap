@@ -11,6 +11,14 @@ import { render, screen, act, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { DialogueOverlay } from '../dialogue-overlay'
 
+const PAGE_LOAD_DELAY = 800
+
+function advancePastLoadDelay(): void {
+  act(() => {
+    vi.advanceTimersByTime(PAGE_LOAD_DELAY)
+  })
+}
+
 describe('DialogueOverlay', () => {
   beforeEach(() => {
     vi.useFakeTimers()
@@ -28,13 +36,17 @@ describe('DialogueOverlay', () => {
   it('types out message character by character', () => {
     render(<DialogueOverlay messages={['Hello']} mascotPose="neutral" onDismiss={vi.fn()} />)
 
+    advancePastLoadDelay()
+
+    // 2 chars at 70ms each = 140ms
     act(() => {
-      vi.advanceTimersByTime(100)
+      vi.advanceTimersByTime(140)
     })
     expect(screen.getByTestId('dialogue-text').textContent).toBe('He')
 
+    // 3 more chars at 70ms = 210ms
     act(() => {
-      vi.advanceTimersByTime(150)
+      vi.advanceTimersByTime(210)
     })
     expect(screen.getByTestId('dialogue-text').textContent).toBe('Hello')
   })
@@ -42,9 +54,11 @@ describe('DialogueOverlay', () => {
   it('flows messages continuously without user interaction', () => {
     render(<DialogueOverlay messages={['Hi', 'Bye']} mascotPose="neutral" onDismiss={vi.fn()} />)
 
-    // First message types out: "Hi" = 2 chars * 50ms = 100ms
+    advancePastLoadDelay()
+
+    // First message types out: "Hi" = 2 chars * 70ms = 140ms
     act(() => {
-      vi.advanceTimersByTime(100)
+      vi.advanceTimersByTime(140)
     })
     expect(screen.getByTestId('dialogue-text').textContent).toBe('Hi')
 
@@ -52,9 +66,9 @@ describe('DialogueOverlay', () => {
     act(() => {
       vi.advanceTimersByTime(400)
     })
-    // Then 100ms for 2 chars of "Bye" at 50ms each
+    // Then 140ms for 2 chars of "Bye" at 70ms each
     act(() => {
-      vi.advanceTimersByTime(100)
+      vi.advanceTimersByTime(140)
     })
     expect(screen.getByTestId('dialogue-text').textContent).toContain('Hi')
     expect(screen.getByTestId('dialogue-text').textContent).toContain('By')
@@ -63,6 +77,7 @@ describe('DialogueOverlay', () => {
   it('shows Got it button when all messages are done', () => {
     render(<DialogueOverlay messages={['Hi']} mascotPose="neutral" onDismiss={vi.fn()} />)
 
+    advancePastLoadDelay()
     act(() => {
       vi.advanceTimersByTime(500)
     })
@@ -78,6 +93,7 @@ describe('DialogueOverlay', () => {
       />,
     )
 
+    advancePastLoadDelay()
     act(() => {
       vi.advanceTimersByTime(100)
     })
@@ -93,6 +109,7 @@ describe('DialogueOverlay', () => {
       />,
     )
 
+    advancePastLoadDelay()
     act(() => {
       vi.advanceTimersByTime(100)
     })
@@ -106,6 +123,7 @@ describe('DialogueOverlay', () => {
     const onDismiss = vi.fn()
     render(<DialogueOverlay messages={['Done']} mascotPose="neutral" onDismiss={onDismiss} />)
 
+    advancePastLoadDelay()
     act(() => {
       vi.advanceTimersByTime(500)
     })

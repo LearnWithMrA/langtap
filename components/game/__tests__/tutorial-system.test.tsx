@@ -57,6 +57,9 @@ describe('DialogueOverlay integration', () => {
       />,
     )
     act(() => {
+      vi.advanceTimersByTime(800)
+    })
+    act(() => {
       vi.advanceTimersByTime(500)
     })
     expect(screen.getByRole('button', { name: 'Skip trial' })).toBeInTheDocument()
@@ -73,6 +76,9 @@ describe('DialogueOverlay integration', () => {
         skipLabel="Skip trial"
       />,
     )
+    act(() => {
+      vi.advanceTimersByTime(800)
+    })
     act(() => {
       vi.advanceTimersByTime(500)
     })

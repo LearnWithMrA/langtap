@@ -279,6 +279,10 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
     if (kotobaTrialSession.isComplete && !hasSeenKotobaTrial) markKotobaTrialSeen()
   }, [kotobaTrialSession.isComplete, hasSeenKotobaTrial, markKotobaTrialSeen])
 
+  // ── Dual mnemonic banner ─────────────────────
+  const { hasSeen: hasSeenMnemonicBanner, markSeen: markMnemonicBannerSeen } =
+    useDialogueSeen('dual-mnemonic-hint')
+
   // ── Special character hints ──────────────────
   const { hasSeen: hasSeenHSokuon, markSeen: markHSokuonSeen } =
     useDialogueSeen('sokuon-hiragana-hint')
@@ -286,6 +290,16 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
     useDialogueSeen('sokuon-katakana-hint')
   const { hasSeen: hasSeenLongVowel, markSeen: markLongVowelSeen } =
     useDialogueSeen('longvowel-hint')
+
+  const hintsEnabled = useSettingsStore((s) => s.hints)
+  const isCharacterDrill = kanaSession.prompt?.kind === 'character'
+  const showMnemonicBanner =
+    !hasSeenMnemonicBanner &&
+    !activeDialogue &&
+    !showKanaTrial &&
+    gameType === 'kana' &&
+    hintsEnabled &&
+    isCharacterDrill
 
   const currentPromptCharIds = kanaSession.prompt?.characters.map((c) => c.id) ?? []
   const showHiraganaSokuonHint =
@@ -388,6 +402,13 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
                 sign up
               </button>{' '}
               to save your progress. :)
+            </PracticeBanner>
+          )}
+          {showMnemonicBanner && (
+            <PracticeBanner variant="kana" buttonLabel="Got it" onAction={markMnemonicBannerSeen}>
+              These are dual mnemonics. They link hiragana and katakana pairs through a shared
+              story. Get an answer wrong and one will appear. We recommend writing them down and
+              creating your own dual hiragana/katakana chart.
             </PracticeBanner>
           )}
           {showHiraganaSokuonHint && (
