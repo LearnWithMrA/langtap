@@ -117,7 +117,13 @@ function ModeDropdown({
 
 // -- Scene shell (shared between active and capped) ---------
 
-function PracticeScene({ children }: { children: ReactNode }): ReactNode {
+function PracticeScene({
+  children,
+  hasBanner,
+}: {
+  children: ReactNode
+  hasBanner?: boolean
+}): ReactNode {
   const prefersReducedMotion = useReducedMotion()
   const sceneSpeed = prefersReducedMotion ? 'stopped' : 'idle'
   const animated = !prefersReducedMotion
@@ -138,7 +144,12 @@ function PracticeScene({ children }: { children: ReactNode }): ReactNode {
       <div className="absolute bottom-4 right-4 z-10">
         <AudioPlayer />
       </div>
-      <div className="absolute left-1/2 -translate-x-1/2 top-[34%] -translate-y-1/2 z-10 w-full max-w-lg px-4">
+      <div
+        className={[
+          'absolute left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-full max-w-lg px-4',
+          hasBanner ? 'top-[40%]' : 'top-[34%]',
+        ].join(' ')}
+      >
         {children}
       </div>
     </div>
@@ -331,8 +342,16 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
     }
   }, [incrementCorrect, mode, isGuest, incrementGuestDistance, gameType])
 
+  const hasBanner =
+    showKotobaBanner ||
+    showTrialBanner ||
+    showMnemonicBanner ||
+    showHiraganaSokuonHint ||
+    showKatakanaSokuonHint ||
+    showLongVowelHint
+
   return (
-    <PracticeScene>
+    <PracticeScene hasBanner={hasBanner}>
       {activeDialogue ? (
         <DialogueOverlay
           key={activeDialogue.script.messages[0]}
