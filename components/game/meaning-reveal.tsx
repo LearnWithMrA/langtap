@@ -20,7 +20,12 @@ type MeaningRevealProps = {
 
 // -- Component ----------------------------------------------
 
-export function MeaningReveal({ meaning, visible, mnemonic, isCorrect }: MeaningRevealProps): ReactNode {
+export function MeaningReveal({
+  meaning,
+  visible,
+  mnemonic,
+  isCorrect,
+}: MeaningRevealProps): ReactNode {
   if (mnemonic) {
     return (
       <div

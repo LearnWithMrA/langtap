@@ -36,7 +36,7 @@ export const DUAL_MNEMONICS: Record<string, DualMnemonic> = {
   e: {
     sound: 'e',
     kana: 'え エ',
-    text: 'え is an e-xotic dancer, and エ is the dancer\'s stage.',
+    text: "え is an e-xotic dancer, and エ is the dancer's stage.",
   },
   o: {
     sound: 'o',
@@ -46,7 +46,7 @@ export const DUAL_MNEMONICS: Record<string, DualMnemonic> = {
   ka: {
     sound: 'ka',
     kana: 'か カ',
-    text: 'か is a ka-ite with string, and カ is the kite\'s sharp frame.',
+    text: "か is a ka-ite with string, and カ is the kite's sharp frame.",
   },
   ki: {
     sound: 'ki',
@@ -76,7 +76,7 @@ export const DUAL_MNEMONICS: Record<string, DualMnemonic> = {
   shi: {
     sound: 'shi',
     kana: 'し シ',
-    text: 'し is a shi-pherd\'s hook pulling sheep, and シ is the sheep\'s smiling face.',
+    text: "し is a shi-pherd's hook pulling sheep, and シ is the sheep's smiling face.",
   },
   su: {
     sound: 'su',
@@ -111,7 +111,7 @@ export const DUAL_MNEMONICS: Record<string, DualMnemonic> = {
   te: {
     sound: 'te',
     kana: 'て テ',
-    text: 'て is a dog\'s tail curling up, and テ is the te-lephone pole the dog is peeing on.',
+    text: "て is a dog's tail curling up, and テ is the te-lephone pole the dog is peeing on.",
   },
   to: {
     sound: 'to',
@@ -146,7 +146,7 @@ export const DUAL_MNEMONICS: Record<string, DualMnemonic> = {
   ha: {
     sound: 'ha',
     kana: 'は ハ',
-    text: 'は is a ha-ckey player swinging a stick, and ハ is the player\'s two legs on the ice.',
+    text: "は is a ha-ckey player swinging a stick, and ハ is the player's two legs on the ice.",
   },
   hi: {
     sound: 'hi',
@@ -181,7 +181,7 @@ export const DUAL_MNEMONICS: Record<string, DualMnemonic> = {
   mu: {
     sound: 'mu',
     kana: 'む ム',
-    text: 'む is a mu-oing cow, and ム is the cow\'s hanging bell.',
+    text: "む is a mu-oing cow, and ム is the cow's hanging bell.",
   },
   me: {
     sound: 'me',
@@ -211,7 +211,7 @@ export const DUAL_MNEMONICS: Record<string, DualMnemonic> = {
   ra: {
     sound: 'ra',
     kana: 'ら ラ',
-    text: 'ら is a ra-bbit, and ラ is the rabbit\'s laughing face.',
+    text: "ら is a ra-bbit, and ラ is the rabbit's laughing face.",
   },
   ri: {
     sound: 'ri',

@@ -177,8 +177,7 @@ export function GameWindow({
 
   const isCharacterDrill = prompt?.kind === 'character'
   const currentRomaji = characters[0]?.romaji ?? ''
-  const dualMnemonic =
-    isCharacterDrill && hintsEnabled ? getDualMnemonic(currentRomaji) : null
+  const dualMnemonic = isCharacterDrill && hintsEnabled ? getDualMnemonic(currentRomaji) : null
 
   const tapGrid = useMemo(
     () => (characters.length > 0 ? buildTapGrid(characters, isKatakana, allowedCharIds) : []),
