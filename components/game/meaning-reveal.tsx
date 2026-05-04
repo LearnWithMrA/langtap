@@ -1,8 +1,9 @@
 // ------------------------------------------------------------
 // File: components/game/meaning-reveal.tsx
 // Purpose: English meaning shown below the input area after a
-//          correct answer. Fades in over 150ms, stays visible
-//          for MEANING_DISPLAY_MS before the prompt advances.
+//          correct answer. Also shows dual mnemonic text in orange
+//          during the learning phase (character drills), turning
+//          green on correct answer.
 // Depends on: nothing
 // ------------------------------------------------------------
 
@@ -13,11 +14,27 @@ import type { ReactNode } from 'react'
 type MeaningRevealProps = {
   meaning: string
   visible: boolean
+  mnemonic?: string | null
+  isCorrect?: boolean
 }
 
 // -- Component ----------------------------------------------
 
-export function MeaningReveal({ meaning, visible }: MeaningRevealProps): ReactNode {
+export function MeaningReveal({ meaning, visible, mnemonic, isCorrect }: MeaningRevealProps): ReactNode {
+  if (mnemonic) {
+    return (
+      <div
+        className={[
+          'text-sm text-center transition-colors duration-150 min-h-6 leading-snug',
+          isCorrect ? 'text-feedback-correct' : 'text-feedback-wrong',
+        ].join(' ')}
+        aria-live="polite"
+      >
+        {mnemonic}
+      </div>
+    )
+  }
+
   return (
     <div
       className={[
@@ -26,7 +43,7 @@ export function MeaningReveal({ meaning, visible }: MeaningRevealProps): ReactNo
       ].join(' ')}
       aria-live="polite"
     >
-      {visible ? meaning : '\u00A0'}
+      {visible ? meaning : ' '}
     </div>
   )
 }

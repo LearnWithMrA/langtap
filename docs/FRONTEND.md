@@ -473,6 +473,19 @@ Supports a `variant` prop: `sage` (green, Kana) or `sky` (blue, Kotoba).
 
 Each tap button: minimum `h-11 w-11`, `rounded-lg`, `text-base`.
 
+**MeaningReveal**
+
+Dual-purpose component below the character prompt. Two modes:
+
+- **Word prompts:** shows the English meaning after correct answer. Fades in via
+  opacity transition. Props: `meaning`, `visible`.
+- **Learning cards (character drills) with hints enabled:** shows the dual mnemonic
+  text immediately in orange (`text-feedback-wrong`). On correct answer, transitions
+  to green (`text-feedback-correct`). Props: `mnemonic`, `isCorrect`.
+
+When hints are disabled or no mnemonic exists, the area stays blank (non-breaking
+space, `min-h-6` to prevent layout shift).
+
 **FeedbackOverlay**
 
 Shown on a wrong answer. Contains:

@@ -39,6 +39,7 @@ export type DialogueTrigger =
   | 'sokuon-hiragana-hint'
   | 'sokuon-katakana-hint'
   | 'longvowel-hint'
+  | 'dual-mnemonic-hint'
 
 // ── Scripts ───────────────────────────────────
 

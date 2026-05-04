@@ -427,17 +427,30 @@ swipes. When the user inputs an incorrect character at any position in the word:
 
 ### 6.1 Mnemonic Display
 
-Mnemonics are short memory aids for remembering a kana character's sound.
-They are stored in `data/kana/mnemonics.ts`, one per character.
+LangTap uses dual mnemonics that link a hiragana and katakana pair through a
+shared visual story. They are stored in `data/kana/mnemonics.ts`, keyed by
+romaji sound (one entry per sound, covering both scripts).
 
 Example:
 ```
-あ (a)  → "An apple with a bite taken out - あ looks like an A"
-か (ka) → "A crow calling KA - the stroke looks like a bird"
+a  → "あ is an a-pple with a stem, and ア is an a-xe cutting it."
+ka → "か is a ka-ite with string, and カ is the kite's sharp frame."
 ```
 
-Mnemonics can be turned off in the Settings screen (mnemonic toggle).
-When off, the wrong answer feedback shows only the orange highlight, no text below.
+**On learning cards (character drills):** the dual mnemonic is shown immediately
+in the meaning area in orange (`text-feedback-wrong`). When the user answers
+correctly, the text turns green (`text-feedback-correct`), giving time to read
+the mnemonic before the prompt auto-advances. Lookup: `getDualMnemonic(romaji)`
+in `data/kana/mnemonics.ts`.
+
+**First-time banner:** the first time a dual mnemonic appears, a banner explains
+the concept and recommends writing them down. Tracked via `useDialogueSeen` with
+trigger `'dual-mnemonic-hint'`.
+
+Mnemonics can be turned off in the Settings screen (Memory hints toggle).
+When off, the learning card meaning area stays blank. The hints toggle also
+controls the romaji/kana hint on wrong answers. It does not affect the English
+meaning shown on word prompts.
 
 ### 6.2 English Meaning Reveal and Progression
 

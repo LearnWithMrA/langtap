@@ -30,6 +30,34 @@ Format per entry:
 
 ---
 
+## 2026-05-04 - Session 86
+
+**Sprint:** N/A (mini change, no sprint task)
+**Task completed:** Dual mnemonics on learning cards
+**Status:** Done
+
+### Changes made
+- `data/kana/mnemonics.ts`: Populated with 46 dual mnemonics (all seion characters, a through n). Each entry links hiragana and katakana through a shared visual story, keyed by romaji sound. Added `DualMnemonic` type and `getDualMnemonic()` lookup helper.
+- `components/game/meaning-reveal.tsx`: Added `mnemonic` and `isCorrect` optional props. When a mnemonic is provided, renders in orange and transitions to green on correct answer. Original English meaning behaviour preserved when no mnemonic is passed.
+- `components/game/game-window.tsx`: Wired dual mnemonics into character drill cards. Reads `hints` setting (mnemonic hidden when hints off). Shows one-time explanatory banner on first mnemonic encounter. Imported `getDualMnemonic` and `useDialogueSeen`.
+- `data/tutorial/dialogue-scripts.ts`: Added `'dual-mnemonic-hint'` to `DialogueTrigger` union for the one-time banner tracking.
+- `docs/CONTENT.md`: Rewrote Section 6 (Mnemonics) to document dual mnemonic system, data structure, display rules, first-time banner, and coverage.
+- `docs/GAME_DESIGN.md`: Updated Section 6.1 (Mnemonic Display) to reflect dual mnemonics on learning cards, orange-to-green transition, and hints toggle behaviour.
+- `docs/FRONTEND.md`: Added MeaningReveal component documentation describing both word-prompt and learning-card modes.
+
+### Tests
+- Full suite: 865 tests, 0 failures
+
+### Next task
+Sprint 8 - Profile, Settings, and Supabase Progress Sync
+
+### Notes
+- Dual mnemonics only cover seion (46 characters). Dakuon and combination mnemonics to be added when those stages ship.
+- The hints toggle controls both the romaji/kana wrong-answer hint AND the mnemonic display. It does not affect English meaning on word prompts.
+- Mnemonic area stays blank (as before) when hints are off, preserving the existing behaviour for users who prefer no hints.
+
+---
+
 ## 2026-05-04 - Session 85
 
 **Sprint:** Sprint 7C - Server-Side Guest Trial Cap (COMPLETE)

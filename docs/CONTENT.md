@@ -265,45 +265,63 @@ and compares user input directly. No separate romaji engine is required.
 
 ## 6. Mnemonics
 
-Mnemonics are short strings that help users remember a character's sound.
-They are shown on wrong answers (if enabled in settings).
-They live in `data/kana/mnemonics.ts`.
+### 6.1 Dual Mnemonics
+
+LangTap uses dual mnemonics: each mnemonic links a hiragana and katakana pair
+through a shared visual story. This reinforces both scripts simultaneously.
+
+They are stored in `data/kana/mnemonics.ts`, keyed by romaji sound (not character
+ID), since each mnemonic covers both the hiragana and katakana form.
 
 ```ts
 // data/kana/mnemonics.ts
 
-type MnemonicMap = Record<string, string>
-// key: character ID, value: mnemonic string (max ~80 characters)
+type DualMnemonic = {
+  sound: string    // romaji key, e.g. 'ka'
+  kana: string     // display pair, e.g. 'か カ'
+  text: string     // the dual mnemonic story
+}
 
-const mnemonics: MnemonicMap = {
-  'hira-a':   'Looks like the letter A with a stroke through it',
-  'hira-i':   'Two strokes, like two people saying "I"',
-  'hira-u':   'Like a bent U',
-  'hira-e':   'Three strokes like a fence, eh?',
-  'hira-o':   'Looks like a backwards 6, the 6th vowel if you count romaji',
-  'hira-ka':  'A crow calling KA (wing and a beak)',
-  'hira-ki':  'Like a key, ki for key',
-  'hira-ku':  'Like a sock, ku for... well, socks need imagination',
-  'hira-ke':  'Looks like a comb (ke-mb)',
-  'hira-ko':  'Like a backward C and a hook, ko',
-  // ... continues for all characters
+const DUAL_MNEMONICS: Record<string, DualMnemonic> = {
+  a:  { sound: 'a',  kana: 'あ ア', text: 'あ is an a-pple with a stem, and ア is an a-xe cutting it.' },
+  ka: { sound: 'ka', kana: 'か カ', text: 'か is a ka-ite with string, and カ is the kite\'s sharp frame.' },
+  // ... 46 entries total, all seion characters covered
 }
 ```
 
-**Mnemonic writing guidelines:**
-- Maximum 80 characters per mnemonic.
-- Visual mnemonics (what the character looks like) work best.
-- Sound mnemonics (a word that sounds like the reading) are secondary.
+Lookup: `getDualMnemonic(romaji)` returns the entry or `null`.
+
+### 6.2 Where Mnemonics Appear
+
+- **Learning cards (character drills):** the dual mnemonic is shown immediately in
+  the meaning area in orange. It turns green when the user answers correctly. This
+  gives the user time to read the mnemonic before the prompt advances.
+- **Wrong answers on word prompts:** planned for a future sprint (per-character
+  mnemonics on wrong answer feedback).
+- Mnemonics are gated by the "Memory hints" toggle in Settings. When hints are
+  off, the mnemonic area stays blank (same as before). Turning off hints does
+  not hide the English meaning on word prompts.
+
+### 6.3 First-Time Banner
+
+The first time a dual mnemonic appears on a learning card, a one-time banner
+explains what dual mnemonics are and recommends writing them down to create a
+personal hiragana/katakana chart. Tracked via `useDialogueSeen` with trigger
+`'dual-mnemonic-hint'`. Dismissed with "Got it" and never reappears.
+
+### 6.4 Mnemonic Writing Guidelines
+
+- Each mnemonic links the hiragana and katakana visual forms through one story.
+- Use visual mnemonics (what the character looks like) as the primary technique.
+- Sound mnemonics (a word that sounds like the reading) reinforce the visual.
 - Keep the language simple; these users are beginners.
 - Avoid mnemonics that require cultural knowledge the user may not have.
-- Every seion, dakuon, and combination character must have a mnemonic before the
-  wrong-answer feedback feature ships. No gaps allowed.
+- No em-dashes.
 
-**Sources for mnemonic inspiration:**
-- Dr. Moku (https://www.drmoku.com): visual mnemonics for kana. Check licence
-  before copying any text directly; write originals inspired by the approach)
-- Community mnemonics from WaniKani forums (inspiration only, not direct copying)
-- Original mnemonics written for LangTap
+### 6.5 Coverage
+
+All 46 seion characters (a through n) have dual mnemonics. Dakuon and combination
+mnemonics are not yet written; they will be added when those stages ship.
 
 ---
 

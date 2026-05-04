@@ -26,7 +26,9 @@ import { FEEDBACK_FLASH_MS, MEANING_DISPLAY_MS, MEANING_FADE_MS } from '@/engine
 import { evaluateInput } from '@/engine/input'
 import { toKatakana } from '@/fixtures/kana-practice-data'
 import { KANA_CHARACTERS } from '@/data/kana/characters'
+import { getDualMnemonic } from '@/data/kana/mnemonics'
 import { useSettingsStore } from '@/stores/settings.store'
+import { useDialogueSeen } from '@/hooks/useDialogueSeen'
 import type { Stage } from '@/types/kana.types'
 import type {
   UsePracticeSessionReturn,
@@ -141,6 +143,9 @@ export function GameWindow({
   const { prompt, isLoading, isEmpty, handleWordComplete, advanceToNext } = session
 
   const inputDirection = useSettingsStore((s) => s.inputDirection)
+  const hintsEnabled = useSettingsStore((s) => s.hints)
+  const { hasSeen: hasSeenMnemonicBanner, markSeen: markMnemonicBannerSeen } =
+    useDialogueSeen('dual-mnemonic-hint')
 
   type Direction = 'kana-to-romaji' | 'romaji-to-kana'
   const [alternateDirection, setAlternateDirection] = useState<Direction>('kana-to-romaji')
@@ -169,6 +174,11 @@ export function GameWindow({
   const isKanaToRomaji = direction === 'kana-to-romaji'
   const currentCharIndex = Math.min(completedCount, characters.length - 1)
   const currentChar = characters[currentCharIndex]
+
+  const isCharacterDrill = prompt?.kind === 'character'
+  const currentRomaji = characters[0]?.romaji ?? ''
+  const dualMnemonic =
+    isCharacterDrill && hintsEnabled ? getDualMnemonic(currentRomaji) : null
 
   const tapGrid = useMemo(
     () => (characters.length > 0 ? buildTapGrid(characters, isKatakana, allowedCharIds) : []),
@@ -469,7 +479,31 @@ export function GameWindow({
         })}
       </div>
 
-      <MeaningReveal meaning={prompt.word.meaning} visible={showMeaning} />
+      {dualMnemonic && !hasSeenMnemonicBanner && (
+        <div className="bg-sage-100 border border-sage-300 rounded-xl px-4 py-3 mb-2 text-center">
+          <p className="text-sm text-sage-600 font-medium">
+            These are dual mnemonics linking hiragana and katakana pairs.
+          </p>
+          <p className="text-xs text-sage-500 mt-1">
+            We recommend writing them down and creating your own dual hiragana/katakana chart.
+          </p>
+          <button
+            type="button"
+            className="text-xs text-sage-400 mt-2 underline"
+            onClick={markMnemonicBannerSeen}
+            aria-label="Dismiss dual mnemonic tip"
+          >
+            Got it
+          </button>
+        </div>
+      )}
+
+      <MeaningReveal
+        meaning={prompt.word.meaning}
+        visible={showMeaning}
+        mnemonic={dualMnemonic?.text ?? null}
+        isCorrect={wordDone}
+      />
 
       {mode === 'type' && (
         <div className="pt-3">
