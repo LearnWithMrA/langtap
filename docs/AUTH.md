@@ -272,17 +272,26 @@ Guest users enter the app from the landing page without creating an account.
 - Profile screen (they see a sign-up prompt)
 
 **How their state is stored:**
-All game state (mastery scores, word counters, manual unlocks, settings) is stored
-in `localStorage` via Zustand persist middleware. Nothing goes to Supabase.
+All game state (learning scores, mastery scores, word counters, manual unlocks,
+settings) is stored in `localStorage` via Zustand persist middleware. Nothing goes
+to Supabase. Learning scores (0-5) unlock characters. Mastery scores come from
+word practice only. Both persist across refreshes, but localStorage limits are
+UX nudges, not security controls.
+
+**Distance cap:**
+Guests have a 30m combined distance cap across kana and kotoba practice. When the
+cap is reached, the game window is disabled: a static card replaces it and no
+active game sessions mount.
 
 **Guest banner:**
-A persistent banner is shown on every screen the guest can access:
+The guest banner does not show persistently on every screen. It appears only when
+the guest hits the 30m combined practice distance cap:
 
-> "Your progress will be lost when you close this tab. Create a free account to
-> save it."
+> "You've hit the limit as a guest. Create an account to continue."
 
-The banner has a "Create account" link and a dismiss button. Dismissal hides the
-banner for the current browser session only (stored in React state, not persisted).
+The banner has a "Create account" link and a dismiss button. Dismissal is stored
+in React state (not persisted), so the banner resets on route navigation and
+reappears on every page visit while the guest remains at the cap.
 
 **Guest state on sign-up:**
 When a guest creates an account, their local state is migrated to Supabase

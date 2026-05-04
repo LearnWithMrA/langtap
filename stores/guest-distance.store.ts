@@ -2,8 +2,11 @@
 // File: stores/guest-distance.store.ts
 // Purpose: Tracks cumulative practice distance for guest users.
 //          Persisted to localStorage. Keyed by gameType (kana/kotoba),
-//          not input mode. Used for the 15m guest trial cap.
+//          not input mode. Used for the 30m combined guest trial cap.
 //          Signed-in users never interact with this store.
+//          Note: localStorage limits are UX/conversion nudges, not
+//          security controls. A guest can edit localStorage in DevTools.
+//          Real anti-abuse requires server-side tracking.
 // Depends on: nothing
 // ─────────────────────────────────────────────
 
@@ -23,6 +26,13 @@ type GuestDistanceActions = {
   getDistance: (gameType: GameType) => number
 }
 
+// ── Helpers ───────────────────────────────────
+
+function sanitizeDistance(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return 0
+  return Math.floor(value)
+}
+
 // ── Store ─────────────────────────────────────
 
 export const useGuestDistanceStore = create<GuestDistanceState & GuestDistanceActions>()(
@@ -34,17 +44,27 @@ export const useGuestDistanceStore = create<GuestDistanceState & GuestDistanceAc
         set((state) => ({
           distances: {
             ...state.distances,
-            [gameType]: state.distances[gameType] + metres,
+            [gameType]: sanitizeDistance(state.distances[gameType]) + sanitizeDistance(metres),
           },
         }))
       },
 
       getDistance: (gameType: GameType): number => {
-        return get().distances[gameType]
+        return sanitizeDistance(get().distances[gameType])
       },
     }),
     {
       name: 'langtap-guest-distance',
+      merge: (persisted, current) => {
+        const stored = persisted as Partial<GuestDistanceState> | null
+        return {
+          ...current,
+          distances: {
+            kana: sanitizeDistance(stored?.distances?.kana),
+            kotoba: sanitizeDistance(stored?.distances?.kotoba),
+          },
+        }
+      },
     },
   ),
 )

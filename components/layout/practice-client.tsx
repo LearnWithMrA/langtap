@@ -115,23 +115,62 @@ function ModeDropdown({
   )
 }
 
-// -- Component ----------------------------------------------
+// -- Scene shell (shared between active and capped) ---------
 
-export function PracticeClient(): ReactNode {
-  const searchParams = useSearchParams()
-  const gameType = (searchParams.get('mode') === 'kotoba' ? 'kotoba' : 'kana') as GameType
+function PracticeScene({ children }: { children: ReactNode }): ReactNode {
+  const prefersReducedMotion = useReducedMotion()
+  const sceneSpeed = prefersReducedMotion ? 'stopped' : 'idle'
+  const animated = !prefersReducedMotion
+
+  return (
+    <div className="theme-day relative w-full h-svh overflow-hidden">
+      <LandscapeBackground
+        speed={sceneSpeed}
+        staticHills={prefersReducedMotion ?? false}
+        animated={animated}
+      />
+      <div
+        className="absolute bottom-[calc(12svh-max(7.73vw,62.7px))] -left-[2%] md:left-[3%] z-[3]"
+        aria-hidden="true"
+      >
+        <CyclingCharacter speed={sceneSpeed} />
+      </div>
+      <div className="absolute bottom-4 right-4 z-10">
+        <AudioPlayer />
+      </div>
+      <div className="absolute left-1/2 -translate-x-1/2 top-[34%] -translate-y-1/2 z-10 w-full max-w-lg px-4">
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// -- Capped shell (no practice hooks mounted) ---------------
+
+function CappedPracticeShell(): ReactNode {
+  return (
+    <PracticeScene>
+      <div className="bg-[#faf5e4] shadow-[0_6px_0_0_#d4c9b0] rounded-2xl w-full max-w-md mx-auto p-8 text-center opacity-80">
+        <p className="text-lg font-bold text-text-primary mb-2">Practice limit reached</p>
+        <p className="text-sm text-text-secondary">
+          Sign up to continue practising and save your progress.
+        </p>
+      </div>
+    </PracticeScene>
+  )
+}
+
+// -- Active practice (hooks mounted only when not capped) ---
+
+function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
   const [mode, setMode] = useState<InputMode>('tap')
   const kotobaInput = useSettingsStore((s) => s.kotobaInput)
-  const prefersReducedMotion = useReducedMotion()
   const { counters, incrementCorrect } = usePracticeCounters()
   const kanaSession = usePracticeSession('N5')
   const trialSession = useTutorialTrial()
   const kotobaTrialSession = useKotobaTrialSession()
   const { isGuest } = useAuth()
   const openSignUp = useAuthModalStore((s) => s.openSignUp)
-
-  const sceneSpeed = prefersReducedMotion ? 'stopped' : 'idle'
-  const animated = !prefersReducedMotion
 
   // ── Dialogue chain ──────────────────────────
   const { hasSeen: hasSeenKanaIntro, markSeen: markKanaIntroSeen } =
@@ -215,11 +254,8 @@ export function PracticeClient(): ReactNode {
   const showKotobaBanner =
     gameType === 'kotoba' && hasSeenKotobaTrial && !hasSeenKotobaBanner && !activeDialogue
 
-  // ── Guest trial cap ─────────────────────────
-  const guestDistances = useGuestDistanceStore((s) => s.distances)
+  // ── Guest distance tracking ─────────────────
   const addGuestDistance = useGuestDistanceStore((s) => s.addDistance)
-  const totalGuestDistance = guestDistances.kana + guestDistances.kotoba
-  const isOverCap = isGuest && totalGuestDistance >= GUEST_TRIAL_DISTANCE_CAP
 
   useEffect(() => {
     if (trialSession.isComplete && !hasSeenTrial) markTrialSeen()
@@ -268,149 +304,123 @@ export function PracticeClient(): ReactNode {
   }, [incrementCorrect, mode, isGuest, addGuestDistance, gameType])
 
   return (
-    <div className="theme-day relative w-full h-svh overflow-hidden">
-      {/* Parallax landscape */}
-      <LandscapeBackground
-        speed={sceneSpeed}
-        staticHills={prefersReducedMotion ?? false}
-        animated={animated}
-      />
-
-      <div
-        className="absolute bottom-[calc(12svh-max(7.73vw,62.7px))] -left-[2%] md:left-[3%] z-[3]"
-        aria-hidden="true"
-      >
-        <CyclingCharacter speed={sceneSpeed} />
-      </div>
-
-      {/* Audio player: bottom right */}
-      <div className="absolute bottom-4 right-4 z-10">
-        <AudioPlayer />
-      </div>
-
-      {/* Game window: centred, raised 40% */}
-      <div className="absolute left-1/2 -translate-x-1/2 top-[34%] -translate-y-1/2 z-10 w-full max-w-lg px-4">
-        {activeDialogue ? (
-          <DialogueOverlay
-            key={activeDialogue.script.messages[0]}
-            messages={activeDialogue.script.messages}
-            mascotPose={activeDialogue.script.mascotPose}
-            theme={activeDialogue.theme}
-            onDismiss={activeDialogue.onDismiss}
-            onSkip={activeDialogue.onSkip}
-            skipLabel={activeDialogue.skipLabel}
-          />
-        ) : showKanaTrial && !trialSession.isComplete ? (
-          <GameWindow
-            key={trialSession.prompt?.word.id ?? 'trial'}
-            mode={mode}
-            session={trialSession}
-            allowedCharIds={TRIAL_ALLOWED_SET}
-            cardClassName={KANA_TRIAL_CARD}
-          >
-            <ModeDropdown mode={mode} onModeChange={setMode} gameType="kana" />
-            <span className="text-base font-bold text-[#3a6a50] tracking-wider">Trial</span>
-          </GameWindow>
-        ) : showKotobaTrial && !kotobaTrialSession.isComplete ? (
+    <PracticeScene>
+      {activeDialogue ? (
+        <DialogueOverlay
+          key={activeDialogue.script.messages[0]}
+          messages={activeDialogue.script.messages}
+          mascotPose={activeDialogue.script.mascotPose}
+          theme={activeDialogue.theme}
+          onDismiss={activeDialogue.onDismiss}
+          onSkip={activeDialogue.onSkip}
+          skipLabel={activeDialogue.skipLabel}
+        />
+      ) : showKanaTrial && !trialSession.isComplete ? (
+        <GameWindow
+          key={trialSession.prompt?.word.id ?? 'trial'}
+          mode={mode}
+          session={trialSession}
+          allowedCharIds={TRIAL_ALLOWED_SET}
+          cardClassName={KANA_TRIAL_CARD}
+        >
+          <ModeDropdown mode={mode} onModeChange={setMode} gameType="kana" />
+          <span className="text-base font-bold text-[#3a6a50] tracking-wider">Trial</span>
+        </GameWindow>
+      ) : showKotobaTrial && !kotobaTrialSession.isComplete ? (
+        <KotobaGameWindow
+          key={kotobaTrialSession.prompt?.id ?? 'kotoba-trial'}
+          mode={mode}
+          kotobaInput={kotobaInput}
+          session={kotobaTrialSession}
+          cardClassName={KOTOBA_TRIAL_CARD}
+        >
+          <ModeDropdown mode={mode} onModeChange={setMode} gameType="kotoba" />
+          <span className="text-base font-bold text-[#4a6a8a] tracking-wider">Trial</span>
+        </KotobaGameWindow>
+      ) : gameType === 'kotoba' ? (
+        <>
+          {showKotobaBanner && (
+            <PracticeBanner variant="kotoba" buttonLabel="Got it" onAction={markKotobaBannerSeen}>
+              You've finished the trial. Let's practice for real. Don't forget to{' '}
+              <button
+                type="button"
+                onClick={openSignUp}
+                className="text-sage-500 font-medium hover:underline"
+              >
+                sign up
+              </button>{' '}
+              to save your progress. :)
+            </PracticeBanner>
+          )}
           <KotobaGameWindow
-            key={kotobaTrialSession.prompt?.id ?? 'kotoba-trial'}
             mode={mode}
             kotobaInput={kotobaInput}
-            session={kotobaTrialSession}
-            cardClassName={KOTOBA_TRIAL_CARD}
+            onCharacterCorrect={handleCharacterCorrect}
           >
             <ModeDropdown mode={mode} onModeChange={setMode} gameType="kotoba" />
-            <span className="text-base font-bold text-[#4a6a8a] tracking-wider">Trial</span>
+            <DistanceCounter value={counters[mode]} />
           </KotobaGameWindow>
-        ) : isOverCap ? (
-          <div className="opacity-50 pointer-events-none">
-            {gameType === 'kotoba' ? (
-              <KotobaGameWindow mode={mode} kotobaInput={kotobaInput}>
-                <ModeDropdown mode={mode} onModeChange={setMode} gameType={gameType} />
-                <DistanceCounter value={counters[mode]} />
-              </KotobaGameWindow>
-            ) : (
-              <GameWindow
-                key={kanaSession.prompt?.word.id ?? 'kana'}
-                mode={mode}
-                session={kanaSession}
-                allowedCharIds={kanaSession.practiceIds}
+        </>
+      ) : (
+        <>
+          {showTrialBanner && (
+            <PracticeBanner variant="kana" buttonLabel="Got it" onAction={markTrialBannerSeen}>
+              You've finished the trial. Let's practice for real. Don't forget to{' '}
+              <button
+                type="button"
+                onClick={openSignUp}
+                className="text-sage-500 font-medium hover:underline"
               >
-                <ModeDropdown mode={mode} onModeChange={setMode} gameType="kana" />
-                <DistanceCounter value={counters[mode]} />
-              </GameWindow>
-            )}
-          </div>
-        ) : gameType === 'kotoba' ? (
-          <>
-            {showKotobaBanner && (
-              <PracticeBanner variant="kotoba" buttonLabel="Got it" onAction={markKotobaBannerSeen}>
-                You've finished the trial. Let's practice for real. Don't forget to{' '}
-                <button
-                  type="button"
-                  onClick={openSignUp}
-                  className="text-sage-500 font-medium hover:underline"
-                >
-                  sign up
-                </button>{' '}
-                to save your progress. :)
-              </PracticeBanner>
-            )}
-            <KotobaGameWindow
-              mode={mode}
-              kotobaInput={kotobaInput}
-              onCharacterCorrect={handleCharacterCorrect}
-            >
-              <ModeDropdown mode={mode} onModeChange={setMode} gameType="kotoba" />
-              <DistanceCounter value={counters[mode]} />
-            </KotobaGameWindow>
-          </>
-        ) : (
-          <>
-            {showTrialBanner && (
-              <PracticeBanner variant="kana" buttonLabel="Got it" onAction={markTrialBannerSeen}>
-                You've finished the trial. Let's practice for real. Don't forget to{' '}
-                <button
-                  type="button"
-                  onClick={openSignUp}
-                  className="text-sage-500 font-medium hover:underline"
-                >
-                  sign up
-                </button>{' '}
-                to save your progress. :)
-              </PracticeBanner>
-            )}
-            {showHiraganaSokuonHint && (
-              <PracticeBanner variant="kana" buttonLabel="Got it" onAction={markHSokuonSeen}>
-                This small っ (tsu) is a special character. It doubles the consonant that follows
-                it. For example, きって is typed "kitte".
-              </PracticeBanner>
-            )}
-            {showKatakanaSokuonHint && (
-              <PracticeBanner variant="kana" buttonLabel="Got it" onAction={markKSokuonSeen}>
-                This small ッ is the katakana version of っ. It works the same way, doubling the
-                consonant that follows it. For example, ロッカー is typed "rokkaa".
-              </PracticeBanner>
-            )}
-            {showLongVowelHint && (
-              <PracticeBanner variant="kana" buttonLabel="Got it" onAction={markLongVowelSeen}>
-                This ー is the long vowel mark. It stretches the vowel of the character before it.
-                For example, カー sounds like "kaa". You'll only see it in katakana words.
-              </PracticeBanner>
-            )}
-            <GameWindow
-              key={kanaSession.prompt?.word.id ?? 'kana'}
-              mode={mode}
-              session={kanaSession}
-              allowedCharIds={kanaSession.practiceIds}
-              onCharacterCorrect={handleCharacterCorrect}
-            >
-              <ModeDropdown mode={mode} onModeChange={setMode} gameType="kana" />
-              <DistanceCounter value={counters[mode]} />
-            </GameWindow>
-          </>
-        )}
-      </div>
-    </div>
+                sign up
+              </button>{' '}
+              to save your progress. :)
+            </PracticeBanner>
+          )}
+          {showHiraganaSokuonHint && (
+            <PracticeBanner variant="kana" buttonLabel="Got it" onAction={markHSokuonSeen}>
+              This small っ (tsu) is a special character. It doubles the consonant that follows it.
+              For example, きって is typed "kitte".
+            </PracticeBanner>
+          )}
+          {showKatakanaSokuonHint && (
+            <PracticeBanner variant="kana" buttonLabel="Got it" onAction={markKSokuonSeen}>
+              This small ッ is the katakana version of っ. It works the same way, doubling the
+              consonant that follows it. For example, ロッカー is typed "rokkaa".
+            </PracticeBanner>
+          )}
+          {showLongVowelHint && (
+            <PracticeBanner variant="kana" buttonLabel="Got it" onAction={markLongVowelSeen}>
+              This ー is the long vowel mark. It stretches the vowel of the character before it. For
+              example, カー sounds like "kaa". You'll only see it in katakana words.
+            </PracticeBanner>
+          )}
+          <GameWindow
+            key={kanaSession.prompt?.word.id ?? 'kana'}
+            mode={mode}
+            session={kanaSession}
+            allowedCharIds={kanaSession.practiceIds}
+            onCharacterCorrect={handleCharacterCorrect}
+          >
+            <ModeDropdown mode={mode} onModeChange={setMode} gameType="kana" />
+            <DistanceCounter value={counters[mode]} />
+          </GameWindow>
+        </>
+      )}
+    </PracticeScene>
   )
+}
+
+// -- Exported wrapper (cap gate before hooks) ──
+
+export function PracticeClient(): ReactNode {
+  const searchParams = useSearchParams()
+  const gameType = (searchParams.get('mode') === 'kotoba' ? 'kotoba' : 'kana') as GameType
+  const { isGuest, isLoading } = useAuth()
+  const guestDistances = useGuestDistanceStore((s) => s.distances)
+  const totalGuestDistance = guestDistances.kana + guestDistances.kotoba
+  const possiblyOverCap = totalGuestDistance >= GUEST_TRIAL_DISTANCE_CAP
+
+  if (possiblyOverCap && isLoading) return <PracticeScene>{null}</PracticeScene>
+  if (possiblyOverCap && isGuest) return <CappedPracticeShell />
+  return <ActivePracticeClient gameType={gameType} />
 }

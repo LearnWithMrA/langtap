@@ -314,7 +314,38 @@ If the service role key is bundled into client-side code (e.g. via a
 
 ---
 
-## 7. Security Checklist
+## 7. Guest Mode Security Model
+
+Guest users can play without an account, subject to a trial distance cap and
+a learning phase. These limits are enforced client-side via localStorage.
+
+**Threat model: localStorage is not a security boundary.**
+
+- The distance cap (30m) and learning scores stored in localStorage are
+  UX/conversion nudges, not security controls.
+- A guest can open DevTools and edit localStorage to bypass the 30m cap
+  or skip the learning phase. This is expected and acceptable.
+- At cap, no active game session components mount. The game window is
+  replaced by a static card prompting sign-up. There is no hidden running
+  session to resume by manipulating state.
+- Guest progress (mastery scores, distance) is never imported into
+  leaderboard scores. Leaderboard writes are server-only, requiring
+  authenticated sessions with server-validated activity.
+- Guest localStorage values are never trusted for any server-side
+  operation. If a guest signs up, their account starts fresh on the
+  server. Local mastery scores may seed the client store for continuity
+  but are never written to Supabase without server validation.
+- Manual unlocks (onboarding and dojo) are intentionally user-controlled.
+  A guest choosing to unlock characters early is a feature, not a bypass.
+
+**Summary:** A motivated guest can extend their trial indefinitely via
+DevTools. This costs nothing (no server resources consumed) and does not
+affect other users or the leaderboard. The trial cap exists to create a
+natural conversion moment, not to enforce a hard paywall.
+
+---
+
+## 8. Security Checklist
 
 Run through this checklist before every production deployment.
 
@@ -352,7 +383,7 @@ Run through this checklist before every production deployment.
 
 ---
 
-## 8. What the AI Must Not Do
+## 9. What the AI Must Not Do
 
 - Never create a table without enabling RLS in the same migration.
 - Never write an RLS policy without the `(select auth.uid())` wrapping.

@@ -8,7 +8,7 @@
 
 'use client'
 
-import { useCallback, useSyncExternalStore } from 'react'
+import { useCallback, useState, useSyncExternalStore } from 'react'
 import type { ReactNode } from 'react'
 
 // ── Storage plumbing ──────────────────────────
@@ -83,11 +83,14 @@ function useTipProgress(
     () => getTipIndex(storageKey),
     () => 0,
   )
-  const dismissed = snapshot >= tips.length
+  const [dismissedThisVisit, setDismissedThisVisit] = useState(false)
+  const allSeen = snapshot >= tips.length
+  const dismissed = allSeen || dismissedThisVisit
   const currentTip = dismissed ? null : (tips[snapshot] ?? null)
 
   const advance = useCallback((): void => {
     setTipIndex(storageKey, snapshot + 1)
+    setDismissedThisVisit(true)
   }, [storageKey, snapshot])
 
   return { dismissed, currentTip, advance }

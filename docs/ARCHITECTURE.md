@@ -190,6 +190,8 @@ langtap/
 |  |  |- meaning-reveal.tsx     # English meaning shown after correct answer
 |  |  |- distance-counter.tsx   # Running distance display
 |  |  |- mode-switcher.tsx      # Input mode toggle icon (top right)
+|  |  |- dialogue-overlay.tsx   # Mascot dialogue card with typewriter animation
+|  |  |- practice-banner.tsx    # Banner above game window (post-trial, post-kotoba)
 |  |
 |  |- dojo/                     # Dojo screen components (Kana and Kotoba)
 |  |  |- character-group.tsx    # Kana: collapsible group (Seion, Dakuon, Yoon)
@@ -239,6 +241,7 @@ langtap/
 |  |- distance.ts               # Distance and speed bonus calculation
 |  |- scoring.ts                # Per-character first-attempt scoring
 |  |- sokuon.ts                 # Sokuon position detection and validation
+|  |- practice-eligibility.ts   # Three-set character eligibility system
 |  |- __tests__/
 |  |  |- selection.test.ts
 |  |  |- mastery.test.ts
@@ -248,6 +251,8 @@ langtap/
 |  |  |- scoring.test.ts
 |  |  |- romaji.test.ts
 |  |  |- sokuon.test.ts
+|  |  |- practice-eligibility.test.ts
+|  |  |- kana-selection.test.ts
 |
 |- stores/                      # Zustand state stores (one per domain)
 |  |- mastery.store.ts          # Character mastery scores
@@ -256,6 +261,7 @@ langtap/
 |  |- session.store.ts          # Current session score and distance
 |  |- settings.store.ts         # User settings (mode, font, audio toggle)
 |  |- user.store.ts             # Authenticated user state
+|  |- guest-distance.store.ts   # Guest cumulative distance (localStorage)
 |
 |- services/                    # All external API calls (Supabase, Stripe)
 |  |- supabase.ts               # Supabase client (anon key only)
@@ -272,6 +278,9 @@ langtap/
 |  |- useSession.ts             # Current session state and scoring
 |  |- useSettings.ts            # User preferences
 |  |- useAudio.ts               # Lo-fi audio playback control
+|  |- useDialogueSeen.ts        # localStorage tracking for seen dialogues
+|  |- useTutorialTrial.ts       # Sandbox kana trial session
+|  |- useKotobaTrialSession.ts  # Sandbox kotoba trial session
 |
 |- data/                        # Static content (bundled, not fetched)
 |  |- kana/
@@ -288,6 +297,10 @@ langtap/
 |  |
 |  |- audio/
 |  |  |- word-manifest.ts       # Maps word ID to audio file path
+|  |
+|  |- tutorial/
+|  |  |- dialogue-scripts.ts    # Dialogue script data keyed by trigger
+|  |  |- trial-prompts.ts       # Fixed kana trial prompts
 |
 |- theme/                       # Design tokens (no logic, values only)
 |  |- colors.ts                 # All colour values (pastel palette + heatmap)
@@ -322,6 +335,11 @@ langtap/
 |  |  |- lofi/                  # Lo-fi background music
 |  |- animation/                # Cycling animation assets
 |  |- fonts/                    # Self-hosted font files
+|  |- images/
+|  |  |- mascot/                # Mascot expression PNGs
+|  |  |  |- mascot-neutral.png
+|  |  |  |- mascot-encouraging.png
+|  |  |  |- mascot-thinking.png
 |
 |- .env.local                   # Environment variables (never committed)
 |- .env.example                 # Template with variable names, no values
@@ -536,6 +554,9 @@ export function updateScore(char: KanaCharacter) {
 - Input sanitization: `bulkLoad` actions validate incoming values at the boundary
   (finite, integer, non-negative) before merging. Invalid values are clamped to safe
   defaults rather than rejected.
+- `guest-distance.store.ts` is localStorage-persisted, keyed by `gameType` (kana
+  or kotoba). It tracks cumulative distance for the guest trial cap only. It is
+  never synced to Supabase and is not used for authenticated users.
 
 ---
 

@@ -1,7 +1,8 @@
 # LangTap - Game Design
 
-Version 1.0 | April 2026
-Domain: Engine logic, mastery system, unlocking, word counters, input modes, feedback.
+Version 1.1 | May 2026
+Domain: Engine logic, mastery system, unlocking, word counters, input modes, feedback,
+tutorial system, guest trial cap, special character hints.
 Reference: LangTap_Planning.md Sections 5.2 – 5.8, 5.13.
 Owner document: CLAUDE.md
 
@@ -258,6 +259,64 @@ isWordEligible(word, unlockedCharacters): boolean
   → true only if every character in the word is in the unlockedCharacters set
 ```
 
+### 4.8 Inline Kana Learning Phase
+
+The kana learning phase uses two separate scoring dimensions:
+
+- **Learning scores (0-5):** tracked per character, incremented by single-character
+  drills. Learning scores unlock characters through progression steps. They are
+  separate from mastery scores and serve only the unlock gate.
+- **Mastery scores (0-40+):** tracked per character, incremented only by word
+  practice (correct first-attempt within a word). Mastery scores drive the heatmap
+  and frequency weighting. They are never affected by character drills.
+
+This separation means a character can have a learning score of 5 (unlocked) but a
+mastery score of 0 (never seen in a word). The heatmap only reflects word-level
+performance.
+
+#### Three character sets
+
+The learning phase produces three character sets, computed by pure functions in
+`engine/practice-eligibility.ts`:
+
+| Set | Purpose | Criteria |
+|---|---|---|
+| `practiceAvailable` | Characters the player can drill (solo and in words) | All characters in the current and previous `UNLOCK_STEPS`, plus manual unlocks, plus always-unlocked special characters |
+| `wordEligible` | Characters that can appear in word prompts | Learning score >= `KANA_WORD_ELIGIBLE_THRESHOLD` (5), or manually unlocked, or always-unlocked |
+| `dojoUnlocked` | Characters shown as unlocked in the Dojo | Same as `wordEligible` |
+
+#### Progression through UNLOCK_STEPS
+
+Characters unlock in step groups defined in `data/kana/progression-groups.ts` as
+`UNLOCK_STEPS`. Each step is an array of group indexes. A step becomes available
+when all characters in the previous step have reached the learning threshold (5)
+or been manually unlocked.
+
+Manual unlocks (from onboarding or dojo) bypass the 5-answer gate entirely. The
+character is immediately added to all three sets.
+
+#### Special characters
+
+Three characters are always unlocked and always word-eligible but are excluded
+from solo drills:
+
+| Character | ID | Reason |
+|---|---|---|
+| っ (hiragana sokuon) | `h-sokuon` | Doubles the following consonant, never pronounced alone |
+| ッ (katakana sokuon) | `k-sokuon` | Same as above, katakana variant |
+| ー (long vowel mark) | `k-longvowel` | Extends the previous vowel, never standalone |
+
+These are defined in `ALWAYS_UNLOCKED` and `SOLO_DRILL_EXCLUDED` sets in
+`engine/practice-eligibility.ts`.
+
+#### Word/character mixing
+
+When 10 or more words are eligible (`MIN_ELIGIBLE_WORDS_FOR_MIXING`), the selection
+algorithm mixes word prompts and character drills at a 60/40 ratio
+(`WORD_PROMPT_RATIO = 0.6`). Below 10 eligible words, only character drills are
+shown (with occasional word fallback if any words are eligible). Characters that
+still need learning (score < 5) are always prioritised for drills.
+
 ---
 
 ## 5. Character Selection Algorithm
@@ -324,6 +383,24 @@ selectNextPrompt(
   unlockedIds: Set<string>,
   preferredLevel: 'N5' | 'N4' | 'N3' | 'N2' | 'N1'  // from kanji_jlpt_level on profile
 ): PromptResult
+```
+
+### 5.5 Kanji Distractor Filtering (Kotoba)
+
+When generating tap-mode distractors for Kotoba kanji input,
+`generateKotobaDistractors` in `engine/kotoba-selection.ts` filters candidates
+by matching kanji character length. Single-kanji words (e.g. 水) get
+single-kanji distractors. Multi-kanji words get multi-kanji distractors of the
+same length. If not enough same-length candidates exist, the function falls back
+to other lengths to fill the remaining slots.
+
+```ts
+generateKotobaDistractors(
+  correctKanji: string,
+  count: number,
+  wordBank: readonly WordBankEntry[],
+  rng?: () => number,
+): string[]
 ```
 
 ---
@@ -562,6 +639,33 @@ derived local dates. Client never computes streak state.
 
 ---
 
+## 8.6 Guest Trial Cap
+
+### 8.6.1 Overview
+
+Guest users (not signed in) have a combined practice distance cap of 30 metres
+across kana and kotoba modes. The cap is a conversion nudge, not a security
+control. A guest can edit localStorage in DevTools to bypass it.
+
+### 8.6.2 Rules
+
+- Distance is tracked per game type (kana, kotoba) in `stores/guest-distance.store.ts`,
+  persisted to localStorage under the key `langtap-guest-distance`.
+- The cap applies to the sum of both game types: `kana + kotoba >= GUEST_TRIAL_DISTANCE_CAP`.
+- The constant `GUEST_TRIAL_DISTANCE_CAP` is defined in `engine/constants.ts` (value: 30).
+- When the cap is reached, the game is disabled: no active practice sessions mount.
+  The user sees the guest banner with a sign-up CTA instead.
+- Signed-in users never interact with the guest distance store.
+
+### 8.6.3 Guest Banner
+
+When the cap is reached, `components/layout/guest-banner.tsx` renders a fixed
+banner below the top bar. The banner shows the message "You've hit the limit as
+a guest" with a link to open the sign-up modal. A dismiss button hides the banner
+for the current page visit only (reappears on navigation).
+
+---
+
 ## 9. Session Score
 
 A session score tracks the current session's statistics.
@@ -718,21 +822,27 @@ No magic numbers anywhere in the codebase.
 // engine/constants.ts - all currently implemented
 
 export const FEEDBACK_FLASH_MS = 300       // correct/wrong flash duration
-export const WRONG_ANSWER_DELAY_MS = 800   // unused, reserved for future hint timing
+export const WRONG_ANSWER_DELAY_MS = 800   // delay before romaji hint on wrong answer
 export const MEANING_DISPLAY_MS = 1500     // ms meaning shown after correct (Kana)
 export const KOTOBA_DISPLAY_MS = 3000      // ms result shown after correct (Kotoba)
 export const MEANING_FADE_MS = 150         // fade-in duration for meaning reveal
 export const TAP_REMINDER_THRESHOLD = 5    // correct answers before reminder hides
 export const UNLOCK_THRESHOLD = 5          // correct answers to unlock a character
+export const KOTOBA_UNLOCK_THRESHOLD = 3   // mastery score to unlock next Kotoba word step
+export const KOTOBA_MASTERY_THRESHOLD = 15 // score for a word to be considered fully mastered
 export const MAX_WORD_COUNTER = 5          // max times a word is shown before reset
+export const KANJI_INPUT_MULTIPLIER = 4    // scoring multiplier for kanji input in Kotoba
 export const MAX_RESPONSE_TIME_MS = 5000   // response time ceiling for speed bonus
 export const BASE_DISTANCE_INCREMENT = 10  // metres per correct answer (base)
 export const METRES_TO_FEET = 3.28084      // conversion factor for US locale
+export const KANA_WORD_ELIGIBLE_THRESHOLD = 5   // learning score before character appears in words
+export const MIN_ELIGIBLE_WORDS_FOR_MIXING = 10 // eligible words before word prompts mix in
+export const WORD_PROMPT_RATIO = 0.6       // probability of word prompt when mixing is active
+export const GUEST_TRIAL_DISTANCE_CAP = 30 // max cumulative metres for guest users
 export const STREAK_START_THRESHOLD = 3    // consecutive practice days to start a streak
 
 // Deferred to the sprint that implements their consumers:
 // export const ANIMATION_WINDOW_SIZE = 10    // recent answers for animation speed
-// export const KANJI_INPUT_MULTIPLIER = 4    // scoring multiplier for kanji input (Phase 2)
 ```
 
 ---
@@ -769,6 +879,178 @@ Required test cases for unlock logic:
 - Character at 4 correct answers: still locked.
 - Character at 5 correct answers: unlocked.
 - Locked character: never appears in word selection output.
+
+---
+
+## 14. Tutorial Dialogue System
+
+### 14.1 Overview
+
+A mascot character delivers tutorial messages via a themed dialogue card overlay.
+The system introduces new players to each game mode and guides them through the
+initial flow. All dialogue is non-blocking: the player can skip at any time.
+
+### 14.2 Mascot
+
+The mascot has three poses:
+
+| Pose | Used for |
+|---|---|
+| `neutral` | Standard explanations, introductions |
+| `encouraging` | Milestone celebrations, unlock notifications |
+| `thinking` | Settings advice, post-trial tips |
+
+### 14.3 Dialogue Card
+
+The dialogue card is a themed overlay rendered by `components/game/dialogue-overlay.tsx`:
+
+- **Green theme** for kana dialogues.
+- **Blue theme** for kotoba dialogues.
+- Text appears with a typewriter effect (character-by-character reveal).
+- All messages in a script flow continuously: the next message begins automatically
+  after the previous one finishes typing.
+- A "Skip" button reveals all remaining text in the current script instantly.
+- The card auto-dismisses after the final message has been fully displayed (with a
+  short delay).
+
+### 14.4 Dialogue Scripts
+
+Scripts are stored in `data/tutorial/dialogue-scripts.ts` as a record keyed by
+`DialogueScriptTrigger`. Each script contains an ordered array of message strings
+and a mascot pose.
+
+**Kana flow (first play):**
+1. `kana-first-play` (neutral): welcome, explains kana alphabets, mastery, feedback
+2. Settings prompt: explains direction, audio, pacing options
+3. Mode-specific: `kana-mode-tap`, `kana-mode-swipe`, or `kana-mode-type`
+4. Trial round (see Section 15)
+5. `kana-post-trial` (thinking): settings advice before real practice
+
+**Kotoba flow (first play per mode):**
+1. Mode-specific: `kotoba-first-tap`, `kotoba-first-type`, or `kotoba-first-swipe`
+2. Trial round (see Section 15)
+3. Practice begins
+
+Mode dialogues include a "Skip trial" option so experienced users can go straight
+to practice.
+
+### 14.5 Seen State
+
+Each dialogue trigger is tracked independently in localStorage via the
+`useDialogueSeen` hook (`hooks/useDialogueSeen.ts`). The hook uses
+`useSyncExternalStore` for SSR-safe hydration.
+
+Storage key: `langtap-dialogues-seen` (JSON array of trigger IDs).
+
+The `DialogueTrigger` type includes all script triggers plus trial triggers, banner
+triggers, and special character hint triggers (see Sections 15 and 17).
+
+---
+
+## 15. Tutorial Trial Round
+
+### 15.1 Overview
+
+After the tutorial dialogue, new players complete a short trial round to experience
+the game mechanics in a sandboxed environment. No mastery scores or word counters
+are written during the trial. The trial is per-mode: completing the kana tap trial
+does not mark the kana swipe trial as seen.
+
+### 15.2 Kana Trial
+
+The kana trial uses fixed prompts from `data/tutorial/trial-prompts.ts`:
+
+- 3 single-character drills (あ, い, う)
+- 3 word prompts using only group 0+1 characters (会う, 家, 上)
+
+The tap grid is restricted during the trial to only the characters in
+`TRIAL_ALLOWED_IDS` (the a-row and ka-row: あ い う え お か き く け こ).
+This prevents the grid from showing characters the player has not been introduced to.
+
+### 15.3 Kotoba Trial
+
+The kotoba trial uses 3 fixed N5 words defined in `hooks/useKotobaTrialSession.ts`:
+
+- 水 (みず, Water)
+- 犬 (いぬ, Dog)
+- 猫 (ねこ, Cat)
+
+The hook returns a `UseKotobaPracticeReturn`-shaped object so the game components
+can treat the trial identically to a real session.
+
+### 15.4 Sandbox Rules
+
+- No mastery score writes (character or word).
+- No word counter increments.
+- No distance accumulation.
+- Trial state is tracked per mode via `useDialogueSeen` (e.g. `kana-trial-tap`,
+  `kotoba-trial-type`).
+- Completing the trial marks the trigger as seen and transitions to real practice.
+
+---
+
+## 16. Dojo Banner Tips
+
+### 16.1 Overview
+
+The Kana Dojo and Kotoba Dojo each display sequential contextual tips in a banner
+card at the top of the screen. Tips show one per visit and advance on dismiss.
+Once all tips have been seen, the banner stops appearing.
+
+### 16.2 Implementation
+
+Tips are managed by `components/dojo/help-card.tsx` using localStorage with
+`useSyncExternalStore`. Each dojo has its own storage key:
+
+- Kana: `dojo.kana.tipIndex`
+- Kotoba: `dojo.kotoba.tipIndex`
+
+The `HelpCard` component renders a card with an icon, title, body text, and a
+"Got it" dismiss button.
+
+### 16.3 Tip Content
+
+**Kana Dojo (2 tips):**
+
+| # | Title | Content |
+|---|---|---|
+| 1 | Welcome to the Dojo | Already know a character? Tap to unlock it, then tap again to mark it as mastered, so it will not appear as often. |
+| 2 | Need a refresher? | Forgotten one? Tap to reset it and it will start showing up again. |
+
+**Kotoba Dojo (2 tips):**
+
+| # | Title | Content |
+|---|---|---|
+| 1 | Welcome to Kotoba Dojo | Words unlock as you learn their characters. Keep practising kana and new words will appear here. |
+| 2 | Explore your words | Tap a word to see its reading and meaning. Mastered words have a gold bar. |
+
+---
+
+## 17. Special Character Hints
+
+### 17.1 Overview
+
+Three special characters have teaching banners that appear above the game window
+the first time the player encounters them in a word prompt. Each hint is tracked
+independently via `useDialogueSeen` and appears only once per character.
+
+### 17.2 Characters
+
+| Character | Trigger ID | What it teaches |
+|---|---|---|
+| っ (hiragana sokuon) | `sokuon-hiragana-hint` | Doubles the following consonant sound. Typed by repeating the next consonant (e.g. って = tte). |
+| ッ (katakana sokuon) | `sokuon-katakana-hint` | Same doubling rule in katakana. |
+| ー (long vowel mark) | `longvowel-hint` | Extends the previous vowel. Used in katakana words (e.g. コーヒー = koohii). |
+
+### 17.3 Display Rules
+
+- The hint banner renders above the game window in `components/layout/practice-client.tsx`.
+- It appears when the current prompt contains one of the special character IDs
+  (`h-sokuon`, `k-sokuon`, `k-longvowel`) and the corresponding trigger has not
+  been marked as seen.
+- Only one hint shows at a time, even if the word contains multiple special characters.
+- The banner auto-dismisses when the player starts typing or tapping.
+- After dismissal, the trigger is marked as seen and the hint never reappears.
 
 ---
 

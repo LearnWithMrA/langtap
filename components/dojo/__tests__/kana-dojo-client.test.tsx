@@ -112,11 +112,10 @@ describe('KanaDojoClient', () => {
     expect(screen.getByRole('complementary', { name: 'Dojo tip' })).toBeInTheDocument()
   })
 
-  it('hides all tips after dismissing both', async () => {
+  it('hides the tip for this visit after dismissing', async () => {
     const user = userEvent.setup()
     seedEmptyState()
     render(<KanaDojoClient />)
-    await user.click(screen.getByRole('button', { name: 'Dismiss tip' }))
     await user.click(screen.getByRole('button', { name: 'Dismiss tip' }))
     expect(screen.queryByRole('complementary', { name: 'Dojo tip' })).not.toBeInTheDocument()
   })

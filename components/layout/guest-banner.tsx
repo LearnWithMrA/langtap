@@ -1,6 +1,6 @@
 // ------------------------------------------------------------
 // File: components/layout/guest-banner.tsx
-// Purpose: Banner shown to guest users when they hit the 15m
+// Purpose: Banner shown to guest users when they hit the 30m combined
 //          practice distance cap. Prompts them to create an
 //          account. Dismissal hides for the current session only.
 // Depends on: hooks/useAuth.ts, stores/auth-modal.store.ts,

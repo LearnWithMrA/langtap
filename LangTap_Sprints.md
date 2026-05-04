@@ -283,6 +283,29 @@ No UI yet. This is pure logic.
 
 ---
 
+## Sprint 7C - Server-Side Guest Trial Cap
+
+**Goal:** Move the guest trial counter from localStorage to Supabase using anonymous auth. The 30m combined cap is enforced server-side. Editing localStorage no longer bypasses the cap. Clearing cookies starts a fresh guest (acceptable). 3-day retention for anonymous guest data.
+**Status:** Pending
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Enable Supabase anonymous sign-ins | **Small** | **To Do** | Enable in Supabase dashboard. Anonymous users get `user.is_anonymous = true`. No email/password required. |
+| Create `guest_usage` table and migration | **Medium** | **To Do** | Table: `user_id` (PK, FK to auth.users on delete cascade), `kana_distance` (int, default 0), `kotoba_distance` (int, default 0), `capped_at` (timestamptz, null), `created_at`, `updated_at`, `expires_at` (default now() + interval '3 days'). RLS: guests select own row only. No direct client insert/update/delete. |
+| Build RPCs for guest usage | **Medium** | **To Do** | `get_or_create_guest_usage()`: creates/returns anonymous guest row. `increment_guest_usage(game_type, metres)`: clamps increments, never lets combined total exceed 30, sets `capped_at` when cap reached. All writes go through RPC, not direct table access. |
+| Add restrictive RLS for anonymous users | **Medium** | **To Do** | Anonymous users cannot write to `mastery`, `word_mastery`, `manual_unlocks`, `practice_sessions`, or `profiles`. Check `is_anonymous` JWT claim in policies. Only permanent authenticated users can write to account tables. |
+| Build `services/guest-usage.service.ts` | **Medium** | **To Do** | `ensureGuestSession()`: calls `signInAnonymously()` only when no user exists. `loadGuestUsage()`: calls `get_or_create_guest_usage` RPC. `incrementGuestUsage(gameType, metres)`: calls `increment_guest_usage` RPC. |
+| Build `useGuestUsage` hook | **Medium** | **To Do** | Ensures anonymous session for guest practice. Loads server usage before active practice mounts. Exposes `isLoading`, `isOverCap`, `usage`, and `increment`. Replaces `useGuestDistanceStore` as cap authority. |
+| Update `useAuth` for anonymous users | **Small** | **To Do** | Add `isAnonymous` to AuthUser. `isGuest = no user OR user.isAnonymous`. `isAuthenticated = user exists AND !isAnonymous`. Anonymous users allowed on guest routes but not treated as permanent for /profile or auth redirects. |
+| Update middleware for anonymous users | **Small** | **To Do** | Anonymous users can view/play guest routes. Not treated as permanent users. Not redirected away from sign-up/login. Cannot access permanent-only profile behaviour. |
+| Wire `PracticeClient` to server usage | **Medium** | **To Do** | Stop using localStorage `guest-distance.store` as cap authority. Gate active practice on server usage via `useGuestUsage`. If usage loading and not permanent user, render scene shell only. If capped, render static disabled card + signup CTA. No `GameWindow`/`KotobaGameWindow`/practice hooks when capped. |
+| Update `GuestBanner` to server usage | **Small** | **To Do** | Read cap state from `useGuestUsage` instead of `useGuestDistanceStore`. Same visual behaviour (shows at cap, resets on route change). |
+| Handle sign-up from anonymous guest | **Small** | **To Do** | When guest signs up, permanent auth takes over and guest cap no longer applies. Do not import guest usage into leaderboard. Guest usage rows deleted on sign-up or left for 3-day cleanup. |
+| Build guest data cleanup job | **Small** | **To Do** | Daily scheduled SQL: delete anonymous users whose `guest_usage.expires_at < now()`. Also delete anonymous auth users with no `guest_usage` row older than 3 days. Cascading FK handles `guest_usage` deletion. |
+| Write guest auth and cap tests | **Medium** | **To Do** | Auth: anonymous user returns `isGuest: true, isAuthenticated: false, isAnonymous: true`. Middleware: anonymous not redirected as permanent. Service: creates session, loads/increments via RPC. Practice: server usage gates active practice. SQL/RLS: anonymous can select own row, cannot update directly, cannot write account tables, RPC cannot reduce distance or exceed 30m. |
+
+---
+
 ## Sprint 8 - Profile, Settings, and Supabase Progress Sync
 
 **Goal:** Profile and Settings screens connected to user state. Signed-up users have all game progress synced to Supabase. Guest progress lives in localStorage and migrates on sign-up.

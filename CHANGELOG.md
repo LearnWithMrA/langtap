@@ -30,6 +30,46 @@ Format per entry:
 
 ---
 
+## 2026-05-04 - Session 84
+
+**Sprint:** Sprint 7B/7C - Security hardening, doc updates, Sprint 7C planning
+**Task completed:** Guest cap security fixes, auth-loading gap, doc sync, Sprint 7C board
+**Status:** Done
+
+### Changes made
+- `components/layout/practice-client.tsx`: Split into `PracticeScene` (shared shell), `CappedPracticeShell` (static card, no hooks), and `ActivePracticeClient` (all practice hooks). `PracticeClient` wrapper checks cap BEFORE mounting any practice sessions. Auth-loading + over-cap renders empty scene (no hooks). No `usePracticeSession`/`useTutorialTrial`/`useKotobaPracticeSession` mount when capped
+- `stores/guest-distance.store.ts`: `addDistance` now sanitizes incoming metres via `sanitizeDistance()` (catches NaN). Updated comment to "30m combined". `merge` function sanitizes rehydrated localStorage values
+- `components/layout/guest-banner.tsx`: Updated comment from "15m" to "30m combined". Route-change reset via `usePathname`
+- `components/dojo/help-card.tsx`: Sequential tip system - each tip shown on separate visits (not back-to-back). `dismissedThisVisit` state hides card for current visit only
+- `components/dojo/character-tile.tsx`: Learning tiles stay fully locked visually (dimmed, lock icon, grey border) but show dark grey /5 progress bar
+- `components/dojo/unlock-prompt.tsx`: "Learning progress: N/5" on bold separate line
+- `components/dojo/character-group.tsx`: Fixed missing `learningScores`/`tileStates` prop path for normal seion grid (Codex catch)
+- `components/layout/kana-dojo-client.tsx`: All unlock scopes use `lockedIds` consistently. Activity uses `learningScores`. Removed `trulyLockedIds`
+- `stores/unlock.store.ts`: `addManualUnlock`/`addManualUnlocks` use `learningScores`
+- `stores/mastery.store.ts`: v2 migration backfills `learningScores = min(score, 5)`. Reset clears both maps. 7 new tests
+- `components/game/__tests__/tutorial-system.test.tsx`: Real PracticeClient cap gate tests - mocks useAuth/usePracticeSession, verifies hooks not called when capped, auth-loading gap covered
+- `docs/AUTH.md`: Updated guest mode section (30m combined cap, banner at cap only, localStorage as UX nudge)
+- `docs/GAME_DESIGN.md`: 7 new sections (tutorial dialogue, trial rounds, learning phase, guest cap, dojo tips, special char hints, kanji distractors). Constants reference updated
+- `docs/ARCHITECTURE.md`: New files added to folder structure (dialogue, trial, eligibility, guest distance, mascot). Guest distance store documented
+- `docs/SECURITY.md`: New Section 7 (Guest Mode Security Model) covering localStorage limits, no game sessions at cap, leaderboard write protection
+- `LangTap_Sprints.md`: Sprint 7C added (13 tasks for server-side guest cap via Supabase anonymous auth). Sprint 11 daily cap task added
+
+### Tests
+- Full suite: 858 tests, 0 failures
+- New: 2 PracticeClient cap gate tests (real component render), 2 sanitization tests, 7 mastery store learning score tests
+
+### Next task
+Sprint 7C - Server-Side Guest Trial Cap (Supabase anonymous auth)
+
+### Notes
+- PracticeClient is now three components: PracticeScene (scene shell), CappedPracticeShell (static card), ActivePracticeClient (all hooks). The exported PracticeClient checks cap + auth before deciding which to mount
+- Auth-loading gap fixed: when distance >= 30 and auth is still resolving, renders empty scene shell. No practice hooks mount until auth confirms the user is not a permanent account
+- localStorage guest cap will become dead code once Sprint 7C wires server-side cap. The local store remains as a temporary measure
+- Codex security review identified: localStorage caps are UX nudges not security, pointer-events-none is CSS-only enforcement, game sessions still mounted at cap. All three fixed
+- 5 documentation files updated across 3 parallel agents
+
+---
+
 ## 2026-05-04 - Session 83
 
 **Sprint:** Sprint 7B - Tutorial and Guidance System (COMPLETE)
