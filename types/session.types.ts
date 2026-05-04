@@ -28,6 +28,24 @@ export type SelectionResult = {
   updatedCounters: WordCounterMap
 }
 
+/**
+ * Prompt kind for the kana learning phase.
+ * 'character': single-kana drill (no word context).
+ * 'word': full word prompt (current behaviour).
+ */
+export type PromptKind = 'character' | 'word'
+
+/**
+ * Output of selectNextKanaPrompt. Includes the prompt kind
+ * so consumers know whether to display a word or single character.
+ */
+export type KanaSelectionResult = {
+  kind: PromptKind
+  characterId: string
+  word: WordBankEntry | null
+  updatedCounters: WordCounterMap
+}
+
 // ── Session ──────────────────────────────────
 
 /**

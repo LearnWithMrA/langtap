@@ -6,8 +6,10 @@
 //             types/mastery.types.ts
 // ─────────────────────────────────────────────
 
-import { UNLOCK_THRESHOLD } from '@/engine/constants'
+import { UNLOCK_THRESHOLD, KANA_WORD_ELIGIBLE_THRESHOLD } from '@/engine/constants'
 import { KANA_CHARACTERS } from '@/data/kana/characters'
+import { getPracticeAvailableIds } from '@/engine/practice-eligibility'
+import { PROGRESSION_GROUPS, UNLOCK_STEPS } from '@/data/kana/progression-groups'
 import type { KanaCharacter, Script, Stage } from '@/types/kana.types'
 import type { MasteryState } from '@/types/game.types'
 
@@ -19,10 +21,34 @@ export function buildLockedSet(state: MasteryState): Set<string> {
   const locked = new Set<string>()
   for (const c of DOJO_CHARACTERS) {
     if (manual.has(c.id)) continue
-    if ((state.scores[c.id] ?? 0) >= UNLOCK_THRESHOLD) continue
+    if ((state.learningScores[c.id] ?? 0) >= KANA_WORD_ELIGIBLE_THRESHOLD) continue
     locked.add(c.id)
   }
   return locked
+}
+
+export type TileState = 'locked' | 'learning' | 'unlocked'
+
+export function buildTileStates(state: MasteryState): Record<string, TileState> {
+  const manual = new Set(state.manuallyUnlocked)
+  const practiceIds = getPracticeAvailableIds(
+    state.learningScores,
+    manual,
+    PROGRESSION_GROUPS,
+    UNLOCK_STEPS,
+  )
+  const result: Record<string, TileState> = {}
+  for (const c of DOJO_CHARACTERS) {
+    const learningScore = state.learningScores[c.id] ?? 0
+    if (manual.has(c.id) || learningScore >= KANA_WORD_ELIGIBLE_THRESHOLD) {
+      result[c.id] = 'unlocked'
+    } else if (practiceIds.has(c.id) && learningScore > 0) {
+      result[c.id] = 'learning'
+    } else {
+      result[c.id] = 'locked'
+    }
+  }
+  return result
 }
 
 export function hasLockedCharacter(

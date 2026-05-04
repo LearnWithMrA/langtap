@@ -37,7 +37,12 @@ function charPrompt(charId: string, kana: string, romaji: string): PracticePromp
     characterIds: [charId],
     audioFile: null,
   }
-  return { word, characters: [{ id: charId, kana, romaji }], targetCharacterId: charId }
+  return {
+    kind: 'character' as const,
+    word,
+    characters: [{ id: charId, kana, romaji }],
+    targetCharacterId: charId,
+  }
 }
 
 function wordPrompt(
@@ -56,7 +61,7 @@ function wordPrompt(
     characterIds: chars.map((c) => c.id),
     audioFile: null,
   }
-  return { word, characters: chars, targetCharacterId: chars[0].id }
+  return { kind: 'word' as const, word, characters: chars, targetCharacterId: chars[0].id }
 }
 
 // ── Exports ───────────────────────────────────

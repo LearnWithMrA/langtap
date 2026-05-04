@@ -68,9 +68,16 @@ function buildTapGrid(
   const needed = TAP_GRID_SIZE - required.length
   const script = isKatakana ? 'katakana' : 'hiragana'
 
+  const SPECIALS = new Set(['h-sokuon', 'k-sokuon', 'k-longvowel'])
+
   const basePool = allowedIds
     ? KANA_CHARACTERS.filter(
-        (c) => allowedIds.has(c.id) && c.romaji !== '' && !requiredIds.has(c.id),
+        (c) =>
+          allowedIds.has(c.id) &&
+          c.romaji !== '' &&
+          !requiredIds.has(c.id) &&
+          !SPECIALS.has(c.id) &&
+          c.script === script,
       )
     : KANA_CHARACTERS.filter((c) => {
         const wordStages = new Set(
@@ -82,6 +89,7 @@ function buildTapGrid(
           c.script === script &&
           c.romaji !== '' &&
           !requiredIds.has(c.id) &&
+          !SPECIALS.has(c.id) &&
           wordStages.has(c.stage)
         )
       })
@@ -91,10 +99,20 @@ function buildTapGrid(
 
   if (distractors.length < needed) {
     const usedIds = new Set([...requiredIds, ...distractors.map((c) => c.id)])
-    const fallback = KANA_CHARACTERS.filter(
-      (c) => c.script === script && c.romaji !== '' && !usedIds.has(c.id),
-    )
-    const shuffledFallback = [...fallback].sort(() => Math.random() - 0.5)
+    const fallbackSource = allowedIds
+      ? KANA_CHARACTERS.filter(
+          (c) =>
+            allowedIds.has(c.id) &&
+            c.script === script &&
+            c.romaji !== '' &&
+            !usedIds.has(c.id) &&
+            !SPECIALS.has(c.id),
+        )
+      : KANA_CHARACTERS.filter(
+          (c) =>
+            c.script === script && c.romaji !== '' && !usedIds.has(c.id) && !SPECIALS.has(c.id),
+        )
+    const shuffledFallback = [...fallbackSource].sort(() => Math.random() - 0.5)
     distractors.push(...shuffledFallback.slice(0, needed - distractors.length))
   }
 

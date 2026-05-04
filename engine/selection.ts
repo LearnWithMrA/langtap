@@ -11,10 +11,15 @@
 import { getMasteryWeight } from '@/engine/mastery'
 import { isWordEligibleByUnlockedSet } from '@/engine/unlock'
 import { getWordCounterWeight, resetCountersForCharacter } from '@/engine/counter'
-import { MAX_WORD_COUNTER } from '@/engine/constants'
+import {
+  MAX_WORD_COUNTER,
+  KANA_WORD_ELIGIBLE_THRESHOLD,
+  WORD_PROMPT_RATIO,
+} from '@/engine/constants'
+import { countEligibleWords, getSoloDrillPool } from '@/engine/practice-eligibility'
 import type { CharacterWithMastery } from '@/types/game.types'
 import type { WordBankEntry, WordCounterMap } from '@/types/word.types'
-import type { SelectionResult } from '@/types/session.types'
+import type { SelectionResult, KanaSelectionResult } from '@/types/session.types'
 import type { JlptLevel } from '@/types/user.types'
 
 // ── Types ────────────────────────────────────
@@ -173,6 +178,110 @@ export function selectNextPrompt(
 
   return {
     prompt: { characterId: selected.id, word: wordResult.word },
+    updatedCounters: wordResult.updatedCounters,
+  }
+}
+
+// ── Kana learning phase selection ────────────
+
+export function selectNextKanaPrompt(
+  characters: CharacterWithMastery[],
+  wordBank: WordBankEntry[],
+  wordCounters: WordCounterMap,
+  practiceIds: Set<string>,
+  wordEligibleIds: Set<string>,
+  manualUnlockIds: Set<string>,
+  learningScores: Record<string, number>,
+  preferredLevel: JlptLevel,
+  minEligibleWords: number,
+  rng: () => number = Math.random,
+): KanaSelectionResult | null {
+  const soloDrillPool = getSoloDrillPool(practiceIds)
+  const drillCandidates = buildCharacterWeights(characters, soloDrillPool).filter(
+    (c) => !manualUnlockIds.has(c.id),
+  )
+  const needsDrill = drillCandidates.filter(
+    (c) => (learningScores[c.id] ?? 0) < KANA_WORD_ELIGIBLE_THRESHOLD,
+  )
+
+  const eligibleWordCount = countEligibleWords(wordEligibleIds, wordBank)
+  const canMixWords = eligibleWordCount >= minEligibleWords
+
+  if (!canMixWords) {
+    if (needsDrill.length === 0) {
+      if (eligibleWordCount > 0) {
+        const fallback = selectNextPrompt(
+          characters,
+          wordBank,
+          wordCounters,
+          wordEligibleIds,
+          preferredLevel,
+          rng,
+        )
+        if (fallback) {
+          return {
+            kind: 'word',
+            characterId: fallback.prompt.characterId,
+            word: fallback.prompt.word,
+            updatedCounters: fallback.updatedCounters,
+          }
+        }
+      }
+      return null
+    }
+    const selected = weightedRandomDraw(needsDrill, rng)
+    return {
+      kind: 'character',
+      characterId: selected.id,
+      word: null,
+      updatedCounters: wordCounters,
+    }
+  }
+
+  const doWordPrompt = needsDrill.length === 0 || rng() < WORD_PROMPT_RATIO
+
+  if (doWordPrompt) {
+    const wordResult = selectNextPrompt(
+      characters,
+      wordBank,
+      wordCounters,
+      wordEligibleIds,
+      preferredLevel,
+      rng,
+    )
+    if (wordResult) {
+      return {
+        kind: 'word',
+        characterId: wordResult.prompt.characterId,
+        word: wordResult.prompt.word,
+        updatedCounters: wordResult.updatedCounters,
+      }
+    }
+  }
+
+  if (needsDrill.length > 0) {
+    const selected = weightedRandomDraw(needsDrill, rng)
+    return {
+      kind: 'character',
+      characterId: selected.id,
+      word: null,
+      updatedCounters: wordCounters,
+    }
+  }
+
+  const wordResult = selectNextPrompt(
+    characters,
+    wordBank,
+    wordCounters,
+    wordEligibleIds,
+    preferredLevel,
+    rng,
+  )
+  if (!wordResult) return null
+  return {
+    kind: 'word',
+    characterId: wordResult.prompt.characterId,
+    word: wordResult.prompt.word,
     updatedCounters: wordResult.updatedCounters,
   }
 }

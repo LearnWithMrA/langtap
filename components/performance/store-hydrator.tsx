@@ -3,7 +3,8 @@
 // Purpose: Hydrates skipHydration stores (mastery, word mastery,
 //          onboarding) once at layout level, then bootstraps the
 //          unlock store so all pages get pre-computed unlock state
-//          without re-initialising.
+//          without re-initialising. Gates bootstrap on both mastery
+//          and onboarding hydration to prevent stale state.
 // Depends on: stores/mastery.store.ts, stores/word-mastery.store.ts,
 //             stores/onboarding.store.ts, stores/unlock.store.ts
 // ─────────────────────────────────────────────
@@ -18,35 +19,35 @@ import { useOnboardingStore } from '@/stores/onboarding.store'
 import { useUnlockStore } from '@/stores/unlock.store'
 
 export function StoreHydrator(): ReactNode {
-  const hasHydrated = useMasteryStore((s) => s.hasHydrated)
-  const wordHasHydrated = useWordMasteryStore((s) => s.hasHydrated)
-  const scores = useMasteryStore((s) => s.scores)
+  const masteryHydrated = useMasteryStore((s) => s.hasHydrated)
+  const wordHydrated = useWordMasteryStore((s) => s.hasHydrated)
+  const onboardingHydrated = useOnboardingStore((s) => s.hasHydrated)
+  const learningScores = useMasteryStore((s) => s.learningScores)
   const bootstrapped = useUnlockStore((s) => s.bootstrapped)
 
   useEffect(() => {
-    if (!hasHydrated) {
+    if (!masteryHydrated) {
       useMasteryStore.persist.rehydrate()
     }
-  }, [hasHydrated])
+  }, [masteryHydrated])
 
   useEffect(() => {
-    if (!wordHasHydrated) {
+    if (!wordHydrated) {
       useWordMasteryStore.persist.rehydrate()
     }
-  }, [wordHasHydrated])
+  }, [wordHydrated])
 
   useEffect(() => {
-    useOnboardingStore.persist.rehydrate()
-  }, [])
-
-  useEffect(() => {
-    if (!hasHydrated || bootstrapped) return
-    const manualIds = useOnboardingStore.getState().selectedCharacterIds
-    const resolved = useUnlockStore.getState().bootstrap(scores, manualIds)
-    if (resolved.length !== manualIds.length) {
-      useOnboardingStore.getState().setSelectedBulk(resolved as string[])
+    if (!onboardingHydrated) {
+      useOnboardingStore.persist.rehydrate()
     }
-  }, [hasHydrated, scores, bootstrapped])
+  }, [onboardingHydrated])
+
+  useEffect(() => {
+    if (!masteryHydrated || !onboardingHydrated || bootstrapped) return
+    const manualIds = useOnboardingStore.getState().selectedCharacterIds
+    useUnlockStore.getState().bootstrap(learningScores, manualIds)
+  }, [masteryHydrated, onboardingHydrated, learningScores, bootstrapped])
 
   return null
 }

@@ -56,6 +56,17 @@ export const BASE_DISTANCE_INCREMENT = 10
 /** Conversion factor from metres to feet */
 export const METRES_TO_FEET = 3.28084
 
+// -- Kana learning phase ------------------------------
+
+/** Score required before a kana character can appear in word prompts */
+export const KANA_WORD_ELIGIBLE_THRESHOLD = 5
+
+/** Minimum number of eligible words before word prompts start mixing in */
+export const MIN_ELIGIBLE_WORDS_FOR_MIXING = 10
+
+/** Probability of a word prompt when mixing is active (vs character drill) */
+export const WORD_PROMPT_RATIO = 0.6
+
 // -- Guest trial cap ----------------------------------
 
 /** Maximum cumulative distance (metres) a guest can practise per game type */

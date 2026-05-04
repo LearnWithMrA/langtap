@@ -13,7 +13,6 @@
 import { create } from 'zustand'
 import { getUnlockedCharacterIds } from '@/engine/unlock'
 import { KANA_CHARACTERS } from '@/data/kana/characters'
-import { PROGRESSION_GROUPS } from '@/data/kana/progression-groups'
 import { useMasteryStore } from '@/stores/mastery.store'
 import type { MasteryScoreMap } from '@/types/game.types'
 
@@ -23,12 +22,6 @@ const ALL_IDS = KANA_CHARACTERS.map((c) => c.id)
 
 const SPECIAL_ROWS = new Set(['sokuon', 'longvowel'])
 const DOJO_CHARACTER_COUNT = KANA_CHARACTERS.filter((c) => !SPECIAL_ROWS.has(c.row)).length
-
-const MIN_UNLOCKED_FOR_PRACTICE = 15
-
-const FIRST_GROUP_IDS = PROGRESSION_GROUPS.filter(
-  (g) => g.stage === 'seion' && g.script === 'hiragana' && g.groupIndex === 1,
-).flatMap((g) => [...g.characterIds])
 
 // ── Types ────────────────────────────────────
 
@@ -69,12 +62,6 @@ export const useUnlockStore = create<UnlockState & UnlockActions>()((set, get) =
 
   bootstrap: (scores: MasteryScoreMap, manualUnlockIds: readonly string[]): readonly string[] => {
     const manual = new Set(manualUnlockIds)
-    const unlocked = getUnlockedCharacterIds(ALL_IDS, scores, manual)
-
-    if (unlocked.size < MIN_UNLOCKED_FOR_PRACTICE) {
-      for (const id of FIRST_GROUP_IDS) manual.add(id)
-    }
-
     const finalUnlocked = getUnlockedCharacterIds(ALL_IDS, scores, manual)
     const unlockedSet = new Set(finalUnlocked)
     const nonSpecialUnlocked = KANA_CHARACTERS.filter(
@@ -95,13 +82,13 @@ export const useUnlockStore = create<UnlockState & UnlockActions>()((set, get) =
     const state = get()
     const nextManual = new Set(state.manualUnlocks)
     nextManual.add(characterId)
-    get().recompute(useMasteryStore.getState().scores, nextManual)
+    get().recompute(useMasteryStore.getState().learningScores, nextManual)
   },
 
   addManualUnlocks: (characterIds: readonly string[]): void => {
     const state = get()
     const nextManual = new Set(state.manualUnlocks)
     for (const id of characterIds) nextManual.add(id)
-    get().recompute(useMasteryStore.getState().scores, nextManual)
+    get().recompute(useMasteryStore.getState().learningScores, nextManual)
   },
 }))

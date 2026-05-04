@@ -12,7 +12,7 @@ import { useMasteryStore } from '@/stores/mastery.store'
 // ── Helpers ──────────────────────────────────
 
 function resetStore(): void {
-  useMasteryStore.setState({ scores: {}, hasHydrated: false })
+  useMasteryStore.setState({ scores: {}, learningScores: {}, hasHydrated: false })
 }
 
 // ── Tests ────────────────────────────────────
@@ -192,6 +192,67 @@ describe('mastery store', () => {
     it('returns true for character with score > 0', () => {
       useMasteryStore.setState({ scores: { 'h-a': 1 } })
       expect(useMasteryStore.getState().hasEncountered('h-a')).toBe(true)
+    })
+  })
+
+  // -- Learning scores --
+
+  describe('incrementLearning', () => {
+    it('increments learning score for a character', () => {
+      useMasteryStore.getState().incrementLearning('h-a')
+      expect(useMasteryStore.getState().getLearningScore('h-a')).toBe(1)
+    })
+
+    it('accumulates learning score', () => {
+      useMasteryStore.getState().incrementLearning('h-a')
+      useMasteryStore.getState().incrementLearning('h-a')
+      useMasteryStore.getState().incrementLearning('h-a')
+      expect(useMasteryStore.getState().getLearningScore('h-a')).toBe(3)
+    })
+
+    it('does not affect mastery score', () => {
+      useMasteryStore.getState().incrementLearning('h-a')
+      expect(useMasteryStore.getState().getScore('h-a')).toBe(0)
+    })
+  })
+
+  describe('getLearningScore', () => {
+    it('returns 0 for unencountered character', () => {
+      expect(useMasteryStore.getState().getLearningScore('h-z')).toBe(0)
+    })
+  })
+
+  describe('reset clears learning scores', () => {
+    it('reset() clears both scores and learningScores for a character', () => {
+      useMasteryStore.setState({ scores: { 'h-a': 10 }, learningScores: { 'h-a': 5 } })
+      useMasteryStore.getState().reset('h-a')
+      expect(useMasteryStore.getState().getScore('h-a')).toBe(0)
+      expect(useMasteryStore.getState().getLearningScore('h-a')).toBe(0)
+    })
+
+    it('resetAll() clears both maps', () => {
+      useMasteryStore.setState({
+        scores: { 'h-a': 10, 'h-i': 5 },
+        learningScores: { 'h-a': 5, 'h-i': 3 },
+      })
+      useMasteryStore.getState().resetAll()
+      expect(useMasteryStore.getState().scores).toEqual({})
+      expect(useMasteryStore.getState().learningScores).toEqual({})
+    })
+  })
+
+  describe('v1 migration', () => {
+    it('backfills learningScores from scores capped at 5', () => {
+      const v1State = { scores: { 'h-a': 12, 'h-i': 3, 'h-u': 0 } }
+      const migrateFn = (
+        useMasteryStore as unknown as {
+          persist: { getOptions: () => { migrate: (state: unknown, version: number) => unknown } }
+        }
+      ).persist.getOptions().migrate
+      const result = migrateFn(v1State, 1) as { learningScores: Record<string, number> }
+      expect(result.learningScores['h-a']).toBe(5)
+      expect(result.learningScores['h-i']).toBe(3)
+      expect(result.learningScores['h-u']).toBeUndefined()
     })
   })
 })

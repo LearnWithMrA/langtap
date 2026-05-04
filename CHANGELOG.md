@@ -30,6 +30,51 @@ Format per entry:
 
 ---
 
+## 2026-05-04 - Session 82
+
+**Sprint:** Sprint 7B - Tutorial and Guidance System
+**Task completed:** Inline kana learning phase (Plan 2, all 5 sub-tasks + Codex fixes)
+**Status:** Done
+
+### Changes made
+- `engine/practice-eligibility.ts`: New. Three set builders (practiceAvailable, wordEligible, dojoUnlocked), solo drill pool, eligible word counter. 15 tests
+- `engine/selection.ts`: Added `selectNextKanaPrompt` with separate learning scores, 60/40 word/character mixing, manual unlock bypass, special character exclusion, fallback for all-manual below-threshold
+- `engine/constants.ts`: Added `KANA_WORD_ELIGIBLE_THRESHOLD`, `MIN_ELIGIBLE_WORDS_FOR_MIXING`, `WORD_PROMPT_RATIO`
+- `types/session.types.ts`: Added `PromptKind`, `KanaSelectionResult`
+- `types/game.types.ts`: Added `learningScores` to `MasteryState`
+- `stores/mastery.store.ts`: Added `learningScores` map, `incrementLearning`, `getLearningScore`. Reset clears both maps. v2 migration backfills `learningScores = min(score, 5)` from existing scores. 7 new tests
+- `stores/unlock.store.ts`: Removed auto-unlock bootstrap. `addManualUnlock`/`addManualUnlocks` use `learningScores`
+- `stores/onboarding.store.ts`: Added `hasHydrated` flag with `onRehydrateStorage`
+- `components/performance/store-hydrator.tsx`: Gates bootstrap on both mastery and onboarding hydration. Uses `learningScores`
+- `hooks/usePracticeSession.ts`: Replaced `selectNextPrompt` with `selectNextKanaPrompt`. Character drills increment `learningScores`, word prompts increment mastery `scores`. Counter writes gated on `kind === 'word'`. Exposes `practiceIds`
+- `components/layout/practice-client.tsx`: Passes `allowedCharIds={practiceIds}` to real kana GameWindow
+- `components/game/game-window.tsx`: Tap grid excludes specials (っ, ッ, ー) from distractors. Fallback respects `allowedIds`
+- `components/dojo/kana-dojo-helpers.ts`: Added `buildTileStates` returning three-state map. `buildLockedSet` uses `learningScores`
+- `components/dojo/character-tile.tsx`: Three-state visual: locked/learning show grey border, dimmed text, lock icon; learning shows dark grey /5 progress bar; unlocked shows heatmap
+- `components/dojo/character-grid.tsx`: Accepts and passes `learningScores` and `tileStates` props
+- `components/dojo/character-group.tsx`: Full prop chain for `learningScores`, `tileStates`. `countTrulyLocked` uses tile states. Normal seion grid path now passes all props
+- `components/layout/kana-dojo-client.tsx`: Computes `tileStates` from mastery. All unlock scopes use `lockedIds` consistently (includes learning tiles). Activity uses `learningScores`. Unlock prompt shows learning score
+- `components/dojo/unlock-prompt.tsx`: Shows "Learning progress: N/5" on bold separate line. Warning about skipping learning phase
+- `engine/__tests__/kana-selection.test.ts`: New. 6 tests for `selectNextKanaPrompt` with separate learning/mastery scores
+- `engine/__tests__/practice-eligibility.test.ts`: 15 tests for three-set system
+
+### Tests
+- Full suite: 846 tests, 0 failures
+- New tests: 15 (eligibility) + 6 (kana selection) + 7 (mastery store learning scores) = 28 new
+
+### Next task
+Build dojo banner tips (Kana + Kotoba), write tutorial system tests, or continue polish
+
+### Notes
+- Core architecture: learning scores (0-5) are separate from mastery scores (0-40+). Learning scores unlock characters. Mastery scores drive the heatmap and only come from word practice
+- Codex reviewed 4 times. Key findings addressed: v1 migration backfill, stale unlock store actions, missing prop paths in normal seion grid, bulk unlock consistency, dojo activity using wrong score map
+- Learning tiles look fully locked (dimmed, lock icon, grey border) but show a visible dark grey progress bar filling at learningScore/5
+- Manual unlocks ("I already know this") bypass the 5-answer gate everywhere: practiceAvailable, wordEligible, dojoUnlocked. They go straight to word practice with mastery score 0
+- Special characters (っ, ッ, ー) are word-eligible but never solo-drilled. Excluded from tap grid distractors
+- The learning loop: new group opens -> drill kana (0-5) -> words unlock at 5/5 -> 60/40 mix -> group completes -> next group opens
+
+---
+
 ## 2026-05-04 - Session 81
 
 **Sprint:** Sprint 7B - Tutorial and Guidance System

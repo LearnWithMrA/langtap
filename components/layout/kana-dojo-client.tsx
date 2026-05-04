@@ -51,6 +51,7 @@ import {
 } from '@/components/dojo/kana-dojo-shells'
 import {
   buildLockedSet,
+  buildTileStates,
   hasLockedCharacter,
   hasAnyUnlock,
   CHARACTERS_BY_SCRIPT_STAGE,
@@ -110,14 +111,16 @@ const STAGE_LABELS: Readonly<Record<Stage, string>> = {
 function KanaDojoReadyShell(): ReactNode {
   // ── Mastery state derived from stores ──
   const scores = useMasteryStore((s) => s.scores)
+  const learningScores = useMasteryStore((s) => s.learningScores)
   const selectedCharacterIds = useOnboardingStore((s) => s.selectedCharacterIds)
 
   const mastery = useMemo<MasteryState>(
     () => ({
       scores,
+      learningScores,
       manuallyUnlocked: selectedCharacterIds,
     }),
-    [scores, selectedCharacterIds],
+    [scores, learningScores, selectedCharacterIds],
   )
 
   const [selected, setSelected] = useState<KanaCharacter | null>(null)
@@ -128,6 +131,7 @@ function KanaDojoReadyShell(): ReactNode {
   const { dismissed: helpDismissed, dismiss: dismissHelp } = useHelpDismissed()
 
   const lockedIds = useMemo(() => buildLockedSet(mastery), [mastery])
+  const tileStates = useMemo(() => buildTileStates(mastery), [mastery])
   const manualUnlocks = useMemo(() => new Set(mastery.manuallyUnlocked), [mastery.manuallyUnlocked])
 
   // ── Derived activity per script and per stage ──
@@ -150,10 +154,12 @@ function KanaDojoReadyShell(): ReactNode {
         activeAssigned = true
         continue
       }
-      out[script] = hasAnyUnlock(chars, mastery.scores, manualUnlocks) ? 'in-progress' : 'future'
+      out[script] = hasAnyUnlock(chars, mastery.learningScores, manualUnlocks)
+        ? 'in-progress'
+        : 'future'
     }
     return out
-  }, [lockedIds, mastery.scores, manualUnlocks])
+  }, [lockedIds, mastery.learningScores, manualUnlocks])
 
   const stageActivity = useMemo<
     Readonly<Record<Script, Readonly<Record<Stage, GroupActivity>>>>
@@ -176,13 +182,13 @@ function KanaDojoReadyShell(): ReactNode {
           activeAssigned = true
           continue
         }
-        out[script][stage] = hasAnyUnlock(chars, mastery.scores, manualUnlocks)
+        out[script][stage] = hasAnyUnlock(chars, mastery.learningScores, manualUnlocks)
           ? 'in-progress'
           : 'future'
       }
     }
     return out
-  }, [lockedIds, mastery.scores, manualUnlocks])
+  }, [lockedIds, mastery.learningScores, manualUnlocks])
 
   // ── Open-state defaults derived from initial mastery ──
   // Computed once from the store snapshot at mount time.
@@ -190,6 +196,7 @@ function KanaDojoReadyShell(): ReactNode {
   const [scriptOpen, setScriptOpen] = useState<Set<Script>>(() => {
     const initialMastery: MasteryState = {
       scores: useMasteryStore.getState().scores,
+      learningScores: useMasteryStore.getState().learningScores,
       manuallyUnlocked: useOnboardingStore.getState().selectedCharacterIds,
     }
     const initialLocked = buildLockedSet(initialMastery)
@@ -208,6 +215,7 @@ function KanaDojoReadyShell(): ReactNode {
   const [stageOpen, setStageOpen] = useState<Record<Script, Set<Stage>>>(() => {
     const initialMastery: MasteryState = {
       scores: useMasteryStore.getState().scores,
+      learningScores: useMasteryStore.getState().learningScores,
       manuallyUnlocked: useOnboardingStore.getState().selectedCharacterIds,
     }
     const initialLocked = buildLockedSet(initialMastery)
@@ -249,13 +257,14 @@ function KanaDojoReadyShell(): ReactNode {
 
   const handleTileClick = useCallback(
     (character: KanaCharacter): void => {
-      if (lockedIds.has(character.id)) {
+      const state = tileStates[character.id]
+      if (state === 'locked' || state === 'learning') {
         setPendingIndividual(character)
       } else {
         setSelected(character)
       }
     },
-    [lockedIds],
+    [tileStates],
   )
 
   const handleIndividualUnlock = useCallback((characterId: string): void => {
@@ -434,6 +443,8 @@ function KanaDojoReadyShell(): ReactNode {
                   charactersByStage={CHARACTERS_BY_SCRIPT_STAGE[script]}
                   scores={mastery.scores}
                   lockedIds={lockedIds}
+                  learningScores={mastery.learningScores}
+                  tileStates={tileStates}
                   scriptActivity={scriptActivity[script]}
                   scriptOpen={scriptOpen.has(script)}
                   stageOpen={stageOpen[script]}
@@ -462,6 +473,7 @@ function KanaDojoReadyShell(): ReactNode {
 
       <UnlockPrompt
         character={pendingIndividual}
+        score={pendingIndividual ? (mastery.learningScores[pendingIndividual.id] ?? 0) : 0}
         onConfirm={handleIndividualUnlock}
         onClose={(): void => setPendingIndividual(null)}
       />

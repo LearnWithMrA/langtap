@@ -16,14 +16,22 @@ import type { KanaCharacter } from '@/types/kana.types'
 
 type UnlockPromptProps = {
   character: KanaCharacter | null
+  score?: number
   onConfirm: (characterId: string) => void
   onClose: () => void
 }
 
 // ── Component ─────────────────────────────────
 
-export function UnlockPrompt({ character, onConfirm, onClose }: UnlockPromptProps): ReactNode {
+export function UnlockPrompt({
+  character,
+  score = 0,
+  onConfirm,
+  onClose,
+}: UnlockPromptProps): ReactNode {
   if (!character) return null
+
+  const progress = Math.min(score, 5)
 
   return (
     <Modal
@@ -33,7 +41,15 @@ export function UnlockPrompt({ character, onConfirm, onClose }: UnlockPromptProp
       steps={[
         {
           title: `Unlock ${character.kana}?`,
-          body: 'You can practise this character straight away. This cannot be undone without resetting all progress.',
+          body: (
+            <>
+              <p className="font-medium mb-2">Learning progress: {progress}/5</p>
+              <p>
+                Unlocking will skip the learning phase and it will appear in full words. This cannot
+                be undone without resetting all progress.
+              </p>
+            </>
+          ),
           confirmLabel: 'Unlock',
         },
       ]}

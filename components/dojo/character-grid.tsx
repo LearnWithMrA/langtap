@@ -33,10 +33,14 @@ import type { KanaCharacter } from '@/types/kana.types'
 
 // ── Types ─────────────────────────────────────
 
+type TileState = 'locked' | 'learning' | 'unlocked'
+
 type CharacterGridProps = {
   characters: readonly KanaCharacter[]
   scores: Readonly<Record<string, number>>
+  learningScores?: Readonly<Record<string, number>>
   lockedIds: ReadonlySet<string>
+  tileStates?: Record<string, TileState>
   onTileClick: (character: KanaCharacter) => void
 }
 
@@ -88,11 +92,20 @@ function deriveAxes(characters: readonly KanaCharacter[]): Axes {
 type CellProps = {
   character: KanaCharacter | undefined
   scores: Readonly<Record<string, number>>
+  learningScores?: Readonly<Record<string, number>>
   lockedIds: ReadonlySet<string>
+  tileStates?: Record<string, TileState>
   onTileClick: (character: KanaCharacter) => void
 }
 
-function Cell({ character, scores, lockedIds, onTileClick }: CellProps): ReactNode {
+function Cell({
+  character,
+  scores,
+  learningScores,
+  lockedIds,
+  tileStates,
+  onTileClick,
+}: CellProps): ReactNode {
   if (!character) {
     // Transparent placeholder sized to match the tile's fluid scaling:
     // fills the grid column width, uses the same viewport-based height
@@ -109,7 +122,9 @@ function Cell({ character, scores, lockedIds, onTileClick }: CellProps): ReactNo
     <CharacterTile
       character={character}
       score={scores[character.id] ?? 0}
+      learningScore={learningScores?.[character.id] ?? 0}
       isLocked={lockedIds.has(character.id)}
+      tileState={tileStates?.[character.id]}
       onClick={onTileClick}
     />
   )
@@ -120,7 +135,9 @@ function Cell({ character, scores, lockedIds, onTileClick }: CellProps): ReactNo
 export function CharacterGrid({
   characters,
   scores,
+  learningScores,
   lockedIds,
+  tileStates,
   onTileClick,
 }: CharacterGridProps): ReactNode {
   const { rowKeys, columnKeys, lookup } = deriveAxes(characters)
@@ -168,7 +185,9 @@ export function CharacterGrid({
                   key={`m-${rowKey}-${colKey}`}
                   character={lookup.get(`${rowKey}|${colKey}`)}
                   scores={scores}
+                  learningScores={learningScores}
                   lockedIds={lockedIds}
+                  tileStates={tileStates}
                   onTileClick={onTileClick}
                 />
               ))}
@@ -203,7 +222,9 @@ export function CharacterGrid({
                   key={`d-${colKey}-${rowKey}`}
                   character={lookup.get(`${rowKey}|${colKey}`)}
                   scores={scores}
+                  learningScores={learningScores}
                   lockedIds={lockedIds}
+                  tileStates={tileStates}
                   onTileClick={onTileClick}
                 />
               ))}

@@ -34,14 +34,19 @@ import {
   progressBarBorderClass,
   progressBarFillClass,
 } from '@/engine/mastery'
+import { KANA_WORD_ELIGIBLE_THRESHOLD } from '@/engine/constants'
 import type { KanaCharacter } from '@/types/kana.types'
 
 // ── Types ─────────────────────────────────────
 
+type TileState = 'locked' | 'learning' | 'unlocked'
+
 type CharacterTileProps = {
   character: KanaCharacter
   score: number
+  learningScore?: number
   isLocked: boolean
+  tileState?: TileState
   onClick: (character: KanaCharacter) => void
 }
 
@@ -68,10 +73,14 @@ function pillFillPercent(score: number): number {
 export function CharacterTile({
   character,
   score,
+  learningScore = 0,
   isLocked,
+  tileState,
   onClick,
 }: CharacterTileProps): ReactNode {
-  const mastered = !isLocked && isMastered(score)
+  const effectiveState = tileState ?? (isLocked ? 'locked' : 'unlocked')
+  const isLearning = effectiveState === 'learning'
+  const mastered = effectiveState === 'unlocked' && isMastered(score)
   const fill = pillFillPercent(score)
   const fillClass = progressBarFillClass(score)
   const borderClass = progressBarBorderClass(score)
@@ -84,16 +93,17 @@ export function CharacterTile({
   // locked at the old 20px floor, and by V=320 it's ~16px. The pill,
   // padding, and mt also shrink in sync so the whole cell reads as a
   // smaller copy rather than a tighter squeeze.
+  const showProgress = !isLocked || isLearning || score > 0 || learningScore > 0
   const buttonStyle: CSSProperties = {
     containerType: 'inline-size',
     width: '100%',
     maxWidth: '76px',
     height: 'clamp(54px, calc(20vw - 10px), 86px)',
-    paddingTop: isLocked ? undefined : 'clamp(3px, 16cqw, 12px)',
-    paddingBottom: isLocked ? 'clamp(2px, 10cqw, 8px)' : undefined,
+    paddingTop: showProgress ? 'clamp(3px, 16cqw, 12px)' : undefined,
+    paddingBottom: !showProgress ? 'clamp(2px, 10cqw, 8px)' : undefined,
   }
 
-  const layoutClass = isLocked ? 'justify-center' : ''
+  const layoutClass = !showProgress ? 'justify-center' : ''
 
   const baseClasses = [
     'relative flex flex-col items-center',
@@ -105,43 +115,44 @@ export function CharacterTile({
     layoutClass,
   ]
 
-  const colourClasses: string[] = [borderClass]
+  const notYetUnlocked = effectiveState === 'locked' || effectiveState === 'learning'
+  const colourClasses: string[] = [notYetUnlocked ? 'border-warm-200' : borderClass]
   if (mastered) {
     colourClasses.push('bg-[color:var(--color-heat-gold-fill)]')
   } else {
     colourClasses.push('bg-cream')
   }
 
-  const interactionClasses: string[] = isLocked
+  const interactionClasses: string[] = notYetUnlocked
     ? ['opacity-70']
     : ['active:translate-y-[3px] active:border-b-[3px]']
 
   const kanaClass = mastered
     ? 'text-[color:var(--color-heat-gold)]'
-    : isLocked
+    : notYetUnlocked
       ? 'text-[#bdbdbd]'
       : 'text-[#4a4a4a]'
 
   const romajiClass = mastered
     ? 'text-[color:var(--color-heat-gold)]'
-    : isLocked
+    : notYetUnlocked
       ? 'text-[#bdbdbd]'
       : 'text-[#a0a0a0]'
 
   const kanaStyle: CSSProperties = {
     fontSize: 'clamp(12px, 37cqw, 28px)',
-    marginTop: isLocked ? 'clamp(1px, 5cqw, 4px)' : undefined,
+    marginTop: !showProgress ? 'clamp(1px, 5cqw, 4px)' : undefined,
   }
 
   const romajiStyle: CSSProperties = {
     fontSize: 'clamp(6px, 17cqw, 13px)',
-    marginTop: isLocked ? 'clamp(1px, 5cqw, 4px)' : 'clamp(0.5px, 4cqw, 3px)',
+    marginTop: !showProgress ? 'clamp(1px, 5cqw, 4px)' : 'clamp(0.5px, 4cqw, 3px)',
   }
 
   const pillStyle: CSSProperties = {
     bottom: 'clamp(3px, 10cqw, 8px)',
     width: 'clamp(18px, 63cqw, 48px)',
-    height: 'clamp(3px, 5cqw, 4px)',
+    height: notYetUnlocked ? 'clamp(4px, 7cqw, 6px)' : 'clamp(3px, 5cqw, 4px)',
   }
 
   const lockBadgeStyle: CSSProperties = {
@@ -165,7 +176,7 @@ export function CharacterTile({
       style={buttonStyle}
     >
       {/* Lock badge: top-right corner, scales with the tile */}
-      {isLocked && (
+      {notYetUnlocked && (
         <span
           aria-hidden="true"
           className="absolute flex items-center justify-center rounded-full bg-black/5 text-[#9c9c9c]"
@@ -199,16 +210,21 @@ export function CharacterTile({
         aria-hidden="true"
         className={[
           'absolute left-1/2 -translate-x-1/2 rounded-full overflow-hidden',
-          isLocked ? 'bg-transparent' : 'bg-[#e5e7eb]',
+          showProgress ? 'bg-[#e5e7eb]' : 'bg-transparent',
         ].join(' ')}
         style={pillStyle}
       >
-        {!isLocked && (
+        {showProgress && (
           <span
-            className={['block h-full rounded-full transition-all duration-300', fillClass].join(
-              ' ',
-            )}
-            style={{ width: `${fill}%` }}
+            className={[
+              'block h-full rounded-full transition-all duration-300',
+              notYetUnlocked ? 'bg-warm-600' : fillClass,
+            ].join(' ')}
+            style={{
+              width: notYetUnlocked
+                ? `${Math.min(100, Math.round((learningScore / KANA_WORD_ELIGIBLE_THRESHOLD) * 100))}%`
+                : `${fill}%`,
+            }}
           />
         )}
       </span>

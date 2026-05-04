@@ -382,6 +382,7 @@ export function PracticeClient(): ReactNode {
               key={kanaSession.prompt?.word.id ?? 'kana'}
               mode={mode}
               session={kanaSession}
+              allowedCharIds={kanaSession.practiceIds}
               onCharacterCorrect={isOverCap ? undefined : handleCharacterCorrect}
             >
               <ModeDropdown mode={mode} onModeChange={setMode} gameType="kana" />

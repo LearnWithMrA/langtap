@@ -29,6 +29,8 @@ import type { KanaCharacter, Script, Stage } from '@/types/kana.types'
 
 // ── Types ─────────────────────────────────────
 
+type TileState = 'locked' | 'learning' | 'unlocked'
+
 type CharacterGroupProps = {
   script: Script
   scriptLabel: string
@@ -36,7 +38,9 @@ type CharacterGroupProps = {
   stageLabels: Readonly<Record<Stage, string>>
   charactersByStage: Readonly<Record<Stage, readonly KanaCharacter[]>>
   scores: Readonly<Record<string, number>>
+  learningScores?: Readonly<Record<string, number>>
   lockedIds: ReadonlySet<string>
+  tileStates?: Record<string, TileState>
   scriptActivity: GroupActivity
   scriptOpen: boolean
   stageOpen: ReadonlySet<Stage>
@@ -55,7 +59,9 @@ type StageBlockProps = {
   stageLabel: string
   characters: readonly KanaCharacter[]
   scores: Readonly<Record<string, number>>
+  learningScores?: Readonly<Record<string, number>>
   lockedIds: ReadonlySet<string>
+  tileStates?: Record<string, TileState>
   activity: GroupActivity
   isOpen: boolean
   onToggle: () => void
@@ -90,8 +96,15 @@ const EXTENDED_DISPLAY_GROUPS = [
 
 const charById = new Map(KANA_CHARACTERS.map((c) => [c.id, c]))
 
-function countLocked(characters: readonly KanaCharacter[], lockedIds: ReadonlySet<string>): number {
-  return characters.reduce((n, c) => n + (lockedIds.has(c.id) ? 1 : 0), 0)
+function countTrulyLocked(
+  characters: readonly KanaCharacter[],
+  tileStates?: Record<string, TileState>,
+  lockedIds?: ReadonlySet<string>,
+): number {
+  if (tileStates) {
+    return characters.reduce((n, c) => n + (tileStates[c.id] === 'locked' ? 1 : 0), 0)
+  }
+  return characters.reduce((n, c) => n + (lockedIds?.has(c.id) ? 1 : 0), 0)
 }
 
 // ── Stage block (inline sub-component) ────────
@@ -101,7 +114,9 @@ function StageBlock({
   stageLabel,
   characters,
   scores,
+  learningScores,
   lockedIds,
+  tileStates,
   activity,
   isOpen,
   onToggle,
@@ -110,7 +125,7 @@ function StageBlock({
   onTileClick,
   controlsId,
 }: StageBlockProps): ReactNode {
-  const locked = countLocked(characters, lockedIds)
+  const locked = countTrulyLocked(characters, tileStates, lockedIds)
 
   return (
     <section>
@@ -152,7 +167,9 @@ function StageBlock({
                     <CharacterGrid
                       characters={yoonChars}
                       scores={scores}
+                      learningScores={learningScores}
                       lockedIds={lockedIds}
+                      tileStates={tileStates}
                       onTileClick={onTileClick}
                     />
                   )}
@@ -175,7 +192,9 @@ function StageBlock({
                                   <CharacterTile
                                     character={char}
                                     score={scores[char.id] ?? 0}
+                                    learningScore={learningScores?.[char.id] ?? 0}
                                     isLocked={lockedIds.has(char.id)}
+                                    tileState={tileStates?.[char.id]}
                                     onClick={onTileClick}
                                   />
                                 </div>
@@ -193,7 +212,9 @@ function StageBlock({
             <CharacterGrid
               characters={characters}
               scores={scores}
+              learningScores={learningScores}
               lockedIds={lockedIds}
+              tileStates={tileStates}
               onTileClick={onTileClick}
             />
           )}
@@ -216,6 +237,8 @@ export function CharacterGroup({
   charactersByStage,
   scores,
   lockedIds,
+  learningScores,
+  tileStates,
   scriptActivity,
   scriptOpen,
   stageOpen,
@@ -229,7 +252,7 @@ export function CharacterGroup({
   onTileClick,
 }: CharacterGroupProps): ReactNode {
   const scriptCharacters = stageOrder.flatMap((stage) => [...(charactersByStage[stage] ?? [])])
-  const scriptLocked = countLocked(scriptCharacters, lockedIds)
+  const scriptLocked = countTrulyLocked(scriptCharacters, tileStates, lockedIds)
   const scriptControlsId = `script-${script}-content`
 
   return (
@@ -264,6 +287,8 @@ export function CharacterGroup({
                 characters={stageChars}
                 scores={scores}
                 lockedIds={lockedIds}
+                learningScores={learningScores}
+                tileStates={tileStates}
                 activity={stageActivity[stage] ?? 'normal'}
                 isOpen={stageOpen.has(stage)}
                 onToggle={(): void => onToggleStage(stage)}

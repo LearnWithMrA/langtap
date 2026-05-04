@@ -38,6 +38,7 @@ export function useTutorialTrial(): TutorialTrialReturn {
     prompt,
     isLoading: false,
     isEmpty: false,
+    practiceIds: new Set<string>(),
     handleWordComplete,
     advanceToNext,
     isComplete,

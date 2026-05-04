@@ -43,5 +43,6 @@ export type UnlockSource = 'mastery' | 'manual' | 'mastery_and_manual'
  */
 export type MasteryState = {
   scores: Readonly<Record<string, number>>
+  learningScores: Readonly<Record<string, number>>
   manuallyUnlocked: readonly string[]
 }

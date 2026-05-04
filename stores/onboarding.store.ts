@@ -22,6 +22,7 @@ type OnboardingState = {
   selectedCharacterIds: string[]
   inputMode: InputMode | null
   onboardingComplete: boolean
+  hasHydrated: boolean
 }
 
 type OnboardingActions = {
@@ -44,6 +45,7 @@ export const useOnboardingStore = create<OnboardingState & OnboardingActions>()(
       selectedCharacterIds: [],
       inputMode: null,
       onboardingComplete: false,
+      hasHydrated: false,
 
       setJlptLevel: (level: JlptLevel): void => {
         set({ jlptLevel: level })
@@ -98,6 +100,16 @@ export const useOnboardingStore = create<OnboardingState & OnboardingActions>()(
     {
       name: 'langtap-onboarding',
       skipHydration: true,
+      onRehydrateStorage: (): ((
+        _state: (OnboardingState & OnboardingActions) | undefined,
+        error?: unknown,
+      ) => void) => {
+        return (_state, error): void => {
+          if (!error) {
+            useOnboardingStore.setState({ hasHydrated: true })
+          }
+        }
+      },
     },
   ),
 )

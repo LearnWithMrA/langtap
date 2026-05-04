@@ -12,10 +12,13 @@
 // ─────────────────────────────────────────────
 
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { selectNextPrompt } from '@/engine/selection'
+import { selectNextKanaPrompt } from '@/engine/selection'
 import { evaluateCharacterAttempt } from '@/engine/scoring'
 import { calculateDistanceIncrement } from '@/engine/distance'
+import { getPracticeAvailableIds, getWordEligibleIds } from '@/engine/practice-eligibility'
+import { MIN_ELIGIBLE_WORDS_FOR_MIXING } from '@/engine/constants'
 import { KANA_CHARACTERS, getCharacterById } from '@/data/kana/characters'
+import { PROGRESSION_GROUPS, UNLOCK_STEPS } from '@/data/kana/progression-groups'
 import { WORD_BANK } from '@/data/words'
 import { useMasteryStore } from '@/stores/mastery.store'
 import { useCounterStore } from '@/stores/counter.store'
@@ -23,7 +26,7 @@ import { useSessionStore } from '@/stores/session.store'
 import { useUnlockStore } from '@/stores/unlock.store'
 import { useOnboardingStore } from '@/stores/onboarding.store'
 import type { WordBankEntry } from '@/types/word.types'
-import type { SelectionResult } from '@/types/session.types'
+import type { PromptKind } from '@/types/session.types'
 import type { CharacterWithMastery } from '@/types/game.types'
 import type { JlptLevel } from '@/types/user.types'
 
@@ -36,6 +39,7 @@ export type PracticeCharacter = {
 }
 
 export type PracticePrompt = {
+  kind: PromptKind
   word: WordBankEntry
   characters: PracticeCharacter[]
   targetCharacterId: string
@@ -51,6 +55,7 @@ export type UsePracticeSessionReturn = {
   prompt: PracticePrompt | null
   isLoading: boolean
   isEmpty: boolean
+  practiceIds: Set<string>
   handleWordComplete: (results: CharacterResult[]) => void
   advanceToNext: () => void
 }
@@ -81,8 +86,31 @@ function getFirstConsonant(romaji: string): string {
   return 't'
 }
 
-function buildPracticePrompt(result: SelectionResult): PracticePrompt | null {
-  const { word } = result.prompt
+function buildPracticePromptFromKana(
+  result: import('@/types/session.types').KanaSelectionResult,
+): PracticePrompt | null {
+  if (result.kind === 'character') {
+    const char = getCharacterById(result.characterId)
+    if (!char) return null
+    const syntheticWord: WordBankEntry = {
+      id: `char-${char.id}`,
+      kana: char.kana,
+      kanji: null,
+      meaning: ' ',
+      jlptLevel: 'N5',
+      characterIds: [char.id],
+      audioFile: null,
+    }
+    return {
+      kind: 'character',
+      word: syntheticWord,
+      characters: [{ id: char.id, kana: char.kana, romaji: char.romaji }],
+      targetCharacterId: char.id,
+    }
+  }
+
+  const word = result.word
+  if (!word) return null
   const chars: { id: string; kana: string; romaji: string }[] = []
   for (const charId of word.characterIds) {
     const char = getCharacterById(charId)
@@ -102,7 +130,7 @@ function buildPracticePrompt(result: SelectionResult): PracticePrompt | null {
     return c
   })
 
-  return { word, characters, targetCharacterId: result.prompt.characterId }
+  return { kind: 'word', word, characters, targetCharacterId: result.characterId }
 }
 
 // ── Hook ──────────────────────────────────────
@@ -111,17 +139,34 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
   const initRef = useRef(false)
 
   const [{ prompt, isEmpty }] = useState(() => {
-    const { bootstrapped, unlockedIds: ids } = useUnlockStore.getState()
-    if (!bootstrapped || ids.size === 0) {
-      return { prompt: null as PracticePrompt | null, isEmpty: !bootstrapped }
+    const { bootstrapped } = useUnlockStore.getState()
+    if (!bootstrapped) {
+      return { prompt: null as PracticePrompt | null, isEmpty: true }
     }
     const s = useMasteryStore.getState().scores
+    const ls = useMasteryStore.getState().learningScores
+    const manualIds = new Set(useOnboardingStore.getState().selectedCharacterIds)
+    const practiceIds = getPracticeAvailableIds(ls, manualIds, PROGRESSION_GROUPS, UNLOCK_STEPS)
+    const wordEligibleIds = getWordEligibleIds(ls, manualIds)
+    if (practiceIds.size === 0) {
+      return { prompt: null as PracticePrompt | null, isEmpty: true }
+    }
     const cwm = buildCharactersWithMastery(s)
     const wordBank = WORD_BANK[preferredLevel]
-    const result = selectNextPrompt(cwm, wordBank, {}, ids, preferredLevel)
+    const result = selectNextKanaPrompt(
+      cwm,
+      wordBank,
+      {},
+      practiceIds,
+      wordEligibleIds,
+      manualIds,
+      ls,
+      preferredLevel,
+      MIN_ELIGIBLE_WORDS_FOR_MIXING,
+    )
     if (!result) return { prompt: null as PracticePrompt | null, isEmpty: true }
     useCounterStore.getState().bulkLoad(result.updatedCounters)
-    const built = buildPracticePrompt(result)
+    const built = buildPracticePromptFromKana(result)
     initRef.current = true
     return { prompt: built, isEmpty: !built }
   })
@@ -130,8 +175,10 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
   const [currentIsEmpty, setIsEmpty] = useState(isEmpty)
 
   const scores = useMasteryStore((s) => s.scores)
+  const learningScores = useMasteryStore((s) => s.learningScores)
   const bootstrapped = useUnlockStore((s) => s.bootstrapped)
   const increment = useMasteryStore((s) => s.increment)
+  const incrementLearning = useMasteryStore((s) => s.incrementLearning)
 
   const counters = useCounterStore((s) => s.counters)
   const incrementCounter = useCounterStore((s) => s.increment)
@@ -142,16 +189,45 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
   const recordCorrect = useSessionStore((s) => s.recordCorrect)
   const recordWrong = useSessionStore((s) => s.recordWrong)
 
-  const unlockedIds = useUnlockStore((s) => s.unlockedIds)
   const recomputeUnlocks = useUnlockStore((s) => s.recompute)
 
   const manualUnlockIds = useOnboardingStore((s) => s.selectedCharacterIds)
+
+  const manualSet = useRef(new Set(manualUnlockIds))
+  useEffect(() => {
+    manualSet.current = new Set(manualUnlockIds)
+  }, [manualUnlockIds])
+
+  const practiceIdsRef = useRef(
+    getPracticeAvailableIds(learningScores, manualSet.current, PROGRESSION_GROUPS, UNLOCK_STEPS),
+  )
+  useEffect(() => {
+    practiceIdsRef.current = getPracticeAvailableIds(
+      learningScores,
+      manualSet.current,
+      PROGRESSION_GROUPS,
+      UNLOCK_STEPS,
+    )
+  }, [learningScores])
 
   const selectNext = useCallback(
     (currentCounters: Record<string, number>): void => {
       const cwm = buildCharactersWithMastery(scores)
       const wordBank = WORD_BANK[preferredLevel]
-      const result = selectNextPrompt(cwm, wordBank, currentCounters, unlockedIds, preferredLevel)
+      const manual = manualSet.current
+      const practiceIds = practiceIdsRef.current
+      const wordEligibleIds = getWordEligibleIds(learningScores, manual)
+      const result = selectNextKanaPrompt(
+        cwm,
+        wordBank,
+        currentCounters,
+        practiceIds,
+        wordEligibleIds,
+        manual,
+        learningScores,
+        preferredLevel,
+        MIN_ELIGIBLE_WORDS_FOR_MIXING,
+      )
 
       if (!result) {
         setPrompt(null)
@@ -160,11 +236,11 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
       }
 
       bulkLoadCounters(result.updatedCounters)
-      const built = buildPracticePrompt(result)
+      const built = buildPracticePromptFromKana(result)
       setPrompt(built)
       setIsEmpty(!built)
     },
-    [scores, unlockedIds, preferredLevel, bulkLoadCounters],
+    [scores, learningScores, preferredLevel, bulkLoadCounters],
   )
 
   // Fallback: if bootstrap wasn't ready at init time, select once it is
@@ -174,25 +250,44 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
     startSession()
     resetAllCounters()
 
-    if (unlockedIds.size === 0) {
+    const manual = manualSet.current
+    const practiceIds = getPracticeAvailableIds(
+      learningScores,
+      manual,
+      PROGRESSION_GROUPS,
+      UNLOCK_STEPS,
+    )
+    practiceIdsRef.current = practiceIds
+    if (practiceIds.size === 0) {
       setIsEmpty(true)
       return
     }
+    const wordEligibleIds = getWordEligibleIds(learningScores, manual)
     const cwm = buildCharactersWithMastery(scores)
     const wordBank = WORD_BANK[preferredLevel]
-    const result = selectNextPrompt(cwm, wordBank, {}, unlockedIds, preferredLevel)
+    const result = selectNextKanaPrompt(
+      cwm,
+      wordBank,
+      {},
+      practiceIds,
+      wordEligibleIds,
+      manual,
+      learningScores,
+      preferredLevel,
+      MIN_ELIGIBLE_WORDS_FOR_MIXING,
+    )
     if (!result) {
       setIsEmpty(true)
       return
     }
     bulkLoadCounters(result.updatedCounters)
-    const built = buildPracticePrompt(result)
+    const built = buildPracticePromptFromKana(result)
     setPrompt(built)
     setIsEmpty(!built)
   }, [
     bootstrapped,
-    unlockedIds,
     scores,
+    learningScores,
     startSession,
     resetAllCounters,
     preferredLevel,
@@ -201,10 +296,18 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
 
   const handleWordComplete = useCallback(
     (results: CharacterResult[]): void => {
+      const isCharacterDrill = currentPrompt?.kind === 'character'
+
       for (const result of results) {
-        const masteryDelta = evaluateCharacterAttempt(result.isFirstAttemptCorrect, true)
-        if (masteryDelta > 0) {
-          increment(result.characterId)
+        if (isCharacterDrill) {
+          if (result.isFirstAttemptCorrect) {
+            incrementLearning(result.characterId)
+          }
+        } else {
+          const masteryDelta = evaluateCharacterAttempt(result.isFirstAttemptCorrect, true)
+          if (masteryDelta > 0) {
+            increment(result.characterId)
+          }
         }
 
         if (result.isFirstAttemptCorrect) {
@@ -215,22 +318,23 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
         }
       }
 
-      if (currentPrompt) {
+      if (currentPrompt?.kind === 'word') {
         incrementCounter(currentPrompt.word.id)
       }
     },
-    [increment, recordCorrect, recordWrong, incrementCounter, currentPrompt],
+    [increment, incrementLearning, recordCorrect, recordWrong, incrementCounter, currentPrompt],
   )
 
   const advanceToNext = useCallback((): void => {
-    recomputeUnlocks(scores, new Set(manualUnlockIds))
+    recomputeUnlocks(learningScores, new Set(manualUnlockIds))
     selectNext(counters)
-  }, [recomputeUnlocks, scores, manualUnlockIds, selectNext, counters])
+  }, [recomputeUnlocks, learningScores, manualUnlockIds, selectNext, counters])
 
   return {
     prompt: currentPrompt,
     isLoading: !bootstrapped,
     isEmpty: currentIsEmpty,
+    practiceIds: practiceIdsRef.current,
     handleWordComplete,
     advanceToNext,
   }
