@@ -36,6 +36,9 @@ export type DialogueTrigger =
   | 'kotoba-trial-type'
   | 'kotoba-trial-swipe'
   | 'kotoba-intro-banner'
+  | 'sokuon-hiragana-hint'
+  | 'sokuon-katakana-hint'
+  | 'longvowel-hint'
 
 // ── Scripts ───────────────────────────────────
 

@@ -30,6 +30,36 @@ Format per entry:
 
 ---
 
+## 2026-05-04 - Session 81
+
+**Sprint:** Sprint 7B - Tutorial and Guidance System
+**Task completed:** Theme swap, tap button consistency, special character hints, meaning flash fix, practice-client polish
+**Status:** Done
+
+### Changes made
+- `components/game/dialogue-overlay.tsx`: Themed Got it buttons (green for kana, blue for kotoba). Added `gotItBg`/`gotItShadow` per theme
+- `components/layout/practice-client.tsx`: Swapped themes (kana=green, kotoba=blue) to match tap button identity. Kana trial card green, kotoba trial card blue. Added sokuon (hiragana + katakana) and long vowel teaching banners triggered on first encounter. Per-prompt `key` on GameWindow/KotobaGameWindow to prevent state carryover
+- `components/game/game-window.tsx`: Fixed meaning flash bug. Old: `showMeaning` reset in useEffect (fires after paint, causes one-frame flash). New: `key` prop on GameWindow forces remount per prompt, so state is always fresh. Added `allowedCharIds` and `cardClassName` props (session 80, noted here for the fix context)
+- `components/game/kotoba-game-window.tsx`: Tap buttons changed from `variant="sky"` to `variant="sage"` for visual consistency across both modes
+- `components/game/meaning-reveal.tsx`: Added `min-h-6` to prevent card height collapse when meaning is empty
+- `components/game/practice-banner.tsx`: Added `variant` prop (kana=sage/あ, kotoba=blue/言) with themed icon and button colours
+- `components/layout/guest-banner.tsx`: Reworked to only show at 15m distance cap. Copy: "You've hit the limit as a guest. Create an account to continue." Removed 60-second delay
+- `data/tutorial/dialogue-scripts.ts`: Added `sokuon-hiragana-hint`, `sokuon-katakana-hint`, `longvowel-hint` triggers. Swipe dialogue: removed auto-suggest line. Type dialogue: removed Hepburn detail, added romaji/kana explanation. Settings dialogue: clarified alternation default
+- `data/tutorial/trial-prompts.ts`: Trimmed to 3 chars + 3 words. Space meaning on char prompts to hold card height
+
+### Tests
+- Full suite: 818 tests, 0 failures
+
+### Next task
+Build inline kana learning phase (Plan 2, Large, needs Codex-gated breakdown)
+
+### Notes
+- Meaning flash root cause: GameWindow reused same component instance across prompts. `showMeaning` stayed `true` from the previous word for one render frame before the useEffect reset it. Fix: `key={prompt.word.id}` forces React to remount, giving fresh state per prompt
+- Theme identity finalised: kana=green (sage), kotoba=blue (sky). Dialogues, trials, and banners all follow this. Real practice windows stay cream with sage buttons for both modes
+- Three special character teaching banners: hiragana sokuon (っ), katakana sokuon (ッ), and long vowel mark (ー). Each tracked independently, shown once per player
+
+---
+
 ## 2026-05-04 - Session 80 (continued)
 
 **Sprint:** Sprint 7B - Tutorial and Guidance System

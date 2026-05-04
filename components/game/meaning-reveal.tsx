@@ -21,7 +21,7 @@ export function MeaningReveal({ meaning, visible }: MeaningRevealProps): ReactNo
   return (
     <div
       className={[
-        'text-base text-warm-600 text-center transition-opacity duration-150',
+        'text-base text-warm-600 text-center transition-opacity duration-150 min-h-6',
         visible ? 'opacity-100' : 'opacity-0',
       ].join(' ')}
       aria-live="polite"

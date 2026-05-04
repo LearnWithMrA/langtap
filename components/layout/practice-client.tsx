@@ -228,6 +228,37 @@ export function PracticeClient(): ReactNode {
     if (kotobaTrialSession.isComplete && !hasSeenKotobaTrial) markKotobaTrialSeen()
   }, [kotobaTrialSession.isComplete, hasSeenKotobaTrial, markKotobaTrialSeen])
 
+  // ── Special character hints ──────────────────
+  const { hasSeen: hasSeenHSokuon, markSeen: markHSokuonSeen } =
+    useDialogueSeen('sokuon-hiragana-hint')
+  const { hasSeen: hasSeenKSokuon, markSeen: markKSokuonSeen } =
+    useDialogueSeen('sokuon-katakana-hint')
+  const { hasSeen: hasSeenLongVowel, markSeen: markLongVowelSeen } =
+    useDialogueSeen('longvowel-hint')
+
+  const currentPromptCharIds = kanaSession.prompt?.characters.map((c) => c.id) ?? []
+  const showHiraganaSokuonHint =
+    !hasSeenHSokuon &&
+    !activeDialogue &&
+    !showKanaTrial &&
+    gameType === 'kana' &&
+    currentPromptCharIds.includes('h-sokuon')
+  const showKatakanaSokuonHint =
+    !hasSeenKSokuon &&
+    !activeDialogue &&
+    !showKanaTrial &&
+    gameType === 'kana' &&
+    !showHiraganaSokuonHint &&
+    currentPromptCharIds.includes('k-sokuon')
+  const showLongVowelHint =
+    !hasSeenLongVowel &&
+    !activeDialogue &&
+    !showKanaTrial &&
+    gameType === 'kana' &&
+    !showHiraganaSokuonHint &&
+    !showKatakanaSokuonHint &&
+    currentPromptCharIds.includes('k-longvowel')
+
   const handleCharacterCorrect = useCallback((): void => {
     incrementCorrect(mode)
     if (isGuest) {
@@ -270,6 +301,7 @@ export function PracticeClient(): ReactNode {
           />
         ) : showKanaTrial && !trialSession.isComplete ? (
           <GameWindow
+            key={trialSession.prompt?.word.id ?? 'trial'}
             mode={mode}
             session={trialSession}
             allowedCharIds={TRIAL_ALLOWED_SET}
@@ -280,6 +312,7 @@ export function PracticeClient(): ReactNode {
           </GameWindow>
         ) : showKotobaTrial && !kotobaTrialSession.isComplete ? (
           <KotobaGameWindow
+            key={kotobaTrialSession.prompt?.id ?? 'kotoba-trial'}
             mode={mode}
             kotobaInput={kotobaInput}
             session={kotobaTrialSession}
@@ -327,7 +360,26 @@ export function PracticeClient(): ReactNode {
                 to save your progress. :)
               </PracticeBanner>
             )}
+            {showHiraganaSokuonHint && (
+              <PracticeBanner variant="kana" buttonLabel="Got it" onAction={markHSokuonSeen}>
+                This small っ (tsu) is a special character. It doubles the consonant that follows
+                it. For example, きって is typed "kitte".
+              </PracticeBanner>
+            )}
+            {showKatakanaSokuonHint && (
+              <PracticeBanner variant="kana" buttonLabel="Got it" onAction={markKSokuonSeen}>
+                This small ッ is the katakana version of っ. It works the same way, doubling the
+                consonant that follows it. For example, ロッカー is typed "rokkaa".
+              </PracticeBanner>
+            )}
+            {showLongVowelHint && (
+              <PracticeBanner variant="kana" buttonLabel="Got it" onAction={markLongVowelSeen}>
+                This ー is the long vowel mark. It stretches the vowel of the character before it.
+                For example, カー sounds like "kaa". You'll only see it in katakana words.
+              </PracticeBanner>
+            )}
             <GameWindow
+              key={kanaSession.prompt?.word.id ?? 'kana'}
               mode={mode}
               session={kanaSession}
               onCharacterCorrect={isOverCap ? undefined : handleCharacterCorrect}
