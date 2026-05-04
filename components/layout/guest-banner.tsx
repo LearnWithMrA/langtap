@@ -1,51 +1,49 @@
 // ------------------------------------------------------------
 // File: components/layout/guest-banner.tsx
-// Purpose: Persistent banner shown to guest users on every main
-//          screen. Reminds them to create an account. Dismissal
-//          hides the banner for the current session only (React
-//          state, not persisted). See FRONTEND.md Section 11.
-// Depends on: hooks/useAuth.ts, stores/auth-modal.store.ts
+// Purpose: Banner shown to guest users when they hit the 15m
+//          practice distance cap. Prompts them to create an
+//          account. Dismissal hides for the current session only.
+// Depends on: hooks/useAuth.ts, stores/auth-modal.store.ts,
+//             stores/guest-distance.store.ts, engine/constants.ts
 // ------------------------------------------------------------
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthModalStore } from '@/stores/auth-modal.store'
+import { useGuestDistanceStore } from '@/stores/guest-distance.store'
+import { GUEST_TRIAL_DISTANCE_CAP } from '@/engine/constants'
 
 // ── Component ─────────────────────────────────
 
 export function GuestBanner(): ReactNode {
   const { isGuest, isLoading } = useAuth()
   const [dismissed, setDismissed] = useState(false)
-  const [delayPassed, setDelayPassed] = useState(false)
   const openSignUp = useAuthModalStore((s) => s.openSignUp)
+  const kanaDistance = useGuestDistanceStore((s) => s.distances.kana)
+  const kotobaDistance = useGuestDistanceStore((s) => s.distances.kotoba)
 
-  useEffect(() => {
-    const timer = setTimeout((): void => {
-      setDelayPassed(true)
-    }, 60_000)
-    return (): void => {
-      clearTimeout(timer)
-    }
-  }, [])
+  const isOverCap =
+    kanaDistance >= GUEST_TRIAL_DISTANCE_CAP || kotobaDistance >= GUEST_TRIAL_DISTANCE_CAP
 
-  if (isLoading || !isGuest || dismissed || !delayPassed) {
+  if (isLoading || !isGuest || dismissed || !isOverCap) {
     return null
   }
 
   return (
     <div className="fixed top-14 left-0 right-0 z-40 bg-[#fff3e0] border-b border-[#f0a166] px-4 py-2 flex items-center justify-center gap-2">
       <p className="text-sm text-[#7a4a1a] text-center">
-        Sign up to save your progress.{' '}
+        You've hit the limit as a guest.{' '}
         <button
           type="button"
           onClick={openSignUp}
           className="text-[#d4700a] font-medium hover:underline"
         >
           Create an account
-        </button>
+        </button>{' '}
+        to continue.
       </p>
       <button
         type="button"

@@ -56,6 +56,11 @@ export const BASE_DISTANCE_INCREMENT = 10
 /** Conversion factor from metres to feet */
 export const METRES_TO_FEET = 3.28084
 
+// -- Guest trial cap ----------------------------------
+
+/** Maximum cumulative distance (metres) a guest can practise per game type */
+export const GUEST_TRIAL_DISTANCE_CAP = 15
+
 // -- Streak -------------------------------------------
 
 /** Number of consecutive practice days required before a streak starts */

@@ -84,14 +84,27 @@ export function generateKotobaDistractors(
   wordBank: readonly WordBankEntry[],
   rng: () => number = Math.random,
 ): string[] {
-  const kanjiPool: string[] = []
+  const targetLength = [...correctKanji].length
+  const sameLength: string[] = []
+  const fallback: string[] = []
+
   for (const word of wordBank) {
     if (word.kanji !== null && word.kanji !== correctKanji) {
-      kanjiPool.push(word.kanji)
+      if ([...word.kanji].length === targetLength) {
+        sameLength.push(word.kanji)
+      } else {
+        fallback.push(word.kanji)
+      }
     }
   }
 
-  const shuffled = [...kanjiPool].sort(() => rng() - 0.5)
-  const unique = [...new Set(shuffled)]
-  return unique.slice(0, count)
+  const shuffledSame = [...new Set(sameLength)].sort(() => rng() - 0.5)
+  const distractors = shuffledSame.slice(0, count)
+
+  if (distractors.length < count) {
+    const shuffledFallback = [...new Set(fallback)].sort(() => rng() - 0.5)
+    distractors.push(...shuffledFallback.slice(0, count - distractors.length))
+  }
+
+  return distractors
 }

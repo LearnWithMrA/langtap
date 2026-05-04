@@ -15,7 +15,7 @@
 
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useReducedMotion } from 'motion/react'
@@ -26,12 +26,24 @@ import { KotobaGameWindow } from '@/components/game/kotoba-game-window'
 import { DistanceCounter } from '@/components/game/distance-counter'
 import { AudioPlayer } from '@/components/audio/audio-player'
 import { DialogueOverlay } from '@/components/game/dialogue-overlay'
+import { PracticeBanner } from '@/components/game/practice-banner'
 import { useKeySound } from '@/hooks/useKeySound'
 import { usePracticeCounters } from '@/hooks/usePracticeCounters'
 import { usePracticeSession } from '@/hooks/usePracticeSession'
+import { useTutorialTrial } from '@/hooks/useTutorialTrial'
+import { useKotobaTrialSession } from '@/hooks/useKotobaTrialSession'
 import { useDialogueSeen } from '@/hooks/useDialogueSeen'
+import { useAuth } from '@/hooks/useAuth'
 import { useSettingsStore } from '@/stores/settings.store'
+import { useAuthModalStore } from '@/stores/auth-modal.store'
+import { useGuestDistanceStore } from '@/stores/guest-distance.store'
 import { DIALOGUE_SCRIPTS } from '@/data/tutorial/dialogue-scripts'
+import { TRIAL_ALLOWED_IDS } from '@/data/tutorial/trial-prompts'
+import { GUEST_TRIAL_DISTANCE_CAP } from '@/engine/constants'
+
+const TRIAL_ALLOWED_SET = new Set(TRIAL_ALLOWED_IDS)
+const KANA_TRIAL_CARD = 'bg-[#ddf0e8] shadow-[0_6px_0_0_#a0d0b8]'
+const KOTOBA_TRIAL_CARD = 'bg-[#dce8f5] shadow-[0_6px_0_0_#a8bed8]'
 
 // -- Types --------------------------------------------------
 
@@ -113,41 +125,115 @@ export function PracticeClient(): ReactNode {
   const prefersReducedMotion = useReducedMotion()
   const { counters, incrementCorrect } = usePracticeCounters()
   const kanaSession = usePracticeSession('N5')
+  const trialSession = useTutorialTrial()
+  const kotobaTrialSession = useKotobaTrialSession()
+  const { isGuest } = useAuth()
+  const openSignUp = useAuthModalStore((s) => s.openSignUp)
 
   const sceneSpeed = prefersReducedMotion ? 'stopped' : 'idle'
   const animated = !prefersReducedMotion
 
+  // ── Dialogue chain ──────────────────────────
   const { hasSeen: hasSeenKanaIntro, markSeen: markKanaIntroSeen } =
     useDialogueSeen('kana-first-play')
   const { hasSeen: hasSeenSettings, markSeen: markSettingsSeen } =
     useDialogueSeen('kana-post-trial')
   const kanaModeKey = `kana-mode-${mode}` as const
   const { hasSeen: hasSeenKanaMode, markSeen: markKanaModeSeen } = useDialogueSeen(kanaModeKey)
+  const trialKey = `kana-trial-${mode}` as const
+  const { hasSeen: hasSeenTrial, markSeen: markTrialSeen } = useDialogueSeen(trialKey)
+  const { hasSeen: hasSeenTrialBanner, markSeen: markTrialBannerSeen } =
+    useDialogueSeen('kana-trial-banner')
   const kotobaModeKey = `kotoba-first-${mode}` as const
   const { hasSeen: hasSeenKotobaMode, markSeen: markKotobaModeSeen } =
     useDialogueSeen(kotobaModeKey)
+  const kotobaTrialKey = `kotoba-trial-${mode}` as const
+  const { hasSeen: hasSeenKotobaTrial, markSeen: markKotobaTrialSeen } =
+    useDialogueSeen(kotobaTrialKey)
+  const { hasSeen: hasSeenKotobaBanner, markSeen: markKotobaBannerSeen } =
+    useDialogueSeen('kotoba-intro-banner')
+
+  const skipTrial = useCallback((): void => {
+    markKanaModeSeen()
+    markTrialSeen()
+  }, [markKanaModeSeen, markTrialSeen])
+
+  const skipKotobaTrial = useCallback((): void => {
+    markKotobaModeSeen()
+    markKotobaTrialSeen()
+  }, [markKotobaModeSeen, markKotobaTrialSeen])
 
   const kanaDialogue =
     gameType === 'kana'
       ? !hasSeenKanaIntro
-        ? { script: DIALOGUE_SCRIPTS['kana-first-play'], onDismiss: markKanaIntroSeen }
+        ? {
+            script: DIALOGUE_SCRIPTS['kana-first-play'],
+            onDismiss: markKanaIntroSeen,
+            theme: 'green' as const,
+            onSkip: undefined as (() => void) | undefined,
+            skipLabel: undefined as string | undefined,
+          }
         : !hasSeenSettings
-          ? { script: DIALOGUE_SCRIPTS['kana-post-trial'], onDismiss: markSettingsSeen }
+          ? {
+              script: DIALOGUE_SCRIPTS['kana-post-trial'],
+              onDismiss: markSettingsSeen,
+              theme: 'green' as const,
+              onSkip: undefined,
+              skipLabel: undefined,
+            }
           : !hasSeenKanaMode
-            ? { script: DIALOGUE_SCRIPTS[kanaModeKey], onDismiss: markKanaModeSeen }
+            ? {
+                script: DIALOGUE_SCRIPTS[kanaModeKey],
+                onDismiss: markKanaModeSeen,
+                theme: 'green' as const,
+                onSkip: skipTrial,
+                skipLabel: 'Skip trial',
+              }
             : null
       : null
 
   const kotobaDialogue =
     gameType === 'kotoba' && !hasSeenKotobaMode
-      ? { script: DIALOGUE_SCRIPTS[kotobaModeKey], onDismiss: markKotobaModeSeen }
+      ? {
+          script: DIALOGUE_SCRIPTS[kotobaModeKey],
+          onDismiss: markKotobaModeSeen,
+          theme: 'blue' as const,
+          onSkip: skipKotobaTrial,
+          skipLabel: 'Skip trial',
+        }
       : null
 
   const activeDialogue = kanaDialogue ?? kotobaDialogue
 
+  // ── Trial round gate ────────────────────────
+  const showKanaTrial = gameType === 'kana' && !activeDialogue && !hasSeenTrial
+  const showKotobaTrial = gameType === 'kotoba' && !activeDialogue && !hasSeenKotobaTrial
+
+  // ── Post-trial / post-kotoba banners ────────
+  const showTrialBanner =
+    gameType === 'kana' && hasSeenTrial && !hasSeenTrialBanner && !activeDialogue
+  const showKotobaBanner =
+    gameType === 'kotoba' && hasSeenKotobaTrial && !hasSeenKotobaBanner && !activeDialogue
+
+  // ── Guest trial cap ─────────────────────────
+  const guestDistance = useGuestDistanceStore((s) => s.distances[gameType])
+  const addGuestDistance = useGuestDistanceStore((s) => s.addDistance)
+  const isOverCap = isGuest && guestDistance >= GUEST_TRIAL_DISTANCE_CAP
+
+  useEffect(() => {
+    if (trialSession.isComplete && !hasSeenTrial) markTrialSeen()
+  }, [trialSession.isComplete, hasSeenTrial, markTrialSeen])
+
+  useEffect(() => {
+    if (kotobaTrialSession.isComplete && !hasSeenKotobaTrial) markKotobaTrialSeen()
+  }, [kotobaTrialSession.isComplete, hasSeenKotobaTrial, markKotobaTrialSeen])
+
   const handleCharacterCorrect = useCallback((): void => {
     incrementCorrect(mode)
-  }, [incrementCorrect, mode])
+    if (isGuest) {
+      addGuestDistance(gameType, 1)
+    }
+  }, [incrementCorrect, mode, isGuest, addGuestDistance, gameType])
 
   return (
     <div className="theme-day relative w-full h-svh overflow-hidden">
@@ -177,22 +263,79 @@ export function PracticeClient(): ReactNode {
             key={activeDialogue.script.messages[0]}
             messages={activeDialogue.script.messages}
             mascotPose={activeDialogue.script.mascotPose}
+            theme={activeDialogue.theme}
             onDismiss={activeDialogue.onDismiss}
+            onSkip={activeDialogue.onSkip}
+            skipLabel={activeDialogue.skipLabel}
           />
-        ) : gameType === 'kotoba' ? (
+        ) : showKanaTrial && !trialSession.isComplete ? (
+          <GameWindow
+            mode={mode}
+            session={trialSession}
+            allowedCharIds={TRIAL_ALLOWED_SET}
+            cardClassName={KANA_TRIAL_CARD}
+          >
+            <ModeDropdown mode={mode} onModeChange={setMode} gameType="kana" />
+            <span className="text-base font-bold text-[#3a6a50] tracking-wider">Trial</span>
+          </GameWindow>
+        ) : showKotobaTrial && !kotobaTrialSession.isComplete ? (
           <KotobaGameWindow
             mode={mode}
             kotobaInput={kotobaInput}
-            onCharacterCorrect={handleCharacterCorrect}
+            session={kotobaTrialSession}
+            cardClassName={KOTOBA_TRIAL_CARD}
           >
             <ModeDropdown mode={mode} onModeChange={setMode} gameType="kotoba" />
-            <DistanceCounter value={counters[mode]} />
+            <span className="text-base font-bold text-[#4a6a8a] tracking-wider">Trial</span>
           </KotobaGameWindow>
+        ) : gameType === 'kotoba' ? (
+          <>
+            {showKotobaBanner && (
+              <PracticeBanner variant="kotoba" buttonLabel="Got it" onAction={markKotobaBannerSeen}>
+                You've finished the trial. Let's practice for real. Don't forget to{' '}
+                <button
+                  type="button"
+                  onClick={openSignUp}
+                  className="text-sage-500 font-medium hover:underline"
+                >
+                  sign up
+                </button>{' '}
+                to save your progress. :)
+              </PracticeBanner>
+            )}
+            <KotobaGameWindow
+              mode={mode}
+              kotobaInput={kotobaInput}
+              onCharacterCorrect={isOverCap ? undefined : handleCharacterCorrect}
+            >
+              <ModeDropdown mode={mode} onModeChange={setMode} gameType="kotoba" />
+              <DistanceCounter value={counters[mode]} />
+            </KotobaGameWindow>
+          </>
         ) : (
-          <GameWindow mode={mode} session={kanaSession} onCharacterCorrect={handleCharacterCorrect}>
-            <ModeDropdown mode={mode} onModeChange={setMode} gameType="kana" />
-            <DistanceCounter value={counters[mode]} />
-          </GameWindow>
+          <>
+            {showTrialBanner && (
+              <PracticeBanner variant="kana" buttonLabel="Got it" onAction={markTrialBannerSeen}>
+                You've finished the trial. Let's practice for real. Don't forget to{' '}
+                <button
+                  type="button"
+                  onClick={openSignUp}
+                  className="text-sage-500 font-medium hover:underline"
+                >
+                  sign up
+                </button>{' '}
+                to save your progress. :)
+              </PracticeBanner>
+            )}
+            <GameWindow
+              mode={mode}
+              session={kanaSession}
+              onCharacterCorrect={isOverCap ? undefined : handleCharacterCorrect}
+            >
+              <ModeDropdown mode={mode} onModeChange={setMode} gameType="kana" />
+              <DistanceCounter value={counters[mode]} />
+            </GameWindow>
+          </>
         )}
       </div>
     </div>

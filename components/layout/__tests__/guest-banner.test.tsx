@@ -1,16 +1,16 @@
 // ------------------------------------------------------------
 // File: components/layout/__tests__/guest-banner.test.tsx
 // Purpose: Tests for the GuestBanner component. Validates
-//          visibility for guests, hidden for authenticated users,
-//          60-second delay, and session-only dismissal.
+//          visibility gated on guest status and 15m distance cap.
 // Depends on: components/layout/guest-banner.tsx
 // ------------------------------------------------------------
 
 // @vitest-environment jsdom
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, act, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { GuestBanner } from '../guest-banner'
+import { useGuestDistanceStore } from '@/stores/guest-distance.store'
 
 // ── Mocks ─────────────────────────────────────
 
@@ -25,68 +25,50 @@ vi.mock('@/hooks/useAuth', () => ({
 describe('GuestBanner', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.useFakeTimers()
+    useGuestDistanceStore.setState({ distances: { kana: 0, kotoba: 0 } })
   })
 
-  afterEach(() => {
-    vi.useRealTimers()
-  })
-
-  it('does not render before 60-second delay', () => {
+  it('does not render when guest is below cap', () => {
     mockUseAuth.mockReturnValue({ isGuest: true, isLoading: false })
+    useGuestDistanceStore.setState({ distances: { kana: 10, kotoba: 5 } })
     const { container } = render(<GuestBanner />)
     expect(container.innerHTML).toBe('')
   })
 
-  it('renders for guest users after delay', () => {
+  it('renders when guest hits the kana cap', () => {
     mockUseAuth.mockReturnValue({ isGuest: true, isLoading: false })
+    useGuestDistanceStore.setState({ distances: { kana: 15, kotoba: 0 } })
     render(<GuestBanner />)
-
-    act(() => {
-      vi.advanceTimersByTime(60_000)
-    })
-    expect(screen.getByText(/sign up to save/i)).toBeDefined()
+    expect(screen.getByText(/hit the limit/i)).toBeDefined()
   })
 
-  it('does not render for authenticated users', () => {
+  it('renders when guest hits the kotoba cap', () => {
+    mockUseAuth.mockReturnValue({ isGuest: true, isLoading: false })
+    useGuestDistanceStore.setState({ distances: { kana: 0, kotoba: 15 } })
+    render(<GuestBanner />)
+    expect(screen.getByText(/hit the limit/i)).toBeDefined()
+  })
+
+  it('does not render for authenticated users even at cap', () => {
     mockUseAuth.mockReturnValue({ isGuest: false, isLoading: false })
+    useGuestDistanceStore.setState({ distances: { kana: 20, kotoba: 20 } })
     const { container } = render(<GuestBanner />)
-
-    act(() => {
-      vi.advanceTimersByTime(60_000)
-    })
-    expect(container.innerHTML).toBe('')
-  })
-
-  it('does not render while loading', () => {
-    mockUseAuth.mockReturnValue({ isGuest: false, isLoading: true })
-    const { container } = render(<GuestBanner />)
-
-    act(() => {
-      vi.advanceTimersByTime(60_000)
-    })
     expect(container.innerHTML).toBe('')
   })
 
   it('hides when dismissed', () => {
     mockUseAuth.mockReturnValue({ isGuest: true, isLoading: false })
+    useGuestDistanceStore.setState({ distances: { kana: 15, kotoba: 0 } })
     render(<GuestBanner />)
-
-    act(() => {
-      vi.advanceTimersByTime(60_000)
-    })
 
     fireEvent.click(screen.getByLabelText('Dismiss banner'))
-    expect(screen.queryByText(/sign up to save/i)).toBeNull()
+    expect(screen.queryByText(/hit the limit/i)).toBeNull()
   })
 
-  it('shows a create account link after delay', () => {
+  it('shows Create an account link', () => {
     mockUseAuth.mockReturnValue({ isGuest: true, isLoading: false })
+    useGuestDistanceStore.setState({ distances: { kana: 15, kotoba: 0 } })
     render(<GuestBanner />)
-
-    act(() => {
-      vi.advanceTimersByTime(60_000)
-    })
     expect(screen.getByText('Create an account')).toBeDefined()
   })
 })

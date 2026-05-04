@@ -29,7 +29,10 @@ import {
 } from '@/components/game/tap-grids'
 import { useKeySound } from '@/hooks/useKeySound'
 import { useSettingsStore } from '@/stores/settings.store'
-import { useKotobaPracticeSession } from '@/hooks/useKotobaPracticeSession'
+import {
+  useKotobaPracticeSession,
+  type UseKotobaPracticeReturn,
+} from '@/hooks/useKotobaPracticeSession'
 import type { KotobaPrompt } from '@/types/kotoba.types'
 
 // ── Constants ─────────────────────────────────
@@ -44,6 +47,8 @@ type KotobaInputSetting = 'readings' | 'kanji'
 type Props = {
   mode: InputMode
   kotobaInput: KotobaInputSetting
+  session?: UseKotobaPracticeReturn
+  cardClassName?: string
   children?: ReactNode
   onCharacterCorrect?: () => void
 }
@@ -59,6 +64,8 @@ function isKatakanaPrompt(word: KotobaPrompt): boolean {
 export function KotobaGameWindow({
   mode,
   kotobaInput,
+  session: externalSession,
+  cardClassName,
   children,
   onCharacterCorrect,
 }: Props): ReactNode {
@@ -72,6 +79,7 @@ export function KotobaGameWindow({
 
   // ── Practice session ──────────────────────
 
+  const internalSession = useKotobaPracticeSession()
   const {
     prompt: currentWord,
     isLoading,
@@ -79,7 +87,7 @@ export function KotobaGameWindow({
     kanjiDistractors,
     recordWordComplete,
     advanceToNext,
-  } = useKotobaPracticeSession()
+  } = externalSession ?? internalSession
 
   // ── State ─────────────────────────────────
 
@@ -406,7 +414,9 @@ export function KotobaGameWindow({
 
   if (isLoading) {
     return (
-      <div className="bg-[#faf5e4] rounded-2xl shadow-[0_6px_0_0_#d4c9b0] w-full max-w-md mx-auto p-6 md:p-8">
+      <div
+        className={`${cardClassName ?? 'bg-[#faf5e4] shadow-[0_6px_0_0_#d4c9b0]'} rounded-2xl w-full max-w-md mx-auto p-6 md:p-8`}
+      >
         <p className="text-warm-400 text-center" role="status" aria-label="Loading Kotoba practice">
           Loading...
         </p>
@@ -416,7 +426,9 @@ export function KotobaGameWindow({
 
   if (isEmpty || !currentWord) {
     return (
-      <div className="bg-[#faf5e4] rounded-2xl shadow-[0_6px_0_0_#d4c9b0] w-full max-w-md mx-auto p-6 md:p-8">
+      <div
+        className={`${cardClassName ?? 'bg-[#faf5e4] shadow-[0_6px_0_0_#d4c9b0]'} rounded-2xl w-full max-w-md mx-auto p-6 md:p-8`}
+      >
         <p className="text-warm-400 text-center" role="status" aria-label="No words available">
           No words unlocked yet. Practice more kana to unlock Kotoba.
         </p>
@@ -425,7 +437,9 @@ export function KotobaGameWindow({
   }
 
   return (
-    <div className="bg-[#faf5e4] rounded-2xl shadow-[0_6px_0_0_#d4c9b0] w-full max-w-md mx-auto p-6 md:p-8">
+    <div
+      className={`${cardClassName ?? 'bg-[#faf5e4] shadow-[0_6px_0_0_#d4c9b0]'} rounded-2xl w-full max-w-md mx-auto p-6 md:p-8`}
+    >
       {/* Header row */}
       {(topLeft || topRight) && (
         <div className="flex items-center justify-between mb-3 -mt-2">
@@ -575,7 +589,7 @@ export function KotobaGameWindow({
           onTap={handleTap}
           feedbackId={tapFeedbackId}
           feedbackState={tapFeedbackState}
-          variant="sky"
+          variant="sage"
         />
       )}
 

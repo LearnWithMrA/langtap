@@ -30,6 +30,48 @@ Format per entry:
 
 ---
 
+## 2026-05-04 - Session 80 (continued)
+
+**Sprint:** Sprint 7B - Tutorial and Guidance System
+**Task completed:** Tutorial trial round (kana + kotoba), guest trial cap, kanji distractor fix, theme system, practice banners
+**Status:** Done (3 tasks + 1 fix + iterative polish)
+
+### Changes made
+- `components/game/dialogue-overlay.tsx`: Added theme system (green/blue/cream). Themed Got it + Skip buttons. `onSkip`/`skipLabel` props for skip-trial. Continuous typewriter flow, hidden scrollbar with `scrollbar-gutter: stable`
+- `data/tutorial/trial-prompts.ts`: 3 chars (あいう) + 3 words (あう, いえ, うえ). `TRIAL_ALLOWED_IDS` exports groups 0+1 for tap grid restriction. Space meaning on char prompts to prevent card height jump
+- `hooks/useTutorialTrial.ts`: Session-shaped sandbox for kana trial, no store writes. 4 tests
+- `hooks/useKotobaTrialSession.ts`: Session-shaped sandbox for kotoba trial (水, 犬, 猫), no store writes
+- `data/tutorial/dialogue-scripts.ts`: Per-mode trial triggers. Swipe/type dialogue text rewritten (removed Hepburn detail, added keyboard setup for swipe, romaji explanation for type). Alternation default explained in settings dialogue. Kotoba dialogues include trial prompt. `DialogueTrigger` expanded with per-mode trial + banner triggers
+- `components/game/game-window.tsx`: Added `allowedCharIds` (restricts tap grid distractors) and `cardClassName` (themed card) props
+- `components/game/kotoba-game-window.tsx`: Added optional `session` and `cardClassName` props. Tap buttons changed from sky to sage for visual consistency with kana
+- `components/game/practice-banner.tsx`: `variant` prop (kana=sage/あ, kotoba=blue/言). Themed icon, button colors. Renders above game window
+- `components/layout/practice-client.tsx`: Full tutorial chain: dialogues then trial then banner then practice. Per-mode trial tracking for both kana and kotoba. Skip trial on mode dialogues. Green theme for kana, blue for kotoba. Guest distance cap wired with `PracticeBanner`
+- `stores/guest-distance.store.ts`: Separate persisted store keyed by gameType. 4 tests
+- `engine/constants.ts`: `GUEST_TRIAL_DISTANCE_CAP = 15`
+- `engine/kotoba-selection.ts`: `generateKotobaDistractors` filters by matching kanji character length
+- `components/layout/guest-banner.tsx`: Only appears at 15m cap. Copy: "You've hit the limit as a guest. Create an account to continue." Removed 60-second delay
+- `components/layout/__tests__/guest-banner.test.tsx`: Rewritten for cap-based visibility. 6 tests
+- `components/game/trial-cap-banner.tsx`: Removed (replaced by PracticeBanner)
+
+### Tests
+- `hooks/__tests__/useTutorialTrial.test.ts`: 4 tests, pass
+- `stores/__tests__/guest-distance.store.test.ts`: 4 tests, pass
+- `components/game/__tests__/dialogue-overlay.test.tsx`: 10 tests, pass
+- `components/layout/__tests__/guest-banner.test.tsx`: 6 tests, pass
+- Full suite: 818 tests, 0 failures
+
+### Next task
+Build inline kana learning phase (Plan 2, Large, needs Codex-gated breakdown)
+
+### Notes
+- Theme identity: kana = green (sage), kotoba = blue (sky). Dialogues, trial windows, and banners all follow this convention. Real practice windows stay cream with sage buttons for both modes
+- Codex reviewed Plans 1-3. Plan 2 (inline kana learning phase) was flagged as under-scoped (Medium to Large). Needs prompt-kind split in selection engine, removal of auto-unlock bootstrap, and dojo UI changes. Deferred for detailed breakdown and second Codex gate
+- Kanji distractor fix: single-kanji words now get single-kanji distractors. Filters by `[...kanji].length` match before falling back
+- Guest banner simplified: no more 60-second timer, only triggers at the 15m distance cap
+- `userEvent.click()` + `vi.useFakeTimers()` deadlocks when component has active intervals. Pattern: use `fireEvent.click()` for those cases
+
+---
+
 ## 2026-05-04 - Session 80
 
 **Sprint:** Sprint 7B - Tutorial and Guidance System

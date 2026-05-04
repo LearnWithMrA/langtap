@@ -45,6 +45,8 @@ type GameWindowProps = {
   mode: InputMode
   session: UsePracticeSessionReturn
   onCharacterCorrect?: () => void
+  allowedCharIds?: Set<string>
+  cardClassName?: string
   children?: ReactNode
 }
 
@@ -58,6 +60,7 @@ function isKatakanaChar(kana: string): boolean {
 function buildTapGrid(
   wordChars: PracticeCharacter[],
   isKatakana: boolean,
+  allowedIds?: Set<string>,
 ): { id: string; kana: string; romaji: string }[] {
   const requiredIds = new Set(wordChars.map((c) => c.id))
   const required = wordChars.filter((c, i, arr) => arr.findIndex((x) => x.id === c.id) === i)
@@ -65,19 +68,26 @@ function buildTapGrid(
   const needed = TAP_GRID_SIZE - required.length
   const script = isKatakana ? 'katakana' : 'hiragana'
 
-  const wordStages = new Set(
-    wordChars
-      .map((c) => KANA_CHARACTERS.find((k) => k.id === c.id)?.stage)
-      .filter((s): s is Stage => s !== undefined),
-  )
+  const basePool = allowedIds
+    ? KANA_CHARACTERS.filter(
+        (c) => allowedIds.has(c.id) && c.romaji !== '' && !requiredIds.has(c.id),
+      )
+    : KANA_CHARACTERS.filter((c) => {
+        const wordStages = new Set(
+          wordChars
+            .map((wc) => KANA_CHARACTERS.find((k) => k.id === wc.id)?.stage)
+            .filter((s): s is Stage => s !== undefined),
+        )
+        return (
+          c.script === script &&
+          c.romaji !== '' &&
+          !requiredIds.has(c.id) &&
+          wordStages.has(c.stage)
+        )
+      })
 
-  const sameStagePool = KANA_CHARACTERS.filter(
-    (c) =>
-      c.script === script && c.romaji !== '' && !requiredIds.has(c.id) && wordStages.has(c.stage),
-  )
-
-  const shuffledSame = [...sameStagePool].sort(() => Math.random() - 0.5)
-  const distractors = shuffledSame.slice(0, needed)
+  const shuffled = [...basePool].sort(() => Math.random() - 0.5)
+  const distractors = shuffled.slice(0, needed)
 
   if (distractors.length < needed) {
     const usedIds = new Set([...requiredIds, ...distractors.map((c) => c.id)])
@@ -102,6 +112,8 @@ export function GameWindow({
   mode,
   session,
   onCharacterCorrect,
+  allowedCharIds,
+  cardClassName,
   children,
 }: GameWindowProps): ReactNode {
   const childArray = Array.isArray(children) ? children : children ? [children] : []
@@ -141,8 +153,8 @@ export function GameWindow({
   const currentChar = characters[currentCharIndex]
 
   const tapGrid = useMemo(
-    () => (characters.length > 0 ? buildTapGrid(characters, isKatakana) : []),
-    [characters, isKatakana],
+    () => (characters.length > 0 ? buildTapGrid(characters, isKatakana, allowedCharIds) : []),
+    [characters, isKatakana, allowedCharIds],
   )
 
   // Cumulative breakpoints
@@ -401,7 +413,9 @@ export function GameWindow({
   // ── Render ────────────────────────────────────
 
   return (
-    <div className="bg-[#faf5e4] rounded-2xl shadow-[0_6px_0_0_#d4c9b0] w-full max-w-md mx-auto p-6 md:p-8">
+    <div
+      className={`${cardClassName ?? 'bg-[#faf5e4] shadow-[0_6px_0_0_#d4c9b0]'} rounded-2xl w-full max-w-md mx-auto p-6 md:p-8`}
+    >
       {(topLeft || topRight) && (
         <div className="flex items-center justify-between mb-2 -mt-2">
           {topLeft}

@@ -15,7 +15,7 @@ export type DialogueScript = {
   mascotPose: MascotPose
 }
 
-export type DialogueTrigger =
+export type DialogueScriptTrigger =
   | 'kana-first-play'
   | 'kana-mode-tap'
   | 'kana-mode-swipe'
@@ -26,9 +26,20 @@ export type DialogueTrigger =
   | 'kotoba-first-swipe'
   | 'unlock-milestone'
 
+export type DialogueTrigger =
+  | DialogueScriptTrigger
+  | 'kana-trial-tap'
+  | 'kana-trial-type'
+  | 'kana-trial-swipe'
+  | 'kana-trial-banner'
+  | 'kotoba-trial-tap'
+  | 'kotoba-trial-type'
+  | 'kotoba-trial-swipe'
+  | 'kotoba-intro-banner'
+
 // ── Scripts ───────────────────────────────────
 
-export const DIALOGUE_SCRIPTS: Record<DialogueTrigger, DialogueScript> = {
+export const DIALOGUE_SCRIPTS: Record<DialogueScriptTrigger, DialogueScript> = {
   'kana-first-play': {
     mascotPose: 'neutral',
     messages: [
@@ -58,11 +69,9 @@ export const DIALOGUE_SCRIPTS: Record<DialogueTrigger, DialogueScript> = {
   'kana-mode-swipe': {
     mascotPose: 'neutral',
     messages: [
-      'Swipe mode uses the Japanese swipe keyboard.',
-      'Turn off auto-suggestion in your keyboard settings.',
-      'The keyboard only shows hiragana. To answer in katakana, just type the hiragana equivalent.',
-      'For example, if the screen shows カ (katakana ka), swipe か (hiragana ka) and the keyboard will suggest the katakana.',
-      "Let's do a trial. We'll show you three hiragana characters and then one word they appear in, so you can give this a try. After that, you start for real.",
+      "Swipe mode uses your phone's Japanese swipe keyboard. You'll need to add a Japanese keyboard in your phone settings first.",
+      'The keyboard only shows hiragana. To answer in katakana, just swipe the hiragana equivalent and the keyboard will suggest the katakana.',
+      "Let's do a trial. We'll show you a few kana characters and then some words they appear in, so you can give this a try. After that, you start for real.",
       "You can also try Tap for an easier on-screen grid, or Type if you're on a computer keyboard. Switch any time from the mode selector.",
     ],
   },
@@ -70,10 +79,9 @@ export const DIALOGUE_SCRIPTS: Record<DialogueTrigger, DialogueScript> = {
   'kana-mode-type': {
     mascotPose: 'neutral',
     messages: [
-      'Type mode uses your physical keyboard.',
-      "Type the romaji (English letters) for each character. For example, あ is 'a', き is 'ki', し is 'shi'.",
-      "Some characters use Hepburn spelling: し is 'shi' (not 'si'), ち is 'chi' (not 'ti'), つ is 'tsu' (not 'tu').",
-      "Let's do a trial. We'll show you three hiragana characters and then one word they appear in, so you can give this a try. After that, you start for real.",
+      'Type mode uses your physical keyboard. Type the romaji (English letters) for each hiragana or katakana character.',
+      "For example, あ is 'a', き is 'ki', し is 'shi'. For katakana, type the same romaji and it will match automatically.",
+      "Let's do a trial. We'll show you a few kana characters and then some words they appear in, so you can give this a try. After that, you start for real.",
       'You can also try Tap for an easier on-screen grid, or Swipe to practise with your mobile keyboard. Switch any time from the mode selector.',
     ],
   },
@@ -82,8 +90,8 @@ export const DIALOGUE_SCRIPTS: Record<DialogueTrigger, DialogueScript> = {
     mascotPose: 'thinking',
     messages: [
       'Before you dive in, here are a few things you can change in Settings.',
-      'You can change how prompts are shown in Settings: alternate between kana and romaji, or stick to kana only.',
-      'You can also turn off auto-speaking the word, change the pacing, turn hints off, or turn on click sounds to mimic a keyboard.',
+      'By default, prompts alternate between showing you kana and romaji. If you prefer one direction only, you can change this in Settings.',
+      'You can also turn off hearing the word spoken, change the pacing, turn hints off, or turn on click sounds to mimic a keyboard.',
       "In your Profile, you'll be able to change the theme and font style (coming soon).",
     ],
   },
@@ -95,8 +103,8 @@ export const DIALOGUE_SCRIPTS: Record<DialogueTrigger, DialogueScript> = {
       'You can answer in kana by tapping the correct reading on the grid.',
       'Or you can select the correct kanji word from the options we show you.',
       "Kanji answers earn 4x the mastery points, so you'll progress faster if you recognise the kanji.",
-      'Words are unlocked in sets of 6.',
-      'Once you answer enough correctly, the next set will unlock automatically.',
+      'Words are unlocked in sets of 6. Once you answer enough correctly, the next set will unlock automatically.',
+      "Let's try a few words so you can see how it works.",
     ],
   },
 
@@ -107,8 +115,8 @@ export const DIALOGUE_SCRIPTS: Record<DialogueTrigger, DialogueScript> = {
       'You can answer in kana by typing the reading with your keyboard.',
       'Or you can type the reading and select the kanji from the auto-suggestions on your Japanese keyboard.',
       "Kanji answers earn 4x the mastery points, so you'll progress faster if you recognise the kanji.",
-      'Words are unlocked in sets of 6.',
-      'Once you answer enough correctly, the next set will unlock automatically.',
+      'Words are unlocked in sets of 6. Once you answer enough correctly, the next set will unlock automatically.',
+      "Let's try a few words so you can see how it works.",
     ],
   },
 
@@ -119,8 +127,8 @@ export const DIALOGUE_SCRIPTS: Record<DialogueTrigger, DialogueScript> = {
       'You can answer in kana by swiping the reading on your keyboard.',
       'Or you can swipe the reading and select the kanji from the auto-suggestions on your Japanese keyboard.',
       "Kanji answers earn 4x the mastery points, so you'll progress faster if you recognise the kanji.",
-      'Words are unlocked in sets of 6.',
-      'Once you answer enough correctly, the next set will unlock automatically.',
+      'Words are unlocked in sets of 6. Once you answer enough correctly, the next set will unlock automatically.',
+      "Let's try a few words so you can see how it works.",
     ],
   },
 
