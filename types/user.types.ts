@@ -21,6 +21,7 @@ export type InputMode = 'tap' | 'type' | 'swipe'
 export type AuthUser = {
   id: string
   email: string | undefined
+  isAnonymous: boolean
 }
 
 // ── User Profile ──────────────────────────────

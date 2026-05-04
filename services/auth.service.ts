@@ -250,7 +250,7 @@ export async function signIn(email: string, password: string): Promise<AuthResul
  * Uses getUser() (network-verified). Never use getSession() server-side.
  */
 export async function getUser(): Promise<{
-  user: { id: string; email: string | undefined } | null
+  user: { id: string; email: string | undefined; isAnonymous: boolean } | null
 }> {
   const { data } = await createBrowserSupabaseClient().auth.getUser()
 
@@ -262,6 +262,7 @@ export async function getUser(): Promise<{
     user: {
       id: data.user.id,
       email: data.user.email,
+      isAnonymous: data.user.is_anonymous ?? false,
     },
   }
 }

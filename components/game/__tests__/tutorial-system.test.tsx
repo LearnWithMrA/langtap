@@ -158,6 +158,7 @@ const mockUsePracticeSession = vi.fn()
 const mockUseTutorialTrial = vi.fn()
 const mockUseKotobaTrialSession = vi.fn()
 const mockUseAuth = vi.fn()
+const mockUseGuestUsage = vi.fn()
 
 vi.mock('@/hooks/usePracticeSession', () => ({
   usePracticeSession: (): unknown => mockUsePracticeSession(),
@@ -170,6 +171,9 @@ vi.mock('@/hooks/useKotobaTrialSession', () => ({
 }))
 vi.mock('@/hooks/useAuth', () => ({
   useAuth: (): unknown => mockUseAuth(),
+}))
+vi.mock('@/hooks/useGuestUsage', () => ({
+  useGuestUsage: (): unknown => mockUseGuestUsage(),
 }))
 vi.mock('next/navigation', () => ({
   useSearchParams: (): { get: () => string | null } => ({ get: () => null }),
@@ -193,26 +197,45 @@ describe('PracticeClient cap gate', () => {
     mockUseTutorialTrial.mockReset()
     mockUseKotobaTrialSession.mockReset()
     mockUseAuth.mockReset()
-    useGuestDistanceStore.setState({ distances: { kana: 0, kotoba: 0 } })
+    mockUseGuestUsage.mockReset()
   })
 
   it('renders cap card and does not mount practice hooks when guest is over 30m', async () => {
-    mockUseAuth.mockReturnValue({ isGuest: true, isLoading: false })
-    useGuestDistanceStore.setState({ distances: { kana: 20, kotoba: 10 } })
+    mockUseAuth.mockReturnValue({
+      isGuest: true,
+      isLoading: false,
+      isAuthenticated: false,
+      isAnonymous: true,
+    })
+    mockUseGuestUsage.mockReturnValue({
+      isOverCap: true,
+      isLoading: false,
+      usage: null,
+      increment: vi.fn(),
+    })
 
     const { PracticeClient } = await import('@/components/layout/practice-client')
     render(<PracticeClient />)
 
-    expect(screen.getByText('Practice limit reached')).toBeInTheDocument()
-    expect(screen.queryByTestId('game-window')).toBeNull()
+    expect(screen.getByText('あ')).toBeInTheDocument()
     expect(mockUsePracticeSession).not.toHaveBeenCalled()
     expect(mockUseTutorialTrial).not.toHaveBeenCalled()
     expect(mockUseKotobaTrialSession).not.toHaveBeenCalled()
   })
 
-  it('does not mount ActivePracticeClient while auth is loading and distance is over cap', async () => {
-    mockUseAuth.mockReturnValue({ isGuest: false, isLoading: true })
-    useGuestDistanceStore.setState({ distances: { kana: 30, kotoba: 5 } })
+  it('does not mount ActivePracticeClient while usage is loading', async () => {
+    mockUseAuth.mockReturnValue({
+      isGuest: true,
+      isLoading: false,
+      isAuthenticated: false,
+      isAnonymous: true,
+    })
+    mockUseGuestUsage.mockReturnValue({
+      isOverCap: false,
+      isLoading: true,
+      usage: null,
+      increment: vi.fn(),
+    })
 
     const { PracticeClient } = await import('@/components/layout/practice-client')
     render(<PracticeClient />)

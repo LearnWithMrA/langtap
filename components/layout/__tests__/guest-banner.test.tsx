@@ -1,7 +1,7 @@
 // ------------------------------------------------------------
 // File: components/layout/__tests__/guest-banner.test.tsx
 // Purpose: Tests for the GuestBanner component. Validates
-//          visibility gated on guest status and 30m combined cap.
+//          visibility gated on server-side 30m combined cap.
 // Depends on: components/layout/guest-banner.tsx
 // ------------------------------------------------------------
 
@@ -10,14 +10,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { GuestBanner } from '../guest-banner'
-import { useGuestDistanceStore } from '@/stores/guest-distance.store'
 
 // ── Mocks ─────────────────────────────────────
 
-const mockUseAuth = vi.fn()
+const mockUseGuestUsage = vi.fn()
 
-vi.mock('@/hooks/useAuth', () => ({
-  useAuth: (): ReturnType<typeof mockUseAuth> => mockUseAuth(),
+vi.mock('@/hooks/useGuestUsage', () => ({
+  useGuestUsage: (): unknown => mockUseGuestUsage(),
 }))
 
 vi.mock('next/navigation', () => ({
@@ -29,49 +28,35 @@ vi.mock('next/navigation', () => ({
 describe('GuestBanner', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    useGuestDistanceStore.setState({ distances: { kana: 0, kotoba: 0 } })
   })
 
-  it('does not render when guest is below combined cap', () => {
-    mockUseAuth.mockReturnValue({ isGuest: true, isLoading: false })
-    useGuestDistanceStore.setState({ distances: { kana: 15, kotoba: 10 } })
+  it('does not render when below cap', () => {
+    mockUseGuestUsage.mockReturnValue({ isOverCap: false, isLoading: false })
     const { container } = render(<GuestBanner />)
     expect(container.innerHTML).toBe('')
   })
 
   it('renders when combined distance hits 30', () => {
-    mockUseAuth.mockReturnValue({ isGuest: true, isLoading: false })
-    useGuestDistanceStore.setState({ distances: { kana: 20, kotoba: 10 } })
+    mockUseGuestUsage.mockReturnValue({ isOverCap: true, isLoading: false })
     render(<GuestBanner />)
     expect(screen.getByText(/hit the limit/i)).toBeDefined()
   })
 
-  it('renders when all distance is in one mode', () => {
-    mockUseAuth.mockReturnValue({ isGuest: true, isLoading: false })
-    useGuestDistanceStore.setState({ distances: { kana: 30, kotoba: 0 } })
-    render(<GuestBanner />)
-    expect(screen.getByText(/hit the limit/i)).toBeDefined()
-  })
-
-  it('does not render for authenticated users even at cap', () => {
-    mockUseAuth.mockReturnValue({ isGuest: false, isLoading: false })
-    useGuestDistanceStore.setState({ distances: { kana: 20, kotoba: 20 } })
+  it('does not render while loading', () => {
+    mockUseGuestUsage.mockReturnValue({ isOverCap: false, isLoading: true })
     const { container } = render(<GuestBanner />)
     expect(container.innerHTML).toBe('')
   })
 
   it('hides when dismissed', () => {
-    mockUseAuth.mockReturnValue({ isGuest: true, isLoading: false })
-    useGuestDistanceStore.setState({ distances: { kana: 30, kotoba: 0 } })
+    mockUseGuestUsage.mockReturnValue({ isOverCap: true, isLoading: false })
     render(<GuestBanner />)
-
     fireEvent.click(screen.getByLabelText('Dismiss banner'))
     expect(screen.queryByText(/hit the limit/i)).toBeNull()
   })
 
   it('shows Create an account link', () => {
-    mockUseAuth.mockReturnValue({ isGuest: true, isLoading: false })
-    useGuestDistanceStore.setState({ distances: { kana: 20, kotoba: 10 } })
+    mockUseGuestUsage.mockReturnValue({ isOverCap: true, isLoading: false })
     render(<GuestBanner />)
     expect(screen.getByText('Create an account')).toBeDefined()
   })

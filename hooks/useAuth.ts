@@ -25,6 +25,7 @@ export function useAuth(): {
   isLoading: boolean
   isAuthenticated: boolean
   isGuest: boolean
+  isAnonymous: boolean
 } {
   const user = useUserStore((s) => s.user)
   const profile = useUserStore((s) => s.profile)
@@ -39,7 +40,10 @@ export function useAuth(): {
       if (!mounted) return
 
       if (authUser) {
-        useUserStore.getState().setUser(authUser)
+        useUserStore.getState().setUser({
+          ...authUser,
+          isAnonymous: authUser.isAnonymous ?? false,
+        })
         const profileResult = await loadProfile(authUser.id)
         if (!mounted) return
         if (profileResult.ok) {
@@ -61,7 +65,11 @@ export function useAuth(): {
       if (!mounted) return
 
       if (session?.user) {
-        const authUser = { id: session.user.id, email: session.user.email }
+        const authUser = {
+          id: session.user.id,
+          email: session.user.email,
+          isAnonymous: session.user.is_anonymous ?? false,
+        }
         useUserStore.getState().setUser(authUser)
         loadProfile(session.user.id).then((result) => {
           if (!mounted) return
@@ -80,11 +88,14 @@ export function useAuth(): {
     }
   }, [])
 
+  const isAnonymous = user?.isAnonymous ?? false
+
   return {
     user,
     profile,
     isLoading,
-    isAuthenticated: user !== null,
-    isGuest: user === null && !isLoading,
+    isAuthenticated: user !== null && !isAnonymous,
+    isGuest: (user === null || isAnonymous) && !isLoading,
+    isAnonymous,
   }
 }

@@ -10,7 +10,7 @@ import { useUserStore } from '../user.store'
 
 // ── Helpers ───────────────────────────────────
 
-const MOCK_USER = { id: 'abc-123', email: 'test@example.com' }
+const MOCK_USER = { id: 'abc-123', email: 'test@example.com', isAnonymous: false }
 
 const MOCK_PROFILE = {
   id: 'abc-123',

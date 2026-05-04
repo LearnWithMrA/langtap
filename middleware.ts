@@ -71,17 +71,21 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
   const { pathname } = request.nextUrl
 
-  // Redirect guests from /profile to /sign-up.
+  const isAnonymous = user?.is_anonymous ?? false
+  const isPermanentUser = user !== null && !isAnonymous
+
+  // Redirect guests and anonymous users from /profile to /sign-up.
   const isGuestToSignup = GUEST_TO_SIGNUP_ROUTES.some((route) => pathname.startsWith(route))
-  if (!user && isGuestToSignup) {
+  if (!isPermanentUser && isGuestToSignup) {
     const url = request.nextUrl.clone()
     url.pathname = '/sign-up'
     return NextResponse.redirect(url)
   }
 
-  // Redirect authenticated users away from auth pages (sign-up, log-in).
+  // Redirect permanent authenticated users away from auth pages (sign-up, log-in).
+  // Anonymous users can still access auth pages to sign up.
   const isAuthPage = AUTH_PAGES.some((route) => pathname.startsWith(route))
-  if (user && isAuthPage) {
+  if (isPermanentUser && isAuthPage) {
     const url = request.nextUrl.clone()
     url.pathname = '/practice'
     return NextResponse.redirect(url)

@@ -1,10 +1,10 @@
 // ------------------------------------------------------------
 // File: components/layout/guest-banner.tsx
 // Purpose: Banner shown to guest users when they hit the 30m combined
-//          practice distance cap. Prompts them to create an
-//          account. Dismissal hides for the current session only.
-// Depends on: hooks/useAuth.ts, stores/auth-modal.store.ts,
-//             stores/guest-distance.store.ts, engine/constants.ts
+//          practice distance cap (server-side enforced). Prompts them
+//          to create an account. Dismissal hides for the current page
+//          visit only (resets on route navigation).
+// Depends on: hooks/useGuestUsage.ts, stores/auth-modal.store.ts
 // ------------------------------------------------------------
 
 'use client'
@@ -12,26 +12,22 @@
 import { useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
-import { useAuth } from '@/hooks/useAuth'
+import { useGuestUsage } from '@/hooks/useGuestUsage'
 import { useAuthModalStore } from '@/stores/auth-modal.store'
-import { useGuestDistanceStore } from '@/stores/guest-distance.store'
-import { GUEST_TRIAL_DISTANCE_CAP } from '@/engine/constants'
 
 // ── Component ─────────────────────────────────
 
 export function GuestBanner(): ReactNode {
-  const { isGuest, isLoading } = useAuth()
+  const { isOverCap, isLoading } = useGuestUsage()
   const pathname = usePathname()
   const [dismissed, setDismissed] = useState(false)
+  const openSignUp = useAuthModalStore((s) => s.openSignUp)
 
   useEffect(() => {
     setDismissed(false)
   }, [pathname])
-  const openSignUp = useAuthModalStore((s) => s.openSignUp)
-  const distances = useGuestDistanceStore((s) => s.distances)
-  const isOverCap = distances.kana + distances.kotoba >= GUEST_TRIAL_DISTANCE_CAP
 
-  if (isLoading || !isGuest || !isOverCap || dismissed) {
+  if (isLoading || !isOverCap || dismissed) {
     return null
   }
 

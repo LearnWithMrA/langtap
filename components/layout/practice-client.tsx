@@ -34,16 +34,16 @@ import { useTutorialTrial } from '@/hooks/useTutorialTrial'
 import { useKotobaTrialSession } from '@/hooks/useKotobaTrialSession'
 import { useDialogueSeen } from '@/hooks/useDialogueSeen'
 import { useAuth } from '@/hooks/useAuth'
+import { useGuestUsage } from '@/hooks/useGuestUsage'
 import { useSettingsStore } from '@/stores/settings.store'
 import { useAuthModalStore } from '@/stores/auth-modal.store'
-import { useGuestDistanceStore } from '@/stores/guest-distance.store'
 import { DIALOGUE_SCRIPTS } from '@/data/tutorial/dialogue-scripts'
 import { TRIAL_ALLOWED_IDS } from '@/data/tutorial/trial-prompts'
-import { GUEST_TRIAL_DISTANCE_CAP } from '@/engine/constants'
 
 const TRIAL_ALLOWED_SET = new Set(TRIAL_ALLOWED_IDS)
 const KANA_TRIAL_CARD = 'bg-[#ddf0e8] shadow-[0_6px_0_0_#a0d0b8]'
 const KOTOBA_TRIAL_CARD = 'bg-[#dce8f5] shadow-[0_6px_0_0_#a8bed8]'
+const FROZEN_PROMPT_KEY = 'langtap-frozen-prompt'
 
 // -- Types --------------------------------------------------
 
@@ -148,13 +148,18 @@ function PracticeScene({ children }: { children: ReactNode }): ReactNode {
 // -- Capped shell (no practice hooks mounted) ---------------
 
 function CappedPracticeShell(): ReactNode {
+  const frozen =
+    typeof window !== 'undefined' ? (localStorage.getItem(FROZEN_PROMPT_KEY) ?? 'あ') : 'あ'
+
   return (
     <PracticeScene>
-      <div className="bg-[#faf5e4] shadow-[0_6px_0_0_#d4c9b0] rounded-2xl w-full max-w-md mx-auto p-8 text-center opacity-80">
-        <p className="text-lg font-bold text-text-primary mb-2">Practice limit reached</p>
-        <p className="text-sm text-text-secondary">
-          Sign up to continue practising and save your progress.
-        </p>
+      <div className="opacity-50 pointer-events-none">
+        <div className="bg-[#faf5e4] shadow-[0_6px_0_0_#d4c9b0] rounded-2xl w-full max-w-md mx-auto p-6 md:p-8">
+          <div className="text-5xl md:text-6xl font-bold text-center py-6 select-none text-warm-400">
+            {frozen}
+          </div>
+          <div className="text-base text-warm-400 text-center min-h-6">&nbsp;</div>
+        </div>
       </div>
     </PracticeScene>
   )
@@ -254,8 +259,17 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
   const showKotobaBanner =
     gameType === 'kotoba' && hasSeenKotobaTrial && !hasSeenKotobaBanner && !activeDialogue
 
-  // ── Guest distance tracking ─────────────────
-  const addGuestDistance = useGuestDistanceStore((s) => s.addDistance)
+  // ── Guest distance tracking (server-side) ───
+  const { increment: incrementGuestDistance } = useGuestUsage()
+
+  // Cache current prompt so the capped shell can show it frozen
+  useEffect(() => {
+    const prompt = gameType === 'kana' ? kanaSession.prompt : null
+    if (prompt) {
+      const chars = prompt.characters.map((c) => c.kana).join('')
+      localStorage.setItem(FROZEN_PROMPT_KEY, chars)
+    }
+  }, [gameType, kanaSession.prompt])
 
   useEffect(() => {
     if (trialSession.isComplete && !hasSeenTrial) markTrialSeen()
@@ -299,9 +313,9 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
   const handleCharacterCorrect = useCallback((): void => {
     incrementCorrect(mode)
     if (isGuest) {
-      addGuestDistance(gameType, 1)
+      void incrementGuestDistance(gameType, 1)
     }
-  }, [incrementCorrect, mode, isGuest, addGuestDistance, gameType])
+  }, [incrementCorrect, mode, isGuest, incrementGuestDistance, gameType])
 
   return (
     <PracticeScene>
@@ -415,12 +429,11 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
 export function PracticeClient(): ReactNode {
   const searchParams = useSearchParams()
   const gameType = (searchParams.get('mode') === 'kotoba' ? 'kotoba' : 'kana') as GameType
-  const { isGuest, isLoading } = useAuth()
-  const guestDistances = useGuestDistanceStore((s) => s.distances)
-  const totalGuestDistance = guestDistances.kana + guestDistances.kotoba
-  const possiblyOverCap = totalGuestDistance >= GUEST_TRIAL_DISTANCE_CAP
+  const { isAuthenticated } = useAuth()
+  const { isLoading: usageLoading, isOverCap } = useGuestUsage()
 
-  if (possiblyOverCap && isLoading) return <PracticeScene>{null}</PracticeScene>
-  if (possiblyOverCap && isGuest) return <CappedPracticeShell />
+  if (isAuthenticated) return <ActivePracticeClient gameType={gameType} />
+  if (usageLoading) return <PracticeScene>{null}</PracticeScene>
+  if (isOverCap) return <CappedPracticeShell />
   return <ActivePracticeClient gameType={gameType} />
 }

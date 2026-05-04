@@ -14,7 +14,7 @@ import { useUserStore } from '@/stores/user.store'
 
 // ── Mocks ─────────────────────────────────────
 
-const MOCK_USER = { id: 'abc-123', email: 'test@example.com' }
+const MOCK_USER = { id: 'abc-123', email: 'test@example.com', isAnonymous: false }
 
 const MOCK_PROFILE = {
   id: 'abc-123',
@@ -118,5 +118,24 @@ describe('useAuth', () => {
     unmount()
 
     expect(mockUnsubscribe).toHaveBeenCalled()
+  })
+
+  it('treats anonymous user as guest, not authenticated', async () => {
+    const ANON_USER = { id: 'anon-123', email: undefined, isAnonymous: true }
+    const { getUser } = await import('@/services/auth.service')
+    const { loadProfile } = await import('@/services/profile.service')
+    vi.mocked(getUser).mockResolvedValue({ user: ANON_USER })
+    vi.mocked(loadProfile).mockResolvedValue({ ok: false, error: 'No profile' })
+
+    const { useAuth } = await import('../useAuth')
+    const { result } = renderHook(() => useAuth())
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(result.current.isGuest).toBe(true)
+    expect(result.current.isAuthenticated).toBe(false)
+    expect(result.current.isAnonymous).toBe(true)
   })
 })

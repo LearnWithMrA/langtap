@@ -30,6 +30,44 @@ Format per entry:
 
 ---
 
+## 2026-05-04 - Session 85
+
+**Sprint:** Sprint 7C - Server-Side Guest Trial Cap (COMPLETE)
+**Task completed:** All 13 tasks. Server-side guest cap via Supabase anonymous auth.
+**Status:** Done (Sprint 7C complete)
+
+### Changes made
+- `supabase/migrations/20260504120000_create_guest_usage.sql`: New. `guest_usage` table (3-day TTL), `get_or_create_guest_usage` RPC, `increment_guest_usage` RPC (30m server-side enforcement, clamps at cap), `is_permanent_user()` helper, restrictive RLS blocking anonymous writes on mastery/word_mastery/manual_unlocks/practice_sessions/word_manual_unlocks
+- `supabase/cleanup-guest-usage.sql`: New. `cleanup_expired_guests()` function for daily cron. Deletes expired guest_usage rows and orphaned anonymous auth users older than 3 days
+- `services/guest-usage.service.ts`: New. `ensureGuestSession()` (signInAnonymously), `loadGuestUsage()` (RPC), `incrementGuestUsage()` (RPC). 7 tests
+- `hooks/useGuestUsage.ts`: New. Server-side cap hook. Ensures anonymous session, loads usage before practice mounts, exposes isLoading/isOverCap/increment
+- `types/user.types.ts`: Added `isAnonymous` to AuthUser
+- `services/auth.service.ts`: `getUser()` now returns `isAnonymous` from `data.user.is_anonymous`
+- `hooks/useAuth.ts`: `isGuest = no user OR anonymous`. `isAuthenticated = permanent only`. Added `isAnonymous` to return
+- `middleware.ts`: Anonymous users treated as guests for /profile. Not redirected from auth pages (can sign up)
+- `components/layout/practice-client.tsx`: PracticeClient uses `useGuestUsage` (server authority). `ActivePracticeClient` increments via `incrementGuestDistance` (async RPC). Capped shell shows frozen last prompt from localStorage. Prompt cached on each correct answer
+- `components/layout/guest-banner.tsx`: Uses `useGuestUsage` instead of localStorage store
+- `hooks/__tests__/useAuth.test.ts`: Added anonymous user test (isGuest true, isAuthenticated false, isAnonymous true)
+- `services/__tests__/guest-usage.service.test.ts`: New. 7 tests (session creation, usage load, increment, error handling)
+
+### Tests
+- Full suite: 865 tests, 0 failures
+- New: 7 guest-usage service tests + 1 anonymous auth test + 2 updated cap gate tests
+
+### Next task
+Sprint 8 - Profile, Settings, and Supabase Progress Sync
+
+### Notes
+- Sprint 7C complete. All 13 tasks done in one session
+- Server-side cap replaces localStorage cap as authority. localStorage guest-distance.store is now dead code (kept for reference)
+- Anonymous-to-permanent sign-up works natively: Supabase flips is_anonymous on the same user ID, useAuth recalculates, cap no longer applies
+- Cleanup job: `cleanup_expired_guests()` ready for pg_cron scheduling. Deletes anonymous users after 3 days of inactivity
+- Capped shell shows frozen last prompt character (cached in localStorage on each correct answer). Falls back to あ if no cache
+- Owner must enable anonymous sign-ins in Supabase dashboard (done this session) and run `supabase db reset` to apply migration
+- Owner must schedule the cleanup cron: `select cron.schedule('cleanup-guest-usage', '0 3 * * *', $$ select public.cleanup_expired_guests(); $$);`
+
+---
+
 ## 2026-05-04 - Session 84
 
 **Sprint:** Sprint 7B/7C - Security hardening, doc updates, Sprint 7C planning
