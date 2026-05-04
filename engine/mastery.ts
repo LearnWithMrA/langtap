@@ -26,6 +26,7 @@ export function getMasteryHeatClass(score: MasteryScore): string {
 // ── Word heat class ──────────────────────────
 
 export function getWordMasteryHeatClass(score: MasteryScore): string {
+  if (score >= KOTOBA_MASTERY_THRESHOLD) return HEAT_GOLD_BG
   if (score === 0) return 'bg-heat-0'
   if (score <= 2) return 'bg-heat-1'
   if (score <= 5) return 'bg-heat-2'

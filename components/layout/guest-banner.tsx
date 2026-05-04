@@ -9,7 +9,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthModalStore } from '@/stores/auth-modal.store'
@@ -19,16 +19,26 @@ import { useAuthModalStore } from '@/stores/auth-modal.store'
 export function GuestBanner(): ReactNode {
   const { isGuest, isLoading } = useAuth()
   const [dismissed, setDismissed] = useState(false)
+  const [delayPassed, setDelayPassed] = useState(false)
   const openSignUp = useAuthModalStore((s) => s.openSignUp)
 
-  if (isLoading || !isGuest || dismissed) {
+  useEffect(() => {
+    const timer = setTimeout((): void => {
+      setDelayPassed(true)
+    }, 60_000)
+    return (): void => {
+      clearTimeout(timer)
+    }
+  }, [])
+
+  if (isLoading || !isGuest || dismissed || !delayPassed) {
     return null
   }
 
   return (
     <div className="fixed top-14 left-0 right-0 z-40 bg-[#fff3e0] border-b border-[#f0a166] px-4 py-2 flex items-center justify-center gap-2">
       <p className="text-sm text-[#7a4a1a] text-center">
-        Your progress will be lost when you close this tab.{' '}
+        Sign up to save your progress.{' '}
         <button
           type="button"
           onClick={openSignUp}

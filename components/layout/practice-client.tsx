@@ -25,10 +25,13 @@ import { GameWindow } from '@/components/game/game-window'
 import { KotobaGameWindow } from '@/components/game/kotoba-game-window'
 import { DistanceCounter } from '@/components/game/distance-counter'
 import { AudioPlayer } from '@/components/audio/audio-player'
+import { DialogueOverlay } from '@/components/game/dialogue-overlay'
 import { useKeySound } from '@/hooks/useKeySound'
 import { usePracticeCounters } from '@/hooks/usePracticeCounters'
 import { usePracticeSession } from '@/hooks/usePracticeSession'
+import { useDialogueSeen } from '@/hooks/useDialogueSeen'
 import { useSettingsStore } from '@/stores/settings.store'
+import { DIALOGUE_SCRIPTS } from '@/data/tutorial/dialogue-scripts'
 
 // -- Types --------------------------------------------------
 
@@ -114,6 +117,34 @@ export function PracticeClient(): ReactNode {
   const sceneSpeed = prefersReducedMotion ? 'stopped' : 'idle'
   const animated = !prefersReducedMotion
 
+  const { hasSeen: hasSeenKanaIntro, markSeen: markKanaIntroSeen } =
+    useDialogueSeen('kana-first-play')
+  const { hasSeen: hasSeenSettings, markSeen: markSettingsSeen } =
+    useDialogueSeen('kana-post-trial')
+  const kanaModeKey = `kana-mode-${mode}` as const
+  const { hasSeen: hasSeenKanaMode, markSeen: markKanaModeSeen } = useDialogueSeen(kanaModeKey)
+  const kotobaModeKey = `kotoba-first-${mode}` as const
+  const { hasSeen: hasSeenKotobaMode, markSeen: markKotobaModeSeen } =
+    useDialogueSeen(kotobaModeKey)
+
+  const kanaDialogue =
+    gameType === 'kana'
+      ? !hasSeenKanaIntro
+        ? { script: DIALOGUE_SCRIPTS['kana-first-play'], onDismiss: markKanaIntroSeen }
+        : !hasSeenSettings
+          ? { script: DIALOGUE_SCRIPTS['kana-post-trial'], onDismiss: markSettingsSeen }
+          : !hasSeenKanaMode
+            ? { script: DIALOGUE_SCRIPTS[kanaModeKey], onDismiss: markKanaModeSeen }
+            : null
+      : null
+
+  const kotobaDialogue =
+    gameType === 'kotoba' && !hasSeenKotobaMode
+      ? { script: DIALOGUE_SCRIPTS[kotobaModeKey], onDismiss: markKotobaModeSeen }
+      : null
+
+  const activeDialogue = kanaDialogue ?? kotobaDialogue
+
   const handleCharacterCorrect = useCallback((): void => {
     incrementCorrect(mode)
   }, [incrementCorrect, mode])
@@ -141,7 +172,14 @@ export function PracticeClient(): ReactNode {
 
       {/* Game window: centred, raised 40% */}
       <div className="absolute left-1/2 -translate-x-1/2 top-[34%] -translate-y-1/2 z-10 w-full max-w-lg px-4">
-        {gameType === 'kotoba' ? (
+        {activeDialogue ? (
+          <DialogueOverlay
+            key={activeDialogue.script.messages[0]}
+            messages={activeDialogue.script.messages}
+            mascotPose={activeDialogue.script.mascotPose}
+            onDismiss={activeDialogue.onDismiss}
+          />
+        ) : gameType === 'kotoba' ? (
           <KotobaGameWindow
             mode={mode}
             kotobaInput={kotobaInput}

@@ -247,36 +247,64 @@ No UI yet. This is pure logic.
 ## Sprint 7 - Dojo Screens (Kana + Kotoba)
 
 **Goal:** Both Kana and Kotoba dojo screens are complete with real mastery data, progress tracking, and unlock controls.
-**Status:** Pending
+**Status:** Done
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Wire Kana Dojo to mastery store | **Medium** | **To Do** | Replace fixture data with real mastery scores. Read from Zustand store. Dojo reflects live state. |
-| Build Kana Dojo layout | **Medium** | **To Do** | Heading: Kana. Subheadings: Seion, Dakuon, Combination. Each group collapsible via arrow toggle. Progress bars with heatmap colouring from the colour utility built in Sprint 2. |
-| Build character progress bar component | **Small** | **To Do** | Shows mastery score as a filled bar. Heatmap colouring from the colour utility built in Sprint 2. |
-| Build individual character unlock interaction | **Small** | **To Do** | Clicking a locked character shows an unlock prompt. Confirmation required. Cannot be undone. |
-| Build bulk unlock interaction | **Small** | **To Do** | Clicking a progress bar shows an "Unlock All" option. Group-level and page-level unlock buttons. Two-step confirmation. Cannot be undone. |
-| Wire Kotoba Dojo to word mastery store | **Medium** | **To Do** | Flat level structure (no units). Levels of 12 words, paired headings ("Levels 1-2", etc.). Real mastery data from word mastery store. |
-| Gate Kotoba Mode behind kana progress | **Small** | **To Do** | Kotoba unlocks when all kana characters are unlocked (score >= 5 or manually unlocked). Show friendly message if not yet unlocked. |
-| Write Dojo tests (Kana + Kotoba) | **Medium** | **To Do** | Collapse/expand, locked state, unlock flow, progress bar rendering, level progression. |
+| Wire Kana Dojo to mastery store | **Medium** | **Done** | `kana-dojo-client.tsx` reads from `useMasteryStore`. Real mastery scores, heatmap colouring, live state. Built in earlier sprints. |
+| Build Kana Dojo layout | **Medium** | **Done** | Hiragana/Katakana groups, collapsible stages (Seion, Dakuon, Combination), progress bars with heatmap colours. Built in earlier sprints. |
+| Build character progress bar component | **Small** | **Done** | `ProgressBar` component with heatmap fill from `engine/mastery.ts`. Built in Sprint 2. |
+| Build individual character unlock interaction | **Small** | **Done** | Locked tile tap opens unlock prompt with confirmation. Wired to unlock store. 16 kana dojo tests. |
+| Build bulk unlock interaction | **Small** | **Done** | Page-level and stage-level unlock buttons with two-step confirmation. Wired to unlock store. |
+| Wire Kotoba Dojo to word mastery store | **Medium** | **Done** | `kotoba-dojo-client.tsx` reads from `useWordMasteryStore`. Progression-based locking via `getUnlockedKotobaWordIds`. N5 eager, N4-N1 lazy-loaded. 24 kotoba dojo tests. Built in Sprint 5B, fixed in Session 77. |
+| Gate Kotoba Mode behind kana progress | **Small** | **Done** | Removed. Kotoba is open from the start for all users. Decision made in Session 77. |
+| Write Dojo tests (Kana + Kotoba) | **Medium** | **Done** | Kana: 16 tests (collapse, unlock, bulk unlock, reset). Kotoba: 24 tests (tabs, groups, tiles, popover, unlock, bulk unlock, state props). 40 total. |
 
 ---
 
-## Sprint 8 - Profile and Settings Screens
+## Sprint 7B - Tutorial and Guidance System
 
-**Goal:** Profile and Settings screens are complete and connected to user state.
+**Goal:** New players understand how the game works through in-game guidance. A mascot character delivers dialogue via Pokemon-style typewriter overlays. Dojo screens show contextual banner tips. Characters require 5 correct picks before appearing in words.
 **Status:** Pending
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Build Profile screen | **Medium** | **To Do** | Username display, JLPT level selector (with mastery pre-set warning), font selector, font size selector, lo-fi audio toggle, reset progress button. |
-| Build reset progress flow | **Small** | **To Do** | Two-step confirmation. Clear warning that this cannot be undone. Resets all kana mastery, word mastery, counters, and unlocks. |
-| Build Settings screen | **Medium** | **To Do** | Input mode selector, mode-specific sub-settings (Type/Swipe: romaji-to-kana or kana-to-romaji). Kotoba Input toggle: two-option segmented control (Readings 1x / Kanji 4x). Only shown when Kotoba Mode is unlocked. |
-| Connect Profile and Settings to Supabase | **Medium** | **To Do** | All preferences saved to the user profile record. Loaded on app start. Guest users: saved to localStorage. |
-| Build delete account flow | **Medium** | **To Do** | Server-side account deletion. Typed confirmation (`delete-username`). Cascade deletes all user data. See SECURITY.md Section 5.4. Flagged in Session 49. |
-| Build username change with 30-day cooldown | **Small** | **To Do** | Server validates cooldown via `username_changed_at`. Returns structured error with next-allowed timestamp. Client shows disabled state. Flagged in Session 49. |
-| Wire membership card to Stripe Customer Portal | **Small** | **To Do** | "Manage billing" link opens Stripe portal session. "Notify me" button captures demand. Feature flag `SHOW_MEMBERSHIP_CARD`. Flagged in Session 49. |
-| Write Profile and Settings tests | **Small** | **To Do** | Each setting saved and loaded correctly. Reset flow. Guest vs logged-in behaviour. |
+| Build dialogue overlay component | **Medium** | **Done** | `components/game/dialogue-overlay.tsx`. Game-window-style cream card with mascot bottom-left, white speech bubble right side, typewriter animation at 50ms/char. All messages flow continuously (400ms pause between). Skip button (sand, press-in) reveals all text. Got it button (green, press-in) dismisses. Fixed card height (340px), bubble scrolls internally. Hidden scrollbar with `scrollbar-gutter: stable` to prevent text reflow. 10 tests. Session 80. |
+| Build dialogue content and sequencing system | **Small** | **Done** | `data/tutorial/dialogue-scripts.ts` (all scripts keyed by trigger ID), `hooks/useDialogueSeen.ts` (localStorage tracking with `useSyncExternalStore`, same pattern as dojo help-card). Session 80. |
+| Implement dialogue scripts | **Medium** | **Done** | Chained dialogue flow in `practice-client.tsx`. Kana first play: intro (neutral) then settings (thinking) then mode-specific (neutral). Kotoba first play: mode-specific only. Mode switch triggers new mode's dialogue. Each mode nudges player toward other modes. Key prop on DialogueOverlay forces remount between dialogues. Session 80. |
+| Build tutorial trial round | **Medium** | **To Do** | After the mode-specific dialogue (section 1B) dismisses, run a guided trial: 3 hiragana single-character prompts followed by 1 word containing those characters. Uses the real game UI but in a sandboxed trial state (no mastery points earned, no counters incremented). After the trial completes, 1C settings dialogue plays, then transition to real practice. Trial only runs once on first play. |
+| Build dojo banner tips (Kana) | **Small** | **To Do** | Contextual banner tips on the Kana dojo screen, shown gradually (not all at once). Examples: "Already know a character? Click to unlock it, then click again to master it, so you won't see it as often", "Forgotten a character? Click to reset it". |
+| Build dojo banner tips (Kotoba) | **Small** | **To Do** | Same gradual banner tip pattern for the Kotoba dojo screen. Contextual hints relevant to word practice and word mastery. |
+| Build inline kana learning phase | **Medium** | **To Do** | New players start with all kana characters locked. Each character requires 5 correct answers in single-character practice to unlock in the kana dojo. Unlocked characters become eligible for word practice, but words only start appearing once enough characters are unlocked to form at least 10 available words (prevents repetition). Kotoba unlock system is unchanged. |
+| Write mascot ChatGPT image prompt | **Small** | **Done** | Prompt written, owner generated 3 poses (neutral, encouraging, thinking) via ChatGPT. PNGs in `public/images/mascot/`. Session 80. |
+| Build guest trial cap (15m) | **Medium** | **To Do** | Guests play with localStorage persistence (progress survives refreshes) but are capped at 15m cumulative distance per mode (kana and kotoba tracked independently). Add `GUEST_TRIAL_DISTANCE_CAP = 15` to `engine/constants.ts`. Track cumulative distance in the session store (already has distance). When a guest hits the cap, practice stops and a banner appears in the game window (same style as the kana dojo help card banners, not a full-screen modal). Banner copy: "You've practised 15m! Sign up to keep going." with a "Create account" button. If the guest dismisses and tries to start practice again, the same banner reappears. Signed-in users have no cap. Guest can only reset by clearing localStorage. |
+| Fix kanji distractor character count | **Small** | **To Do** | `engine/kotoba-selection.ts` `generateKotobaDistractors` picks distractors without matching kanji character count. Single-kanji words (e.g. 犬) get double-kanji distractors (e.g. 東京), making the answer obvious. Filter distractor pool to only include kanji with the same character length as the correct answer. |
+| Write tutorial system tests | **Small** | **To Do** | Dialogue overlay render and dismiss, typewriter animation, dialogue seen tracking, inline learning phase gate (character with score < 5 excluded from words, score >= 5 included), dojo banner tip display logic, guest trial cap enforcement. |
+
+---
+
+## Sprint 8 - Profile, Settings, and Supabase Progress Sync
+
+**Goal:** Profile and Settings screens connected to user state. Signed-up users have all game progress synced to Supabase. Guest progress lives in localStorage and migrates on sign-up.
+**Status:** Pending
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Build Profile screen | **Medium** | **Done** | `components/profile/profile-client.tsx` (264 lines). Header card, preferences card (JLPT selector with warning), membership card, account settings, support links. Visual shell complete. Built in earlier sprints. |
+| Build Settings screen | **Medium** | **Done** | `components/settings/settings-dialog.tsx` fully wired to `useSettingsStore`. Controls: inputDirection, kotobaInput, hints, wordAudio, keyClicks, autoAdvance. Built in earlier sprints. |
+| Build reset progress flow | **Small** | **To Do** | UI warning text exists but no actual reset logic. Need two-step confirmation then `resetAll()` on mastery, word mastery, counter, and unlock stores. Sync reset to Supabase for signed-in users. |
+| Connect Profile and Settings to Supabase | **Medium** | **To Do** | Preferences card JLPT level uses local `useState` instead of profile store/Supabase. Wire to `updateProfile()`. Auto-master words below selected level on change (reuse `buildAutoMasteryScores` from onboarding). |
+| Build delete account flow | **Medium** | **To Do** | Server-side account deletion. Typed confirmation (`delete-username`). Cascade deletes all user data. See SECURITY.md Section 5.4. |
+| Build username change with 30-day cooldown | **Small** | **To Do** | Server validates cooldown via `username_changed_at`. Returns structured error with next-allowed timestamp. Client shows disabled state. UI shell exists. |
+| Wire membership card to Stripe Customer Portal | **Small** | **To Do** | "Manage billing" link opens Stripe portal session. "Notify me" button captures demand. Feature flag `SHOW_MEMBERSHIP_CARD`. |
+| Implement kana mastery service | **Medium** | **To Do** | `services/mastery.service.ts` is a placeholder (`export {}`). Implement `loadMastery(userId)` and `syncMastery(userId, delta)` following the `word-mastery.service.ts` pattern. Delta upsert on `user_id, character_id`. |
+| Implement word counter service | **Small** | **To Do** | `services/counter.service.ts` is a placeholder (`export {}`). Implement `loadCounters(userId)` and `syncCounters(userId, delta)`. Upsert on `user_id, word_id`. |
+| Wire load-on-start for signed-in users | **Medium** | **To Do** | In `StoreHydrator` or a new provider: after auth check, if user is signed in, fetch kana mastery, word mastery, word counters, and manual unlocks from Supabase. Merge into Zustand stores using `bulkLoad` (max of local vs remote). localStorage stays as cache. |
+| Wire sync-on-end for signed-in users | **Medium** | **To Do** | On `beforeunload` or navigation away from practice: sync dirty kana mastery, word mastery, and word counter deltas to Supabase. Only changed rows upserted. Manual unlocks already sync immediately via `unlock.service.ts`. |
+| Wire word mastery service calls | **Small** | **To Do** | `services/word-mastery.service.ts` is implemented but never called. Wire into load-on-start and sync-on-end flows alongside kana mastery service. |
+| Guest-to-account migration | **Medium** | **To Do** | On sign-up or first sign-in: push all localStorage state (kana mastery, word mastery, counters, unlocks) to Supabase. Run once after auth completes, before practice screen. If migration fails, preserve local state and notify user. See BACKEND.md Section 3.3. |
+| Write Profile, Settings, and Sync tests | **Small** | **To Do** | Service tests for mastery and counter services. Profile settings save/load. Reset flow. Guest vs signed-in. Sync load/merge/sync cycle. |
+| Sync input mode from Supabase profile to settings store on login | **Small** | **To Do** | On login or new device, `useSettingsStore.inputMode` should hydrate from `profiles.input_mode` in Supabase instead of defaulting to `'tap'`. Currently `useSettings.ts` is a placeholder. Implement profile-to-store sync so the user's onboarding choice persists across devices. |
 
 ---
 
@@ -312,19 +340,21 @@ No UI yet. This is pure logic.
 
 ---
 
-## Sprint 11 - Stripe Infrastructure and Pre-Launch
+## Sprint 11 - Stripe, Email, Security Hardening, and Pre-Launch
 
-**Goal:** Payments infrastructure is in place but not active. App is ready for soft launch.
+**Goal:** Payments infrastructure is in place (hosted checkout, no custom payment UI). Email deliverability is production-grade. API routes are rate-limited. Onboarding email sequence is live. App is ready for soft launch.
 **Status:** Pending
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Set up Stripe account and products | **Medium** | **To Do** | Create Stripe account. Define membership product (details TBD). Wire Stripe into the app but do not activate any paywall. |
-| Activate Stripe membership | **Epic** | **To Do** | Break into smaller tasks at the time. Define pricing model first. |
+| Set up Stripe account with hosted Checkout Sessions | **Medium** | **To Do** | Create Stripe account. Define membership product (details TBD). Use Stripe-hosted Checkout Sessions (prebuilt page) instead of custom payment UI. This handles PCI compliance, webhook signature verification, and payment flow out of the box. Wire a checkout session creation endpoint at `app/api/stripe/checkout/route.ts` that calls `stripe.checkout.sessions.create()` server-side and returns the session URL. Client redirects to Stripe's hosted page. Success/cancel URLs point back to the app. No custom webhook handler needed for basic checkout - Stripe's hosted page manages payment confirmation. |
+| Activate Stripe membership | **Epic** | **To Do** | Break into smaller tasks at the time. Define pricing model first. For subscription management, use Stripe Customer Portal (hosted) so users can update payment methods, cancel, and view invoices without custom UI. |
+| Configure custom SMTP with domain authentication | **Medium** | **To Do** | Supabase's default SMTP has poor deliverability - password reset and confirmation emails go to spam or promotions tab. Fix: choose a transactional email provider (Resend or Postmark). In Supabase dashboard: Auth > SMTP Settings > configure custom SMTP with the provider's credentials. On the domain registrar: add SPF record (TXT, `v=spf1 include:<provider> ~all`), DKIM record (TXT, provider-generated key), and DMARC record (TXT, `v=DMARC1; p=quarantine; rua=mailto:dmarc@langtap.com`). Test with mail-tester.com before launch - target score 9/10 or higher. Document the provider choice and DNS records in `docs/DEVOPS.md`. |
+| Build onboarding email sequence | **Medium** | **To Do** | Three-email drip sequence using the chosen email provider (Resend or Postmark). Day 0: welcome email ("You're in! Here's how to start practising"). Day 2: activation nudge ("Have you tried [kana/kotoba] practice yet? Here's a quick tip"). Day 7: social proof ("Other learners at your JLPT level are practising X minutes a day"). Trigger Day 0 on sign-up via a Supabase database webhook or edge function on `auth.users` insert. Days 2 and 7 via the email provider's drip/sequence feature or a scheduled edge function. All emails must include an unsubscribe link (GDPR). Respect the `notifications_enabled` field on the profiles table. |
 | Build credits / attribution screen | **Small** | **To Do** | List VOICEVOX attribution, font licences, and any other third-party credits. |
-| Write privacy policy and terms of service | **Medium** | **To Do** | Plain language. Cover data storage (Supabase), leaderboard visibility of username, and guest mode data loss warning. |
-| Final end-to-end test pass | **Large** | **To Do** | Full user journey: guest entry, sign up, onboarding, Kana practice (all three modes), Kotoba practice (Readings + Kanji), Dojo (Kana + Kotoba), Profile, Settings, Leaderboard. |
-| Soft launch on Vercel | **Small** | **To Do** | Share URL with a small group of testers. Monitor for errors. |
+| Write privacy policy and terms of service | **Medium** | **To Do** | Plain language. Cover data storage (Supabase), leaderboard visibility of username, guest mode data loss warning, email communications and unsubscribe rights, and cookie usage (localStorage for guest state). |
+| Final end-to-end test pass | **Large** | **To Do** | Full user journey: guest entry, sign up (verify email lands in inbox, not spam), onboarding, Kana practice (all three modes), Kotoba practice (Readings + Kanji), Dojo (Kana + Kotoba), Profile, Settings, Leaderboard. Include: password reset email deliverability test, rate limit verification (hit endpoint rapidly, confirm 429 response), Stripe checkout flow (test mode purchase). |
+| Soft launch on Vercel | **Small** | **To Do** | Share URL with a small group of testers. Monitor for errors. Confirm email deliverability with real inboxes (Gmail, Outlook, iCloud). |
 
 ---
 

@@ -30,6 +30,42 @@ Format per entry:
 
 ---
 
+## 2026-05-04 - Session 80
+
+**Sprint:** Sprint 7B - Tutorial and Guidance System
+**Task completed:** Build dialogue overlay, content system, implement scripts, mascot assets, plus hotfixes
+**Status:** Done (4 tasks)
+
+### Changes made
+- `public/images/mascot/mascot-neutral.png`, `mascot-encouraging.png`, `mascot-thinking.png`: Three mascot pose PNGs generated via ChatGPT, split and placed in project
+- `components/game/dialogue-overlay.tsx`: Dialogue card component. Game-window-style cream card, mascot bottom-left, white speech bubble right side. Typewriter at 50ms/char, continuous message flow with 400ms pause. Skip (sand press-in) and Got it (green press-in) buttons. Fixed height 340px, scrollable bubble with hidden scrollbar (`scrollbar-gutter: stable`). Escape to dismiss
+- `components/game/__tests__/dialogue-overlay.test.tsx`: 10 tests covering typewriter timing, continuous flow, skip, dismiss, mascot poses, empty guard, Escape key
+- `data/tutorial/dialogue-scripts.ts`: All dialogue scripts keyed by trigger ID (kana intro, settings, 3 kana modes, 3 kotoba modes, unlock milestone). Each mode nudges player toward other modes
+- `hooks/useDialogueSeen.ts`: localStorage-based tracking with `useSyncExternalStore` (SSR-safe). Same pattern as dojo help-card
+- `components/layout/practice-client.tsx`: Chained dialogue flow. Kana: intro then settings then mode-specific. Kotoba: mode-specific only. Key prop forces remount between dialogues. Mode switch triggers unseen mode dialogue
+- `components/layout/guest-banner.tsx`: Banner text updated to "Sign up to save your progress". 60-second delay before appearing so it does not clash with tutorial dialogue
+- `components/layout/__tests__/guest-banner.test.tsx`: Updated for new copy and 60-second delay (6 tests)
+- `stores/mastery.store.ts`, `stores/onboarding.store.ts`, `stores/word-mastery.store.ts`: Reverted broken sessionStorage change back to localStorage (default)
+- `engine/mastery.ts`: Added gold heat class for words at KOTOBA_MASTERY_THRESHOLD
+- `LangTap_Sprints.md`: Sprint 11 expanded with SMTP/domain auth, onboarding email sequence, Stripe hosted checkout. Guest trial cap (15m) task added to Sprint 7B. Rate limiting task removed (no public API routes)
+
+### Tests
+- `components/game/__tests__/dialogue-overlay.test.tsx`: 10 tests, all pass
+- `components/layout/__tests__/guest-banner.test.tsx`: 6 tests, all pass
+- Full suite: 810 tests, 0 failures
+
+### Next task
+Build tutorial trial round / Build inline kana learning phase / Build guest trial cap (15m)
+
+### Notes
+- sessionStorage experiment broke the app (animation, onboarding, progress all failed). Root cause: stores use `skipHydration: true` and rehydrate from empty sessionStorage. Reverted to localStorage. Stale browser data required manual clear
+- Stripe approach changed: using hosted Checkout Sessions (prebuilt page) instead of custom webhook handler. Simplifies PCI compliance and webhook security
+- Guest banner delayed 60 seconds to avoid clashing with tutorial dialogue on first visit
+- Dialogue flow order: intro then settings then mode-specific (not intro then mode then settings as initially assumed)
+- Test suite found that `userEvent.click()` deadlocks with `vi.useFakeTimers()` when the component has active intervals. Solved by using `fireEvent.click()` for those cases
+
+---
+
 ## [2026-05-01] - Session 79
 
 **Sprint:** Sprint 6 - Input Modes (Kana + Kotoba)
