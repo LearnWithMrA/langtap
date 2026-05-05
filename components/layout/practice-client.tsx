@@ -38,6 +38,7 @@ import { useKotobaTrialSession } from '@/hooks/useKotobaTrialSession'
 import { useDialogueSeen } from '@/hooks/useDialogueSeen'
 import { useAuth } from '@/hooks/useAuth'
 import { useGuestUsage } from '@/hooks/useGuestUsage'
+import { useStuckLoadingWarning } from '@/hooks/useStuckLoadingWarning'
 import { useSettingsStore } from '@/stores/settings.store'
 import { useAuthModalStore } from '@/stores/auth-modal.store'
 import { DIALOGUE_SCRIPTS } from '@/data/tutorial/dialogue-scripts'
@@ -452,8 +453,10 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
 // -- Exported wrapper (cap gate before hooks) ──
 
 export function PracticeClient({ gameType = 'kana' }: { gameType?: GameType }): ReactNode {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isLoading: authLoading } = useAuth()
   const { isLoading: usageLoading, isOverCap } = useGuestUsage()
+
+  useStuckLoadingWarning({ authLoading, usageLoading }, 'PracticeClient')
 
   if (isAuthenticated) return <ActivePracticeClient gameType={gameType} />
   if (!usageLoading && isOverCap) return <CappedPracticeShell />
