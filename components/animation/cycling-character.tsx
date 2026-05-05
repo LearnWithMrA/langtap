@@ -55,6 +55,7 @@ export function CyclingCharacter({
 }: CyclingCharacterProps): React.ReactElement {
   const [frameIndex, setFrameIndex] = useState(0)
   const [allLoaded, setAllLoaded] = useState(framesLoadedOnce)
+  const [remainingMounted, setRemainingMounted] = useState(framesLoadedOnce)
   const loadedCount = useRef(0)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const calledRef = useRef(false)
@@ -65,6 +66,21 @@ export function CyclingCharacter({
       onAllFramesLoaded?.()
     }
   }, [onAllFramesLoaded])
+
+  useEffect(() => {
+    if (remainingMounted) return
+    const idle =
+      typeof requestIdleCallback === 'function'
+        ? requestIdleCallback(() => setRemainingMounted(true))
+        : setTimeout(() => setRemainingMounted(true), 200)
+    return (): void => {
+      if (typeof cancelIdleCallback === 'function' && typeof idle === 'number') {
+        cancelIdleCallback(idle)
+      } else {
+        clearTimeout(idle as ReturnType<typeof setTimeout>)
+      }
+    }
+  }, [remainingMounted])
 
   const handleFrameLoad = useCallback((): void => {
     loadedCount.current += 1
@@ -102,24 +118,36 @@ export function CyclingCharacter({
     <div
       aria-hidden="true"
       className="relative pointer-events-none select-none w-[max(37vw,300px)] aspect-[400/380]"
+      data-testid="cycling-character"
     >
-      {FRAME_PATHS.map((src, i) => (
-        <Image
-          key={src}
-          src={src}
-          alt=""
-          width={400}
-          height={380}
-          priority={i === 0}
-          loading={i === 0 ? undefined : 'eager'}
-          unoptimized
-          onLoad={handleFrameLoad}
-          className={[
-            'absolute inset-0 h-full w-full object-contain',
-            i === frameIndex ? 'opacity-100' : 'opacity-0',
-          ].join(' ')}
-        />
-      ))}
+      <Image
+        src={FRAME_PATHS[0]}
+        alt=""
+        width={400}
+        height={380}
+        priority
+        onLoad={handleFrameLoad}
+        className={[
+          'absolute inset-0 h-full w-full object-contain',
+          frameIndex === 0 ? 'opacity-100' : 'opacity-0',
+        ].join(' ')}
+      />
+      {remainingMounted &&
+        FRAME_PATHS.slice(1).map((src, i) => (
+          <Image
+            key={src}
+            src={src}
+            alt=""
+            width={400}
+            height={380}
+            loading="eager"
+            onLoad={handleFrameLoad}
+            className={[
+              'absolute inset-0 h-full w-full object-contain',
+              i + 1 === frameIndex ? 'opacity-100' : 'opacity-0',
+            ].join(' ')}
+          />
+        ))}
     </div>
   )
 }

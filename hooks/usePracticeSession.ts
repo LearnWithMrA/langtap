@@ -19,7 +19,7 @@ import { getPracticeAvailableIds, getWordEligibleIds } from '@/engine/practice-e
 import { MIN_ELIGIBLE_WORDS_FOR_MIXING } from '@/engine/constants'
 import { KANA_CHARACTERS, getCharacterById } from '@/data/kana/characters'
 import { PROGRESSION_GROUPS, UNLOCK_STEPS } from '@/data/kana/progression-groups'
-import { WORD_BANK } from '@/data/words'
+import { loadWordBank, getWordBankSync } from '@/data/words/word-bank-loader'
 import { useMasteryStore } from '@/stores/mastery.store'
 import { useCounterStore } from '@/stores/counter.store'
 import { useSessionStore } from '@/stores/session.store'
@@ -137,10 +137,25 @@ function buildPracticePromptFromKana(
 
 export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePracticeSessionReturn {
   const initRef = useRef(false)
+  const [wordBankData, setWordBankData] = useState<WordBankEntry[] | null>(() =>
+    getWordBankSync(preferredLevel),
+  )
+
+  useEffect(() => {
+    if (wordBankData) return
+    let mounted = true
+    loadWordBank(preferredLevel).then((words) => {
+      if (mounted) setWordBankData(words)
+    })
+    return (): void => {
+      mounted = false
+    }
+  }, [preferredLevel, wordBankData])
 
   const [{ prompt, isEmpty }] = useState(() => {
     const { bootstrapped } = useUnlockStore.getState()
-    if (!bootstrapped) {
+    const cachedBank = getWordBankSync(preferredLevel)
+    if (!bootstrapped || !cachedBank) {
       return { prompt: null as PracticePrompt | null, isEmpty: true }
     }
     const s = useMasteryStore.getState().scores
@@ -152,10 +167,9 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
       return { prompt: null as PracticePrompt | null, isEmpty: true }
     }
     const cwm = buildCharactersWithMastery(s)
-    const wordBank = WORD_BANK[preferredLevel]
     const result = selectNextKanaPrompt(
       cwm,
-      wordBank,
+      cachedBank,
       {},
       practiceIds,
       wordEligibleIds,
@@ -212,14 +226,14 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
 
   const selectNext = useCallback(
     (currentCounters: Record<string, number>): void => {
+      if (!wordBankData) return
       const cwm = buildCharactersWithMastery(scores)
-      const wordBank = WORD_BANK[preferredLevel]
       const manual = manualSet.current
       const practiceIds = practiceIdsRef.current
       const wordEligibleIds = getWordEligibleIds(learningScores, manual)
       const result = selectNextKanaPrompt(
         cwm,
-        wordBank,
+        wordBankData,
         currentCounters,
         practiceIds,
         wordEligibleIds,
@@ -240,12 +254,12 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
       setPrompt(built)
       setIsEmpty(!built)
     },
-    [scores, learningScores, preferredLevel, bulkLoadCounters],
+    [scores, learningScores, preferredLevel, bulkLoadCounters, wordBankData],
   )
 
-  // Fallback: if bootstrap wasn't ready at init time, select once it is
+  // Fallback: if bootstrap or word bank wasn't ready at init time, select once both are
   useEffect(() => {
-    if (!bootstrapped || initRef.current) return
+    if (!bootstrapped || !wordBankData || initRef.current) return
     initRef.current = true
     startSession()
     resetAllCounters()
@@ -264,10 +278,9 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
     }
     const wordEligibleIds = getWordEligibleIds(learningScores, manual)
     const cwm = buildCharactersWithMastery(scores)
-    const wordBank = WORD_BANK[preferredLevel]
     const result = selectNextKanaPrompt(
       cwm,
-      wordBank,
+      wordBankData,
       {},
       practiceIds,
       wordEligibleIds,
@@ -286,6 +299,7 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
     setIsEmpty(!built)
   }, [
     bootstrapped,
+    wordBankData,
     scores,
     learningScores,
     startSession,
@@ -332,7 +346,7 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
 
   return {
     prompt: currentPrompt,
-    isLoading: !bootstrapped,
+    isLoading: !bootstrapped || !wordBankData,
     isEmpty: currentIsEmpty,
     practiceIds: practiceIdsRef.current,
     handleWordComplete,

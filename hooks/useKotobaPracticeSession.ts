@@ -15,8 +15,12 @@ import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { selectNextKotobaWord, generateKotobaDistractors } from '@/engine/kotoba-selection'
 import { getUnlockedKotobaWordIds } from '@/engine/kotoba-progression'
 import { getCharacterById } from '@/data/kana/characters'
-import { WORD_BANK } from '@/data/words'
-import { N5_LEVELS, N4_LEVELS, N3_LEVELS, N2_LEVELS, N1_LEVELS } from '@/data/words/kotoba-levels'
+import {
+  loadWordBank,
+  getWordBankSync,
+  loadKotobaLevels,
+  getKotobaLevelsSync,
+} from '@/data/words/word-bank-loader'
 import type { KotobaLevel } from '@/data/words/kotoba-levels'
 import { useWordMasteryStore } from '@/stores/word-mastery.store'
 import { useCounterStore } from '@/stores/counter.store'
@@ -25,14 +29,6 @@ import type { WordBankEntry, WordCounterMap } from '@/types/word.types'
 import type { JlptLevel } from '@/types/user.types'
 
 // ── Constants ────────────────────────────────
-
-const KOTOBA_LEVELS: Record<JlptLevel, readonly KotobaLevel[]> = {
-  N5: N5_LEVELS,
-  N4: N4_LEVELS,
-  N3: N3_LEVELS,
-  N2: N2_LEVELS,
-  N1: N1_LEVELS,
-}
 
 const SOKUON_IDS = new Set(['h-sokuon', 'k-sokuon'])
 const LONGVOWEL_ID = 'k-longvowel'
@@ -102,16 +98,39 @@ function buildKotobaPrompt(word: WordBankEntry): KotobaPrompt | null {
 export function useKotobaPracticeSession(jlptLevel: JlptLevel = 'N5'): UseKotobaPracticeReturn {
   const initRef = useRef(false)
 
-  const levels = KOTOBA_LEVELS[jlptLevel]
-  const wordBank = WORD_BANK[jlptLevel]
+  const [wordBankData, setWordBankData] = useState<WordBankEntry[] | null>(() =>
+    getWordBankSync(jlptLevel),
+  )
+  const [levelsData, setLevelsData] = useState<readonly KotobaLevel[] | null>(() =>
+    getKotobaLevelsSync(jlptLevel),
+  )
+
+  useEffect(() => {
+    let mounted = true
+    if (!wordBankData) {
+      loadWordBank(jlptLevel).then((words) => {
+        if (mounted) setWordBankData(words)
+      })
+    }
+    if (!levelsData) {
+      loadKotobaLevels(jlptLevel).then((levels) => {
+        if (mounted) setLevelsData(levels)
+      })
+    }
+    return (): void => {
+      mounted = false
+    }
+  }, [jlptLevel, wordBankData, levelsData])
 
   const [{ prompt: initialPrompt, isEmpty: initialIsEmpty }] = useState(() => {
+    const cachedBank = getWordBankSync(jlptLevel)
+    const cachedLevels = getKotobaLevelsSync(jlptLevel)
     const { hasHydrated, scores, manuallyUnlockedWords } = useWordMasteryStore.getState()
-    if (!hasHydrated) {
+    if (!hasHydrated || !cachedBank || !cachedLevels) {
       return { prompt: null as KotobaPrompt | null, isEmpty: false }
     }
 
-    const ids = getAllWordIds(levels)
+    const ids = getAllWordIds(cachedLevels)
     const manual = new Set(manuallyUnlockedWords)
     const unlocked = getUnlockedKotobaWordIds(ids, scores, manual)
 
@@ -119,7 +138,7 @@ export function useKotobaPracticeSession(jlptLevel: JlptLevel = 'N5'): UseKotoba
       return { prompt: null as KotobaPrompt | null, isEmpty: true }
     }
 
-    const result = selectNextKotobaWord(unlocked, wordBank, scores, {})
+    const result = selectNextKotobaWord(unlocked, cachedBank, scores, {})
     if (!result) {
       return { prompt: null as KotobaPrompt | null, isEmpty: true }
     }
@@ -142,7 +161,7 @@ export function useKotobaPracticeSession(jlptLevel: JlptLevel = 'N5'): UseKotoba
   const bulkLoadCounters = useCounterStore((s) => s.bulkLoad)
   const incrementCounter = useCounterStore((s) => s.increment)
 
-  const allWordIds = useMemo(() => getAllWordIds(levels), [levels])
+  const allWordIds = useMemo(() => (levelsData ? getAllWordIds(levelsData) : []), [levelsData])
   const manualUnlockSet = useMemo(() => new Set(manualUnlocks), [manualUnlocks])
 
   const unlockedWordIds = useMemo(
@@ -152,12 +171,18 @@ export function useKotobaPracticeSession(jlptLevel: JlptLevel = 'N5'): UseKotoba
 
   const selectAndBuild = useCallback(
     (currentCounters: WordCounterMap): KotobaPrompt | null => {
-      const result = selectNextKotobaWord(unlockedWordIds, wordBank, wordScores, currentCounters)
+      if (!wordBankData) return null
+      const result = selectNextKotobaWord(
+        unlockedWordIds,
+        wordBankData,
+        wordScores,
+        currentCounters,
+      )
       if (!result) return null
       bulkLoadCounters(result.updatedCounters)
       return buildKotobaPrompt(result.word)
     },
-    [unlockedWordIds, wordBank, wordScores, bulkLoadCounters],
+    [unlockedWordIds, wordBankData, wordScores, bulkLoadCounters],
   )
 
   useEffect(() => {
@@ -194,13 +219,13 @@ export function useKotobaPracticeSession(jlptLevel: JlptLevel = 'N5'): UseKotoba
   }, [selectAndBuild, counters])
 
   const kanjiDistractors = useMemo((): string[] => {
-    if (!currentPrompt?.kanji) return []
-    return generateKotobaDistractors(currentPrompt.kanji, 3, wordBank)
-  }, [currentPrompt, wordBank])
+    if (!currentPrompt?.kanji || !wordBankData) return []
+    return generateKotobaDistractors(currentPrompt.kanji, 3, wordBankData)
+  }, [currentPrompt, wordBankData])
 
   return {
     prompt: currentPrompt,
-    isLoading: !hasHydrated,
+    isLoading: !hasHydrated || !wordBankData || !levelsData,
     isEmpty: currentIsEmpty,
     kanjiDistractors,
     recordWordComplete,

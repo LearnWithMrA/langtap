@@ -233,11 +233,11 @@ These targets are refined after each optimization task lands.
 
 | Target | Baseline (A1/A2) | Goal | Task |
 |---|---|---|---|
-| Practice first load JS | 552 kB raw | Under 200 kB raw | D2 + D3 |
-| Practice word data loaded | 1,258 kB (all JLPT) | Active level only (~89-548 kB) | D3 |
-| Practice TBT | 8,690ms | Under 1,000ms | D2 + D3 |
-| Practice Lighthouse score | 34 | 70+ | D1 + D2 + D3 |
-| Cyclist image transfer | 12 MB (14 PNGs) | Under 2 MB (WebP, deferred) | D1 |
+| Practice first load JS | 552 kB raw | Under 200 kB raw | D2 + D3 | **241 kB** (done) |
+| Practice word data loaded | 1,258 kB (all JLPT) | Active level only (~89-548 kB) | D3 | Active level only (done) |
+| Practice TBT | 8,690ms | Under 1,000ms | D2 + D3 | Pending re-measure |
+| Practice Lighthouse score | 34 | 70+ | D1 + D2 + D3 | Pending re-measure |
+| Cyclist image transfer | 12 MB (14 PNGs) | Under 2 MB (WebP, deferred) | D1 | Deferred + Next.js optimization (done) |
 | Landing page total transfer | 20.7 MB | Under 2 MB | D1 + F1 |
 | Landing page Lighthouse score | 53 | 80+ | D1 + F1 |
 | Warm home-to-practice | Pending (manual) | Under 100ms to interactive | E5 |

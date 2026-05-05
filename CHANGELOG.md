@@ -30,6 +30,41 @@ Format per entry:
 
 ---
 
+## 2026-05-05 - Session 88 (Phase D)
+
+**Sprint:** Sprint 8 - Smooth Game Loading and Navigation
+**Task completed:** D1 (cyclist asset reduction), D2 (split Kana/Kotoba surfaces), D3 (lazy-load word banks), D4 (cache headers)
+**Status:** Done
+
+### Changes made
+- `components/animation/cycling-character.tsx`: Only frame 1 renders on initial mount. Frames 2-14 mount after requestIdleCallback. Removed `unoptimized` prop to enable Next.js image optimization (WebP/AVIF conversion). Added `data-testid="cycling-character"` (D1).
+- `components/layout/practice-client.tsx`: KotobaGameWindow lazy-loaded via `next/dynamic`. Kana practice no longer imports Kotoba code or data. Replaced static import with `LazyKotobaGameWindow` (D2).
+- `data/words/word-bank-loader.ts`: New file. Lazy loader with module-level cache and request deduplication. `loadWordBank(level)` and `loadKotobaLevels(level)` use dynamic imports per JLPT level. `getWordBankSync(level)` returns cached data for synchronous access (D3).
+- `hooks/usePracticeSession.ts`: Replaced `import { WORD_BANK }` with lazy loader. Word bank loads on demand for the active JLPT level. Returns `isLoading: true` until word bank resolves. Cache hit on warm navigation gives synchronous prompt selection (D3).
+- `hooks/useKotobaPracticeSession.ts`: Same lazy loading pattern for both word bank and kotoba levels. Removed static imports of all 5 JLPT level arrays (D3).
+- `vercel.json`: Added immutable cache headers for mascot images (D4).
+- `docs/PERFORMANCE.md`: Updated optimization targets with post-D results.
+- `LangTap_Sprints.md`: D1, D2, D3, D4 marked Done.
+
+### Tests
+- 877 tests passing, 0 failures
+
+### Bundle impact
+- Practice first load JS: **552 kB to 241 kB** (56% reduction)
+- Practice route JS: **278 kB to 19.9 kB** (93% reduction)
+- Word bank data: loaded per JLPT level on demand instead of all 1.26 MB eagerly
+- Cyclist frames: deferred 13 of 14 frames to idle time, Next.js serves WebP
+
+### Next task
+Phase E: Route architecture and navigation smoothness
+
+### Notes
+- D3 is the biggest single win. The N1 word bank (548 kB, 1.8s long task) no longer loads on the Kana practice path at all, and only loads for Kotoba when the user is at N1 level.
+- D1 keeps source PNGs as-is but removes `unoptimized` so Next.js Image optimizer serves WebP/AVIF. Frame 1 loads with priority; frames 2-14 deferred to requestIdleCallback.
+- D4 is minimal since Next.js already handles `_next/static/chunks` caching. Added mascot images to vercel.json immutable cache.
+
+---
+
 ## 2026-05-05 - Session 88 (Phase C)
 
 **Sprint:** Sprint 8 - Smooth Game Loading and Navigation

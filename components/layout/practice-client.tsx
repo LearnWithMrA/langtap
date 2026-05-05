@@ -18,11 +18,19 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useSearchParams } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { useReducedMotion } from 'motion/react'
 import { LandscapeBackground } from '@/components/layout/landscape-background'
 import { CyclingCharacter } from '@/components/animation/cycling-character'
 import { GameWindow } from '@/components/game/game-window'
-import { KotobaGameWindow } from '@/components/game/kotoba-game-window'
+
+const LazyKotobaGameWindow = dynamic(
+  () =>
+    import('@/components/game/kotoba-game-window').then((mod) => ({
+      default: mod.KotobaGameWindow,
+    })),
+  { loading: () => null },
+)
 import { DistanceCounter } from '@/components/game/distance-counter'
 import { AudioPlayer } from '@/components/audio/audio-player'
 import { DialogueOverlay } from '@/components/game/dialogue-overlay'
@@ -375,7 +383,7 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
           <span className="text-base font-bold text-[#3a6a50] tracking-wider">Trial</span>
         </GameWindow>
       ) : showKotobaTrial && !kotobaTrialSession.isComplete ? (
-        <KotobaGameWindow
+        <LazyKotobaGameWindow
           key={kotobaTrialSession.prompt?.id ?? 'kotoba-trial'}
           mode={mode}
           kotobaInput={kotobaInput}
@@ -384,7 +392,7 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
         >
           <ModeDropdown mode={mode} onModeChange={setMode} gameType="kotoba" />
           <span className="text-base font-bold text-[#4a6a8a] tracking-wider">Trial</span>
-        </KotobaGameWindow>
+        </LazyKotobaGameWindow>
       ) : gameType === 'kotoba' ? (
         <>
           {showKotobaBanner && (
@@ -400,14 +408,14 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
               to save your progress. :)
             </PracticeBanner>
           )}
-          <KotobaGameWindow
+          <LazyKotobaGameWindow
             mode={mode}
             kotobaInput={kotobaInput}
             onCharacterCorrect={handleCharacterCorrect}
           >
             <ModeDropdown mode={mode} onModeChange={setMode} gameType="kotoba" />
             <DistanceCounter value={counters[mode]} />
-          </KotobaGameWindow>
+          </LazyKotobaGameWindow>
         </>
       ) : (
         <>
