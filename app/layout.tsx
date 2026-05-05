@@ -8,12 +8,15 @@
 
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
-import { Zen_Maru_Gothic } from 'next/font/google'
+import localFont from 'next/font/local'
 import './globals.css'
 
-const zenMaruGothic = Zen_Maru_Gothic({
-  weight: ['300', '400', '500', '700', '900'],
-  subsets: ['latin'],
+const zenMaruGothic = localFont({
+  src: [
+    { path: '../public/fonts/zen-maru-400.woff2', weight: '400', style: 'normal' },
+    { path: '../public/fonts/zen-maru-500.woff2', weight: '500', style: 'normal' },
+    { path: '../public/fonts/zen-maru-700.woff2', weight: '700', style: 'normal' },
+  ],
   variable: '--font-zen-maru',
   display: 'swap',
 })

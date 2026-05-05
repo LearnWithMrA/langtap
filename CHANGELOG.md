@@ -30,6 +30,49 @@ Format per entry:
 
 ---
 
+## 2026-05-05 - Session 90
+
+**Sprint:** Sprint 8 - Smooth Game Loading and Navigation
+**Task completed:** G1/G2 verification + font subsetting fix
+**Status:** Done
+
+### Changes made
+- `app/layout.tsx`: Switched from `next/font/google` (Zen_Maru_Gothic with 5 weights, 477 subset files) to `next/font/local` with 3 self-hosted subsetted woff2 files. Dropped unused weights 300 and 900.
+- `public/fonts/zen-maru-400.woff2`: Custom subset (39 kB) containing hiragana, katakana, Latin, and CJK punctuation only.
+- `public/fonts/zen-maru-500.woff2`: Same subset, weight 500 (39 kB).
+- `public/fonts/zen-maru-700.woff2`: Same subset, weight 700 (40 kB).
+
+### G1 Results (Production bundle)
+| Route | Baseline (A1) | Post-Sprint 8 | Change |
+|---|---|---|---|
+| `/practice/kana` | 552 kB | 188 kB | -66% |
+| `/home` | 169 kB | 117 kB | -31% |
+| `/` (landing) | 237 kB | 238 kB | flat |
+| Warm home->practice | full remount | 60 kB prefetched | shared layout |
+
+### G2/G3 Results (Lighthouse, production build, local Supabase)
+| Metric | Before font fix | After font fix |
+|---|---|---|
+| FCP | 2.0s | 1.0s |
+| LCP | 55-60s | 3.9-4.1s |
+| Speed Index | 2.4s | 2.1s |
+| CLS | 0 | 0 |
+| Network requests | 514 | 39-79 |
+| Font files | 477 (~MB total) | 3 (119 kB total) |
+| Accessibility | 95-96 | 95-96 |
+| Best Practices | 96-100 | 96-100 |
+
+### Tests
+- Full suite: 892 passed, 0 failed.
+
+### Notes
+- The 477 font files were the primary cause of slow first-load. Zen Maru Gothic's full CJK set splits into ~95 unicode-range subsets per weight. With 5 weights loaded, every page referenced 477 font files.
+- Custom subset includes: U+0000-00FF (Latin), U+2000-206F (punctuation), U+3000-303F (CJK punctuation), U+3040-309F (hiragana), U+30A0-30FF (katakana), U+FF00-FF9F (fullwidth forms). Total ~370 glyphs per weight.
+- Remaining TBT (1.6s) is Supabase client init and game engine evaluation. Not blocking visual render.
+- Performance score (61-63) is capped by TBT, not by font/network. Further TBT reduction would require lazy-loading Supabase client.
+
+---
+
 ## 2026-05-05 - Session 89
 
 **Sprint:** Sprint 8 - Smooth Game Loading and Navigation
