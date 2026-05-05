@@ -91,8 +91,8 @@ depend on data it does not use.
 
 Examples in this codebase:
 - Zustand stores are split by domain: `mastery.store.ts`, `settings.store.ts`,
-  `onboarding.store.ts`. A component that needs settings does not pull in mastery
-  state.
+  `onboarding.store.ts`, `gameplay.store.ts`, `user.store.ts`, `guest-usage.store.ts`.
+  A component that needs settings does not pull in mastery state.
 - Component props are narrow. `Avatar` takes `username` and `size`, not the full
   `LeaderboardEntry`.
 

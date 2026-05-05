@@ -26,15 +26,15 @@ import { syncManualUnlocks } from '@/services/unlock.service'
 import { useSettingsStore } from '@/stores/settings.store'
 import { useWordMasteryStore } from '@/stores/word-mastery.store'
 import { buildAutoMasteryScores } from '@/engine/kotoba-progression'
-import { loadWordBank } from '@/data/words/word-bank-loader'
+import { preloadPracticeDataForLevel, getWordBankSync } from '@/data/words/word-bank-loader'
 import { ensureGuestSession } from '@/services/guest-usage.service'
-import { N5_LEVELS, N4_LEVELS, N3_LEVELS, N2_LEVELS, N1_LEVELS } from '@/data/words/kotoba-levels'
+import type { JlptLevel } from '@/types/user.types'
 
 // -- Component ---------------------------------------------------
 
 export default function OnboardingStep3Page(): ReactNode {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, isLoading: authLoading } = useAuth()
   const completeOnboarding = useOnboardingStore((s: OnboardingStore) => s.completeOnboarding)
   const onboardingComplete = useOnboardingStore((s: OnboardingStore) => s.onboardingComplete)
   const inputMode = useOnboardingStore((s: OnboardingStore) => s.inputMode)
@@ -63,11 +63,9 @@ export default function OnboardingStep3Page(): ReactNode {
     if (!selectedMode) return
     setSaving(true)
 
-    // Warm practice resources during the save pause so the
-    // practice screen and tutorial load without a gap.
     router.prefetch('/practice/kana')
-    void loadWordBank(jlptLevel)
-    void ensureGuestSession()
+    if (!authLoading && !user) void ensureGuestSession()
+    await preloadPracticeDataForLevel(jlptLevel)
 
     if (user) {
       await updateProfile(user.id, {
@@ -81,13 +79,15 @@ export default function OnboardingStep3Page(): ReactNode {
       }
     }
 
-    const levelWordIds: Record<string, readonly string[]> = {
-      N5: N5_LEVELS.flatMap((l) => [...l.wordIds]),
-      N4: N4_LEVELS.flatMap((l) => [...l.wordIds]),
-      N3: N3_LEVELS.flatMap((l) => [...l.wordIds]),
-      N2: N2_LEVELS.flatMap((l) => [...l.wordIds]),
-      N1: N1_LEVELS.flatMap((l) => [...l.wordIds]),
+    const allLevels: JlptLevel[] = ['N5', 'N4', 'N3', 'N2', 'N1']
+    const levelWordIds: Record<string, readonly string[]> = {}
+    for (const level of allLevels) {
+      const bank = getWordBankSync(level)
+      if (bank) {
+        levelWordIds[level] = bank.map((w) => w.id)
+      }
     }
+
     const autoMastery = buildAutoMasteryScores(jlptLevel, levelWordIds)
     if (Object.keys(autoMastery).length > 0) {
       useWordMasteryStore.getState().bulkLoad(autoMastery)

@@ -438,6 +438,7 @@ export function GameWindow({
 
   return (
     <div
+      data-testid="practice-game-ready"
       className={`${cardClassName ?? 'bg-[#faf5e4] shadow-[0_6px_0_0_#d4c9b0]'} rounded-2xl w-full max-w-md mx-auto p-6 md:p-8`}
     >
       {(topLeft || topRight) && (

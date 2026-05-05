@@ -107,20 +107,16 @@ export function useKotobaPracticeSession(jlptLevel: JlptLevel = 'N5'): UseKotoba
 
   useEffect(() => {
     let mounted = true
-    if (!wordBankData) {
-      loadWordBank(jlptLevel).then((words) => {
-        if (mounted) setWordBankData(words)
-      })
-    }
-    if (!levelsData) {
-      loadKotobaLevels(jlptLevel).then((levels) => {
-        if (mounted) setLevelsData(levels)
-      })
-    }
+    loadWordBank(jlptLevel).then((words) => {
+      if (mounted) setWordBankData(words)
+    })
+    loadKotobaLevels(jlptLevel).then((levels) => {
+      if (mounted) setLevelsData(levels)
+    })
     return (): void => {
       mounted = false
     }
-  }, [jlptLevel, wordBankData, levelsData])
+  }, [jlptLevel])
 
   const [{ prompt: initialPrompt, isEmpty: initialIsEmpty }] = useState(() => {
     const cachedBank = getWordBankSync(jlptLevel)

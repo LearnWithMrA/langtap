@@ -185,6 +185,7 @@ export function AppTopBar(): ReactNode {
           <div className="flex items-center gap-1">
             <button
               type="button"
+              data-testid="settings-button"
               onClick={(): void => {
                 playSound('ui-nav-click')
                 openSettings()
@@ -268,6 +269,7 @@ export function AppTopBar(): ReactNode {
           </Link>
           <Link
             href="/dojo/kana"
+            data-testid="nav-dojo-kana"
             className={[
               ICON_LINK,
               isKanaDojo ? 'text-sage-500 font-bold' : 'text-warm-800 hover:text-sage-400',
@@ -278,6 +280,7 @@ export function AppTopBar(): ReactNode {
           </Link>
           <Link
             href="/dojo/kotoba"
+            data-testid="nav-dojo-kotoba"
             className={[
               ICON_LINK,
               isKotobaDojo ? 'text-sage-500 font-bold' : 'text-warm-800 hover:text-sage-400',

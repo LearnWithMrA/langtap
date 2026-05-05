@@ -135,6 +135,7 @@ export function TypeInput({
     <input
       ref={inputRef}
       type="text"
+      data-testid="practice-input"
       value={value}
       onChange={handleChange}
       disabled={disabled}

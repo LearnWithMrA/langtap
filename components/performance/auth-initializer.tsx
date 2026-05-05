@@ -7,7 +7,8 @@
 //          non-blocking background operation. Sets up one
 //          onAuthStateChange subscription. All useAuth consumers
 //          read from the store without making their own Supabase
-//          calls.
+//          calls. Profile writes are guarded by user ID to prevent
+//          stale responses from overwriting newer auth state.
 // Depends on: services/auth.service.ts, services/profile.service.ts,
 //             services/supabase-browser.ts, stores/user.store.ts
 // ─────────────────────────────────────────────
@@ -26,6 +27,7 @@ import { useUserStore } from '@/stores/user.store'
 export function AuthInitializer(): ReactNode {
   useEffect(() => {
     let mounted = true
+    let activeUserId: string | null = null
 
     async function init(): Promise<void> {
       const { user: authUser } = await getUser()
@@ -33,11 +35,13 @@ export function AuthInitializer(): ReactNode {
       if (!mounted) return
 
       if (authUser) {
+        activeUserId = authUser.id
         useUserStore.getState().setUser({
           ...authUser,
           isAnonymous: authUser.isAnonymous ?? false,
         })
       } else {
+        activeUserId = null
         useUserStore.getState().clear()
       }
 
@@ -45,8 +49,12 @@ export function AuthInitializer(): ReactNode {
 
       if (authUser) {
         const profileResult = await loadProfile(authUser.id)
-        if (mounted && profileResult.ok) {
-          useUserStore.getState().setProfile(profileResult.data)
+        if (mounted && activeUserId === authUser.id) {
+          if (profileResult.ok) {
+            useUserStore.getState().setProfile(profileResult.data)
+          } else {
+            useUserStore.getState().setProfileLoaded(true)
+          }
         }
       }
     }
@@ -60,19 +68,26 @@ export function AuthInitializer(): ReactNode {
       if (!mounted) return
 
       if (session?.user) {
-        const authUser = {
-          id: session.user.id,
+        const userId = session.user.id
+        activeUserId = userId
+        useUserStore.getState().setProfile(null)
+        useUserStore.getState().setUser({
+          id: userId,
           email: session.user.email,
           isAnonymous: session.user.is_anonymous ?? false,
-        }
-        useUserStore.getState().setUser(authUser)
-        loadProfile(session.user.id).then((result) => {
+        })
+        loadProfile(userId).then((result) => {
           if (!mounted) return
-          if (result.ok) {
-            useUserStore.getState().setProfile(result.data)
+          if (activeUserId === userId) {
+            if (result.ok) {
+              useUserStore.getState().setProfile(result.data)
+            } else {
+              useUserStore.getState().setProfileLoaded(true)
+            }
           }
         })
       } else {
+        activeUserId = null
         useUserStore.getState().clear()
       }
     })

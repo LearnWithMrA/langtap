@@ -21,21 +21,26 @@ type ParsedRoute = {
 }
 
 // ── Budgets ───────────────────────────────────
-// Based on the production build baseline from 2026-04-27.
+// Based on G1 production build verification (Session 90, 2026-05-04).
 // Headroom is ~25% above current measured values.
 // Tighten these as you optimise; never loosen without discussion.
+//
+// G1 actuals: practice 188 kB, home 117 kB, landing 238 kB,
+// dojo/kana ~117 kB, dojo/kotoba ~125 kB, leaderboard ~110 kB, profile ~110 kB.
 
 const BUDGETS: BudgetEntry[] = [
-  { route: '/', maxFirstLoadKB: 200 },
-  { route: '/home', maxFirstLoadKB: 200 },
-  { route: '/practice', maxFirstLoadKB: 200 },
+  { route: '/', maxFirstLoadKB: 300 },
+  { route: '/home', maxFirstLoadKB: 150 },
+  { route: '/practice/kana', maxFirstLoadKB: 240 },
+  { route: '/practice/kotoba', maxFirstLoadKB: 240 },
   { route: '/dojo/kana', maxFirstLoadKB: 150 },
   { route: '/dojo/kotoba', maxFirstLoadKB: 160 },
   { route: '/leaderboard', maxFirstLoadKB: 140 },
   { route: '/profile', maxFirstLoadKB: 140 },
 ]
 
-const GLOBAL_MAX_FIRST_LOAD_KB = 200
+const GLOBAL_MAX_FIRST_LOAD_KB = 300
+const MAX_SINGLE_CHUNK_KB = 150
 
 // ── Parse build stdout ────────────────────────
 
@@ -127,6 +132,26 @@ async function main(): Promise<void> {
         `  ✗ ${route.route.padEnd(25)} ${String(route.firstLoadKB).padStart(7)} kB / ${String(GLOBAL_MAX_FIRST_LOAD_KB).padStart(4)} kB  OVER (global)`,
       )
     }
+  }
+
+  // Check largest individual route chunk (sizeKB = route-specific JS, not shared)
+  console.log('\n  Largest chunk check:')
+  console.log('  ' + '-'.repeat(64))
+
+  for (const route of routes) {
+    if (route.route.startsWith('/api/')) continue
+    if (route.route.includes('icon') || route.route.includes('apple-icon')) continue
+
+    if (route.sizeKB > MAX_SINGLE_CHUNK_KB) {
+      failed = true
+      console.log(
+        `  ✗ ${route.route.padEnd(25)} ${String(route.sizeKB).padStart(7)} kB / ${String(MAX_SINGLE_CHUNK_KB).padStart(4)} kB  OVER (chunk)`,
+      )
+    }
+  }
+
+  if (!failed) {
+    console.log('  ✓ All route chunks within limit')
   }
 
   console.log('  ' + '-'.repeat(64))

@@ -42,7 +42,7 @@ const FRAME_INTERVAL_MS: Record<SpeedLevel, number> = {
 
 const FRAME_PATHS: string[] = Array.from(
   { length: FRAME_COUNT },
-  (_, i) => `/images/cyclist/${String(i + 1).padStart(2, '0')}.png`,
+  (_, i) => `/images/cyclist/${String(i + 1).padStart(2, '0')}-v1.webp`,
 )
 
 let framesLoadedOnce = false

@@ -26,6 +26,7 @@ export function PracticeCta({ mode }: { mode: string }): ReactNode {
     <div>
       <Link
         href="/practice/kana"
+        data-testid="nav-practice-kana"
         onClick={(): void => playSound('key-click')}
         aria-label="Start practising kana"
         className="block w-full bg-mint-500 text-white text-base font-bold rounded-xl py-3 shadow-[0_4px_0_0_#2e9a73] hover:brightness-105 active:translate-y-[2px] active:shadow-none transition-all duration-75 min-h-[48px] text-center"

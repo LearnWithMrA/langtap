@@ -40,3 +40,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# playwright
+/test-results/
+/playwright-report/
+tests/performance/results/
+tests/performance/results.json
+
+# lighthouse ci
+/.lighthouseci/
+
+# asset backups
+/assets-backup/

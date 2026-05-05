@@ -261,10 +261,62 @@ and `PracticeBanner` to cut off heavy import chains. Test now runs in ~300ms.
 
 ---
 
-## 7. Verification Results (G1-G4)
+## 7. Verification Results (G1-G4, Session 90-91)
 
-_To be filled after Phase G verification tasks are completed. Will contain
-post-optimization measurements compared against this baseline._
+### 7.1 Post-Optimization Route Sizes
+
+| Route | First Load JS (before) | First Load JS (after) | Change |
+|---|---|---|---|
+| `/practice/kana` | 552 kB | 188 kB | -66% |
+| `/practice/kotoba` | 552 kB | 188 kB | -66% |
+| `/home` | 169 kB | 117 kB | -31% |
+| `/` (landing) | 237 kB | 238 kB | flat |
+
+### 7.2 Post-Optimization Lighthouse (Session 90)
+
+| Metric | Before | After |
+|---|---|---|
+| FCP | 2.0s | 1.0s |
+| LCP | 55-133s | 3.9-4.1s |
+| CLS | 0 | 0 |
+| Speed Index | 2.4s | 2.1s |
+| Network requests | 514 | 39-79 |
+| Accessibility | - | 95-96 |
+| Best Practices | - | 96-100 |
+| Performance score | 34 | 61-63 (capped by Supabase TBT) |
+
+### 7.3 Asset Sizes
+
+| Asset | Before | After | Change |
+|---|---|---|---|
+| Cyclist frames | 12 MB (14 PNGs) | 1.9 MB (14 versioned WebPs) | -84% |
+| Font files | 477 files (~55 MB) | 3 files (119 kB) | -99.8% |
+| Word banks total | 1,258 kB (loaded eagerly) | ~290 kB gzip (dynamic imports, all preloaded) | Lazy loaded but fully cached |
+
+### 7.4 Budget Enforcement (G4)
+
+Route-specific budgets in `scripts/check-bundle-budget.ts`:
+- `/practice/kana`: 240 kB max first load
+- `/practice/kotoba`: 240 kB max first load
+- `/home`: 150 kB max
+- `/`: 300 kB max
+- Max single route chunk: 150 kB
+- Global max first load: 300 kB
+
+### 7.5 Automated Testing (G6)
+
+- Playwright: 28 tests (desktop + mobile), real nav clicks, CPU throttle, threshold assertions
+- Lighthouse CI: 5 URLs, 3 runs, numeric assertions (FCP, LCP, CLS, TBT, SI, resource budgets)
+- Commands: `npm run performance:smoke`, `npm run performance:trace`, `npm run lighthouse`
+
+### 7.6 Data Loading Model (Final)
+
+- Word banks (content): ALL 5 JLPT levels preloaded eagerly on app mount (~290 kB gzip total)
+- Kotoba level maps (progression): only the player's selected JLPT level loaded on demand
+- Kana practice: uses full combined word bank, soft-weighted toward preferred level
+- Kotoba practice: uses selected JLPT word bank + selected JLPT Kotoba map
+- For authenticated users: practice waits for profile before starting (no N5 guess)
+- For guests: uses onboarding store level immediately
 
 ---
 
@@ -274,5 +326,6 @@ post-optimization measurements compared against this baseline._
 |---|---|---|---|
 | 1.0 | 2026-05-05 | 88 | Initial baseline from A1: route sizes, chunk breakdown, static assets, key findings |
 | 1.1 | 2026-05-05 | 88 | A2 Lighthouse cold-load metrics, long task breakdown, optimization targets updated |
+| 1.2 | 2026-05-05 | 91 | Section 7: post-optimization verification results, budget enforcement, data loading model |
 | 1.2 | 2026-05-05 | 88 | Post-D bundle results: practice 552->188 kB, home 169->117 kB. Phase E route restructure. Blocking: game screen not rendering, needs investigation. |
 | 1.3 | 2026-05-05 | 89 | Blank game screen resolved: Strict Mode double-fire left auth/guest-usage loading gates stuck. Added `useStuckLoadingWarning` dev watchdog, visible loading card, and `test-utils/async-gate.tsx` regression pattern. |

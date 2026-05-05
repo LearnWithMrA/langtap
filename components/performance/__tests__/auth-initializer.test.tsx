@@ -57,7 +57,7 @@ vi.mock('@/services/supabase-browser', () => ({
 
 describe('AuthInitializer', () => {
   beforeEach(() => {
-    useUserStore.setState({ user: null, profile: null, isLoading: true })
+    useUserStore.setState({ user: null, profile: null, isLoading: true, isProfileLoaded: false })
     vi.clearAllMocks()
   })
 
@@ -175,5 +175,31 @@ describe('AuthInitializer', () => {
     await waitFor(() => {
       expect(useUserStore.getState().isLoading).toBe(false)
     })
+  })
+
+  it('sets isProfileLoaded true after successful profile load', async () => {
+    mockGetUser.mockResolvedValue({ user: MOCK_USER })
+    mockLoadProfile.mockResolvedValue({ ok: true, data: MOCK_PROFILE })
+
+    render(<AuthInitializer />)
+
+    await waitFor(() => {
+      expect(useUserStore.getState().isProfileLoaded).toBe(true)
+    })
+
+    expect(useUserStore.getState().profile).toEqual(MOCK_PROFILE)
+  })
+
+  it('sets isProfileLoaded true even when profile load fails', async () => {
+    mockGetUser.mockResolvedValue({ user: MOCK_USER })
+    mockLoadProfile.mockResolvedValue({ ok: false, error: 'network error' })
+
+    render(<AuthInitializer />)
+
+    await waitFor(() => {
+      expect(useUserStore.getState().isProfileLoaded).toBe(true)
+    })
+
+    expect(useUserStore.getState().profile).toBeNull()
   })
 })

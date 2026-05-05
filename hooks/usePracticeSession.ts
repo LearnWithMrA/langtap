@@ -19,7 +19,7 @@ import { getPracticeAvailableIds, getWordEligibleIds } from '@/engine/practice-e
 import { MIN_ELIGIBLE_WORDS_FOR_MIXING } from '@/engine/constants'
 import { KANA_CHARACTERS, getCharacterById } from '@/data/kana/characters'
 import { PROGRESSION_GROUPS, UNLOCK_STEPS } from '@/data/kana/progression-groups'
-import { loadWordBank, getWordBankSync } from '@/data/words/word-bank-loader'
+import { preloadAllWordBanks, getAllWordBanksSync } from '@/data/words/word-bank-loader'
 import { useMasteryStore } from '@/stores/mastery.store'
 import { useCounterStore } from '@/stores/counter.store'
 import { useSessionStore } from '@/stores/session.store'
@@ -138,23 +138,22 @@ function buildPracticePromptFromKana(
 export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePracticeSessionReturn {
   const initRef = useRef(false)
   const [wordBankData, setWordBankData] = useState<WordBankEntry[] | null>(() =>
-    getWordBankSync(preferredLevel),
+    getAllWordBanksSync(),
   )
 
   useEffect(() => {
-    if (wordBankData) return
     let mounted = true
-    loadWordBank(preferredLevel).then((words) => {
-      if (mounted) setWordBankData(words)
+    preloadAllWordBanks().then(() => {
+      if (mounted) setWordBankData(getAllWordBanksSync())
     })
     return (): void => {
       mounted = false
     }
-  }, [preferredLevel, wordBankData])
+  }, [])
 
   const [{ prompt, isEmpty }] = useState(() => {
     const { bootstrapped } = useUnlockStore.getState()
-    const cachedBank = getWordBankSync(preferredLevel)
+    const cachedBank = getAllWordBanksSync()
     if (!bootstrapped || !cachedBank) {
       return { prompt: null as PracticePrompt | null, isEmpty: true }
     }

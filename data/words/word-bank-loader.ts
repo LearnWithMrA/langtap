@@ -1,10 +1,12 @@
 // ─────────────────────────────────────────────
 // File: data/words/word-bank-loader.ts
-// Purpose: Lazy loader for word bank data. Loads only the active
-//          JLPT level on demand, caches resolved data module-wide,
-//          and dedupes concurrent requests for the same level.
-//          Route code should use this instead of importing WORD_BANK
-//          or ALL_WORDS directly.
+// Purpose: Lazy loader for word bank and kotoba level data.
+//          Word banks are content (~290 KB gzip total for all 5
+//          levels). Kotoba level maps are progression structure
+//          (only the selected level needed at a time).
+//          Provides preloadAllWordBanks() for eager warming and
+//          preloadPracticeDataForLevel(level) for level-specific
+//          Kotoba map loading.
 // Depends on: data/words/n5.ts, n4.ts, n3.ts, n2.ts, n1.ts,
 //             data/words/kotoba-levels/
 // ─────────────────────────────────────────────
@@ -12,6 +14,10 @@
 import type { WordBankEntry } from '@/types/word.types'
 import type { JlptLevel } from '@/types/user.types'
 import type { KotobaLevel } from '@/data/words/kotoba-levels'
+
+// ── Constants ─────────────────────────────────
+
+const ALL_LEVELS: JlptLevel[] = ['N5', 'N4', 'N3', 'N2', 'N1']
 
 // ── Cache ─────────────────────────────────────
 
@@ -43,6 +49,20 @@ export function getWordBankSync(level: JlptLevel): WordBankEntry[] | null {
   return wordBankCache.get(level) ?? null
 }
 
+export function preloadAllWordBanks(): Promise<WordBankEntry[][]> {
+  return Promise.all(ALL_LEVELS.map((level) => loadWordBank(level)))
+}
+
+export function getAllWordBanksSync(): WordBankEntry[] | null {
+  const banks: WordBankEntry[] = []
+  for (const level of ALL_LEVELS) {
+    const cached = wordBankCache.get(level)
+    if (!cached) return null
+    banks.push(...cached)
+  }
+  return banks
+}
+
 // ── Kotoba levels loader ──────────────────────
 
 export function loadKotobaLevels(level: JlptLevel): Promise<readonly KotobaLevel[]> {
@@ -64,6 +84,12 @@ export function loadKotobaLevels(level: JlptLevel): Promise<readonly KotobaLevel
 
 export function getKotobaLevelsSync(level: JlptLevel): readonly KotobaLevel[] | null {
   return kotobaLevelsCache.get(level) ?? null
+}
+
+export function preloadPracticeDataForLevel(
+  level: JlptLevel,
+): Promise<[WordBankEntry[][], readonly KotobaLevel[]]> {
+  return Promise.all([preloadAllWordBanks(), loadKotobaLevels(level)])
 }
 
 // ── Dynamic imports ───────────────────────────

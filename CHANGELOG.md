@@ -30,6 +30,59 @@ Format per entry:
 
 ---
 
+## 2026-05-05 - Session 91
+
+**Sprint:** Sprint 8 - Smooth Game Loading and Navigation
+**Task completed:** G4-G7: Budget enforcement, telemetry, Playwright suite, Codex review (3 passes)
+**Status:** Done (Sprint 8 complete)
+
+### Changes made
+- `scripts/check-bundle-budget.ts`: Route-specific budgets for `/practice/kana`, `/practice/kotoba`. Largest-chunk-size check (150 kB max).
+- `app/layout.tsx`: Added `@vercel/speed-insights` for production telemetry.
+- `playwright.config.ts`: New. Desktop + mobile (iPhone 14) projects. Production build server.
+- `tests/performance/smoke.spec.ts`: New. 10 tests: cold loads, warm nav via real link clicks, bundle leakage, settings during gameplay.
+- `tests/performance/trace.spec.ts`: New. 4 tests: CDP traces with 4x CPU throttle, TaskDuration assertions, unexpected fetch detection.
+- `lighthouserc.js`: New. Lighthouse CI config: 5 URLs, 3 runs, numeric assertions for perf/a11y/best-practices/metrics/resource sizes.
+- `tsconfig.json`: Excluded `test-utils`, `tests`, `**/__tests__` from prod build so `tsc` passes clean.
+- `components/layout/practice-client.tsx`: Cap gate fixed (blocks on authLoading, usageLoading, and isProfileLoaded for authenticated users). JLPT level resolved from profile/onboarding/fallback. Kotoba receives `jlptLevel` prop. `useGameplayStore` set on mount/unmount.
+- `components/performance/auth-initializer.tsx`: Profile writes guarded by `activeUserId`. Profile cleared before new user set. `isProfileLoaded` marked true on both success and failure.
+- `components/performance/practice-data-preloader.tsx`: All word banks preloaded eagerly. Kotoba map loaded only after player level is known (waits for profile for authenticated users).
+- `components/performance/session-prefetch.tsx`: Gameplay guard via `useGameplayStore`. Queued prefetches cancelled on cleanup. Routes spaced 100ms.
+- `components/game/kotoba-game-window.tsx`: Added `jlptLevel` prop, passes to `useKotobaPracticeSession`.
+- `hooks/usePracticeSession.ts`: Now uses full combined word bank (all levels) via `getAllWordBanksSync`/`preloadAllWordBanks`. Selection algorithm soft-weights `preferredLevel`.
+- `hooks/useKotobaPracticeSession.ts`: Reloads data when `jlptLevel` prop changes.
+- `hooks/useGameplayActive.ts`: New. Reads from `useGameplayStore`.
+- `stores/gameplay.store.ts`: New. Zustand atom set by `ActivePracticeClient`.
+- `stores/user.store.ts`: Added `isProfileLoaded` state and `setProfileLoaded` action.
+- `data/words/word-bank-loader.ts`: Added `preloadAllWordBanks()`, `getAllWordBanksSync()`, `preloadPracticeDataForLevel(level)`.
+- `app/(onboarding)/onboarding/step-3/page.tsx`: Removed static Kotoba level imports. Auto-mastery derived from word bank IDs. `ensureGuestSession` gated on `!authLoading && !user`. Calls `preloadPracticeDataForLevel` before routing.
+- `components/animation/cycling-character.tsx`: Frame paths updated to versioned WebP (`XX-v1.webp`).
+- `public/images/cyclist/`: 14 WebP files (1.9 MB total). Old PNGs moved to `assets-backup/` (gitignored).
+- `components/game/game-window.tsx`: Added `data-testid="practice-game-ready"`.
+- `components/game/type-input.tsx`: Added `data-testid="practice-input"`.
+- `components/layout/app-top-bar.tsx`: Added `data-testid="settings-button"`, `data-testid="nav-dojo-kana"`, `data-testid="nav-dojo-kotoba"`.
+- `components/dashboard/practice-cta.tsx`: Added `data-testid="nav-practice-kana"`.
+- `package.json`: Added `performance:smoke`, `performance:trace`, `performance`, `lighthouse` scripts. Added `@testing-library/dom`, `@playwright/test`, `@vercel/speed-insights`, `@lhci/cli`.
+- `.gitignore`: Added playwright results, lighthouse output, assets-backup.
+
+### Tests
+- `data/words/__tests__/word-bank-loader.test.ts`: New. 6 tests for loader APIs: preloadAll, getAllSync, preloadForLevel, deduplication.
+- `components/performance/__tests__/auth-initializer.test.tsx`: Added 2 tests: isProfileLoaded on success and on failure. Reset includes isProfileLoaded.
+- `components/game/__tests__/tutorial-system.test.tsx`: Updated cap gate tests. Added: guest resolved mounts practice, auth loading blocks practice. 14 tests total.
+- Full suite: 902 passed, 0 failed.
+
+### Next task
+Sprint 9 (next sprint on the board)
+
+### Notes
+- Three Codex staff-engineer review passes drove the architecture fixes. Key insight: word banks are content (preload all ~290 KB gzip), Kotoba level maps are progression (load only selected level on demand).
+- Kana practice now uses the full combined word bank from all 5 JLPT levels. Selection algorithm soft-weights the player's preferred level, expanding to other levels when preferred options are exhausted.
+- For authenticated users, practice waits for profile before starting. Profile load failure still unblocks practice (falls back to onboarding level).
+- `ensureGuestSession()` only fires for actual guests (not during auth loading race).
+- Cyclist assets converted from PNG (12 MB) to versioned WebP (1.9 MB). Old PNGs kept in `assets-backup/` as non-deployed backups.
+
+---
+
 ## 2026-05-05 - Session 90
 
 **Sprint:** Sprint 8 - Smooth Game Loading and Navigation

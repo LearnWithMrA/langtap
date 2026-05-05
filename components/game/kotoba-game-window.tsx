@@ -34,6 +34,7 @@ import {
   type UseKotobaPracticeReturn,
 } from '@/hooks/useKotobaPracticeSession'
 import type { KotobaPrompt } from '@/types/kotoba.types'
+import type { JlptLevel } from '@/types/user.types'
 
 // ── Constants ─────────────────────────────────
 
@@ -47,6 +48,7 @@ type KotobaInputSetting = 'readings' | 'kanji'
 type Props = {
   mode: InputMode
   kotobaInput: KotobaInputSetting
+  jlptLevel?: JlptLevel
   session?: UseKotobaPracticeReturn
   cardClassName?: string
   children?: ReactNode
@@ -64,6 +66,7 @@ function isKatakanaPrompt(word: KotobaPrompt): boolean {
 export function KotobaGameWindow({
   mode,
   kotobaInput,
+  jlptLevel,
   session: externalSession,
   cardClassName,
   children,
@@ -79,7 +82,7 @@ export function KotobaGameWindow({
 
   // ── Practice session ──────────────────────
 
-  const internalSession = useKotobaPracticeSession()
+  const internalSession = useKotobaPracticeSession(jlptLevel)
   const {
     prompt: currentWord,
     isLoading,

@@ -232,7 +232,7 @@ describe('PracticeClient cap gate', () => {
     expect(mockUseKotobaTrialSession).not.toHaveBeenCalled()
   })
 
-  it('mounts ActivePracticeClient immediately while usage is loading (no gate)', async () => {
+  it('does not mount ActivePracticeClient while usage is loading', async () => {
     mockUseAuth.mockReturnValue({
       isGuest: true,
       isLoading: false,
@@ -274,7 +274,73 @@ describe('PracticeClient cap gate', () => {
     const { PracticeClient } = await import('@/components/layout/practice-client')
     render(<PracticeClient />)
 
+    expect(mockUsePracticeSession).not.toHaveBeenCalled()
+    expect(mockUseTutorialTrial).not.toHaveBeenCalled()
+  })
+
+  it('mounts ActivePracticeClient when guest auth and usage are both resolved', async () => {
+    mockUseAuth.mockReturnValue({
+      isGuest: true,
+      isLoading: false,
+      isAuthenticated: false,
+      isAnonymous: true,
+    })
+    mockUseGuestUsage.mockReturnValue({
+      isOverCap: false,
+      isLoading: false,
+      usage: { kanaDistance: 5, kotobaDistance: 0, cappedAt: null },
+      increment: vi.fn(),
+    })
+    mockUsePracticeSession.mockReturnValue({
+      prompt: null,
+      isLoading: false,
+      isEmpty: false,
+      practiceIds: new Set(),
+      handleWordComplete: vi.fn(),
+      advanceToNext: vi.fn(),
+    })
+    mockUseTutorialTrial.mockReturnValue({
+      prompt: null,
+      isComplete: true,
+      isLoading: false,
+      isEmpty: true,
+      practiceIds: new Set(),
+      handleWordComplete: vi.fn(),
+      advanceToNext: vi.fn(),
+    })
+    mockUseKotobaTrialSession.mockReturnValue({
+      prompt: null,
+      isComplete: true,
+      isLoading: false,
+      isEmpty: true,
+      handleWordComplete: vi.fn(),
+      advanceToNext: vi.fn(),
+    })
+
+    const { PracticeClient } = await import('@/components/layout/practice-client')
+    render(<PracticeClient />)
+
     expect(mockUsePracticeSession).toHaveBeenCalled()
     expect(mockUseTutorialTrial).toHaveBeenCalled()
+  })
+
+  it('does not mount ActivePracticeClient while auth is loading', async () => {
+    mockUseAuth.mockReturnValue({
+      isGuest: false,
+      isLoading: true,
+      isAuthenticated: false,
+      isAnonymous: false,
+    })
+    mockUseGuestUsage.mockReturnValue({
+      isOverCap: false,
+      isLoading: false,
+      usage: null,
+      increment: vi.fn(),
+    })
+
+    const { PracticeClient } = await import('@/components/layout/practice-client')
+    render(<PracticeClient />)
+
+    expect(mockUsePracticeSession).not.toHaveBeenCalled()
   })
 })

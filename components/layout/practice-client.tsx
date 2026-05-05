@@ -41,6 +41,9 @@ import { useGuestUsage } from '@/hooks/useGuestUsage'
 import { useStuckLoadingWarning } from '@/hooks/useStuckLoadingWarning'
 import { useSettingsStore } from '@/stores/settings.store'
 import { useAuthModalStore } from '@/stores/auth-modal.store'
+import { useUserStore } from '@/stores/user.store'
+import { useOnboardingStore } from '@/stores/onboarding.store'
+import { useGameplayStore } from '@/stores/gameplay.store'
 import { DIALOGUE_SCRIPTS } from '@/data/tutorial/dialogue-scripts'
 import { TRIAL_ALLOWED_IDS } from '@/data/tutorial/trial-prompts'
 
@@ -168,11 +171,21 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
   const [mode, setMode] = useState<InputMode>('tap')
   const kotobaInput = useSettingsStore((s) => s.kotobaInput)
   const { counters, incrementCorrect } = usePracticeCounters()
-  const kanaSession = usePracticeSession('N5')
+  const profileLevel = useUserStore((s) => s.profile?.jlptLevel)
+  const onboardingLevel = useOnboardingStore((s) => s.jlptLevel)
+  const resolvedLevel = profileLevel ?? onboardingLevel ?? 'N5'
+  const kanaSession = usePracticeSession(resolvedLevel)
   const trialSession = useTutorialTrial()
   const kotobaTrialSession = useKotobaTrialSession()
   const { isGuest } = useAuth()
   const openSignUp = useAuthModalStore((s) => s.openSignUp)
+
+  useEffect(() => {
+    useGameplayStore.getState().setActive(true)
+    return (): void => {
+      useGameplayStore.getState().setActive(false)
+    }
+  }, [])
 
   // ── Dialogue chain ──────────────────────────
   const { hasSeen: hasSeenKanaIntro, markSeen: markKanaIntroSeen } =
@@ -388,6 +401,7 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
           <LazyKotobaGameWindow
             mode={mode}
             kotobaInput={kotobaInput}
+            jlptLevel={resolvedLevel}
             onCharacterCorrect={handleCharacterCorrect}
           >
             <ModeDropdown mode={mode} onModeChange={setMode} gameType="kotoba" />
@@ -455,10 +469,13 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
 export function PracticeClient({ gameType = 'kana' }: { gameType?: GameType }): ReactNode {
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const { isLoading: usageLoading, isOverCap } = useGuestUsage()
+  const isProfileLoaded = useUserStore((s) => s.isProfileLoaded)
 
   useStuckLoadingWarning({ authLoading, usageLoading }, 'PracticeClient')
 
+  if (authLoading || usageLoading) return <PracticeScene>{null}</PracticeScene>
+  if (isAuthenticated && !isProfileLoaded) return <PracticeScene>{null}</PracticeScene>
   if (isAuthenticated) return <ActivePracticeClient gameType={gameType} />
-  if (!usageLoading && isOverCap) return <CappedPracticeShell />
+  if (isOverCap) return <CappedPracticeShell />
   return <ActivePracticeClient gameType={gameType} />
 }

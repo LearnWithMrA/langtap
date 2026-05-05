@@ -14,11 +14,16 @@
     "lint": "eslint .",
     "check": "npm run format:check && npm run lint && npm run type-check && npm run test",
     "build:budget": "next build 2>&1 | npx tsx scripts/check-bundle-budget.ts",
+    "performance:smoke": "npx playwright test tests/performance/smoke.spec.ts",
+    "performance:trace": "npx playwright test tests/performance/trace.spec.ts",
+    "performance": "npx playwright test tests/performance/",
+    "lighthouse": "lhci autorun",
     "prebuild": "npm run check"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.101.1",
+    "@vercel/speed-insights": "^2.0.0",
     "motion": "^12.38.0",
     "next": "15.5.14",
     "react": "19.1.0",
@@ -27,8 +32,11 @@
   },
   "devDependencies": {
     "@eslint/js": "^9",
+    "@lhci/cli": "^0.15.1",
     "@next/eslint-plugin-next": "^15",
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6",
     "@testing-library/react": "16.3.2",
     "@testing-library/user-event": "^14",
