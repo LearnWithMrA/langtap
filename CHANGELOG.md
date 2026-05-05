@@ -33,32 +33,40 @@ Format per entry:
 ## 2026-05-05 - Session 89
 
 **Sprint:** Sprint 8 - Smooth Game Loading and Navigation
-**Task completed:** Fix blank game screen + add async render gate guardrails
+**Task completed:** Fix blank game screen, remove loading gate, add async guardrails
 **Status:** Done
 
 ### Changes made
-- `components/performance/auth-initializer.tsx`: Removed `initRef` guard that broke under React Strict Mode double-fire. Effect is now idempotent. Second mount calls `getUser()` again and sets store state correctly.
+- `components/performance/auth-initializer.tsx`: Removed `initRef` guard that broke under React Strict Mode double-fire. Effect is now idempotent.
 - `hooks/useGuestUsage.ts`: Moved `markInitialized()` from before async work to after it completes (both success and failure paths). Prevents Strict Mode cleanup from leaving `isLoading` stuck `true`.
-- `hooks/useStuckLoadingWarning.ts`: New dev-only watchdog hook. Warns after 5s which loading gate is stuck. No-op in production.
-- `components/layout/practice-client.tsx`: Loading state now renders a visible pulse-animated card (`PracticeLoadingCard` with `data-testid="practice-loading-card"`) instead of `null`. Added `useStuckLoadingWarning` to surface stuck gates during development.
+- `components/layout/practice-client.tsx`: Removed the `usageLoading` gate entirely. Practice/tutorial renders immediately for guests without waiting for Supabase. Cap enforced only after usage resolves (`!usageLoading && isOverCap`). Trial rounds are not worth protecting from abuse.
+- `app/(onboarding)/onboarding/step-3/page.tsx`: Added practice prefetch during "Saving..." pause. Warms word bank (`loadWordBank`), guest session (`ensureGuestSession`), and route (`router.prefetch`) so practice loads without a gap after onboarding.
+- `hooks/useStuckLoadingWarning.ts`: New dev-only watchdog hook. Warns after 5s which loading gate is stuck. Retained for future membership gates.
 - `test-utils/async-gate.tsx`: New shared test utilities. `deferred<T>()` controllable promise, `renderHookStrict()` real StrictMode wrapper, `expectLoadingClears()` assertion helper.
-- `LangTap_Sprints.md`: Added guardrail pattern note to Sprint 12 "Build free tier daily distance cap" task for future membership gates.
+- `components/game/__tests__/tutorial-system.test.tsx`: Updated cap gate test to assert new behavior (ActivePracticeClient mounts immediately while usage loads).
+- `LangTap_Sprints.md`: Added guardrail pattern note to Sprint 12 "Build free tier daily distance cap" task.
+- `docs/ARCHITECTURE.md`: Added "Async render gate tests" section to testing rules.
+- `docs/PERFORMANCE.md`: Added v1.3 entry documenting the fix and guardrail pattern.
 
 ### Tests
-- `components/performance/__tests__/auth-initializer.test.tsx`: Pass. Added real `<React.StrictMode>` tests with deferred getUser and unmount/remount without store reset. Proven to fail if `initRef` guard is restored.
-- `hooks/__tests__/useGuestUsage.test.ts`: Pass. New file (10 tests). StrictMode with deferred async, unmount/remount WITHOUT store reset, multiple consumers, all failure paths. Proven to fail (8/10) if `markInitialized` moved before async.
-- `components/layout/__tests__/practice-client.test.tsx`: Pass. New file (4 tests). Proves loading card is visible, resolves to game content, skips for authenticated users.
-- Full suite: 891 passed, 0 failed.
+- `components/performance/__tests__/auth-initializer.test.tsx`: Pass (7 tests). Real StrictMode with deferred async. Fails if initRef restored.
+- `hooks/__tests__/useGuestUsage.test.ts`: Pass (10 tests). StrictMode, unmount/remount WITHOUT store reset. Fails (8/10) if markInitialized moved before async.
+- `components/layout/__tests__/practice-client.test.tsx`: Pass (5 tests). No loading gate, cap only after resolve, immediate render for guests.
+- `components/game/__tests__/tutorial-system.test.tsx`: Pass (12 tests). Updated to match new no-gate behavior.
+- Full suite: 892 passed, 0 failed.
 
 ### Root cause
-Both `AuthInitializer` and `useGuestUsage` used "init once" guards (`initRef` / `markInitialized()`) that fired eagerly before async work completed. In React Strict Mode (Next.js 15 default in dev), effects fire, get cleaned up, then fire again. The guard prevented the second run from doing work, while the first run's async was discarded because `mounted` became `false`. Result: `isLoading` stuck `true` forever, blank game card.
+Both `AuthInitializer` and `useGuestUsage` used "init once" guards that fired eagerly before async work completed. In React Strict Mode (Next.js 15 default in dev), the guard prevented the second effect run from doing work after cleanup invalidated the first. Result: `isLoading` stuck `true` forever.
+
+### Architecture decision
+Trial/dialogue screens do not need Supabase. The natural UX flow (onboarding save -> tutorial dialogue -> trial rounds) provides enough time for guest session and word bank to load in the background. Blocking practice on a loading gate was unnecessary and created the blank-screen failure mode.
 
 ### Next task
 Phase G verification (Sprint 8 completion).
 
 ### Notes
-- The bug only manifested in dev mode (React Strict Mode). Production builds would have been fine, but dev mode is where all testing happens.
-- Sprint 12 "Build free tier daily distance cap" now has an explicit guardrail note: use `useStuckLoadingWarning` + `renderHookStrict` + `deferred` for any new membership loading gate.
+- The bug only manifested in dev mode (React Strict Mode). Production would have been fine, but dev mode is where all testing happens.
+- Sprint 12 "Build free tier daily distance cap" has an explicit guardrail note for future membership gates.
 - Cyclist constant speed is still an end-of-sprint task.
 
 ---

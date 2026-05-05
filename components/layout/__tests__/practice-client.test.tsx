@@ -1,11 +1,10 @@
 // ─────────────────────────────────────────────
 // File: components/layout/__tests__/practice-client.test.tsx
 // Purpose: Regression test for PracticeClient render gate. Proves
-//          loading state is visible (not blank), and that async
-//          gates eventually resolve to show game content.
+//          practice renders immediately for guests (no loading gate),
+//          and cap is enforced only after usage resolves.
 // Depends on: components/layout/practice-client.tsx,
-//             stores/user.store.ts, stores/guest-usage.store.ts,
-//             test-utils/async-gate.tsx
+//             stores/user.store.ts, stores/guest-usage.store.ts
 // ─────────────────────────────────────────────
 
 import { render, screen, waitFor } from '@testing-library/react'
@@ -129,25 +128,42 @@ describe('PracticeClient', () => {
     vi.clearAllMocks()
   })
 
-  it('renders visible loading card while gates are pending (not blank)', () => {
+  it('renders game immediately for guests without waiting for usage to load', () => {
     useUserStore.setState({ user: null, profile: null, isLoading: false })
+    // Guest usage store is still loading (default state)
 
     render(<PracticeClient gameType="kana" />)
 
-    const loadingCard = screen.getByTestId('practice-loading-card')
-    expect(loadingCard).toBeInTheDocument()
+    // Should NOT show a loading card - game renders immediately
+    expect(screen.queryByTestId('practice-loading-card')).not.toBeInTheDocument()
   })
 
-  it('loading card is visible when auth resolves but guest usage is pending', () => {
+  it('does not show capped shell while usage is still loading', () => {
     useUserStore.setState({ user: null, profile: null, isLoading: false })
-    // Guest usage store stays at default: isLoading=true, isInitialized=false
+    // Even if somehow isOverCap would be true while loading, don't show cap
 
     render(<PracticeClient gameType="kana" />)
 
-    expect(screen.getByTestId('practice-loading-card')).toBeInTheDocument()
+    expect(screen.queryByText(/hit the limit/i)).not.toBeInTheDocument()
   })
 
-  it('resolves to game content after guest usage resolves', async () => {
+  it('shows capped shell only after usage resolves and user is over cap', async () => {
+    useUserStore.setState({ user: null, profile: null, isLoading: false })
+    useGuestUsageStore.setState({
+      usage: { kanaDistance: 1000, kotobaDistance: 900, cappedAt: null },
+      isLoading: false,
+      isInitialized: true,
+    })
+
+    render(<PracticeClient gameType="kana" />)
+
+    await waitFor(() => {
+      // CappedPracticeShell renders a frozen character
+      expect(screen.getByText('あ')).toBeInTheDocument()
+    })
+  })
+
+  it('renders game content when usage resolves under cap', async () => {
     useUserStore.setState({ user: null, profile: null, isLoading: false })
     useGuestUsageStore.setState({
       usage: { kanaDistance: 0, kotobaDistance: 0, cappedAt: null },
@@ -162,7 +178,7 @@ describe('PracticeClient', () => {
     })
   })
 
-  it('skips gates entirely for authenticated users', () => {
+  it('skips cap gate entirely for authenticated users', () => {
     useUserStore.setState({
       user: { id: 'u1', email: 'a@b.com', isAnonymous: false },
       profile: null,

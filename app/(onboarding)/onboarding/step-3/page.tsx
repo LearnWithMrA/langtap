@@ -26,6 +26,8 @@ import { syncManualUnlocks } from '@/services/unlock.service'
 import { useSettingsStore } from '@/stores/settings.store'
 import { useWordMasteryStore } from '@/stores/word-mastery.store'
 import { buildAutoMasteryScores } from '@/engine/kotoba-progression'
+import { loadWordBank } from '@/data/words/word-bank-loader'
+import { ensureGuestSession } from '@/services/guest-usage.service'
 import { N5_LEVELS, N4_LEVELS, N3_LEVELS, N2_LEVELS, N1_LEVELS } from '@/data/words/kotoba-levels'
 
 // -- Component ---------------------------------------------------
@@ -60,6 +62,12 @@ export default function OnboardingStep3Page(): ReactNode {
     } = useOnboardingStore.getState()
     if (!selectedMode) return
     setSaving(true)
+
+    // Warm practice resources during the save pause so the
+    // practice screen and tutorial load without a gap.
+    router.prefetch('/practice/kana')
+    void loadWordBank(jlptLevel)
+    void ensureGuestSession()
 
     if (user) {
       await updateProfile(user.id, {
