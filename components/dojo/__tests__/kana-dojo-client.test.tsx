@@ -251,6 +251,6 @@ describe('KanaDojoClient - parity state prop', () => {
     render(<KanaDojoClient state="empty" />)
     expect(screen.getByRole('heading', { name: 'Start your journey' })).toBeInTheDocument()
     const cta = screen.getByRole('link', { name: 'Start practice' })
-    expect(cta).toHaveAttribute('href', '/practice?mode=kana')
+    expect(cta).toHaveAttribute('href', '/practice/kana')
   })
 })

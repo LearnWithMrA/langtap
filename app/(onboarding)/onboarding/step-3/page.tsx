@@ -44,7 +44,7 @@ export default function OnboardingStep3Page(): ReactNode {
 
   useEffect(() => {
     if (onboardingComplete) {
-      router.replace('/practice')
+      router.replace('/practice/kana')
     }
   }, [onboardingComplete, router])
 

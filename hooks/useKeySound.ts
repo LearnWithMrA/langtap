@@ -57,6 +57,29 @@ async function loadSound(id: string): Promise<AudioBuffer | null> {
   return promise
 }
 
+// -- Warmup -------------------------------------------------
+
+const WARMUP_SOUNDS = ['e', 'o', 'key-click']
+let warmedUp = false
+
+function warmupSounds(): void {
+  if (warmedUp) return
+  warmedUp = true
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(() => {
+      for (const id of WARMUP_SOUNDS) {
+        void loadSound(id)
+      }
+    })
+  } else {
+    setTimeout(() => {
+      for (const id of WARMUP_SOUNDS) {
+        void loadSound(id)
+      }
+    }, 200)
+  }
+}
+
 // -- Hook ---------------------------------------------------
 
 export function useKeySound(): { playSound: (id: string) => void } {
@@ -65,10 +88,21 @@ export function useKeySound(): { playSound: (id: string) => void } {
 
   useEffect((): (() => void) => {
     mountedRef.current = true
+    if (keyClicks && !warmedUp) {
+      const handler = (): void => {
+        warmupSounds()
+        document.removeEventListener('pointerdown', handler)
+      }
+      document.addEventListener('pointerdown', handler, { once: true })
+      return (): void => {
+        mountedRef.current = false
+        document.removeEventListener('pointerdown', handler)
+      }
+    }
     return (): void => {
       mountedRef.current = false
     }
-  }, [])
+  }, [keyClicks])
 
   const playSound = useCallback((): void => {
     if (!keyClicks) return

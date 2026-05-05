@@ -117,7 +117,8 @@ const PREFETCH_ROUTES = [
   '/home',
   '/dojo/kana',
   '/dojo/kotoba',
-  '/practice',
+  '/practice/kana',
+  '/practice/kotoba',
   '/leaderboard',
   '/profile',
 ]

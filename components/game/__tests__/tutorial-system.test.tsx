@@ -175,9 +175,6 @@ vi.mock('@/hooks/useAuth', () => ({
 vi.mock('@/hooks/useGuestUsage', () => ({
   useGuestUsage: (): unknown => mockUseGuestUsage(),
 }))
-vi.mock('next/navigation', () => ({
-  useSearchParams: (): { get: () => string | null } => ({ get: () => null }),
-}))
 vi.mock('motion/react', () => ({
   useReducedMotion: (): boolean => false,
 }))

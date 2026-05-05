@@ -347,6 +347,6 @@ describe('KotobaDojoClient - state prop', () => {
       screen.getByRole('heading', { name: 'Start building your vocabulary' }),
     ).toBeInTheDocument()
     const cta = screen.getByRole('link', { name: 'Start practice' })
-    expect(cta).toHaveAttribute('href', '/practice?mode=kotoba')
+    expect(cta).toHaveAttribute('href', '/practice/kotoba')
   })
 })

@@ -17,20 +17,25 @@ import { AppTopBar } from '@/components/layout/app-top-bar'
 import { GuestBanner } from '@/components/layout/guest-banner'
 import { SettingsDialog } from '@/components/settings/settings-dialog'
 import { SessionPrefetch } from '@/components/performance/session-prefetch'
+import { PracticeDataPreloader } from '@/components/performance/practice-data-preloader'
 import { StoreHydrator } from '@/components/performance/store-hydrator'
 import { AuthInitializer } from '@/components/performance/auth-initializer'
 import { AuthModalProvider } from '@/components/layout/auth-modal-provider'
+import { ScrollRestoration } from '@/components/performance/scroll-restoration'
+import { PageTransition } from '@/components/performance/page-transition'
 
 export default function MainLayout({ children }: { children: ReactNode }): ReactNode {
   return (
     <>
       <AppTopBar />
       <GuestBanner />
-      {children}
+      <PageTransition>{children}</PageTransition>
       <SettingsDialog />
       <AuthModalProvider />
       <AuthInitializer />
       <StoreHydrator />
+      <PracticeDataPreloader />
+      <ScrollRestoration />
       <SessionPrefetch />
     </>
   )

@@ -92,7 +92,7 @@ export function KotobaEmptyShell(): ReactNode {
               Pick a unit to see the words inside, or jump straight into Kotoba practice.
             </p>
             <Link
-              href="/practice?mode=kotoba"
+              href="/practice/kotoba"
               className="inline-block bg-sage-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-sage-600 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-500"
             >
               Start practice

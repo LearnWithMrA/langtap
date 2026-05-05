@@ -17,11 +17,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
-import { useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import { useReducedMotion } from 'motion/react'
-import { LandscapeBackground } from '@/components/layout/landscape-background'
-import { CyclingCharacter } from '@/components/animation/cycling-character'
 import { GameWindow } from '@/components/game/game-window'
 
 const LazyKotobaGameWindow = dynamic(
@@ -32,10 +28,8 @@ const LazyKotobaGameWindow = dynamic(
   { loading: () => null },
 )
 import { DistanceCounter } from '@/components/game/distance-counter'
-import { AudioPlayer } from '@/components/audio/audio-player'
 import { DialogueOverlay } from '@/components/game/dialogue-overlay'
 import { PracticeBanner } from '@/components/game/practice-banner'
-import { PracticeLoadingShell } from '@/components/game/practice-loading-shell'
 import { useKeySound } from '@/hooks/useKeySound'
 import { usePracticeCounters } from '@/hooks/usePracticeCounters'
 import { usePracticeSession } from '@/hooks/usePracticeSession'
@@ -133,26 +127,8 @@ function PracticeScene({
   children: ReactNode
   hasBanner?: boolean
 }): ReactNode {
-  const prefersReducedMotion = useReducedMotion()
-  const sceneSpeed = prefersReducedMotion ? 'stopped' : 'idle'
-  const animated = !prefersReducedMotion
-
   return (
-    <div className="theme-day relative w-full h-svh overflow-hidden">
-      <LandscapeBackground
-        speed={sceneSpeed}
-        staticHills={prefersReducedMotion ?? false}
-        animated={animated}
-      />
-      <div
-        className="absolute bottom-[calc(12svh-max(7.73vw,62.7px))] -left-[2%] md:left-[3%] z-[3]"
-        aria-hidden="true"
-      >
-        <CyclingCharacter speed={sceneSpeed} />
-      </div>
-      <div className="absolute bottom-4 right-4 z-10">
-        <AudioPlayer />
-      </div>
+    <div className="h-svh overflow-hidden">
       <div
         className={[
           'absolute left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-full max-w-lg px-4',
@@ -475,19 +451,12 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
 
 // -- Exported wrapper (cap gate before hooks) ──
 
-export function PracticeClient(): ReactNode {
-  const searchParams = useSearchParams()
-  const gameType = (searchParams.get('mode') === 'kotoba' ? 'kotoba' : 'kana') as GameType
+export function PracticeClient({ gameType = 'kana' }: { gameType?: GameType }): ReactNode {
   const { isAuthenticated } = useAuth()
   const { isLoading: usageLoading, isOverCap } = useGuestUsage()
 
   if (isAuthenticated) return <ActivePracticeClient gameType={gameType} />
-  if (usageLoading)
-    return (
-      <PracticeScene>
-        <PracticeLoadingShell />
-      </PracticeScene>
-    )
+  if (usageLoading) return <PracticeScene>{null}</PracticeScene>
   if (isOverCap) return <CappedPracticeShell />
   return <ActivePracticeClient gameType={gameType} />
 }

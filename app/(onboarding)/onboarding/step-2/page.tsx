@@ -52,7 +52,7 @@ export default function OnboardingStep2Page(): ReactNode {
 
   useEffect(() => {
     if (onboardingComplete) {
-      router.replace('/practice')
+      router.replace('/practice/kana')
     }
   }, [onboardingComplete, router])
 

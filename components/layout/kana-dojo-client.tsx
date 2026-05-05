@@ -411,7 +411,7 @@ function KanaDojoReadyShell(): ReactNode {
               />
             )}
             <Link
-              href="/practice?mode=kana"
+              href="/practice/kana"
               className="inline-flex items-center justify-center px-3 font-bold text-white bg-sky-600/85 hover:bg-sky-700/85 active:translate-y-[2px] active:border-b-[2px] transition-colors border-b-[clamp(2px,calc(1.25vw-2px),4px)] border-b-sky-700/85"
               style={{
                 height: 'clamp(30px, calc(6.25vw + 10px), 40px)',

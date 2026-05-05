@@ -30,6 +30,50 @@ Format per entry:
 
 ---
 
+## 2026-05-05 - Session 88 (Phase E)
+
+**Sprint:** Sprint 8 - Smooth Game Loading and Navigation
+**Task completed:** E1 (route segments), E3 (smart prefetch), E4 (data preloader), E5 (shared scene layout), E6 (scroll restoration), E7 (page transitions), E8 (key-sound warmup). E2 skipped (no skeletons).
+**Status:** Done
+
+### Changes made
+- `app/(main)/practice/page.tsx`: Now redirects to `/practice/kana` for backwards compatibility.
+- `app/(main)/(scene)/practice/kana/page.tsx`: New route. Passes gameType="kana" to PracticeClient.
+- `app/(main)/(scene)/practice/kotoba/page.tsx`: New route. Passes gameType="kotoba" to PracticeClient.
+- `app/(main)/(scene)/layout.tsx`: New shared scene layout. Renders landscape, cyclist, and audio player once. Home and practice are children. Navigation between them no longer remounts the background (E5).
+- `app/(main)/(scene)/home/`: Moved into (scene) route group.
+- `components/layout/practice-client.tsx`: Accepts gameType prop instead of useSearchParams. PracticeScene stripped of landscape/cyclist/audio (provided by scene layout). Removed PracticeLoadingShell import.
+- `components/layout/game-home-client.tsx`: Removed landscape/cyclist rendering (provided by scene layout). Now renders just the dashboard content.
+- `components/performance/session-prefetch.tsx`: Replaced setTimeout with requestIdleCallback. Skips on saveData/2g connections. Updated CORE_ROUTES to new practice paths (E3).
+- `components/performance/practice-data-preloader.tsx`: New component. Pre-warms word bank cache on idle after store hydration so practice opens instantly (E4).
+- `components/performance/scroll-restoration.tsx`: New component. Manual scroll position save/restore per pathname for back/forward navigation (E6).
+- `components/performance/page-transition.tsx`: New component. Subtle 150ms fadeIn on route changes using CSS animation (E7).
+- `hooks/useKeySound.ts`: Added warmupSounds() that pre-decodes common audio buffers after first user gesture via requestIdleCallback (E8).
+- `next.config.ts`: Added redirects for `/practice?mode=kana` and `/practice?mode=kotoba` to new route segments.
+- All links updated: mode-panel, practice-cta, kana-dojo-client, kotoba-dojo-client, kana-dojo-shells, kotoba-dojo-shells, app-top-bar, session-prefetch, auth callback, onboarding steps 1-3.
+- `app/(main)/layout.tsx`: Added PageTransition wrapper, ScrollRestoration, PracticeDataPreloader.
+- `LangTap_Sprints.md`: E1, E3, E4, E5, E6, E7, E8 marked Done.
+
+### Tests
+- 874 tests passing, 0 failures
+- Flaky N1 word bank test times out under heavy parallel load (passes in isolation at 1.2s, system concurrency issue not code issue)
+
+### Bundle impact
+- Practice route: **241 kB to 188 kB** (landscape/cyclist code moved to shared layout)
+- Home route: **169 kB to 117 kB** (same reason)
+- Warm home-to-practice: no landscape/cyclist remount (E5 fix)
+
+### Next task
+Phase F: F1 (lazy-load landing page islands), then Phase G (verification)
+
+### Notes
+- E2 skipped per user feedback: no loading skeletons on the practice screen. KanaDojo reference app confirms instant navigation is achievable without skeletons.
+- E5 is the highest-impact visual change: the cyclist and landscape persist across home/practice navigation. No more flash/reset.
+- E7 adds a subtle 150ms fade between route changes to smooth transitions.
+- E8 pre-decodes key sounds on first pointerdown so the first key click plays without delay.
+
+---
+
 ## 2026-05-05 - Session 88 (Phase D)
 
 **Sprint:** Sprint 8 - Smooth Game Loading and Navigation

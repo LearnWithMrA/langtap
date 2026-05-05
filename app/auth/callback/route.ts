@@ -23,8 +23,9 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   // Sanitize the next param to prevent open redirects.
   // Only relative paths are accepted (starts with / but not //).
-  const rawNext = searchParams.get('next') ?? '/practice'
-  const redirectTo = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/practice'
+  const rawNext = searchParams.get('next') ?? '/practice/kana'
+  const redirectTo =
+    rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/practice/kana'
 
   if (code) {
     const supabase = await createServerSupabaseClient()

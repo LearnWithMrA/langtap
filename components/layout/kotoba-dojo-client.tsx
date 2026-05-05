@@ -251,7 +251,7 @@ function ReadyShell(): ReactNode {
               />
             )}
             <Link
-              href="/practice?mode=kotoba"
+              href="/practice/kotoba"
               className="inline-flex items-center justify-center px-3 font-bold text-white bg-sage-600/85 hover:bg-sage-700/85 active:translate-y-[2px] active:border-b-[2px] transition-colors border-b-[clamp(2px,calc(1.25vw-2px),4px)] border-b-[color:var(--color-sage-600)]"
               style={{
                 height: 'clamp(30px, calc(6.25vw + 10px), 40px)',

@@ -42,7 +42,7 @@ const THEMES = {
     label: 'Kana',
     ctaLabel: 'Practice Kana',
     masteryLabel: 'Characters mastered',
-    route: '/practice?mode=kana',
+    route: '/practice/kana',
   },
   kotoba: {
     bg: 'bg-kotoba-dojo-bg/60',
@@ -57,7 +57,7 @@ const THEMES = {
     label: 'Kotoba',
     ctaLabel: 'Practice Kotoba',
     masteryLabel: 'Words mastered',
-    route: '/practice?mode=kotoba',
+    route: '/practice/kotoba',
   },
 } as const
 

@@ -15,6 +15,22 @@ const nextConfig: NextConfig = {
       static: 300,
     },
   },
+  async redirects() {
+    return [
+      {
+        source: '/practice',
+        has: [{ type: 'query', key: 'mode', value: 'kotoba' }],
+        destination: '/practice/kotoba',
+        permanent: true,
+      },
+      {
+        source: '/practice',
+        has: [{ type: 'query', key: 'mode', value: 'kana' }],
+        destination: '/practice/kana',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 export default nextConfig
