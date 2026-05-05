@@ -11,11 +11,9 @@ import { render, screen, act, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { DialogueOverlay } from '../dialogue-overlay'
 
-const PAGE_LOAD_DELAY = 800
-
-function advancePastLoadDelay(): void {
+function flushMicrotasks(): void {
   act(() => {
-    vi.advanceTimersByTime(PAGE_LOAD_DELAY)
+    vi.advanceTimersByTime(0)
   })
 }
 
@@ -36,7 +34,7 @@ describe('DialogueOverlay', () => {
   it('types out message character by character', () => {
     render(<DialogueOverlay messages={['Hello']} mascotPose="neutral" onDismiss={vi.fn()} />)
 
-    advancePastLoadDelay()
+    flushMicrotasks()
 
     // 2 chars at 70ms each = 140ms
     act(() => {
@@ -54,7 +52,7 @@ describe('DialogueOverlay', () => {
   it('flows messages continuously without user interaction', () => {
     render(<DialogueOverlay messages={['Hi', 'Bye']} mascotPose="neutral" onDismiss={vi.fn()} />)
 
-    advancePastLoadDelay()
+    flushMicrotasks()
 
     // First message types out: "Hi" = 2 chars * 70ms = 140ms
     act(() => {
@@ -77,7 +75,7 @@ describe('DialogueOverlay', () => {
   it('shows Got it button when all messages are done', () => {
     render(<DialogueOverlay messages={['Hi']} mascotPose="neutral" onDismiss={vi.fn()} />)
 
-    advancePastLoadDelay()
+    flushMicrotasks()
     act(() => {
       vi.advanceTimersByTime(500)
     })
@@ -93,7 +91,7 @@ describe('DialogueOverlay', () => {
       />,
     )
 
-    advancePastLoadDelay()
+    flushMicrotasks()
     act(() => {
       vi.advanceTimersByTime(100)
     })
@@ -109,7 +107,7 @@ describe('DialogueOverlay', () => {
       />,
     )
 
-    advancePastLoadDelay()
+    flushMicrotasks()
     act(() => {
       vi.advanceTimersByTime(100)
     })
@@ -123,7 +121,7 @@ describe('DialogueOverlay', () => {
     const onDismiss = vi.fn()
     render(<DialogueOverlay messages={['Done']} mascotPose="neutral" onDismiss={onDismiss} />)
 
-    advancePastLoadDelay()
+    flushMicrotasks()
     act(() => {
       vi.advanceTimersByTime(500)
     })

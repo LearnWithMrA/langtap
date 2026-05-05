@@ -1,20 +1,23 @@
 // ------------------------------------------------------------
 // File: hooks/__tests__/useAuth.test.ts
-// Purpose: Tests for the useAuth hook. Validates auth state
-//          derivation (isAuthenticated, isGuest) and initial
-//          loading behaviour.
+// Purpose: Tests for the useAuth hook. After B2, useAuth is a pure
+//          Zustand selector. Tests validate state derivation from
+//          the store, not initialization logic (which lives in
+//          AuthInitializer).
 // Depends on: hooks/useAuth.ts, stores/user.store.ts
 // ------------------------------------------------------------
 
 // @vitest-environment jsdom
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderHook, waitFor } from '@testing-library/react'
+import { describe, it, expect, beforeEach } from 'vitest'
+import { renderHook } from '@testing-library/react'
 import { useUserStore } from '@/stores/user.store'
+import { useAuth } from '../useAuth'
 
-// ── Mocks ─────────────────────────────────────
+// ── Fixtures ─────────────────────────────────
 
 const MOCK_USER = { id: 'abc-123', email: 'test@example.com', isAnonymous: false }
+const ANON_USER = { id: 'anon-123', email: undefined, isAnonymous: true }
 
 const MOCK_PROFILE = {
   id: 'abc-123',
@@ -28,62 +31,33 @@ const MOCK_PROFILE = {
   createdAt: '2026-04-01T00:00:00Z',
 }
 
-const mockUnsubscribe = vi.fn()
-
-vi.mock('@/services/auth.service', () => ({
-  getUser: vi.fn(),
-}))
-
-vi.mock('@/services/profile.service', () => ({
-  loadProfile: vi.fn(),
-}))
-
-vi.mock('@/services/supabase-browser', () => ({
-  createBrowserSupabaseClient: vi.fn(() => ({
-    auth: {
-      onAuthStateChange: vi.fn(() => ({
-        data: { subscription: { unsubscribe: mockUnsubscribe } },
-      })),
-    },
-  })),
-}))
-
 // ── Tests ─────────────────────────────────────
 
 describe('useAuth', () => {
-  beforeEach(async () => {
+  beforeEach(() => {
     useUserStore.setState({ user: null, profile: null, isLoading: true })
-    vi.clearAllMocks()
   })
 
-  it('returns isGuest true when no user and not loading', async () => {
-    const { getUser } = await import('@/services/auth.service')
-    vi.mocked(getUser).mockResolvedValue({ user: null })
-
-    const { useAuth } = await import('../useAuth')
+  it('returns loading state when store is loading', () => {
     const { result } = renderHook(() => useAuth())
 
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
-
+    expect(result.current.isLoading).toBe(true)
+    expect(result.current.isGuest).toBe(false)
     expect(result.current.isAuthenticated).toBe(false)
+  })
+
+  it('returns isGuest true when no user and not loading', () => {
+    useUserStore.setState({ user: null, profile: null, isLoading: false })
+    const { result } = renderHook(() => useAuth())
+
     expect(result.current.isGuest).toBe(true)
+    expect(result.current.isAuthenticated).toBe(false)
     expect(result.current.user).toBeNull()
   })
 
-  it('returns isAuthenticated true when user exists', async () => {
-    const { getUser } = await import('@/services/auth.service')
-    const { loadProfile } = await import('@/services/profile.service')
-    vi.mocked(getUser).mockResolvedValue({ user: MOCK_USER })
-    vi.mocked(loadProfile).mockResolvedValue({ ok: true, data: MOCK_PROFILE })
-
-    const { useAuth } = await import('../useAuth')
+  it('returns isAuthenticated true when user exists and not anonymous', () => {
+    useUserStore.setState({ user: MOCK_USER, profile: MOCK_PROFILE, isLoading: false })
     const { result } = renderHook(() => useAuth())
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
 
     expect(result.current.isAuthenticated).toBe(true)
     expect(result.current.isGuest).toBe(false)
@@ -91,48 +65,17 @@ describe('useAuth', () => {
     expect(result.current.profile).toEqual(MOCK_PROFILE)
   })
 
-  it('handles profile load failure gracefully', async () => {
-    const { getUser } = await import('@/services/auth.service')
-    const { loadProfile } = await import('@/services/profile.service')
-    vi.mocked(getUser).mockResolvedValue({ user: MOCK_USER })
-    vi.mocked(loadProfile).mockResolvedValue({ ok: false, error: 'Failed.' })
-
-    const { useAuth } = await import('../useAuth')
+  it('returns isAuthenticated true even without profile', () => {
+    useUserStore.setState({ user: MOCK_USER, profile: null, isLoading: false })
     const { result } = renderHook(() => useAuth())
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
 
     expect(result.current.isAuthenticated).toBe(true)
     expect(result.current.profile).toBeNull()
   })
 
-  it('unsubscribes from auth changes on unmount', async () => {
-    const { getUser } = await import('@/services/auth.service')
-    vi.mocked(getUser).mockResolvedValue({ user: null })
-
-    const { useAuth } = await import('../useAuth')
-    const { unmount } = renderHook(() => useAuth())
-
-    unmount()
-
-    expect(mockUnsubscribe).toHaveBeenCalled()
-  })
-
-  it('treats anonymous user as guest, not authenticated', async () => {
-    const ANON_USER = { id: 'anon-123', email: undefined, isAnonymous: true }
-    const { getUser } = await import('@/services/auth.service')
-    const { loadProfile } = await import('@/services/profile.service')
-    vi.mocked(getUser).mockResolvedValue({ user: ANON_USER })
-    vi.mocked(loadProfile).mockResolvedValue({ ok: false, error: 'No profile' })
-
-    const { useAuth } = await import('../useAuth')
+  it('treats anonymous user as guest, not authenticated', () => {
+    useUserStore.setState({ user: ANON_USER, profile: null, isLoading: false })
     const { result } = renderHook(() => useAuth())
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
 
     expect(result.current.isGuest).toBe(true)
     expect(result.current.isAuthenticated).toBe(false)

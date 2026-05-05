@@ -16,7 +16,6 @@ import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react'
 // ── Constants ─────────────────────────────────
 
 const TYPEWRITER_SPEED_MS = 70
-const PAGE_LOAD_DELAY_MS = 800
 
 const MASCOT_IMAGES: Record<MascotPose, string> = {
   neutral: '/images/mascot/mascot-neutral.png',
@@ -69,6 +68,7 @@ type DialogueOverlayProps = {
   messages: string[]
   mascotPose: MascotPose
   theme?: DialogueTheme
+  startDelayMs?: number
   onDismiss: () => void
   onSkip?: () => void
   skipLabel?: string
@@ -80,6 +80,7 @@ export function DialogueOverlay({
   messages,
   mascotPose,
   theme = 'cream',
+  startDelayMs = 0,
   onDismiss,
   onSkip,
   skipLabel,
@@ -98,11 +99,15 @@ export function DialogueOverlay({
 
   useEffect(() => {
     dialogRef.current?.focus()
-    const delay = setTimeout((): void => setReady(true), PAGE_LOAD_DELAY_MS)
+    if (startDelayMs <= 0) {
+      setReady(true)
+      return
+    }
+    const delay = setTimeout((): void => setReady(true), startDelayMs)
     return (): void => {
       clearTimeout(delay)
     }
-  }, [])
+  }, [startDelayMs])
 
   useEffect(() => {
     if (!ready) return

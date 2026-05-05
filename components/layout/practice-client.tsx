@@ -27,6 +27,7 @@ import { DistanceCounter } from '@/components/game/distance-counter'
 import { AudioPlayer } from '@/components/audio/audio-player'
 import { DialogueOverlay } from '@/components/game/dialogue-overlay'
 import { PracticeBanner } from '@/components/game/practice-banner'
+import { PracticeLoadingShell } from '@/components/game/practice-loading-shell'
 import { useKeySound } from '@/hooks/useKeySound'
 import { usePracticeCounters } from '@/hooks/usePracticeCounters'
 import { usePracticeSession } from '@/hooks/usePracticeSession'
@@ -473,7 +474,12 @@ export function PracticeClient(): ReactNode {
   const { isLoading: usageLoading, isOverCap } = useGuestUsage()
 
   if (isAuthenticated) return <ActivePracticeClient gameType={gameType} />
-  if (usageLoading) return <PracticeScene>{null}</PracticeScene>
+  if (usageLoading)
+    return (
+      <PracticeScene>
+        <PracticeLoadingShell />
+      </PracticeScene>
+    )
   if (isOverCap) return <CappedPracticeShell />
   return <ActivePracticeClient gameType={gameType} />
 }

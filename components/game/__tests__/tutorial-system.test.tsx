@@ -57,10 +57,7 @@ describe('DialogueOverlay integration', () => {
       />,
     )
     act(() => {
-      vi.advanceTimersByTime(800)
-    })
-    act(() => {
-      vi.advanceTimersByTime(500)
+      vi.advanceTimersByTime(350)
     })
     expect(screen.getByRole('button', { name: 'Skip trial' })).toBeInTheDocument()
   })
@@ -77,10 +74,7 @@ describe('DialogueOverlay integration', () => {
       />,
     )
     act(() => {
-      vi.advanceTimersByTime(800)
-    })
-    act(() => {
-      vi.advanceTimersByTime(500)
+      vi.advanceTimersByTime(350)
     })
     fireEvent.click(screen.getByRole('button', { name: 'Skip trial' }))
     expect(onSkip).toHaveBeenCalledOnce()
@@ -195,6 +189,18 @@ vi.mock('@/components/animation/cycling-character', () => ({
 }))
 vi.mock('@/components/audio/audio-player', () => ({
   AudioPlayer: (): null => null,
+}))
+vi.mock('@/components/game/game-window', () => ({
+  GameWindow: (): null => null,
+}))
+vi.mock('@/components/game/kotoba-game-window', () => ({
+  KotobaGameWindow: (): null => null,
+}))
+vi.mock('@/components/game/distance-counter', () => ({
+  DistanceCounter: (): null => null,
+}))
+vi.mock('@/components/game/practice-banner', () => ({
+  PracticeBanner: (): null => null,
 }))
 
 describe('PracticeClient cap gate', () => {

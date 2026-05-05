@@ -30,6 +30,46 @@ Format per entry:
 
 ---
 
+## 2026-05-05 - Session 88
+
+**Sprint:** Sprint 8 - Smooth Game Loading and Navigation
+**Task completed:** A1, A2, B1, B2, B3 (Phase A baseline + Phase B UX fixes)
+**Status:** Done
+
+### Changes made
+- `docs/PERFORMANCE.md`: New file. Production bundle baseline (A1): route sizes, chunk breakdown, static assets. Lighthouse cold-load metrics (A2): scores, FCP, LCP, TBT, CLS for all key routes. Long task breakdown for practice page. Warm navigation observations. Optimization targets table.
+- `components/game/practice-loading-shell.tsx`: New file. Skeleton component matching game card styling (cream bg, shadow, rounded-2xl). Pulse placeholders for character and input areas. Replaces blank screen during auth/usage loading (B1).
+- `components/performance/auth-initializer.tsx`: New file. Single auth init point mounted in (main) and (onboarding) layouts. Calls getUser() once, sets identity immediately, loads profile in background. One onAuthStateChange subscription (B2).
+- `hooks/useAuth.ts`: Rewritten as pure Zustand selector. No useEffect, no Supabase calls, no subscriptions. All auth init moved to AuthInitializer (B2).
+- `components/layout/practice-client.tsx`: Loading state now renders PracticeLoadingShell inside PracticeScene instead of null (B1).
+- `app/(main)/layout.tsx`: Added AuthInitializer before StoreHydrator (B2).
+- `app/(onboarding)/layout.tsx`: Added AuthInitializer for step-3 user state access (B2).
+- `components/game/dialogue-overlay.tsx`: Removed hardcoded 800ms PAGE_LOAD_DELAY_MS. Added startDelayMs prop defaulting to 0. Typing starts immediately (B3).
+- `components/game/__tests__/tutorial-system.test.tsx`: Fixed pre-existing 5s timeout by mocking GameWindow, KotobaGameWindow, DistanceCounter, PracticeBanner (cuts off 1.2MB word bank import chain). Updated timing for 0ms default delay.
+- `components/game/__tests__/dialogue-overlay.test.tsx`: Updated all timing assertions for 0ms default delay.
+- `hooks/__tests__/useAuth.test.ts`: Rewritten as pure selector tests (no mock services needed).
+- `components/performance/__tests__/auth-initializer.test.tsx`: New file. Tests for single getUser call, immediate loading=false, background profile load, cleanup.
+- `components/game/__tests__/practice-loading-shell.test.tsx`: New file. Tests for skeleton rendering, accessibility, styling.
+- `supabase/config.toml`: Enabled anonymous sign-ins locally (was blocking guest practice flow).
+- `LangTap_Sprints.md`: A1, A2, B1, B2, B3 marked Done.
+
+### Tests
+- 872 tests passing, 0 failures (+7 from 865)
+- New: practice-loading-shell (3), auth-initializer (4)
+- Rewritten: useAuth (5), dialogue-overlay (10), tutorial-system (12)
+
+### Next task
+Phase C: C1 (centralize guest usage state), C2 (DNS prefetch)
+
+### Notes
+- Production baseline: practice 552 kB first load (34 Lighthouse score), 1.26 MB word bank data loaded regardless of JLPT level, 12 MB cyclist PNGs. Landing 237 kB (53 score).
+- Practice TBT 8.7s dominated by N1 word bank parsing (1.8s single long task).
+- CLS is 0 everywhere (good foundation to maintain).
+- Warm navigation: mode switching and settings smooth, home-to-practice has visible scene reset (E5 fix).
+- Pre-existing test timeout root cause: KotobaGameWindow not mocked, loading 1.2MB word bank through useKotobaPracticeSession import chain.
+
+---
+
 ## 2026-05-05 - Session 87
 
 **Sprint:** N/A (sprint planning)

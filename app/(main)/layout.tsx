@@ -18,6 +18,7 @@ import { GuestBanner } from '@/components/layout/guest-banner'
 import { SettingsDialog } from '@/components/settings/settings-dialog'
 import { SessionPrefetch } from '@/components/performance/session-prefetch'
 import { StoreHydrator } from '@/components/performance/store-hydrator'
+import { AuthInitializer } from '@/components/performance/auth-initializer'
 import { AuthModalProvider } from '@/components/layout/auth-modal-provider'
 
 export default function MainLayout({ children }: { children: ReactNode }): ReactNode {
@@ -28,6 +29,7 @@ export default function MainLayout({ children }: { children: ReactNode }): React
       {children}
       <SettingsDialog />
       <AuthModalProvider />
+      <AuthInitializer />
       <StoreHydrator />
       <SessionPrefetch />
     </>
