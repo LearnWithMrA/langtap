@@ -30,19 +30,45 @@ Format per entry:
 
 ---
 
+## 2026-05-05 - Session 87
+
+**Sprint:** N/A (sprint planning)
+**Task completed:** Sprint 8 performance sprint planned, sprint board restructured
+**Status:** Done
+
+### Changes made
+- `LangTap_Sprints.md`: New Sprint 8 (Smooth Game Loading and Navigation) replaces old Sprint 8 (Profile/Settings/Sync). Former Sprint 12 (Page Transition Speed) fully merged into new Sprint 8. Seven phases (A-G) with 22 tasks covering: production baseline measurements, PracticeLoadingShell skeleton, centralized auth, guest usage state, cyclist asset reduction, Kana/Kotoba surface split, async word bank loaders, route segments, shared scene layout, Suspense boundaries, intent-based prefetch with gameplay guard, data preloader, cache headers, DNS prefetch, landing page lazy-loading, Lighthouse audit, and performance budgets. Three rounds of Codex staff-engineer review incorporated as implementation constraints. Old Sprints 8-11 renumbered to 9-12. Sprint 11 performance audit marked Done (absorbed into Sprint 8). Version history updated to 1.3.
+- `CHANGELOG.md`: This entry.
+
+### Tests
+- No code changes, planning only.
+
+### Next task
+Sprint 8 Phase A: Production bundle baseline (A1)
+
+### Notes
+- Performance investigation found: blank practice screen during auth loading (PracticeClient renders empty scene while Supabase getUser() resolves), dev-build bundles at 13MB practice / 5.3MB landing (production numbers TBD), 12MB cyclist PNGs loading eagerly, duplicate auth network calls per useAuth consumer, all JLPT word banks imported everywhere, 800ms hardcoded dialogue delay.
+- Codex review constraints: auth initializer in (main) and (onboarding) layouts not root, FPS 55 is verification target not unit test, "active gameplay" defined precisely for prefetch guard, practice split is two patches, shared scene layout needs rollback checkpoint, cache uses versioned filenames only, old practice URLs must redirect.
+
+---
+
 ## 2026-05-04 - Session 86
 
 **Sprint:** N/A (mini change, no sprint task)
-**Task completed:** Dual mnemonics on learning cards
+**Task completed:** Dual mnemonics on learning cards, tutorial pacing, banner layout fix
 **Status:** Done
 
 ### Changes made
 - `data/kana/mnemonics.ts`: Populated with 46 dual mnemonics (all seion characters, a through n). Each entry links hiragana and katakana through a shared visual story, keyed by romaji sound. Added `DualMnemonic` type and `getDualMnemonic()` lookup helper.
 - `components/game/meaning-reveal.tsx`: Added `mnemonic` and `isCorrect` optional props. When a mnemonic is provided, renders in orange and transitions to green on correct answer. Original English meaning behaviour preserved when no mnemonic is passed.
-- `components/game/game-window.tsx`: Wired dual mnemonics into character drill cards. Reads `hints` setting (mnemonic hidden when hints off). Shows one-time explanatory banner on first mnemonic encounter. Imported `getDualMnemonic` and `useDialogueSeen`.
+- `components/game/game-window.tsx`: Wired dual mnemonics into character drill cards. Mnemonic only appears after 3 wrong attempts (alongside the romaji/kana hint), not from the start. Reads `hints` setting (mnemonic hidden when hints off). Imported `getDualMnemonic`.
 - `data/tutorial/dialogue-scripts.ts`: Added `'dual-mnemonic-hint'` to `DialogueTrigger` union for the one-time banner tracking.
+- `components/game/dialogue-overlay.tsx`: Slowed typewriter speed from 50ms to 70ms per character. Added 800ms page-load delay before typing starts so the dialogue waits for the page to be ready.
+- `components/layout/practice-client.tsx`: Added dual mnemonic one-time banner using `PracticeBanner` (same pattern as sokuon hints). Fixed banner layout: banners stay in children flow (push the game card down), but the container shifts from `top-[34%]` to `top-[40%]` when a banner is active, preventing overlap with the top bar. Game card returns to original position when banner is dismissed.
+- `components/game/__tests__/dialogue-overlay.test.tsx`: Updated all timer assertions for new 800ms page-load delay and 70ms typewriter speed.
+- `components/game/__tests__/tutorial-system.test.tsx`: Updated dialogue overlay integration tests to account for page-load delay.
 - `docs/CONTENT.md`: Rewrote Section 6 (Mnemonics) to document dual mnemonic system, data structure, display rules, first-time banner, and coverage.
-- `docs/GAME_DESIGN.md`: Updated Section 6.1 (Mnemonic Display) to reflect dual mnemonics on learning cards, orange-to-green transition, and hints toggle behaviour.
+- `docs/GAME_DESIGN.md`: Updated Section 6.1 (Mnemonic Display) to reflect dual mnemonics on wrong answers, orange-to-green transition, and hints toggle behaviour.
 - `docs/FRONTEND.md`: Added MeaningReveal component documentation describing both word-prompt and learning-card modes.
 
 ### Tests
