@@ -1,21 +1,25 @@
 // ─────────────────────────────────────────────
 // File: hooks/useGuestUsage.ts
-// Purpose: Server-side guest trial cap hook. Ensures anonymous
-//          Supabase session, loads usage from server, exposes
-//          cap state and increment function. Replaces localStorage
-//          guest-distance.store as the cap authority.
-// Depends on: services/guest-usage.service.ts, hooks/useAuth.ts
+// Purpose: Server-side guest trial cap hook. Reads from a shared
+//          Zustand store so all consumers (PracticeClient wrapper,
+//          ActivePracticeClient, GuestBanner) see the same cap
+//          state. Triggers init once per app lifecycle when a guest
+//          visits a cap-aware surface. Does not move
+//          ensureGuestSession() into global auth init to avoid
+//          creating anonymous Supabase users on every route.
+// Depends on: stores/guest-usage.store.ts,
+//             services/guest-usage.service.ts, hooks/useAuth.ts
 // ─────────────────────────────────────────────
 
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useAuth } from '@/hooks/useAuth'
+import { useGuestUsageStore } from '@/stores/guest-usage.store'
 import {
   ensureGuestSession,
   loadGuestUsage,
   incrementGuestUsage,
-  type GuestUsage,
 } from '@/services/guest-usage.service'
 import { GUEST_TRIAL_DISTANCE_CAP } from '@/engine/constants'
 
@@ -24,7 +28,7 @@ import { GUEST_TRIAL_DISTANCE_CAP } from '@/engine/constants'
 type UseGuestUsageReturn = {
   isLoading: boolean
   isOverCap: boolean
-  usage: GuestUsage | null
+  usage: ReturnType<typeof useGuestUsageStore.getState>['usage']
   increment: (gameType: 'kana' | 'kotoba', metres: number) => Promise<void>
 }
 
@@ -32,25 +36,25 @@ type UseGuestUsageReturn = {
 
 export function useGuestUsage(): UseGuestUsageReturn {
   const { isGuest, isLoading: authLoading, isAnonymous } = useAuth()
-  const [usage, setUsage] = useState<GuestUsage | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const initRef = useRef(false)
+  const usage = useGuestUsageStore((s) => s.usage)
+  const storeLoading = useGuestUsageStore((s) => s.isLoading)
+  const isInitialized = useGuestUsageStore((s) => s.isInitialized)
 
   useEffect(() => {
-    if (authLoading || initRef.current) return
+    if (authLoading || isInitialized) return
     if (!isGuest) {
-      setUsage(null)
-      setIsLoading(false)
+      useGuestUsageStore.getState().setLoading(false)
+      useGuestUsageStore.getState().markInitialized()
       return
     }
 
     let mounted = true
-    initRef.current = true
+    useGuestUsageStore.getState().markInitialized()
 
     async function init(): Promise<void> {
       const sessionResult = await ensureGuestSession()
       if (!mounted || !sessionResult.ok) {
-        if (mounted) setIsLoading(false)
+        if (mounted) useGuestUsageStore.getState().setLoading(false)
         return
       }
 
@@ -58,16 +62,16 @@ export function useGuestUsage(): UseGuestUsageReturn {
       if (!mounted) return
 
       if (usageResult.ok) {
-        setUsage(usageResult.data)
+        useGuestUsageStore.getState().setUsage(usageResult.data)
       }
-      setIsLoading(false)
+      useGuestUsageStore.getState().setLoading(false)
     }
 
     init()
     return (): void => {
       mounted = false
     }
-  }, [authLoading, isGuest])
+  }, [authLoading, isGuest, isInitialized])
 
   const totalDistance = usage ? usage.kanaDistance + usage.kotobaDistance : 0
   const isOverCap = isGuest && totalDistance >= GUEST_TRIAL_DISTANCE_CAP
@@ -77,14 +81,14 @@ export function useGuestUsage(): UseGuestUsageReturn {
       if (!isGuest || !isAnonymous || isOverCap) return
       const result = await incrementGuestUsage(gameType, metres)
       if (result.ok) {
-        setUsage(result.data)
+        useGuestUsageStore.getState().setUsage(result.data)
       }
     },
     [isGuest, isAnonymous, isOverCap],
   )
 
   return {
-    isLoading: isLoading || authLoading,
+    isLoading: storeLoading || authLoading,
     isOverCap,
     usage,
     increment,

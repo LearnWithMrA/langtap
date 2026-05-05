@@ -30,6 +30,33 @@ Format per entry:
 
 ---
 
+## 2026-05-05 - Session 88 (Phase C)
+
+**Sprint:** Sprint 8 - Smooth Game Loading and Navigation
+**Task completed:** C1 (centralize guest usage state), C2 (DNS prefetch)
+**Status:** Done
+
+### Changes made
+- `stores/guest-usage.store.ts`: New file. Shared Zustand store for server-side guest usage. All consumers (PracticeClient wrapper, ActivePracticeClient, GuestBanner) read from the same source. When increment pushes past the cap, isOverCap updates for all readers in the same render cycle. Warm navigation skips the skeleton because isLoading stays false in the store.
+- `hooks/useGuestUsage.ts`: Rewritten to read/write from the shared store instead of component-local useState. Init runs once via the store's isInitialized flag. Subsequent mounts of useGuestUsage read cached state immediately.
+- `app/layout.tsx`: Added dns-prefetch and preconnect links for the Supabase hostname in the root layout. Reads from NEXT_PUBLIC_SUPABASE_URL at build time. Only the hostname, never the anon key.
+- `stores/__tests__/guest-usage.store.test.ts`: New file. 5 tests: initial state, setUsage propagation, cap gate visibility, markInitialized, reset.
+- `LangTap_Sprints.md`: C1, C2 marked Done.
+
+### Tests
+- 877 tests passing, 0 failures (+5 from 872)
+- New: guest-usage.store (5)
+
+### Next task
+Phase D: D1 (cyclist asset reduction), D2 (split Kana/Kotoba surfaces), D3 (lazy-load word banks), D4 (cache headers)
+
+### Notes
+- C1 fixes the skeleton flash on warm navigation: the store retains isLoading=false after first init, so returning to /practice skips the skeleton.
+- C2 shaves 50-100ms off the first Supabase request by resolving DNS during HTML parse.
+- Phases A-C are infrastructure. Phase D is where measurable payload reduction begins (cyclist 12MB, word banks 1.2MB).
+
+---
+
 ## 2026-05-05 - Session 88
 
 **Sprint:** Sprint 8 - Smooth Game Loading and Navigation

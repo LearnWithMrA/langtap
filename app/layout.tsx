@@ -30,9 +30,21 @@ export const metadata: Metadata = {
   },
 }
 
+const supabaseHostname = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
+  : null
+
 export default function RootLayout({ children }: { children: ReactNode }): ReactNode {
   return (
     <html lang="ja" translate="no" className={zenMaruGothic.variable}>
+      <head>
+        {supabaseHostname && (
+          <>
+            <link rel="dns-prefetch" href={`//${supabaseHostname}`} />
+            <link rel="preconnect" href={`//${supabaseHostname}`} crossOrigin="anonymous" />
+          </>
+        )}
+      </head>
       <body suppressHydrationWarning>{children}</body>
     </html>
   )
