@@ -78,9 +78,13 @@ export function ModePanel({
 }: ModePanelProps): ReactNode {
   const { playSound } = useKeySound()
   const theme = THEMES[variant]
-  const [expanded, setExpanded] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches,
-  )
+  const [expanded, setExpanded] = useState(false)
+
+  useEffect(() => {
+    if (window.matchMedia('(min-width: 1024px)').matches) {
+      setExpanded(true)
+    }
+  }, [])
   const [modeOpen, setModeOpen] = useState(false)
   const [currentMode, setCurrentMode] = useState(inputMode)
   const dropdownRef = useRef<HTMLDivElement>(null)

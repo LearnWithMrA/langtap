@@ -30,11 +30,11 @@ export const metadata: Metadata = {
   },
 }
 
-const supabaseHostname = process.env.NEXT_PUBLIC_SUPABASE_URL
-  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
-  : null
-
 export default function RootLayout({ children }: { children: ReactNode }): ReactNode {
+  const supabaseHostname = process.env.NEXT_PUBLIC_SUPABASE_URL
+    ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
+    : null
+
   return (
     <html lang="ja" translate="no" className={zenMaruGothic.variable}>
       <head>

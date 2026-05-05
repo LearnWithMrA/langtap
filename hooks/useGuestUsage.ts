@@ -49,12 +49,14 @@ export function useGuestUsage(): UseGuestUsageReturn {
     }
 
     let mounted = true
-    useGuestUsageStore.getState().markInitialized()
 
     async function init(): Promise<void> {
       const sessionResult = await ensureGuestSession()
       if (!mounted || !sessionResult.ok) {
-        if (mounted) useGuestUsageStore.getState().setLoading(false)
+        if (mounted) {
+          useGuestUsageStore.getState().setLoading(false)
+          useGuestUsageStore.getState().markInitialized()
+        }
         return
       }
 
@@ -65,6 +67,7 @@ export function useGuestUsage(): UseGuestUsageReturn {
         useGuestUsageStore.getState().setUsage(usageResult.data)
       }
       useGuestUsageStore.getState().setLoading(false)
+      useGuestUsageStore.getState().markInitialized()
     }
 
     init()

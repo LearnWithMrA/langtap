@@ -1,19 +1,21 @@
-// @vitest-environment jsdom
-// ─────────────────────────────────────────────
+// ────────────────────���────────────────────────
 // File: components/performance/__tests__/auth-initializer.test.tsx
-// Purpose: Tests for AuthInitializer. Validates single getUser()
-//          call, immediate loading=false after identity resolves,
-//          profile loading as background operation, and cleanup.
+// Purpose: Tests for AuthInitializer. Validates loading resolves
+//          under real React.StrictMode (double-fire) and with
+//          deferred getUser() that settles after first cleanup.
+//          Would fail if initRef guard were restored.
 // Depends on: components/performance/auth-initializer.tsx,
-//             stores/user.store.ts
-// ─────────────────────────────────────────────
+//             stores/user.store.ts, test-utils/async-gate.tsx
+// ──────────────────────────────────────���──────
 
+import React from 'react'
 import { render, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useUserStore } from '@/stores/user.store'
 import { AuthInitializer } from '../auth-initializer'
+import { deferred } from '@/test-utils/async-gate'
 
-// ── Mocks ─────────────────────────────────────
+// ── Mocks ────────���────────────────────────────
 
 const MOCK_USER = { id: 'abc-123', email: 'test@example.com', isAnonymous: false }
 
@@ -51,7 +53,7 @@ vi.mock('@/services/supabase-browser', () => ({
   })),
 }))
 
-// ── Tests ─────────────────────────────────────
+// ── Tests ──────���──────────────────────────────
 
 describe('AuthInitializer', () => {
   beforeEach(() => {
@@ -69,17 +71,13 @@ describe('AuthInitializer', () => {
     })
 
     expect(useUserStore.getState().user).toBeNull()
-    expect(mockGetUser).toHaveBeenCalledOnce()
   })
 
   it('sets user and loading false before profile loads', async () => {
-    let resolveProfile: (v: unknown) => void = () => {}
-    const profilePromise = new Promise((resolve) => {
-      resolveProfile = resolve
-    })
+    const profileDeferred = deferred<unknown>()
 
     mockGetUser.mockResolvedValue({ user: MOCK_USER })
-    mockLoadProfile.mockReturnValue(profilePromise)
+    mockLoadProfile.mockReturnValue(profileDeferred.promise)
 
     render(<AuthInitializer />)
 
@@ -90,7 +88,7 @@ describe('AuthInitializer', () => {
     expect(useUserStore.getState().user).toEqual(MOCK_USER)
     expect(useUserStore.getState().profile).toBeNull()
 
-    resolveProfile({ ok: true, data: MOCK_PROFILE })
+    profileDeferred.resolve({ ok: true, data: MOCK_PROFILE })
 
     await waitFor(() => {
       expect(useUserStore.getState().profile).toEqual(MOCK_PROFILE)
@@ -115,5 +113,67 @@ describe('AuthInitializer', () => {
 
     const { container } = render(<AuthInitializer />)
     expect(container.firstChild).toBeNull()
+  })
+
+  it('resolves loading under real StrictMode with deferred getUser', async () => {
+    const getUserDeferred = deferred<{ user: unknown }>()
+    mockGetUser.mockReturnValue(getUserDeferred.promise)
+
+    render(
+      <React.StrictMode>
+        <AuthInitializer />
+      </React.StrictMode>,
+    )
+
+    expect(useUserStore.getState().isLoading).toBe(true)
+
+    getUserDeferred.resolve({ user: null })
+
+    await waitFor(() => {
+      expect(useUserStore.getState().isLoading).toBe(false)
+    })
+  })
+
+  it('resolves loading under real StrictMode with authenticated user', async () => {
+    const getUserDeferred = deferred<{ user: unknown }>()
+    const profileDeferred = deferred<unknown>()
+    mockGetUser.mockReturnValue(getUserDeferred.promise)
+    mockLoadProfile.mockReturnValue(profileDeferred.promise)
+
+    render(
+      <React.StrictMode>
+        <AuthInitializer />
+      </React.StrictMode>,
+    )
+
+    getUserDeferred.resolve({ user: MOCK_USER })
+
+    await waitFor(() => {
+      expect(useUserStore.getState().isLoading).toBe(false)
+    })
+
+    expect(useUserStore.getState().user).toEqual(MOCK_USER)
+
+    profileDeferred.resolve({ ok: true, data: MOCK_PROFILE })
+
+    await waitFor(() => {
+      expect(useUserStore.getState().profile).toEqual(MOCK_PROFILE)
+    })
+  })
+
+  it('resolves after unmount/remount without store reset', async () => {
+    mockGetUser.mockResolvedValue({ user: null })
+
+    const { unmount } = render(<AuthInitializer />)
+    unmount()
+
+    // DO NOT reset store. If the old initRef guard existed, the second
+    // mount would skip init and isLoading would stay true forever.
+
+    render(<AuthInitializer />)
+
+    await waitFor(() => {
+      expect(useUserStore.getState().isLoading).toBe(false)
+    })
   })
 })

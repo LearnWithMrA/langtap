@@ -22,14 +22,13 @@ import { StoreHydrator } from '@/components/performance/store-hydrator'
 import { AuthInitializer } from '@/components/performance/auth-initializer'
 import { AuthModalProvider } from '@/components/layout/auth-modal-provider'
 import { ScrollRestoration } from '@/components/performance/scroll-restoration'
-import { PageTransition } from '@/components/performance/page-transition'
 
 export default function MainLayout({ children }: { children: ReactNode }): ReactNode {
   return (
     <>
       <AppTopBar />
       <GuestBanner />
-      <PageTransition>{children}</PageTransition>
+      {children}
       <SettingsDialog />
       <AuthModalProvider />
       <AuthInitializer />

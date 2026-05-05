@@ -35,7 +35,8 @@ export function ScrollRestoration(): ReactNode {
   }, [])
 
   useEffect(() => {
-    const prev = positions.current.get(pathname)
+    const posMap = positions.current
+    const prev = posMap.get(pathname)
     if (isPopstate.current && prev !== undefined) {
       window.scrollTo(0, prev)
     } else {
@@ -44,7 +45,7 @@ export function ScrollRestoration(): ReactNode {
     isPopstate.current = false
 
     return (): void => {
-      positions.current.set(pathname, window.scrollY)
+      posMap.set(pathname, window.scrollY)
     }
   }, [pathname])
 

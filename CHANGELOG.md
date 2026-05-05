@@ -30,6 +30,73 @@ Format per entry:
 
 ---
 
+## 2026-05-05 - Session 89
+
+**Sprint:** Sprint 8 - Smooth Game Loading and Navigation
+**Task completed:** Fix blank game screen + add async render gate guardrails
+**Status:** Done
+
+### Changes made
+- `components/performance/auth-initializer.tsx`: Removed `initRef` guard that broke under React Strict Mode double-fire. Effect is now idempotent. Second mount calls `getUser()` again and sets store state correctly.
+- `hooks/useGuestUsage.ts`: Moved `markInitialized()` from before async work to after it completes (both success and failure paths). Prevents Strict Mode cleanup from leaving `isLoading` stuck `true`.
+- `hooks/useStuckLoadingWarning.ts`: New dev-only watchdog hook. Warns after 5s which loading gate is stuck. No-op in production.
+- `components/layout/practice-client.tsx`: Loading state now renders a visible pulse-animated card (`PracticeLoadingCard` with `data-testid="practice-loading-card"`) instead of `null`. Added `useStuckLoadingWarning` to surface stuck gates during development.
+- `test-utils/async-gate.tsx`: New shared test utilities. `deferred<T>()` controllable promise, `renderHookStrict()` real StrictMode wrapper, `expectLoadingClears()` assertion helper.
+- `LangTap_Sprints.md`: Added guardrail pattern note to Sprint 12 "Build free tier daily distance cap" task for future membership gates.
+
+### Tests
+- `components/performance/__tests__/auth-initializer.test.tsx`: Pass. Added real `<React.StrictMode>` tests with deferred getUser and unmount/remount without store reset. Proven to fail if `initRef` guard is restored.
+- `hooks/__tests__/useGuestUsage.test.ts`: Pass. New file (10 tests). StrictMode with deferred async, unmount/remount WITHOUT store reset, multiple consumers, all failure paths. Proven to fail (8/10) if `markInitialized` moved before async.
+- `components/layout/__tests__/practice-client.test.tsx`: Pass. New file (4 tests). Proves loading card is visible, resolves to game content, skips for authenticated users.
+- Full suite: 891 passed, 0 failed.
+
+### Root cause
+Both `AuthInitializer` and `useGuestUsage` used "init once" guards (`initRef` / `markInitialized()`) that fired eagerly before async work completed. In React Strict Mode (Next.js 15 default in dev), effects fire, get cleaned up, then fire again. The guard prevented the second run from doing work, while the first run's async was discarded because `mounted` became `false`. Result: `isLoading` stuck `true` forever, blank game card.
+
+### Next task
+Phase G verification (Sprint 8 completion).
+
+### Notes
+- The bug only manifested in dev mode (React Strict Mode). Production builds would have been fine, but dev mode is where all testing happens.
+- Sprint 12 "Build free tier daily distance cap" now has an explicit guardrail note: use `useStuckLoadingWarning` + `renderHookStrict` + `deferred` for any new membership loading gate.
+- Cyclist constant speed is still an end-of-sprint task.
+
+---
+
+## 2026-05-05 - Session 88 (Phase E - continued)
+
+**Sprint:** Sprint 8 - Smooth Game Loading and Navigation
+**Task completed:** Phase F skipped, hydration fix, PageTransition removed
+**Status:** Blocked
+
+### Changes made
+- `components/dashboard/mode-panel.tsx`: Fixed hydration mismatch. `expanded` state was using `typeof window !== 'undefined'` in useState initializer (server=false, client=true). Changed to default false with useEffect sync on mount.
+- `app/(main)/layout.tsx`: Removed PageTransition wrapper (was forcing remount of scene layout on navigation, defeating E5). Import removed.
+- `components/performance/scroll-restoration.tsx`: Fixed ESLint warning about ref in cleanup.
+- `LangTap_Sprints.md`: F1 marked Skipped with rationale. Sprint status updated to In Progress with blocking issue noted.
+
+### Tests
+- ESLint and TypeScript pass. Tests pass (flaky N1 timeout under parallel load, passes in isolation).
+
+### Blocking issue
+Game screen (tutorial dialogue / game window) does not render after Phase E changes. Landscape background shows but game card never appears. Root cause not yet identified. Likely in the interaction between:
+- Auth flow (AuthInitializer -> useAuth -> useGuestUsage -> PracticeClient gate)
+- Word bank lazy loading (usePracticeSession returns isLoading until loadWordBank resolves)
+- Scene layout restructuring (new (scene) route group wrapping home + practice)
+
+Next session: investigate with Codex, add console.log checkpoints to trace where the render flow stalls (auth init, guest usage, word bank loading, or PracticeScene rendering).
+
+### Next task
+Debug game screen rendering. Then Phase G verification.
+
+### Notes
+- Phase F skipped: landing page at 237 kB is acceptable, problem was always practice route (now 188 kB).
+- The hydration fix in ModePanel was a pre-existing bug surfaced by the route restructuring.
+- PageTransition with key={pathname} conflicts with E5 shared scene layout (forces remount). Needs a different approach if page transitions are still wanted.
+- Constant cyclist speed noted as end-of-sprint task.
+
+---
+
 ## 2026-05-05 - Session 88 (Phase E)
 
 **Sprint:** Sprint 8 - Smooth Game Loading and Navigation

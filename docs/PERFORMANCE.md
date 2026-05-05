@@ -274,3 +274,5 @@ post-optimization measurements compared against this baseline._
 |---|---|---|---|
 | 1.0 | 2026-05-05 | 88 | Initial baseline from A1: route sizes, chunk breakdown, static assets, key findings |
 | 1.1 | 2026-05-05 | 88 | A2 Lighthouse cold-load metrics, long task breakdown, optimization targets updated |
+| 1.2 | 2026-05-05 | 88 | Post-D bundle results: practice 552->188 kB, home 169->117 kB. Phase E route restructure. Blocking: game screen not rendering, needs investigation. |
+| 1.3 | 2026-05-05 | 89 | Blank game screen resolved: Strict Mode double-fire left auth/guest-usage loading gates stuck. Added `useStuckLoadingWarning` dev watchdog, visible loading card, and `test-utils/async-gate.tsx` regression pattern. |

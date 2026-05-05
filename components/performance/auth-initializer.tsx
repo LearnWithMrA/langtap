@@ -14,7 +14,7 @@
 
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { createBrowserSupabaseClient } from '@/services/supabase-browser'
 import { getUser } from '@/services/auth.service'
@@ -24,12 +24,7 @@ import { useUserStore } from '@/stores/user.store'
 // ── Main export ───────────────────────────────
 
 export function AuthInitializer(): ReactNode {
-  const initRef = useRef(false)
-
   useEffect(() => {
-    if (initRef.current) return
-    initRef.current = true
-
     let mounted = true
 
     async function init(): Promise<void> {

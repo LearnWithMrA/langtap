@@ -674,10 +674,25 @@ the current behaviour before making any changes. This protects against regressio
 - Cleanup on unmount
 - Side effect timing (debounce, timeout)
 
+### Async render gate tests
+
+Any hook that gates rendering on an `isLoading` flag (auth, guest usage, membership)
+must have a regression test proving it resolves under React Strict Mode. Use the
+shared utilities in `test-utils/async-gate.tsx`:
+
+- `deferred<T>()`: controllable promise (resolve/reject manually in the test)
+- `renderHookStrict()`: renders inside real `<React.StrictMode>`
+- `expectLoadingClears()`: asserts `isLoading` resolves to `false`
+
+Pattern: render the hook in StrictMode, hold the async work pending via `deferred()`,
+resolve it, and assert loading clears. If the hook uses an eager init flag that
+breaks under double-fire, the test will timeout (proving the bug).
+
 ### General test rules
 
 - Tests use Vitest and React Testing Library.
 - Test files live in a `__tests__/` folder adjacent to the source.
+- Shared test utilities live in `test-utils/` at the project root.
 - No snapshot tests for game logic. Use explicit assertions.
 - Test names describe behaviour, not implementation ("shows error when email is
   empty", not "calls setError with string").
