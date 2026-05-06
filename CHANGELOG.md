@@ -30,6 +30,31 @@ Format per entry:
 
 ---
 
+## 2026-05-07 - Session 97b
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Phase 0c: Create kana_character_catalog + verify word catalog completeness
+**Status:** Done
+
+### Changes made
+- `supabase/migrations/20260507120001_create_and_seed_kana_catalog.sql`: New migration. Creates `kana_character_catalog` table (234 characters seeded from `data/kana/characters.ts`). Adds public read policy to `leaderboard_word_catalog` (previously had RLS enabled but no SELECT policy). Reseeds `leaderboard_word_catalog` to include 555 katakana words from `data/words/kt.ts` (total now 8798, up from 8243).
+- `scripts/seed-kana-catalog.ts`: New script. Generates kana catalog seed SQL from `data/kana/characters.ts`. Count derived dynamically from source data.
+- `scripts/seed-word-catalog.ts`: Added `KATAKANA_WORDS` import. Replaced `console.log` with `process.stdout.write` to prevent stray output in generated SQL.
+- `data/__tests__/catalog-completeness.test.ts`: 7 new tests. Verifies kana catalog contains every character from source data, word catalog contains every non-empty word ID from all word banks (N5-N1 + katakana), and documents the one known empty ID in N1 (`id: ''`, kana: い, kanji: 依).
+
+### Tests
+- `data/__tests__/catalog-completeness.test.ts`: 7 passed
+- Full suite: 964 passed (7 new), 0 failures
+- `npm run check`: clean
+
+### Next task
+Phase 0d: Create reset RPCs with row lock + epoch increment + unlock deletion
+
+### Notes
+Codex review flagged the katakana gap (555 words missing from word catalog), the empty N1 word ID (documented, not fixed), and the missing read policy on `leaderboard_word_catalog`. All addressed in this task.
+
+---
+
 ## 2026-05-07 - Session 97
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership
