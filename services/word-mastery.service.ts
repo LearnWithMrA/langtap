@@ -1,11 +1,10 @@
 // ─────────────────────────────────────────────
 // File: services/word-mastery.service.ts
-// Purpose: Load word mastery scores, epoch, and manual word unlocks
-//          from Supabase. Sync via checkpoint_word_mastery and
-//          checkpoint_word_manual_unlocks RPCs (epoch-aware,
-//          greatest-merge). Legacy direct-write functions are
-//          retained for existing callers until direct RLS policies
-//          are removed in a later Phase 1 task.
+// Purpose: Load word mastery snapshot (scores + unlocks + epoch)
+//          atomically via RPC. Sync via checkpoint RPCs.
+//          Legacy direct-write functions retained for existing
+//          callers (dojo unlock, onboarding sync) until direct
+//          RLS policies are removed.
 // Depends on: services/supabase-browser.ts, types/word.types.ts
 // ─────────────────────────────────────────────
 
@@ -18,6 +17,7 @@ type ServiceResult<T> = { ok: true; data: T } | { ok: false; error: string }
 
 export type WordMasterySnapshot = {
   scores: WordMasteryScoreMap
+  unlockIds: string[]
   epoch: number
 }
 
@@ -28,36 +28,65 @@ export type CheckpointResult = {
   currentEpoch: number
 }
 
-// ── Load (with epoch) ─────────────────────────
+// ── Constants ─────────────────────────────────
 
-export async function loadWordMasterySnapshot(
-  userId: string,
-): Promise<ServiceResult<WordMasterySnapshot>> {
+const MAX_CHECKPOINT_ROWS = 200
+
+// ── Helpers ───────────────────────────────────
+
+function parseCheckpointResult(data: unknown): CheckpointResult | null {
+  if (data === null || typeof data !== 'object') return null
+  const d = data as Record<string, unknown>
+  if (typeof d['applied_count'] !== 'number') return null
+  if (typeof d['skipped_stale_count'] !== 'number') return null
+  if (typeof d['current_epoch'] !== 'number') return null
+  return {
+    appliedCount: d['applied_count'] as number,
+    droppedInvalidIds: Array.isArray(d['dropped_invalid_ids'])
+      ? (d['dropped_invalid_ids'] as string[])
+      : [],
+    skippedStaleCount: d['skipped_stale_count'] as number,
+    currentEpoch: d['current_epoch'] as number,
+  }
+}
+
+// ── Load (atomic via RPC) ─────────────────────
+
+export async function loadWordMasterySnapshot(): Promise<ServiceResult<WordMasterySnapshot>> {
   const supabase = createBrowserSupabaseClient()
 
-  const [masteryResult, profileResult] = await Promise.all([
-    supabase.from('word_mastery').select('word_id, score').eq('user_id', userId),
-    supabase.from('profiles').select('word_mastery_reset_epoch').eq('id', userId).single(),
-  ])
+  const { data, error } = await supabase.rpc('load_word_mastery_snapshot')
 
-  if (masteryResult.error) {
-    return { ok: false, error: 'Failed to load word mastery.' }
+  if (error) {
+    return { ok: false, error: 'Failed to load word mastery snapshot.' }
   }
 
-  if (profileResult.error) {
-    return { ok: false, error: 'Failed to load word mastery epoch.' }
+  if (data === null || typeof data !== 'object') {
+    return { ok: false, error: 'Invalid word mastery snapshot response.' }
+  }
+
+  const d = data as Record<string, unknown>
+  if (
+    typeof d['epoch'] !== 'number' ||
+    !Array.isArray(d['scores']) ||
+    !Array.isArray(d['unlocks'])
+  ) {
+    return { ok: false, error: 'Malformed word mastery snapshot response.' }
   }
 
   const scores: WordMasteryScoreMap = {}
-  for (const row of masteryResult.data ?? []) {
-    const r = row as { word_id: string; score: number }
-    scores[r.word_id] = r.score
+  for (const row of d['scores'] as Array<Record<string, unknown>>) {
+    if (typeof row['word_id'] === 'string' && typeof row['score'] === 'number') {
+      scores[row['word_id']] = row['score']
+    }
   }
 
-  const epoch = (profileResult.data as { word_mastery_reset_epoch: number })
-    .word_mastery_reset_epoch
+  const unlockIds = (d['unlocks'] as unknown[]).filter((id): id is string => typeof id === 'string')
 
-  return { ok: true, data: { scores, epoch } }
+  return {
+    ok: true,
+    data: { scores, unlockIds, epoch: d['epoch'] as number },
+  }
 }
 
 // ── Checkpoint sync (scores) ──────────────────
@@ -78,12 +107,13 @@ export async function checkpointWordMastery(
     }
   }
 
+  if (rows.length > MAX_CHECKPOINT_ROWS) {
+    return { ok: false, error: `Checkpoint payload exceeds ${MAX_CHECKPOINT_ROWS} rows.` }
+  }
+
   const supabase = createBrowserSupabaseClient()
 
-  const payload = rows.map((r) => ({
-    word_id: r.word_id,
-    score: r.score,
-  }))
+  const payload = rows.map((r) => ({ word_id: r.word_id, score: r.score }))
 
   const { data, error } = await supabase.rpc('checkpoint_word_mastery', {
     p_epoch: epoch,
@@ -94,27 +124,17 @@ export async function checkpointWordMastery(
     return { ok: false, error: 'Failed to sync word mastery checkpoint.' }
   }
 
-  const result = data as {
-    applied_count: number
-    dropped_invalid_ids: string[]
-    skipped_stale_count: number
-    current_epoch: number
+  const result = parseCheckpointResult(data)
+  if (!result) {
+    return { ok: false, error: 'Invalid checkpoint response shape.' }
   }
 
-  return {
-    ok: true,
-    data: {
-      appliedCount: result.applied_count,
-      droppedInvalidIds: result.dropped_invalid_ids ?? [],
-      skippedStaleCount: result.skipped_stale_count,
-      currentEpoch: result.current_epoch,
-    },
-  }
+  return { ok: true, data: result }
 }
 
 // ── Checkpoint sync (word manual unlocks) ─────
 
-export async function checkpointWordManualUnlocks(
+export async function checkpointWordUnlocks(
   ids: string[],
   epoch: number,
 ): Promise<ServiceResult<CheckpointResult>> {
@@ -125,6 +145,10 @@ export async function checkpointWordManualUnlocks(
     }
   }
 
+  if (ids.length > MAX_CHECKPOINT_ROWS) {
+    return { ok: false, error: `Unlock payload exceeds ${MAX_CHECKPOINT_ROWS} IDs.` }
+  }
+
   const supabase = createBrowserSupabaseClient()
 
   const { data, error } = await supabase.rpc('checkpoint_word_manual_unlocks', {
@@ -133,43 +157,15 @@ export async function checkpointWordManualUnlocks(
   })
 
   if (error) {
-    return { ok: false, error: 'Failed to sync word manual unlocks.' }
+    return { ok: false, error: 'Failed to sync word unlocks.' }
   }
 
-  const result = data as {
-    applied_count: number
-    dropped_invalid_ids: string[]
-    skipped_stale_count: number
-    current_epoch: number
+  const result = parseCheckpointResult(data)
+  if (!result) {
+    return { ok: false, error: 'Invalid checkpoint response shape.' }
   }
 
-  return {
-    ok: true,
-    data: {
-      appliedCount: result.applied_count,
-      droppedInvalidIds: result.dropped_invalid_ids ?? [],
-      skippedStaleCount: result.skipped_stale_count,
-      currentEpoch: result.current_epoch,
-    },
-  }
-}
-
-// ── Load word manual unlocks ──────────────────
-
-export async function loadWordManualUnlocks(userId: string): Promise<ServiceResult<string[]>> {
-  const supabase = createBrowserSupabaseClient()
-
-  const { data, error } = await supabase
-    .from('word_manual_unlocks')
-    .select('word_id')
-    .eq('user_id', userId)
-
-  if (error) {
-    return { ok: false, error: 'Failed to load word unlocks.' }
-  }
-
-  const ids = (data ?? []).map((row: { word_id: string }) => row.word_id)
-  return { ok: true, data: ids }
+  return { ok: true, data: result }
 }
 
 // ── Legacy direct-write functions ─────────────
@@ -196,6 +192,22 @@ export async function loadWordMastery(userId: string): Promise<ServiceResult<Wor
   }
 
   return { ok: true, data: scores }
+}
+
+export async function loadWordManualUnlocks(userId: string): Promise<ServiceResult<string[]>> {
+  const supabase = createBrowserSupabaseClient()
+
+  const { data, error } = await supabase
+    .from('word_manual_unlocks')
+    .select('word_id')
+    .eq('user_id', userId)
+
+  if (error) {
+    return { ok: false, error: 'Failed to load word unlocks.' }
+  }
+
+  const ids = (data ?? []).map((row: { word_id: string }) => row.word_id)
+  return { ok: true, data: ids }
 }
 
 export async function syncWordMastery(

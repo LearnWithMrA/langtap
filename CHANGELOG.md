@@ -30,6 +30,32 @@ Format per entry:
 
 ---
 
+## 2026-05-07 - Session 97i
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Codex gate: Phase 1 review fixes
+**Status:** Done
+
+### Changes made
+- `supabase/migrations/20260507120007_create_load_snapshot_rpcs.sql`: Two new RPCs (`load_mastery_snapshot`, `load_word_mastery_snapshot`) that atomically read epoch + scores + unlocks under a profile row `FOR SHARE` lock. Prevents a reset between separate queries from returning stale data with a new epoch.
+- `services/mastery.service.ts`: Rewrote to use atomic `load_mastery_snapshot` RPC (no more parallel queries). Removed `userId` param from load (RPC derives from session). Added `parseCheckpointResult` runtime validator. Renamed `syncManualUnlocks` to `checkpointKanaUnlocks` (avoids collision with `unlock.service.ts`). Added `MAX_CHECKPOINT_ROWS = 200` pre-validation. Snapshot now includes `unlockIds` alongside scores.
+- `services/word-mastery.service.ts`: Same pattern. Uses `load_word_mastery_snapshot` RPC. Renamed to `checkpointWordMastery` and `checkpointWordUnlocks`. Added response validation and payload cap. Snapshot includes `unlockIds`.
+- `services/__tests__/mastery.service.test.ts`: Rewrote. 17 tests covering atomic load (RPC, empty, errors, malformed response, null data), checkpoint (RPC call, empty, payload cap, stale epoch, error, malformed response), and unlock checkpoint.
+- `services/__tests__/word-mastery.service.test.ts`: Rewrote. 19 tests covering atomic load, checkpoint, unlock, response validation, payload cap, and legacy functions.
+
+### Tests
+- Full suite: 984 passed, 0 failures
+- `npm run check`: clean
+- All 16 migrations apply cleanly
+
+### Next task
+Phase 2: Wire load-on-start for signed-in users
+
+### Notes
+Phase 1 Codex gate cleared. The blocker was non-atomic snapshot loading (epoch + data in separate queries, vulnerable to reset between reads). Fixed with atomic load RPCs using `FOR SHARE` lock on the profile row. All services now have: runtime response validation, payload cap enforcement, and unambiguous function names (checkpoint* for RPCs, legacy* for direct writes).
+
+---
+
 ## 2026-05-07 - Session 97h
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership

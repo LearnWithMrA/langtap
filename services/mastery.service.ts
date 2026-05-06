@@ -1,10 +1,9 @@
 // ─────────────────────────────────────────────
 // File: services/mastery.service.ts
-// Purpose: Load kana mastery scores (score + learning_score) and
-//          epoch from Supabase. Sync via checkpoint_mastery and
-//          checkpoint_manual_unlocks RPCs (epoch-aware, greatest-merge).
-//          All writes go through RPCs that lock the profile row
-//          for serialization with resets.
+// Purpose: Load kana mastery snapshot (scores + learning + unlocks +
+//          epoch) atomically via RPC. Sync via checkpoint RPCs.
+//          All reads and writes go through RPCs that lock the
+//          profile row for epoch consistency and reset serialization.
 // Depends on: services/supabase-browser.ts, types/game.types.ts
 // ─────────────────────────────────────────────
 
@@ -18,6 +17,7 @@ type ServiceResult<T> = { ok: true; data: T } | { ok: false; error: string }
 export type MasterySnapshot = {
   scores: MasteryScoreMap
   learningScores: MasteryScoreMap
+  unlockIds: string[]
   epoch: number
 }
 
@@ -28,36 +28,70 @@ export type CheckpointResult = {
   currentEpoch: number
 }
 
-// ── Load ──────────────────────────────────────
+// ── Constants ─────────────────────────────────
 
-export async function loadMasterySnapshot(userId: string): Promise<ServiceResult<MasterySnapshot>> {
+const MAX_CHECKPOINT_ROWS = 200
+
+// ── Helpers ───────────────────────────────────
+
+function parseCheckpointResult(data: unknown): CheckpointResult | null {
+  if (data === null || typeof data !== 'object') return null
+  const d = data as Record<string, unknown>
+  if (typeof d['applied_count'] !== 'number') return null
+  if (typeof d['skipped_stale_count'] !== 'number') return null
+  if (typeof d['current_epoch'] !== 'number') return null
+  return {
+    appliedCount: d['applied_count'] as number,
+    droppedInvalidIds: Array.isArray(d['dropped_invalid_ids'])
+      ? (d['dropped_invalid_ids'] as string[])
+      : [],
+    skippedStaleCount: d['skipped_stale_count'] as number,
+    currentEpoch: d['current_epoch'] as number,
+  }
+}
+
+// ── Load (atomic via RPC) ─────────────────────
+
+export async function loadMasterySnapshot(): Promise<ServiceResult<MasterySnapshot>> {
   const supabase = createBrowserSupabaseClient()
 
-  const [masteryResult, profileResult] = await Promise.all([
-    supabase.from('mastery').select('character_id, score, learning_score').eq('user_id', userId),
-    supabase.from('profiles').select('mastery_reset_epoch').eq('id', userId).single(),
-  ])
+  const { data, error } = await supabase.rpc('load_mastery_snapshot')
 
-  if (masteryResult.error) {
-    return { ok: false, error: 'Failed to load mastery scores.' }
+  if (error) {
+    return { ok: false, error: 'Failed to load mastery snapshot.' }
   }
 
-  if (profileResult.error) {
-    return { ok: false, error: 'Failed to load mastery epoch.' }
+  if (data === null || typeof data !== 'object') {
+    return { ok: false, error: 'Invalid mastery snapshot response.' }
+  }
+
+  const d = data as Record<string, unknown>
+  if (
+    typeof d['epoch'] !== 'number' ||
+    !Array.isArray(d['scores']) ||
+    !Array.isArray(d['unlocks'])
+  ) {
+    return { ok: false, error: 'Malformed mastery snapshot response.' }
   }
 
   const scores: MasteryScoreMap = {}
   const learningScores: MasteryScoreMap = {}
 
-  for (const row of masteryResult.data ?? []) {
-    const r = row as { character_id: string; score: number; learning_score: number }
-    scores[r.character_id] = r.score
-    learningScores[r.character_id] = r.learning_score
+  for (const row of d['scores'] as Array<Record<string, unknown>>) {
+    if (typeof row['character_id'] === 'string' && typeof row['score'] === 'number') {
+      scores[row['character_id']] = row['score']
+    }
+    if (typeof row['character_id'] === 'string' && typeof row['learning_score'] === 'number') {
+      learningScores[row['character_id']] = row['learning_score']
+    }
   }
 
-  const epoch = (profileResult.data as { mastery_reset_epoch: number }).mastery_reset_epoch
+  const unlockIds = (d['unlocks'] as unknown[]).filter((id): id is string => typeof id === 'string')
 
-  return { ok: true, data: { scores, learningScores, epoch } }
+  return {
+    ok: true,
+    data: { scores, learningScores, unlockIds, epoch: d['epoch'] as number },
+  }
 }
 
 // ── Checkpoint sync (scores) ──────────────────
@@ -68,7 +102,7 @@ export type MasteryCheckpointRow = {
   learning_score: number
 }
 
-export async function syncMastery(
+export async function checkpointMastery(
   rows: MasteryCheckpointRow[],
   epoch: number,
 ): Promise<ServiceResult<CheckpointResult>> {
@@ -77,6 +111,10 @@ export async function syncMastery(
       ok: true,
       data: { appliedCount: 0, droppedInvalidIds: [], skippedStaleCount: 0, currentEpoch: epoch },
     }
+  }
+
+  if (rows.length > MAX_CHECKPOINT_ROWS) {
+    return { ok: false, error: `Checkpoint payload exceeds ${MAX_CHECKPOINT_ROWS} rows.` }
   }
 
   const supabase = createBrowserSupabaseClient()
@@ -96,27 +134,17 @@ export async function syncMastery(
     return { ok: false, error: 'Failed to sync mastery checkpoint.' }
   }
 
-  const result = data as {
-    applied_count: number
-    dropped_invalid_ids: string[]
-    skipped_stale_count: number
-    current_epoch: number
+  const result = parseCheckpointResult(data)
+  if (!result) {
+    return { ok: false, error: 'Invalid checkpoint response shape.' }
   }
 
-  return {
-    ok: true,
-    data: {
-      appliedCount: result.applied_count,
-      droppedInvalidIds: result.dropped_invalid_ids ?? [],
-      skippedStaleCount: result.skipped_stale_count,
-      currentEpoch: result.current_epoch,
-    },
-  }
+  return { ok: true, data: result }
 }
 
 // ── Checkpoint sync (manual unlocks) ──────────
 
-export async function syncManualUnlocks(
+export async function checkpointKanaUnlocks(
   ids: string[],
   epoch: number,
 ): Promise<ServiceResult<CheckpointResult>> {
@@ -127,6 +155,10 @@ export async function syncManualUnlocks(
     }
   }
 
+  if (ids.length > MAX_CHECKPOINT_ROWS) {
+    return { ok: false, error: `Unlock payload exceeds ${MAX_CHECKPOINT_ROWS} IDs.` }
+  }
+
   const supabase = createBrowserSupabaseClient()
 
   const { data, error } = await supabase.rpc('checkpoint_manual_unlocks', {
@@ -135,41 +167,13 @@ export async function syncManualUnlocks(
   })
 
   if (error) {
-    return { ok: false, error: 'Failed to sync manual unlocks.' }
+    return { ok: false, error: 'Failed to sync kana unlocks.' }
   }
 
-  const result = data as {
-    applied_count: number
-    dropped_invalid_ids: string[]
-    skipped_stale_count: number
-    current_epoch: number
+  const result = parseCheckpointResult(data)
+  if (!result) {
+    return { ok: false, error: 'Invalid checkpoint response shape.' }
   }
 
-  return {
-    ok: true,
-    data: {
-      appliedCount: result.applied_count,
-      droppedInvalidIds: result.dropped_invalid_ids ?? [],
-      skippedStaleCount: result.skipped_stale_count,
-      currentEpoch: result.current_epoch,
-    },
-  }
-}
-
-// ── Load manual unlocks ───────────────────────
-
-export async function loadManualUnlocks(userId: string): Promise<ServiceResult<string[]>> {
-  const supabase = createBrowserSupabaseClient()
-
-  const { data, error } = await supabase
-    .from('manual_unlocks')
-    .select('character_id')
-    .eq('user_id', userId)
-
-  if (error) {
-    return { ok: false, error: 'Failed to load manual unlocks.' }
-  }
-
-  const ids = (data ?? []).map((row: { character_id: string }) => row.character_id)
-  return { ok: true, data: ids }
+  return { ok: true, data: result }
 }

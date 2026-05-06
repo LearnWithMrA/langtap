@@ -476,6 +476,7 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 | Implement kana mastery service | **Medium** | **Done** | `loadMasterySnapshot` (scores + learningScores + epoch). `syncMastery` and `syncManualUnlocks` via checkpoint RPCs. `loadManualUnlocks` via direct query. 14 tests. Session 97. |
 | Implement word counter service | **Small** | **Done** | `syncCounters` via plain client upsert (session-scoped best-effort, no epoch). Session 97. |
 | Wire word mastery service calls | **Small** | **Done** | Added `loadWordMasterySnapshot` (scores + epoch), `checkpointWordMastery`, `checkpointWordManualUnlocks` via RPCs. Legacy direct-write functions retained for existing callers. 19 tests (7 new). Session 97. |
+| **Codex gate: Phase 1 review** | - | **Done** | Codex found: non-atomic snapshot load (blocker), unsafe response casts, naming collisions. Fixed: atomic load RPCs (`load_mastery_snapshot`, `load_word_mastery_snapshot`), runtime response validation, renamed checkpoint functions, payload cap enforcement. Session 97. |
 
 ### Phase 2: Sync Infrastructure
 
@@ -484,6 +485,7 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 | Wire load-on-start for signed-in users | **Medium** | **To Do** | StoreHydrator: epoch-aware merge, waits for migration decision, gates PracticeClient. |
 | Wire checkpoint sync for signed-in users | **Medium** | **To Do** | Versioned dirty tracking, checkpoint RPCs with epoch, pagehide beacon fallback, persisted retry. |
 | Sync input mode from Supabase profile to settings store on login | **Small** | **To Do** | `useSettings.ts` reads profile fields, pushes to settings store. |
+| **Codex gate: Phase 2 review** | - | **To Do** | Review StoreHydrator epoch-aware merge, checkpoint sync hook, beacon endpoint, dirty versioning, and auth-change rehydrate flow. |
 
 ### Phase 3: Guest Conversion
 
@@ -491,6 +493,7 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 |---|---|---|---|
 | Safe guest progress import via server RPC | **Medium** | **To Do** | `import_guest_progress` and `import_legacy_progress` RPCs. Server-side validation, catalog checks, greatest-merge, error classification. |
 | Guest-to-account migration flow | **Medium** | **To Do** | Centralized in AuthInitializer. Three scenarios (session marker auto-import, confirmation prompt, legacy modal). Quarantine on pending keys. |
+| **Codex gate: Phase 3 review** | - | **To Do** | Review import RPC, migration flow, quarantine state machine, pending key ownership, and error classification routing. |
 
 ### Phase 4: Profile and Settings
 
@@ -500,6 +503,7 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 | Build username change UI | **Small** | **To Do** | Uses change_username RPC. Disabled state during cooldown. |
 | Build reset progress flow | **Small** | **To Do** | Uses reset RPCs. Non-optimistic. Spinner during RPC. |
 | Build delete account flow | **Medium** | **To Do** | Server-side deletion with CSRF, provider-aware re-auth, cascade verification, cookie cleanup. |
+| **Codex gate: Phase 4 review** | - | **To Do** | Review profile wiring, settings sync, username/reset/delete flows, and CSRF/re-auth implementation. |
 
 ### Phase 5: Auth Expansion
 
@@ -507,12 +511,14 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 |---|---|---|---|
 | Google Sign-In | **Medium** | **To Do** | Supabase OAuth. `window.location.origin` for redirect. Callback sanitization. |
 | Apple Sign-In | **Medium** | **To Do** | Supabase OAuth. Apple-specific handling (Private Relay, no name reliance). |
+| **Codex gate: Phase 5 review** | - | **To Do** | Review OAuth callback sanitization, redirect origin handling, account linking, and guest migration integration. |
 
 ### Phase 6: Membership
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
 | Build free tier daily distance cap | **Medium** | **To Do** | Server-enforced via `daily_cap_events` table. Two-int advisory lock. Feature flag in `app_config`. Cap crossing allowed, next prompt blocked. |
+| **Codex gate: Phase 6 review** | - | **To Do** | Review daily cap RPC, advisory lock serialization, feature flag enforcement, cap_enforced tracking, and practice gating. |
 
 ### Phase 7: Tests
 
