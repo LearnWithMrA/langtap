@@ -28,6 +28,7 @@ import { toKatakana } from '@/fixtures/kana-practice-data'
 import { KANA_CHARACTERS } from '@/data/kana/characters'
 import { getDualMnemonic } from '@/data/kana/mnemonics'
 import { useSettingsStore } from '@/stores/settings.store'
+import { useWordAudio } from '@/hooks/useWordAudio'
 import type { Stage } from '@/types/kana.types'
 import type {
   UsePracticeSessionReturn,
@@ -147,6 +148,7 @@ export function GameWindow({
 
   const inputDirection = useSettingsStore((s) => s.inputDirection)
   const hintsEnabled = useSettingsStore((s) => s.hints)
+  const { playWordAudio } = useWordAudio()
 
   type Direction = 'kana-to-romaji' | 'romaji-to-kana'
   const [alternateDirection, setAlternateDirection] = useState<Direction>('kana-to-romaji')
@@ -290,7 +292,10 @@ export function GameWindow({
       if (scoreDelta > 0) onLeaderboardScore(scoreDelta)
     }
 
-    scheduleTimeout((): void => setShowMeaning(true), MEANING_FADE_MS)
+    scheduleTimeout((): void => {
+      setShowMeaning(true)
+      if (prompt?.word.id) playWordAudio(prompt.word.id)
+    }, MEANING_FADE_MS)
     scheduleTimeout((): void => {
       if (inputDirection === 'alternate') {
         setAlternateDirection((prev) =>
@@ -310,6 +315,8 @@ export function GameWindow({
     isCharacterDrill,
     advanceToNext,
     inputDirection,
+    playWordAudio,
+    prompt?.word.id,
   ])
 
   const handleWrong = useCallback((): void => {

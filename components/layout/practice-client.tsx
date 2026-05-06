@@ -169,7 +169,8 @@ function CappedPracticeShell(): ReactNode {
 // -- Active practice (hooks mounted only when not capped) ---
 
 function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
-  const [mode, setMode] = useState<InputMode>('tap')
+  const mode = useSettingsStore((s) => s.inputMode) as InputMode
+  const setMode = useSettingsStore((s) => s.setInputMode)
   const kotobaInput = useSettingsStore((s) => s.kotobaInput)
   const { counters, incrementCorrect } = usePracticeCounters()
   const profileLevel = useUserStore((s) => s.profile?.jlptLevel)

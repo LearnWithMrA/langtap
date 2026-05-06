@@ -23,6 +23,7 @@ type ModePanelProps = {
   stages: readonly StageProgress[]
   leaderboard: LeaderboardGlance
   inputMode: string
+  onModeChange?: (mode: 'tap' | 'type' | 'swipe') => void
   locked?: boolean
 }
 
@@ -74,6 +75,7 @@ export function ModePanel({
   stages,
   leaderboard,
   inputMode,
+  onModeChange,
   locked = false,
 }: ModePanelProps): ReactNode {
   const { playSound } = useKeySound()
@@ -86,7 +88,7 @@ export function ModePanel({
     }
   }, [])
   const [modeOpen, setModeOpen] = useState(false)
-  const [currentMode, setCurrentMode] = useState(inputMode)
+  const currentMode = inputMode
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const closeDropdown = useCallback((): void => setModeOpen(false), [])
@@ -250,7 +252,7 @@ export function ModePanel({
                 key={mode}
                 type="button"
                 onClick={(): void => {
-                  setCurrentMode(mode)
+                  onModeChange?.(mode)
                   setModeOpen(false)
                 }}
                 className={`block px-4 py-2 text-xs font-medium text-left transition-colors duration-150 ${

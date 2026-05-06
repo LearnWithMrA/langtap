@@ -30,6 +30,47 @@ Format per entry:
 
 ---
 
+## 2026-05-06 - Session 94b
+
+**Sprint:** Sprint 9 - Leaderboard and Audio
+**Task completed:** VOICEVOX audio generation, word audio playback, lo-fi background music, Codex bug fixes, profile visibility persistence
+**Status:** Done
+
+### Changes made
+- `scripts/generate-audio.ts`: Updated with Shikoku Metan (speaker 2), 0.85x speed, 44.1kHz, max MP3 quality, JLPT level folders, sequential level processing, ID validation filter
+- `data/audio/word-manifest.ts`: Populated with 8,243 word entries mapped to JLPT levels
+- `hooks/useWordAudio.ts`: New. On-demand word pronunciation playback hook, lazy AudioContext, buffer cache, respects wordAudio setting
+- `components/game/game-window.tsx`: Wired word audio on meaning reveal
+- `components/game/kotoba-game-window.tsx`: Wired word audio on completion. Fixed kanji clean scoring bug (wasClean now checks kanjiWrongCount)
+- `hooks/useLofiPlayer.ts`: New. Shuffled 17-track rotation, auto-advance on track end, persisted play preference, previous/skip controls. Fixed auto-advance bug (ended listener attached on Audio creation)
+- `data/audio/lofi-tracks.ts`: New. CC0 track list (HoliznaCC0, no attribution required)
+- `components/audio/audio-player.tsx`: Rewritten with real playback, previous/play/next controls, minimal layout
+- `public/audio/lofi/`: 17 lo-fi MP3 tracks added
+- `public/audio/words/n5..n1/`: 8,243 word pronunciation MP3s added
+- `hooks/useWordAudio.test.ts`: New. 5 tests for word audio hook
+- `data/audio/__tests__/word-manifest.test.ts`: New. 2 tests for manifest path resolution
+- `components/layout/practice-client.tsx`: Mode now reads/writes settings store instead of hardcoded tap
+- `components/dashboard/mode-panel.tsx`: Mode changes propagate via onModeChange callback to settings store
+- `components/layout/game-home-client.tsx`: Wires setInputMode to ModePanel onModeChange
+- `components/profile/preferences-card.tsx`: Leaderboard visibility wired to Supabase via updateProfile with optimistic update and rollback
+- `vercel.json`: Added short cache rule for word audio files
+- `package.json`: Added tsx to devDependencies, generate-audio npm script
+- `LangTap_Sprints.md`: All Sprint 9 tasks marked Done
+
+### Tests
+- Full suite: 942 passed
+- `npm run check`: prettier, eslint, tsc, vitest all clean
+
+### Next task
+Sprint 10 - Accounts, Auth, and Membership. Server-derived leaderboard scoring to be planned as a future sprint task.
+
+### Notes
+- Codex review identified 8 findings. 5 fixed this session (kanji clean scoring, lo-fi auto-advance, default mode persistence, manifest empty ID, profile visibility). Client-trusted scoring deferred as accepted v1 trade-off. Kana per-character scoring is intentional. Test coverage gaps noted for follow-up.
+- VOICEVOX voice: Shikoku Metan Normal (speaker 2). Licence needs confirmation before commercial use.
+- Lo-fi tracks: HoliznaCC0, CC0 public domain, no attribution required.
+
+---
+
 ## 2026-05-06 - Session 94
 
 **Sprint:** Sprint 9 - Leaderboard and Audio

@@ -1,19 +1,19 @@
-// ------------------------------------------------------------
+// ─────────────────────────────────────────────
 // File: components/audio/audio-player.tsx
-// Purpose: Translucent lo-fi background music player. Phase 1
-//          placeholder: displays song title and play/pause button
-//          but plays nothing until audio tracks are sourced in
-//          Sprint 10. Does not break if no audio source exists.
-// Depends on: nothing
-// ------------------------------------------------------------
+// Purpose: Translucent lo-fi background music player. Shuffled
+//          playback of CC0 tracks. Play/pause toggle with skip
+//          button. Shows current track title. Audio only fetched
+//          on user interaction, never on page load.
+// Depends on: hooks/useLofiPlayer.ts, hooks/useKeySound.ts
+// ─────────────────────────────────────────────
 
 'use client'
 
-import { useState, useCallback } from 'react'
 import type { ReactNode } from 'react'
+import { useLofiPlayer } from '@/hooks/useLofiPlayer'
 import { useKeySound } from '@/hooks/useKeySound'
 
-// -- Icons --------------------------------------------------
+// ── Icons ────────────────────────────────────
 
 function IconPlay(): ReactNode {
   return (
@@ -32,29 +32,78 @@ function IconPause(): ReactNode {
   )
 }
 
-// -- Component ----------------------------------------------
+function IconPrevious(): ReactNode {
+  return (
+    <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" stroke="none">
+      <rect x={5} y={5} width={3} height={14} rx={1} />
+      <path d="M18 5 L9 12 L18 19 Z" />
+    </svg>
+  )
+}
+
+function IconNext(): ReactNode {
+  return (
+    <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" stroke="none">
+      <path d="M6 5 L15 12 L6 19 Z" />
+      <rect x={16} y={5} width={3} height={14} rx={1} />
+    </svg>
+  )
+}
+
+// ── Component ────────────────────────────────
 
 export function AudioPlayer(): ReactNode {
-  const [isPlaying, setIsPlaying] = useState(false)
+  const { isPlaying, toggle, skip, previous } = useLofiPlayer()
   const { playSound } = useKeySound()
 
-  const handleToggle = useCallback((): void => {
+  const handleToggle = (): void => {
     playSound('ui-audio-toggle')
-    setIsPlaying((prev) => !prev)
-    // No actual audio playback in Phase 1
-  }, [playSound])
+    toggle()
+  }
+
+  const handlePrevious = (): void => {
+    playSound('ui-dropdown')
+    previous()
+  }
+
+  const handleSkip = (): void => {
+    playSound('ui-dropdown')
+    skip()
+  }
+
+  const controlButton =
+    'h-7 w-7 flex items-center justify-center rounded-full bg-white/50 text-warm-800 hover:text-sage-400 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-sage-300 cursor-pointer'
 
   return (
-    <div className="flex items-center gap-2 bg-white/40 backdrop-blur-sm rounded-lg px-2.5 py-1.5">
+    <div className="flex items-center gap-1 bg-white/40 backdrop-blur-sm rounded-lg px-1.5 py-1.5">
+      {isPlaying && (
+        <button
+          type="button"
+          onClick={handlePrevious}
+          className={controlButton}
+          aria-label="Previous track"
+        >
+          <IconPrevious />
+        </button>
+      )}
       <button
         type="button"
         onClick={handleToggle}
-        className="h-7 w-7 flex items-center justify-center rounded-full bg-white/50 text-warm-800 hover:text-sage-400 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-sage-300 cursor-pointer"
+        className={controlButton}
         aria-label={isPlaying ? 'Pause music' : 'Play music'}
       >
         {isPlaying ? <IconPause /> : <IconPlay />}
       </button>
-      <span className="text-xs text-warm-600 truncate max-w-[100px]">Lo-fi</span>
+      {isPlaying && (
+        <button
+          type="button"
+          onClick={handleSkip}
+          className={controlButton}
+          aria-label="Next track"
+        >
+          <IconNext />
+        </button>
+      )}
     </div>
   )
 }

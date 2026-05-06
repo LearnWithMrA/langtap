@@ -66,6 +66,7 @@ export function GameHomeClient(): ReactNode {
   const scores = useMasteryStore((s) => s.scores)
   const unlockedIds = useUnlockStore((s) => s.unlockedIds)
   const inputMode = useSettingsStore((s) => s.inputMode)
+  const setInputMode = useSettingsStore((s) => s.setInputMode)
 
   useEffect(() => {
     const manual = new Set(useOnboardingStore.getState().selectedCharacterIds)
@@ -100,6 +101,7 @@ export function GameHomeClient(): ReactNode {
               stages={kanaStages}
               leaderboard={EMPTY_LEADERBOARD}
               inputMode={inputMode}
+              onModeChange={setInputMode}
             />
           </div>
           <div className="lg:flex-1">
@@ -108,6 +110,7 @@ export function GameHomeClient(): ReactNode {
               stages={kotobaStages}
               leaderboard={EMPTY_LEADERBOARD}
               inputMode={inputMode}
+              onModeChange={setInputMode}
             />
           </div>
         </div>

@@ -4,12 +4,12 @@
 //          bank, generates MP3 files, and builds the word-manifest.
 //          Incremental: re-running only generates missing files.
 //          Run with: npx tsx scripts/generate-audio.ts [--level N5]
-//                    [--dry-run] [--speaker 3]
+//                    [--dry-run] [--speaker 2]
 // Depends on: data/words/n5..n1, VOICEVOX running at localhost:50021,
 //             ffmpeg installed
 // ─────────────────────────────────────────────
 
-import { existsSync, mkdirSync, writeFileSync, unlinkSync, readFileSync } from 'node:fs'
+import { existsSync, mkdirSync, writeFileSync, unlinkSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execSync } from 'node:child_process'
@@ -28,13 +28,23 @@ const MANIFEST_PATH = join(ROOT, 'data', 'audio', 'word-manifest.ts')
 const VOICEVOX_BASE = 'http://localhost:50021'
 const BATCH_SIZE = 5
 const BATCH_DELAY_MS = 100
-const DEFAULT_SPEAKER = 3
+const DEFAULT_SPEAKER = 2
+
+// ── Voice tuning (Shikoku Metan Normal) ─────
+
+const VOICE_OVERRIDES = {
+  speedScale: 0.85,
+  prePhonemeLength: 0.05,
+  postPhonemeLength: 0.05,
+  outputSamplingRate: 44100,
+}
 
 // ── Types ────────────────────────────────────
 
 type WordEntry = {
   id: string
   kana: string
+  level: string
 }
 
 type Stats = {
@@ -92,6 +102,18 @@ function checkFfmpeg(): void {
 
 // ── Word loading ─────────────────────────────
 
+function isValidId(id: string): boolean {
+  if (id.length === 0) return false
+  if (/[/\\"\s$`]/.test(id)) return false
+  return true
+}
+
+function tagLevel(words: Array<{ id: string; kana: string }>, level: string): WordEntry[] {
+  return words
+    .filter((w) => isValidId(w.id) && w.kana.length > 0)
+    .map((w) => ({ id: w.id, kana: w.kana, level }))
+}
+
 async function loadWords(levelFilter: string | null): Promise<WordEntry[]> {
   const { N5_WORDS } = await import('../data/words/n5')
   const { N4_WORDS } = await import('../data/words/n4')
@@ -99,7 +121,7 @@ async function loadWords(levelFilter: string | null): Promise<WordEntry[]> {
   const { N2_WORDS } = await import('../data/words/n2')
   const { N1_WORDS } = await import('../data/words/n1')
 
-  const LEVEL_MAP: Record<string, WordEntry[]> = {
+  const LEVEL_MAP: Record<string, Array<{ id: string; kana: string }>> = {
     N5: N5_WORDS,
     N4: N4_WORDS,
     N3: N3_WORDS,
@@ -113,10 +135,10 @@ async function loadWords(levelFilter: string | null): Promise<WordEntry[]> {
       console.error(`Unknown level: ${levelFilter}. Use N5, N4, N3, N2, or N1.`)
       process.exit(1)
     }
-    return words
+    return tagLevel(words, levelFilter.toLowerCase())
   }
 
-  return Object.values(LEVEL_MAP).flat()
+  return Object.entries(LEVEL_MAP).flatMap(([level, words]) => tagLevel(words, level.toLowerCase()))
 }
 
 // ── VOICEVOX API ─────────────────────────────
@@ -130,6 +152,7 @@ async function generateAudio(text: string, speakerId: number): Promise<Buffer> {
     throw new Error(`audio_query failed (${queryRes.status}): ${await queryRes.text()}`)
   }
   const audioQuery = await queryRes.json()
+  Object.assign(audioQuery, VOICE_OVERRIDES)
 
   const synthRes = await fetch(`${VOICEVOX_BASE}/synthesis?speaker=${speakerId}`, {
     method: 'POST',
@@ -148,7 +171,7 @@ function wavToMp3(wavBuffer: Buffer, outputPath: string, wordId: string): void {
   const tempWav = join(tmpdir(), `voicevox-${wordId}-${process.pid}.wav`)
   writeFileSync(tempWav, wavBuffer)
   try {
-    execSync(`ffmpeg -i "${tempWav}" -codec:a libmp3lame -qscale:a 4 -y "${outputPath}"`, {
+    execSync(`ffmpeg -i "${tempWav}" -codec:a libmp3lame -qscale:a 0 -y "${outputPath}"`, {
       stdio: 'pipe',
     })
   } finally {
@@ -173,8 +196,14 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 3, delayMs = 1000): 
 
 // ── Process single word ─────────────────────
 
+function wordOutputPath(word: WordEntry): string {
+  return join(OUTPUT_DIR, word.level, `${word.id}.mp3`)
+}
+
 async function processWord(word: WordEntry, speakerId: number): Promise<void> {
-  const outputPath = join(OUTPUT_DIR, `${word.id}.mp3`)
+  const outDir = join(OUTPUT_DIR, word.level)
+  if (!existsSync(outDir)) mkdirSync(outDir, { recursive: true })
+  const outputPath = wordOutputPath(word)
   const wavBuffer = await generateAudio(word.kana, speakerId)
   wavToMp3(wavBuffer, outputPath, word.id)
 }
@@ -182,14 +211,14 @@ async function processWord(word: WordEntry, speakerId: number): Promise<void> {
 // ── Manifest generation ─────────────────────
 
 function buildManifest(words: WordEntry[]): void {
-  const existingIds: string[] = []
+  const entries: Array<{ id: string; level: string }> = []
   for (const word of words) {
-    if (existsSync(join(OUTPUT_DIR, `${word.id}.mp3`))) {
-      existingIds.push(word.id)
+    if (existsSync(wordOutputPath(word))) {
+      entries.push({ id: word.id, level: word.level })
     }
   }
 
-  existingIds.sort()
+  entries.sort((a, b) => a.id.localeCompare(b.id))
 
   const lines = [
     '// ─────────────────────────────────────────────',
@@ -201,65 +230,35 @@ function buildManifest(words: WordEntry[]): void {
     '',
     '// ── Manifest ─────────────────────────────────',
     '',
-    'export const WORDS_WITH_AUDIO = new Set<string>([',
-    ...existingIds.map((id) => `  '${id}',`),
+    'const WORD_AUDIO_MAP = new Map<string, string>([',
+    ...entries.map((e) => `  ['${e.id}', '${e.level}'],`),
     '])',
     '',
     '// ── Helpers ──────────────────────────────────',
     '',
     'export function getWordAudioPath(wordId: string): string | null {',
-    '  return WORDS_WITH_AUDIO.has(wordId) ? `/audio/words/${wordId}.mp3` : null',
+    '  const level = WORD_AUDIO_MAP.get(wordId)',
+    '  return level ? `/audio/words/${level}/${wordId}.mp3` : null',
     '}',
     '',
   ]
 
   writeFileSync(MANIFEST_PATH, lines.join('\n'))
-  console.log(`\nManifest written: ${existingIds.length} entries -> ${MANIFEST_PATH}`)
+  console.log(`\nManifest written: ${entries.length} entries -> ${MANIFEST_PATH}`)
 }
 
-// ── Main ─────────────────────────────────────
+// ── Process one level ───────────────────────
 
-async function main(): Promise<void> {
-  const { level, dryRun, speaker } = parseArgs()
-
-  console.log('Loading word bank...')
-  const words = await loadWords(level)
-  console.log(`Total words: ${words.length}${level ? ` (${level} only)` : ''}`)
-
-  if (!existsSync(OUTPUT_DIR)) {
-    mkdirSync(OUTPUT_DIR, { recursive: true })
-  }
-
-  // Dry run mode
-  if (dryRun) {
-    const missing = words.filter((w) => !existsSync(join(OUTPUT_DIR, `${w.id}.mp3`)))
-    console.log(`\nDry run: ${missing.length} files need generation out of ${words.length} total`)
-    for (const w of missing.slice(0, 20)) {
-      console.log(`  ${w.id}: ${w.kana}`)
-    }
-    if (missing.length > 20) console.log(`  ... and ${missing.length - 20} more`)
-    process.exit(0)
-  }
-
-  // Prerequisite checks
-  await checkVoicevox()
-  checkFfmpeg()
-
-  console.log(`Speaker ID: ${speaker}`)
-  console.log(`Output: ${OUTPUT_DIR}`)
-  console.log('')
-
+async function processLevel(words: WordEntry[], speaker: number): Promise<Stats> {
   const stats: Stats = { generated: 0, skipped: 0, errors: 0 }
   let processed = 0
 
-  // Batch processing
   for (let i = 0; i < words.length; i += BATCH_SIZE) {
     const batch = words.slice(i, i + BATCH_SIZE)
 
     const results = await Promise.allSettled(
       batch.map((word) => {
-        const outputPath = join(OUTPUT_DIR, `${word.id}.mp3`)
-        if (existsSync(outputPath)) {
+        if (existsSync(wordOutputPath(word))) {
           stats.skipped++
           processed++
           return Promise.resolve()
@@ -280,7 +279,7 @@ async function main(): Promise<void> {
     }
 
     if (processed % 50 === 0 || processed === words.length) {
-      console.log(`[${processed}/${words.length}] Progress`)
+      console.log(`  [${processed}/${words.length}]`)
     }
 
     if (i + BATCH_SIZE < words.length) {
@@ -288,14 +287,73 @@ async function main(): Promise<void> {
     }
   }
 
+  return stats
+}
+
+// ── Main ─────────────────────────────────────
+
+async function main(): Promise<void> {
+  const { level, dryRun, speaker } = parseArgs()
+
+  console.log('Loading word bank...')
+  const allWords = await loadWords(level)
+  console.log(`Total words: ${allWords.length}${level ? ` (${level} only)` : ''}`)
+
+  if (!existsSync(OUTPUT_DIR)) {
+    mkdirSync(OUTPUT_DIR, { recursive: true })
+  }
+
+  // Group words by level (preserves order: n5, n4, n3, n2, n1)
+  const levels = new Map<string, WordEntry[]>()
+  for (const word of allWords) {
+    const group = levels.get(word.level) ?? []
+    group.push(word)
+    levels.set(word.level, group)
+  }
+
+  // Dry run mode
+  if (dryRun) {
+    for (const [lvl, words] of levels) {
+      const missing = words.filter((w) => !existsSync(wordOutputPath(w)))
+      console.log(
+        `\n${lvl.toUpperCase()}: ${missing.length} need generation out of ${words.length}`,
+      )
+      for (const w of missing.slice(0, 5)) {
+        console.log(`  ${w.id}: ${w.kana}`)
+      }
+      if (missing.length > 5) console.log(`  ... and ${missing.length - 5} more`)
+    }
+    process.exit(0)
+  }
+
+  // Prerequisite checks
+  await checkVoicevox()
+  checkFfmpeg()
+
+  console.log(`Speaker ID: ${speaker}`)
+  console.log(`Output: ${OUTPUT_DIR}`)
+
+  const totals: Stats = { generated: 0, skipped: 0, errors: 0 }
+
+  for (const [lvl, words] of levels) {
+    console.log(`\n── ${lvl.toUpperCase()} (${words.length} words) ──`)
+    const stats = await processLevel(words, speaker)
+    totals.generated += stats.generated
+    totals.skipped += stats.skipped
+    totals.errors += stats.errors
+    console.log(
+      `  Done: ${stats.generated} generated, ${stats.skipped} skipped, ${stats.errors} errors`,
+    )
+  }
+
   // Summary
-  console.log(`\nDone: ${words.length} words processed`)
-  console.log(`  Generated: ${stats.generated}`)
-  console.log(`  Skipped (exists): ${stats.skipped}`)
-  console.log(`  Errors: ${stats.errors}`)
+  console.log(`\n── Total ──`)
+  console.log(`  Generated: ${totals.generated}`)
+  console.log(`  Skipped (exists): ${totals.skipped}`)
+  console.log(`  Errors: ${totals.errors}`)
 
   // Build manifest
-  buildManifest(words)
+  buildManifest(allWords)
 }
 
 main().catch((err) => {

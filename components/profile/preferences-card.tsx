@@ -2,25 +2,29 @@
 // File: components/profile/preferences-card.tsx
 // Purpose: Preferences card for the Profile screen. Contains JLPT
 //          level (with confirmation modal), scene theme and font
-//          (locked for now), and leaderboard visibility.
-//          All state is local in Sprint 2B. Yellow pastel theme.
+//          (locked for now), and leaderboard visibility (persisted
+//          to Supabase via updateProfile).
 // Depends on: components/profile/profile-icons.tsx,
-//             components/ui/modal.tsx
+//             components/ui/modal.tsx,
+//             stores/user.store.ts,
+//             services/profile.service.ts
 // ─────────────────────────────────────────────
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import type { ReactNode } from 'react'
 import { IconChevron } from '@/components/profile/profile-icons'
 import { Modal } from '@/components/ui/modal'
+import { useUserStore } from '@/stores/user.store'
+import { updateProfile } from '@/services/profile.service'
+import type { LeaderboardVisibility } from '@/types/user.types'
 
 // ── Types ─────────────────────────────────────
 
 type JlptLevel = 'N5' | 'N4' | 'N3' | 'N2' | 'N1'
 type SceneTheme = 'day' | 'sunrise' | 'sunset' | 'night'
 type FontFamily = 'Noto Sans JP' | 'Zen Maru Gothic'
-type LeaderboardVisibility = 'public' | 'friends' | 'hidden'
 
 const JLPT_LEVELS: JlptLevel[] = ['N5', 'N4', 'N3', 'N2', 'N1']
 
@@ -54,13 +58,35 @@ function IconLock(): ReactNode {
 // ── Main export ───────────────────────────────
 
 export function PreferencesCard(): ReactNode {
-  const [jlptLevel, setJlptLevel] = useState<JlptLevel>('N5')
+  const user = useUserStore((s) => s.user)
+  const profile = useUserStore((s) => s.profile)
+  const setProfile = useUserStore((s) => s.setProfile)
+
+  const [jlptLevel, setJlptLevel] = useState<JlptLevel>((profile?.jlptLevel as JlptLevel) ?? 'N5')
   const [jlptExpanded, setJlptExpanded] = useState(false)
   const [pendingLevel, setPendingLevel] = useState<JlptLevel | null>(null)
   const [sceneTheme] = useState<SceneTheme>('day')
   const [fontFamily] = useState<FontFamily>('Zen Maru Gothic')
-  const [visibility, setVisibility] = useState<LeaderboardVisibility>('public')
   const [visibilityExpanded, setVisibilityExpanded] = useState(false)
+
+  const visibility: LeaderboardVisibility = profile?.leaderboardVisibility ?? 'public'
+
+  const handleVisibilityChange = useCallback(
+    (newVisibility: LeaderboardVisibility): void => {
+      if (!user || !profile) return
+
+      const previous = profile.leaderboardVisibility
+      setProfile({ ...profile, leaderboardVisibility: newVisibility })
+      setVisibilityExpanded(false)
+
+      void updateProfile(user.id, { leaderboard_visibility: newVisibility }).then((result) => {
+        if (!result.ok) {
+          setProfile({ ...profile, leaderboardVisibility: previous })
+        }
+      })
+    },
+    [user, profile, setProfile],
+  )
 
   const handleLevelSelect = (level: JlptLevel): void => {
     if (level === jlptLevel) {
@@ -177,10 +203,7 @@ export function PreferencesCard(): ReactNode {
             <div className="flex gap-1.5">
               <button
                 type="button"
-                onClick={(): void => {
-                  setVisibility('public')
-                  setVisibilityExpanded(false)
-                }}
+                onClick={(): void => handleVisibilityChange('public')}
                 className={[
                   'flex-1 rounded-full px-3 py-1.5 text-sm transition-colors duration-150',
                   'focus:outline-none focus:ring-2 focus:ring-profile-accent/50',
@@ -197,10 +220,7 @@ export function PreferencesCard(): ReactNode {
               </span>
               <button
                 type="button"
-                onClick={(): void => {
-                  setVisibility('hidden')
-                  setVisibilityExpanded(false)
-                }}
+                onClick={(): void => handleVisibilityChange('hidden')}
                 className={[
                   'flex-1 rounded-full px-3 py-1.5 text-sm transition-colors duration-150',
                   'focus:outline-none focus:ring-2 focus:ring-profile-accent/50',
