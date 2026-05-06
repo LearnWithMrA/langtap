@@ -30,6 +30,30 @@ Format per entry:
 
 ---
 
+## 2026-05-07 - Session 97g
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Phase 1: Implement kana mastery service + word counter service
+**Status:** Done
+
+### Changes made
+- `services/mastery.service.ts`: Full implementation replacing placeholder. `loadMasterySnapshot(userId)` returns scores, learningScores, and epoch in parallel queries. `syncMastery(rows, epoch)` calls `checkpoint_mastery` RPC with epoch-aware greatest-merge. `syncManualUnlocks(ids, epoch)` calls `checkpoint_manual_unlocks` RPC. `loadManualUnlocks(userId)` loads character IDs from Supabase. All sync functions return `CheckpointResult` with appliedCount, droppedInvalidIds, skippedStaleCount, and currentEpoch.
+- `services/counter.service.ts`: Full implementation replacing placeholder. `syncCounters(userId, counters)` via plain client upsert. Session-scoped best-effort, no epoch, no row lock.
+- `services/__tests__/mastery.service.test.ts`: 14 new tests covering load (snapshot with epoch, empty maps, error cases), checkpoint sync (RPC call, stale epoch, empty rows, error), manual unlock sync (RPC call, empty array, error), and load manual unlocks.
+
+### Tests
+- `services/__tests__/mastery.service.test.ts`: 14 passed
+- Full suite: 978 passed (14 new), 0 failures
+- `npm run check`: clean
+
+### Next task
+Phase 1, Task 3: Wire word mastery service calls (then Phase 2: sync infrastructure)
+
+### Notes
+Phase 1 tasks 1 and 2 complete. The mastery service is the first to use checkpoint RPCs instead of direct Supabase upserts. Counter service intentionally stays on direct upsert (session-scoped, no security concern). Task 3 (wire word mastery) will update the existing word-mastery.service.ts to also use checkpoint RPCs, removing the last direct-write path for word mastery scores.
+
+---
+
 ## 2026-05-07 - Session 97f
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership

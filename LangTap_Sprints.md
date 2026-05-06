@@ -473,8 +473,8 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Implement kana mastery service | **Medium** | **To Do** | `loadMasterySnapshot` (scores + learningScores + epoch in one query). `syncMastery` calls checkpoint RPC. `syncManualUnlocks` calls unlock checkpoint RPC. |
-| Implement word counter service | **Small** | **To Do** | `loadCounters` and `syncCounters`. Session-scoped best-effort, no epoch. |
+| Implement kana mastery service | **Medium** | **Done** | `loadMasterySnapshot` (scores + learningScores + epoch). `syncMastery` and `syncManualUnlocks` via checkpoint RPCs. `loadManualUnlocks` via direct query. 14 tests. Session 97. |
+| Implement word counter service | **Small** | **Done** | `syncCounters` via plain client upsert (session-scoped best-effort, no epoch). Session 97. |
 | Wire word mastery service calls | **Small** | **To Do** | Wire existing `word-mastery.service.ts` into load-on-start and checkpoint flows. |
 
 ### Phase 2: Sync Infrastructure
