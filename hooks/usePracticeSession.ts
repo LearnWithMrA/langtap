@@ -343,7 +343,14 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
   const advanceToNext = useCallback((): void => {
     recomputeUnlocks(learningScores, new Set(manualUnlockIds))
     selectNext(counters, currentPrompt?.targetCharacterId)
-  }, [recomputeUnlocks, learningScores, manualUnlockIds, selectNext, counters, currentPrompt?.targetCharacterId])
+  }, [
+    recomputeUnlocks,
+    learningScores,
+    manualUnlockIds,
+    selectNext,
+    counters,
+    currentPrompt?.targetCharacterId,
+  ])
 
   return {
     prompt: currentPrompt,
