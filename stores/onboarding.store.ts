@@ -9,7 +9,7 @@
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { createScopedStorage } from '@/stores/scoped-storage'
+import { createScopedStorage, registerScopedStore } from '@/stores/scoped-storage'
 
 // -- Types -------------------------------------------------------
 
@@ -115,3 +115,10 @@ export const useOnboardingStore = create<OnboardingState & OnboardingActions>()(
     },
   ),
 )
+
+registerScopedStore(useOnboardingStore, {
+  jlptLevel: 'N5',
+  selectedCharacterIds: [],
+  inputMode: null,
+  onboardingComplete: false,
+})

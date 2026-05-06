@@ -11,7 +11,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { MasteryScoreMap } from '@/types/game.types'
-import { createScopedStorage } from '@/stores/scoped-storage'
+import { createScopedStorage, registerScopedStore } from '@/stores/scoped-storage'
 
 // ── Types ────────────────────────────────────
 
@@ -53,6 +53,7 @@ export const useMasteryStore = create<MasteryState & MasteryActions>()(
       incrementLearning: (characterId: string): void => {
         set((state) => {
           const current = state.learningScores[characterId] ?? 0
+          if (current >= 5) return state
           return { learningScores: { ...state.learningScores, [characterId]: current + 1 } }
         })
       },
@@ -135,3 +136,5 @@ export const useMasteryStore = create<MasteryState & MasteryActions>()(
     },
   ),
 )
+
+registerScopedStore(useMasteryStore, { scores: {}, learningScores: {} })

@@ -54,6 +54,32 @@ export function createScopedStorage(_baseName: string): PersistStorage<any> {
   }
 }
 
+// ── Auth change: clear + rehydrate ────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type PersistStore = { persist: { rehydrate: () => void }; setState: (state: any) => void }
+
+let registeredStores: Array<{ store: PersistStore; defaultState: Record<string, unknown> }> = []
+
+export function registerScopedStore(
+  store: PersistStore,
+  defaultState: Record<string, unknown>,
+): void {
+  registeredStores.push({ store, defaultState })
+}
+
+export function resetStoresForAuthChange(): void {
+  for (const { store, defaultState } of registeredStores) {
+    store.setState({ ...defaultState, hasHydrated: false })
+  }
+  // StoreHydrator watches hasHydrated and will re-trigger rehydrate()
+  // with the new user's scoped localStorage keys
+}
+
+export function clearRegisteredStores(): void {
+  registeredStores = []
+}
+
 // ── Legacy key detection ──────────────────────
 
 const LEGACY_STORE_NAMES = [

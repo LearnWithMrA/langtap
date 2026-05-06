@@ -30,6 +30,33 @@ Format per entry:
 
 ---
 
+## 2026-05-07 - Session 97f
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Codex review fixes: auth-change rehydrate, checkpoint cast safety, learning score cap
+**Status:** Done
+
+### Changes made
+- `stores/scoped-storage.ts`: Added `registerScopedStore`, `resetStoresForAuthChange`, and `clearRegisteredStores`. On auth change, all registered stores clear in-memory state and set `hasHydrated = false` so StoreHydrator re-triggers rehydration from the new user's scoped keys.
+- `stores/mastery.store.ts`: Registered with scoped storage. `incrementLearning` now caps at 5 (`if (current >= 5) return state`).
+- `stores/word-mastery.store.ts`: Registered with scoped storage.
+- `stores/onboarding.store.ts`: Registered with scoped storage.
+- `components/performance/auth-initializer.tsx`: Calls `resetStoresForAuthChange()` in `onAuthStateChange` handler for both sign-in and sign-out paths.
+- `supabase/migrations/20260507120006_fix_checkpoint_cast_safety.sql`: Rewrites checkpoint_mastery and checkpoint_word_mastery to only cast scores for catalog-valid rows. Invalid-ID rows collected for dropped list without touching scores. Range check (`^\d{1,10}$` + bigint 0..2147483647) prevents overflow on cast.
+
+### Tests
+- Full suite: 964 passed, 0 failures
+- `npm run check`: clean
+- All 15 migrations apply cleanly
+
+### Next task
+Phase 1: Implement kana mastery service
+
+### Notes
+Import/quarantine UX (legacy modal, practice gating, dual-marker auto-import) is correctly scoped as Phase 3 work, not Phase 0h. Phase 0h delivered the storage infrastructure. Direct RLS write bypass remains a known gap until Phase 1 services move behind checkpoint RPCs.
+
+---
+
 ## 2026-05-07 - Session 97e
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership

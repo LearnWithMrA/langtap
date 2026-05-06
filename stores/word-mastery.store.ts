@@ -20,7 +20,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { WordMasteryScoreMap } from '@/types/word.types'
-import { createScopedStorage } from '@/stores/scoped-storage'
+import { createScopedStorage, registerScopedStore } from '@/stores/scoped-storage'
 
 // ── Types ────────────────────────────────────
 
@@ -166,3 +166,5 @@ export const useWordMasteryStore = create<WordMasteryState & WordMasteryActions>
     },
   ),
 )
+
+registerScopedStore(useWordMasteryStore, { scores: {}, manuallyUnlockedWords: [] })

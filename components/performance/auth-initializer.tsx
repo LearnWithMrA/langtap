@@ -21,7 +21,7 @@ import { createBrowserSupabaseClient } from '@/services/supabase-browser'
 import { getUser } from '@/services/auth.service'
 import { loadProfile } from '@/services/profile.service'
 import { useUserStore } from '@/stores/user.store'
-import { setStorageUserId } from '@/stores/scoped-storage'
+import { setStorageUserId, resetStoresForAuthChange } from '@/stores/scoped-storage'
 
 // ── Main export ───────────────────────────────
 
@@ -76,6 +76,7 @@ export function AuthInitializer(): ReactNode {
         const isAnon = session.user.is_anonymous ?? false
         activeUserId = userId
         setStorageUserId(isAnon ? null : userId)
+        resetStoresForAuthChange()
         useUserStore.getState().setProfile(null)
         useUserStore.getState().setUser({
           id: userId,
@@ -95,6 +96,7 @@ export function AuthInitializer(): ReactNode {
       } else {
         activeUserId = null
         setStorageUserId(null)
+        resetStoresForAuthChange()
         useUserStore.getState().clear()
       }
     })
