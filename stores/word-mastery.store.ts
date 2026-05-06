@@ -27,6 +27,7 @@ import { createScopedStorage, registerScopedStore } from '@/stores/scoped-storag
 type WordMasteryState = {
   scores: WordMasteryScoreMap
   manuallyUnlockedWords: readonly string[]
+  epoch: number
   hasHydrated: boolean
 }
 
@@ -34,6 +35,8 @@ type WordMasteryActions = {
   increment: (wordId: string) => void
   setScore: (wordId: string, score: number) => void
   bulkLoad: (incoming: WordMasteryScoreMap) => void
+  replaceAll: (scores: WordMasteryScoreMap, unlockIds: string[], epoch: number) => void
+  setEpoch: (epoch: number) => void
   reset: (wordId: string) => void
   resetAll: () => void
   getScore: (wordId: string) => number
@@ -72,6 +75,7 @@ export const useWordMasteryStore = create<WordMasteryState & WordMasteryActions>
     (set, get) => ({
       scores: {},
       manuallyUnlockedWords: [],
+      epoch: 0,
       hasHydrated: false,
 
       increment: (wordId: string): void => {
@@ -98,6 +102,14 @@ export const useWordMasteryStore = create<WordMasteryState & WordMasteryActions>
           }
           return { scores: merged }
         })
+      },
+
+      replaceAll: (scores: WordMasteryScoreMap, unlockIds: string[], epoch: number): void => {
+        set({ scores, manuallyUnlockedWords: unlockIds, epoch })
+      },
+
+      setEpoch: (epoch: number): void => {
+        set({ epoch })
       },
 
       reset: (wordId: string): void => {
@@ -155,6 +167,7 @@ export const useWordMasteryStore = create<WordMasteryState & WordMasteryActions>
       partialize: (state) => ({
         scores: state.scores,
         manuallyUnlockedWords: state.manuallyUnlockedWords,
+        epoch: state.epoch,
       }),
       onRehydrateStorage: () => {
         return (_state, error): void => {
@@ -167,4 +180,4 @@ export const useWordMasteryStore = create<WordMasteryState & WordMasteryActions>
   ),
 )
 
-registerScopedStore(useWordMasteryStore, { scores: {}, manuallyUnlockedWords: [] })
+registerScopedStore(useWordMasteryStore, { scores: {}, manuallyUnlockedWords: [], epoch: 0 })

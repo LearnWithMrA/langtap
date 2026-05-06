@@ -30,6 +30,31 @@ Format per entry:
 
 ---
 
+## 2026-05-07 - Session 97j
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Phase 2, Task 1: Wire load-on-start for signed-in users
+**Status:** Done
+
+### Changes made
+- `components/performance/store-hydrator.tsx`: Rewrote. Signed-in users now load server data via `loadMasterySnapshot` and `loadWordMasterySnapshot` RPCs with epoch-aware merge. Server epoch > local: replaces local entirely (discard stale). Equal: max-merge scores, union word unlocks. Server epoch < local: warning, uses server. Guests skip server load and set `isServerHydrated` immediately.
+- `stores/mastery.store.ts`: Added `epoch` to state and partialize. Added `bulkLoadLearning`, `replaceAll(scores, learningScores, epoch)`, `setEpoch`. Epoch persisted to localStorage alongside scores.
+- `stores/word-mastery.store.ts`: Added `epoch` to state and partialize. Added `replaceAll(scores, unlockIds, epoch)`, `setEpoch`. Epoch persisted to localStorage.
+- `stores/user.store.ts`: Added `isServerHydrated` state and `setServerHydrated` action. Cleared on `clear()`.
+- `components/layout/practice-client.tsx`: Added `isServerHydrated` gate. Authenticated users see the loading scene until server hydration completes.
+
+### Tests
+- Full suite: 984 passed, 0 failures
+- `npm run check`: clean
+
+### Next task
+Phase 2, Task 2: Wire checkpoint sync for signed-in users
+
+### Notes
+This is the core of the sync infrastructure. The epoch-aware merge ensures resets on other devices are respected: server epoch > local = discard all local data. The atomic load RPCs (from Phase 1 Codex fix) guarantee epoch consistency within a single snapshot.
+
+---
+
 ## 2026-05-07 - Session 97i
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership

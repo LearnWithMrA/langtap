@@ -539,11 +539,13 @@ export function PracticeClient({ gameType = 'kana' }: { gameType?: GameType }): 
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const { isLoading: usageLoading, isOverCap } = useGuestUsage()
   const isProfileLoaded = useUserStore((s) => s.isProfileLoaded)
+  const isServerHydrated = useUserStore((s) => s.isServerHydrated)
 
   useStuckLoadingWarning({ authLoading, usageLoading }, 'PracticeClient')
 
   if (authLoading || usageLoading) return <PracticeScene>{null}</PracticeScene>
   if (isAuthenticated && !isProfileLoaded) return <PracticeScene>{null}</PracticeScene>
+  if (isAuthenticated && !isServerHydrated) return <PracticeScene>{null}</PracticeScene>
   if (isAuthenticated) return <ActivePracticeClient gameType={gameType} />
   if (isOverCap) return <CappedPracticeShell />
   return <ActivePracticeClient gameType={gameType} />

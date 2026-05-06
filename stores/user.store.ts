@@ -17,6 +17,7 @@ type UserState = {
   profile: UserProfile | null
   isLoading: boolean
   isProfileLoaded: boolean
+  isServerHydrated: boolean
 }
 
 type UserActions = {
@@ -24,6 +25,7 @@ type UserActions = {
   setProfile: (profile: UserProfile | null) => void
   setLoading: (loading: boolean) => void
   setProfileLoaded: (loaded: boolean) => void
+  setServerHydrated: (hydrated: boolean) => void
   clear: () => void
 }
 
@@ -36,6 +38,7 @@ export const useUserStore = create<UserStore>()((set) => ({
   profile: null,
   isLoading: true,
   isProfileLoaded: false,
+  isServerHydrated: false,
 
   setUser: (user: AuthUser | null): void => {
     set({ user })
@@ -53,7 +56,11 @@ export const useUserStore = create<UserStore>()((set) => ({
     set({ isProfileLoaded: loaded })
   },
 
+  setServerHydrated: (hydrated: boolean): void => {
+    set({ isServerHydrated: hydrated })
+  },
+
   clear: (): void => {
-    set({ user: null, profile: null, isProfileLoaded: false })
+    set({ user: null, profile: null, isProfileLoaded: false, isServerHydrated: false })
   },
 }))

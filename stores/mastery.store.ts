@@ -18,6 +18,7 @@ import { createScopedStorage, registerScopedStore } from '@/stores/scoped-storag
 type MasteryState = {
   scores: MasteryScoreMap
   learningScores: MasteryScoreMap
+  epoch: number
   hasHydrated: boolean
 }
 
@@ -25,6 +26,9 @@ type MasteryActions = {
   increment: (characterId: string) => void
   incrementLearning: (characterId: string) => void
   bulkLoad: (incoming: MasteryScoreMap) => void
+  bulkLoadLearning: (incoming: MasteryScoreMap) => void
+  replaceAll: (scores: MasteryScoreMap, learningScores: MasteryScoreMap, epoch: number) => void
+  setEpoch: (epoch: number) => void
   reset: (characterId: string) => void
   resetAll: () => void
   getScore: (characterId: string) => number
@@ -48,6 +52,7 @@ export const useMasteryStore = create<MasteryState & MasteryActions>()(
     (set, get) => ({
       scores: {},
       learningScores: {},
+      epoch: 0,
       hasHydrated: false,
 
       incrementLearning: (characterId: string): void => {
@@ -75,6 +80,30 @@ export const useMasteryStore = create<MasteryState & MasteryActions>()(
           }
           return { scores: merged }
         })
+      },
+
+      bulkLoadLearning: (incoming: MasteryScoreMap): void => {
+        set((state) => {
+          const merged = { ...state.learningScores }
+          for (const [key, value] of Object.entries(incoming)) {
+            const sanitized = Math.min(sanitizeScore(value), 5)
+            const existing = merged[key] ?? 0
+            merged[key] = Math.max(existing, sanitized)
+          }
+          return { learningScores: merged }
+        })
+      },
+
+      replaceAll: (
+        scores: MasteryScoreMap,
+        learningScores: MasteryScoreMap,
+        epoch: number,
+      ): void => {
+        set({ scores, learningScores, epoch })
+      },
+
+      setEpoch: (epoch: number): void => {
+        set({ epoch })
       },
 
       reset: (characterId: string): void => {
@@ -125,6 +154,7 @@ export const useMasteryStore = create<MasteryState & MasteryActions>()(
       partialize: (state) => ({
         scores: state.scores,
         learningScores: state.learningScores,
+        epoch: state.epoch,
       }),
       onRehydrateStorage: () => {
         return (_state, error): void => {
@@ -137,4 +167,4 @@ export const useMasteryStore = create<MasteryState & MasteryActions>()(
   ),
 )
 
-registerScopedStore(useMasteryStore, { scores: {}, learningScores: {} })
+registerScopedStore(useMasteryStore, { scores: {}, learningScores: {}, epoch: 0 })

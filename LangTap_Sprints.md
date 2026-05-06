@@ -482,7 +482,7 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Wire load-on-start for signed-in users | **Medium** | **To Do** | StoreHydrator: epoch-aware merge, waits for migration decision, gates PracticeClient. |
+| Wire load-on-start for signed-in users | **Medium** | **Done** | StoreHydrator loads server data via atomic RPCs with epoch-aware merge. `replaceAll` and `epoch` added to mastery + word-mastery stores. `isServerHydrated` gates PracticeClient. Guests skip server load. Session 97. |
 | Wire checkpoint sync for signed-in users | **Medium** | **To Do** | Versioned dirty tracking, checkpoint RPCs with epoch, pagehide beacon fallback, persisted retry. |
 | Sync input mode from Supabase profile to settings store on login | **Small** | **To Do** | `useSettings.ts` reads profile fields, pushes to settings store. |
 | **Codex gate: Phase 2 review** | - | **To Do** | Review StoreHydrator epoch-aware merge, checkpoint sync hook, beacon endpoint, dirty versioning, and auth-change rehydrate flow. |
