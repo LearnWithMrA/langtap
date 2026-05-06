@@ -306,7 +306,7 @@ Shown once after sign-up. Never shown again after completion.
 Tracked by `onboarding_complete: boolean` on the user's profile.
 
 Three steps. The original notification preferences step was deferred to a
-contextual prompt after the user's first practice session (Sprint 10). This
+contextual prompt after the user's first practice session (Sprint 11). This
 reduces time-to-first-practice and follows the just-in-time permission
 pattern. Full visual and interaction spec: UX_DESIGN.md Section 5.
 
@@ -351,7 +351,7 @@ pattern. Full visual and interaction spec: UX_DESIGN.md Section 5.
   `/practice`.
 - After this step, `onboarding_complete` is set to `true`.
 
-### Deferred: Notification Prompt (Sprint 10)
+### Deferred: Notification Prompt (Sprint 11)
 
 After the user's first completed practice session, a contextual interstitial
 prompts: "Want daily practice reminders?" with a toggle. If enabled, sets

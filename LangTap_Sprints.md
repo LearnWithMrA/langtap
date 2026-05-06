@@ -420,79 +420,99 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 
 ---
 
-## Sprint 9 - Profile, Settings, and Supabase Progress Sync
+## Sprint 9 - Leaderboard and Audio
 
-**Goal:** Profile and Settings screens connected to user state. Signed-up users have all game progress synced to Supabase. Guest progress lives in localStorage and migrates on sign-up.
+**Goal:** Complete the game experience. Leaderboard is live and functional with full support for the existing UI (Kana/Kotoba, Tap/Type/Swipe, All Time/This Week). All audio (word pronunciation and lo-fi background) is integrated. Game-centric features are finished before moving to account infrastructure.
 **Status:** Pending
+
+**Assumptions:**
+- Weekly leaderboard is in scope because the UI already exposes the All Time/This Week toggle.
+- Do not reuse the old one-row-per-user leaderboard concept. The schema must support game_type, input_mode, period, and week boundaries natively.
+- Leaderboard writes are server-only via security-definer RPC. No client owner-write RLS for scores.
+- Legacy leaderboard table (if any) is left in place unless the owner explicitly approves a cleanup migration later.
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Build Profile screen | **Medium** | **Done** | `components/profile/profile-client.tsx` (264 lines). Header card, preferences card (JLPT selector with warning), membership card, account settings, support links. Visual shell complete. Built in earlier sprints. |
-| Build Settings screen | **Medium** | **Done** | `components/settings/settings-dialog.tsx` fully wired to `useSettingsStore`. Controls: inputDirection, kotobaInput, hints, wordAudio, keyClicks, autoAdvance. Built in earlier sprints. |
-| Build reset progress flow | **Small** | **To Do** | UI warning text exists but no actual reset logic. Need two-step confirmation then `resetAll()` on mastery, word mastery, counter, and unlock stores. Sync reset to Supabase for signed-in users. |
-| Connect Profile and Settings to Supabase | **Medium** | **To Do** | Preferences card JLPT level uses local `useState` instead of profile store/Supabase. Wire to `updateProfile()`. Auto-master words below selected level on change (reuse `buildAutoMasteryScores` from onboarding). |
-| Build delete account flow | **Medium** | **To Do** | Server-side account deletion. Typed confirmation (`delete-username`). Cascade deletes all user data. See SECURITY.md Section 5.4. |
-| Build username change with 30-day cooldown | **Small** | **To Do** | Server validates cooldown via `username_changed_at`. Returns structured error with next-allowed timestamp. Client shows disabled state. UI shell exists. |
-| Wire membership card to Stripe Customer Portal | **Small** | **To Do** | "Manage billing" link opens Stripe portal session. "Notify me" button captures demand. Feature flag `SHOW_MEMBERSHIP_CARD`. |
+| Design leaderboard Supabase schema | **Medium** | **To Do** | Score-event-backed schema supporting: game_type (kana/kotoba), input_mode (tap/type/swipe), period (all_time/weekly with week_start). Table: `leaderboard_entries` with user_id, game_type, input_mode, total_score, week_score, week_start, updated_at. Separate rows per game_type + input_mode combo (not one row per user). RLS: anyone can SELECT. No client INSERT/UPDATE/DELETE. All writes via security-definer RPC only. |
+| Build leaderboard score sync (server-only RPC) | **Medium** | **To Do** | Security-definer RPC `upsert_leaderboard_score(game_type, input_mode, score_delta)`. Calculates total_score and week_score server-side. Resets week_score when week_start changes. Called from service layer on session end. Debounced - not on every keypress. Clients cannot call INSERT/UPDATE directly on leaderboard_entries. |
+| Add leaderboard privacy (profiles.leaderboard_visibility) | **Small** | **To Do** | Add `leaderboard_visibility` column to profiles (default: 'public', options: 'public'/'hidden'). Wire the existing Profile visibility toggle to update this field via `updateProfile()`. Leaderboard RPC/queries exclude rows where the user's visibility is 'hidden'. Migration required. |
+| Build leaderboard screen | **Medium** | **To Do** | Full support for existing UI contract: Kana + Kotoba boards (side by side desktop, game type switcher mobile), Tap/Type/Swipe mode tabs per board, All Time/This Week toggle. Ranked list with username, input mode indicator, and score. Pinned current-user row. Hidden users excluded from results. |
+| Build leaderboard rank calculation | **Small** | **To Do** | Rank by total_score (all time) or week_score (this week) descending. Ties resolved by updated_at ascending (earlier score wins on tie). Current user's row always pinned at bottom if not in visible top-N. |
+| Write leaderboard tests | **Medium** | **To Do** | Ranking tests for: Kana/Kotoba, all input modes, All Time/This Week, tie resolution, current-user pinned row, hidden users excluded, empty/error/loading states. RPC/service tests proving clients cannot directly write leaderboard scores (RLS denies INSERT/UPDATE/DELETE). |
+| Source and confirm lo-fi track licence | **Small** | **To Do** | Find or confirm a lo-fi background track with a licence that permits use in a free (and future paid) app. Document track source, artist, licence type, and attribution requirements. Must be resolved before integration. |
+| Integrate lo-fi background audio | **Small** | **To Do** | Audio file is NOT loaded on page load. Only fetched and decoded when the user clicks the play lo-fi button. Persist play/pause preference. Default off (no autoplay, no preload). Depends on licence confirmation task above. |
+| Build VOICEVOX generation script | **Medium** | **To Do** | Create `scripts/generate-audio.ts`. Calls local VOICEVOX API for each word in the word bank. Outputs MP3s to `public/audio/words/`. Handles retries, progress logging, and skip-if-exists for incremental runs. Confirm chosen VOICEVOX voice character licence permits use in a free app. |
+| Generate word audio and build manifest | **Medium** | **To Do** | Run `scripts/generate-audio.ts` for all word bank entries. Commit MP3s to `public/audio/words/`. Populate `data/audio/word-manifest.ts` with file paths keyed by word ID. Remove stale Kanji Alive references from manifest and CONTENT.md. Word audio must be lazy-loaded only when the audio setting is enabled and a word is actively displayed - never preloaded on page load. |
+| Write audio tests | **Small** | **To Do** | Tests proving: word audio does not load on page load (only on demand when setting enabled + word displayed). Lo-fi audio does not load on page load (only on play button click). Audio respects settings toggle state. |
+
+---
+
+## Sprint 10 - Accounts, Auth, and Membership
+
+**Goal:** Guest-to-account conversion works end-to-end. Signed-in users have all progress synced to Supabase. Google and Apple sign-in available. Membership tiers defined and enforced (free tier daily cap). Profile and settings fully wired. Guest progress import is validated and safe.
+**Status:** Pending
+
+**Assumptions:**
+- Guest localStorage progress imports to Supabase on account creation, but is validated and sanitized server-side. Raw localStorage is never trusted for direct writes.
+- docs/SECURITY.md must be updated to document the safe import policy (currently says guest localStorage is never trusted for server writes).
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
 | Implement kana mastery service | **Medium** | **To Do** | `services/mastery.service.ts` is a placeholder (`export {}`). Implement `loadMastery(userId)` and `syncMastery(userId, delta)` following the `word-mastery.service.ts` pattern. Delta upsert on `user_id, character_id`. |
 | Implement word counter service | **Small** | **To Do** | `services/counter.service.ts` is a placeholder (`export {}`). Implement `loadCounters(userId)` and `syncCounters(userId, delta)`. Upsert on `user_id, word_id`. |
 | Wire load-on-start for signed-in users | **Medium** | **To Do** | In `StoreHydrator` or a new provider: after auth check, if user is signed in, fetch kana mastery, word mastery, word counters, and manual unlocks from Supabase. Merge into Zustand stores using `bulkLoad` (max of local vs remote). localStorage stays as cache. |
 | Wire sync-on-end for signed-in users | **Medium** | **To Do** | On `beforeunload` or navigation away from practice: sync dirty kana mastery, word mastery, and word counter deltas to Supabase. Only changed rows upserted. Manual unlocks already sync immediately via `unlock.service.ts`. |
 | Wire word mastery service calls | **Small** | **To Do** | `services/word-mastery.service.ts` is implemented but never called. Wire into load-on-start and sync-on-end flows alongside kana mastery service. |
-| Guest-to-account migration | **Medium** | **To Do** | On sign-up or first sign-in: push all localStorage state (kana mastery, word mastery, counters, unlocks) to Supabase. Run once after auth completes, before practice screen. If migration fails, preserve local state and notify user. See BACKEND.md Section 3.3. |
-| Write Profile, Settings, and Sync tests | **Small** | **To Do** | Service tests for mastery and counter services. Profile settings save/load. Reset flow. Guest vs signed-in. Sync load/merge/sync cycle. |
 | Sync input mode from Supabase profile to settings store on login | **Small** | **To Do** | On login or new device, `useSettingsStore.inputMode` should hydrate from `profiles.input_mode` in Supabase instead of defaulting to `'tap'`. Currently `useSettings.ts` is a placeholder. Implement profile-to-store sync so the user's onboarding choice persists across devices. |
+| Safe guest progress import | **Medium** | **To Do** | Dedicated import function called once, idempotently, after account creation or first sign-in. Validates all character/word IDs against known datasets (reject unknown IDs). Sanitizes shapes (correct types, no extra fields). Clamps suspicious values (mastery scores capped at engine maximums, counters within sane bounds). Documents how imported progress affects leaderboard totals (imported scores count toward leaderboard - user earned them). If import fails, preserve local state and notify user. Update `docs/SECURITY.md` to document the safe import policy replacing the current "guest localStorage is never trusted" statement. See BACKEND.md Section 3.3. |
+| Guest-to-account migration flow | **Medium** | **To Do** | UI flow: on sign-up or first sign-in, run the safe guest progress import. Push validated localStorage state (kana mastery, word mastery, counters, unlocks) to Supabase via the import function. Run before practice screen mounts. Clear local guest state after successful import. |
+| Connect Profile and Settings to Supabase | **Medium** | **To Do** | Full wiring, not just JLPT level. Includes: remove all fixture/mock data from profile screen, wire JLPT level to `updateProfile()` (reuse `buildAutoMasteryScores` for auto-mastery on level change), wire distance unit preference, wire leaderboard visibility toggle, build email change modal, build password change modal, handle profile repair when sign-up succeeds but username write fails (retry or prompt). |
+| Google Sign-In | **Medium** | **To Do** | Add as a second auth option. Supabase OAuth. Update auth modals with Google button. Handle OAuth callback. |
+| Apple Sign-In | **Medium** | **To Do** | Add as a third auth option. Supabase OAuth. Required for any future iOS wrapper. Update auth modals with Apple button. Handle OAuth callback. |
+| Build free tier daily distance cap | **Medium** | **To Do** | Signed-in free users get a daily distance cap (amount TBD). Track daily cumulative distance in a store (reset at midnight local time). When cap is hit, game window greys out and a banner appears: "You've been crushing it! You've hit your limit for today. Come back tomorrow or upgrade to keep going." with a membership link. Same pattern as guest cap but daily reset. Needs daily-reset logic and membership CTA. **Guardrail:** Add the new membership loading flag to `useStuckLoadingWarning` in PracticeClient. Write a regression test using `renderHookStrict` + `deferred` from `test-utils/async-gate.tsx` to prove the gate resolves under Strict Mode. Pattern established in Sprint 8 Session 89 fix. |
+| Build reset progress flow | **Small** | **To Do** | UI warning text exists but no actual reset logic. Need two-step confirmation then `resetAll()` on mastery, word mastery, counter, and unlock stores. Sync reset to Supabase for signed-in users. |
+| Build username change with 30-day cooldown | **Small** | **To Do** | Server validates cooldown via `username_changed_at`. Returns structured error with next-allowed timestamp. Client shows disabled state. UI shell exists. |
+| Build delete account flow | **Medium** | **To Do** | Server-side account deletion. Typed confirmation (`delete-username`). Cascade deletes all user data. See SECURITY.md Section 5.4. |
+| Write accounts and sync tests | **Medium** | **To Do** | Service tests for mastery and counter services. Profile settings save/load. Reset flow. Guest vs signed-in. Sync load/merge/sync cycle. OAuth flow tests. |
+| Write guest import tests | **Small** | **To Do** | Idempotency (running import twice produces same result). Invalid/unknown IDs rejected. Clamped values (scores above engine max are capped). Malformed shapes rejected. Import failure preserves local progress. Imported scores reflected in leaderboard totals correctly. |
 
 ---
 
-## Sprint 10 - Leaderboards (Kana + Kotoba)
+## Sprint 11 - Security, Email, Polish, and Pre-Launch
 
-**Goal:** Global leaderboards for Kana and Kotoba modes.
+**Goal:** App is launch-ready. Email deliverability is production-grade. Mutating endpoints are protected with CSRF/origin checks and rate limits. Accessibility and cross-browser verified. Privacy policy and credits in place. Soft launch to testers.
 **Status:** Pending
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Design leaderboard Supabase schema | **Medium** | **To Do** | Separate Kana and Kotoba boards. Table: leaderboard_entries. Fields: user_id, username, input_mode, game_type (kana/kotoba), total_score, updated_at. RLS: anyone can read, only owner can write their own row. |
-| Build leaderboard score sync | **Medium** | **To Do** | On session end, push the updated kana mastery total and word mastery total to the leaderboard table. Debounced - not on every keypress. |
-| Build leaderboard screen | **Medium** | **To Do** | Kana + Kotoba boards side by side (desktop) or game type switcher (mobile). Tap/Type/Swipe tabs per board. Ranked list with username, input mode indicator, and score. Highlight the current user's row. |
-| Build leaderboard rank calculation | **Small** | **To Do** | Rank by total_score descending. Ties resolved by updated_at ascending (earlier score wins on tie). |
-| Write leaderboard tests | **Small** | **To Do** | Correct ranking order, current user highlight, empty state, loading state, both game types. |
-
----
-
-## Sprint 11 - Audio, Polish, and Guest-to-Account Flow
-
-**Goal:** All audio is integrated, UI is polished, and guests can convert to a full account.
-**Status:** Pending
-
-| Task | Size | Status | Notes |
-|---|---|---|---|
-| Integrate lo-fi background audio | **Small** | **To Do** | Connect audio player component to the settings toggle. Persist preference. Default on. |
-| Generate and integrate word audio via VOICEVOX | **Medium** | **To Do** | Open VOICEVOX on Mac. Run scripts/generate-audio.ts to call local VOICEVOX API for every word in the word bank. Save MP3s to public/audio/words/. Commit to repo. Confirm chosen voice character licence permits use in a free app. Add attribution to credits screen. See CONTENT.md Section 2.2. |
-| Build guest-to-account conversion flow | **Medium** | **To Do** | Guest user clicks "Save Progress" or similar CTA. Prompted to create an account. Local progress (kana mastery + word mastery) migrated to Supabase on account creation. |
+| Implement CSRF/origin checks for mutating endpoints | **Medium** | **To Do** | All mutating route handlers and RPC callers must verify origin/referer headers against allowed origins. Covers: sign-out, delete account, username change, leaderboard score sync RPC, guest import RPC, and future Stripe endpoints. Use Next.js middleware or per-route validation. Reject requests with missing or mismatched origin. Document the approach in `docs/SECURITY.md`. |
+| Implement rate limiting for mutating endpoints | **Medium** | **To Do** | Rate limit all mutating API routes and RPC-calling service endpoints. Suggested limits: auth actions (sign-up, sign-in, password reset) 5/min per IP, profile mutations (username, delete) 3/min per user, leaderboard sync 10/min per user, guest import 3/hour per IP. Use Vercel Edge middleware or an in-memory/Redis store. Return 429 with Retry-After header. Document limits in `docs/SECURITY.md`. |
+| Configure custom SMTP with domain authentication | **Medium** | **To Do** | Supabase's default SMTP has poor deliverability - password reset and confirmation emails go to spam or promotions tab. Fix: choose a transactional email provider (Resend or Postmark). In Supabase dashboard: Auth > SMTP Settings > configure custom SMTP with the provider's credentials. On the domain registrar: add SPF record (TXT, `v=spf1 include:<provider> ~all`), DKIM record (TXT, provider-generated key), and DMARC record (TXT, `v=DMARC1; p=quarantine; rua=mailto:dmarc@langtap.com`). Test with mail-tester.com before launch - target score 9/10 or higher. Document the provider choice and DNS records in `docs/DEVOPS.md`. |
+| Build onboarding email sequence | **Medium** | **To Do** | Three-email drip sequence using the chosen email provider (Resend or Postmark). Day 0: welcome email ("You're in! Here's how to start practising"). Day 2: activation nudge ("Have you tried [kana/kotoba] practice yet? Here's a quick tip"). Day 7: social proof ("Other learners at your JLPT level are practising X minutes a day"). Trigger Day 0 on sign-up via a Supabase database webhook or edge function on `auth.users` insert. Days 2 and 7 via the email provider's drip/sequence feature or a scheduled edge function. All emails must include an unsubscribe link (GDPR). Respect the `notifications_enabled` field on the profiles table. |
 | Accessibility audit | **Medium** | **To Do** | Every interactive element: ARIA labels, keyboard navigation, focus states, touch targets minimum 44x44pt. |
 | Cross-browser and cross-device testing | **Medium** | **To Do** | Chrome, Safari, Firefox. Desktop, tablet, mobile. iOS and Android swipe keyboard behaviour. |
-| Performance audit | **Medium** | **Done** | Phase 0-2 done in earlier sessions. Remaining work fully absorbed into Sprint 8 (Smooth Game Loading and Navigation). |
 | Error boundary implementation | **Small** | **To Do** | Global error boundary. All screens handle error state with a human-readable message and a recovery action. |
+| Build credits / attribution screen | **Small** | **To Do** | List VOICEVOX attribution, font licences, and any other third-party credits. |
+| Write privacy policy and terms of service | **Medium** | **To Do** | Plain language. Cover data storage (Supabase), leaderboard visibility of username, guest mode data loss warning, email communications and unsubscribe rights, and cookie usage (localStorage for guest state). |
+| Write security tests | **Small** | **To Do** | CSRF/origin rejection: requests with missing or wrong origin are rejected with 403. Rate limit: rapid requests return 429 after threshold. Covers all mutating endpoints listed above. |
+| Update stale sprint references in docs | **Small** | **Done** | Fixed 12 stale references: CONTENT.md (5x Sprint 10 -> 9), PERFORMANCE.md (Sprint 11 -> 9), UX_DESIGN.md (2x Sprint 10 -> 11, 2x Sprint 11 -> 12, 1x Sprint 10 -> 9), AUTH.md (2x Sprint 10 -> 11), data/audio/word-manifest.ts (Kanji Alive -> VOICEVOX, Sprint 10 -> 9). Session 92. |
+| Final end-to-end test pass | **Large** | **To Do** | Full user journey: guest entry, sign up (verify email lands in inbox, not spam), onboarding, Kana practice (all three modes), Kotoba practice (Readings + Kanji), Dojo (Kana + Kotoba), Profile, Settings, Leaderboard. Include: password reset email deliverability test, rate limit verification (hit endpoint rapidly, confirm 429 response), CSRF rejection verification. |
+| Soft launch on Vercel | **Small** | **To Do** | Share URL with a small group of testers. Monitor for errors. Confirm email deliverability with real inboxes (Gmail, Outlook, iCloud). |
 
 ---
 
-## Sprint 12 - Stripe, Email, Security Hardening, and Pre-Launch
+## Sprint 12 - Payments (Stripe)
 
-**Goal:** Payments infrastructure is in place (hosted checkout, no custom payment UI). Email deliverability is production-grade. API routes are rate-limited. Onboarding email sequence is live. App is ready for soft launch.
+**Goal:** Stripe payments integrated post-launch. Hosted checkout, customer portal for subscription management. No custom payment UI. Membership unlocks unlimited daily practice.
 **Status:** Pending
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
 | Set up Stripe account with hosted Checkout Sessions | **Medium** | **To Do** | Create Stripe account. Define membership product (details TBD). Use Stripe-hosted Checkout Sessions (prebuilt page) instead of custom payment UI. This handles PCI compliance, webhook signature verification, and payment flow out of the box. Wire a checkout session creation endpoint at `app/api/stripe/checkout/route.ts` that calls `stripe.checkout.sessions.create()` server-side and returns the session URL. Client redirects to Stripe's hosted page. Success/cancel URLs point back to the app. No custom webhook handler needed for basic checkout - Stripe's hosted page manages payment confirmation. |
 | Activate Stripe membership | **Epic** | **To Do** | Break into smaller tasks at the time. Define pricing model first. For subscription management, use Stripe Customer Portal (hosted) so users can update payment methods, cancel, and view invoices without custom UI. |
-| Configure custom SMTP with domain authentication | **Medium** | **To Do** | Supabase's default SMTP has poor deliverability - password reset and confirmation emails go to spam or promotions tab. Fix: choose a transactional email provider (Resend or Postmark). In Supabase dashboard: Auth > SMTP Settings > configure custom SMTP with the provider's credentials. On the domain registrar: add SPF record (TXT, `v=spf1 include:<provider> ~all`), DKIM record (TXT, provider-generated key), and DMARC record (TXT, `v=DMARC1; p=quarantine; rua=mailto:dmarc@langtap.com`). Test with mail-tester.com before launch - target score 9/10 or higher. Document the provider choice and DNS records in `docs/DEVOPS.md`. |
-| Build onboarding email sequence | **Medium** | **To Do** | Three-email drip sequence using the chosen email provider (Resend or Postmark). Day 0: welcome email ("You're in! Here's how to start practising"). Day 2: activation nudge ("Have you tried [kana/kotoba] practice yet? Here's a quick tip"). Day 7: social proof ("Other learners at your JLPT level are practising X minutes a day"). Trigger Day 0 on sign-up via a Supabase database webhook or edge function on `auth.users` insert. Days 2 and 7 via the email provider's drip/sequence feature or a scheduled edge function. All emails must include an unsubscribe link (GDPR). Respect the `notifications_enabled` field on the profiles table. |
-| Build free tier daily distance cap | **Medium** | **To Do** | Signed-in free users get a daily distance cap (amount TBD). Track daily cumulative distance in a store (reset at midnight local time). When cap is hit, game window greys out and a banner appears: "You've been crushing it! You've hit your limit for today. Come back tomorrow or upgrade to keep going." with a membership link. Same pattern as guest cap but daily reset. Needs daily-reset logic and membership CTA. **Guardrail:** Add the new membership loading flag to `useStuckLoadingWarning` in PracticeClient. Write a regression test using `renderHookStrict` + `deferred` from `test-utils/async-gate.tsx` to prove the gate resolves under Strict Mode. Pattern established in Sprint 8 Session 89 fix. |
-| Build credits / attribution screen | **Small** | **To Do** | List VOICEVOX attribution, font licences, and any other third-party credits. |
-| Write privacy policy and terms of service | **Medium** | **To Do** | Plain language. Cover data storage (Supabase), leaderboard visibility of username, guest mode data loss warning, email communications and unsubscribe rights, and cookie usage (localStorage for guest state). |
-| Final end-to-end test pass | **Large** | **To Do** | Full user journey: guest entry, sign up (verify email lands in inbox, not spam), onboarding, Kana practice (all three modes), Kotoba practice (Readings + Kanji), Dojo (Kana + Kotoba), Profile, Settings, Leaderboard. Include: password reset email deliverability test, rate limit verification (hit endpoint rapidly, confirm 429 response), Stripe checkout flow (test mode purchase). |
-| Soft launch on Vercel | **Small** | **To Do** | Share URL with a small group of testers. Monitor for errors. Confirm email deliverability with real inboxes (Gmail, Outlook, iCloud). |
+| Wire membership card to Stripe Customer Portal | **Small** | **To Do** | "Manage billing" link opens Stripe portal session. "Notify me" button captures demand. Feature flag `SHOW_MEMBERSHIP_CARD`. |
+| Build Stripe webhook handler | **Medium** | **To Do** | Listen for `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`. Update user's membership status in Supabase. Verify webhook signatures. Idempotent processing. |
+| Write Stripe integration tests | **Small** | **To Do** | Test mode checkout flow. Webhook signature verification. Subscription status updates. Membership gate on daily cap removal. |
 
 ---
 
@@ -503,14 +523,8 @@ Ideas and improvements not tied to a phase. Pulled in when the time is right.
 | Task | Size | Status | Notes |
 |---|---|---|---|
 | Cross-reference JMDict JSON files against Jisho Excel word bank | **Small** | **To Do** | Five JSON files (N5-N1) sourced from JMDict via Waller. Each entry has jmdict_seq, kana, kanji, waller_definition. N1 JSON has 3,427 entries vs Excel's 3,444 (17 gap). Script should match on kana, output words unique to each source, and flag definition differences. Goal: confirm nothing is missing from the word bank and evaluate waller_definition as a cleaner alternative to the stripped Jisho definitions. JSON files stored at scripts/source/. |
-| Google Sign-In | **Medium** | **To Do** | Add as a second auth option. Supabase OAuth. |
-| Apple Sign-In | **Medium** | **To Do** | Add as a third auth option. Required for any future iOS wrapper. |
-| Font size linked to mastery | **Medium** | **To Do** | Starts at 30pt. Decreases by 2pt per correct answer. Minimum size TBD (suggested 12pt). Toggle in Profile. |
-| Additional language support | **Epic** | **To Do** | Architecture should support this from Phase 1. Korean and Mandarin are the most likely additions. Break into tasks when scoping begins. |
 | Cross-reference JMDict JSON against Jisho Excel | **Small** | **To Do** | Write `scripts/compare-word-sources.ts`. Match on kana across both sources per JLPT level. Output: words only in Excel, words only in JSON, count totals. Useful for validating word bank completeness. Not blocking anything. |
-| JIS kana keyboard mapping | **Medium** | **To Do** | Map physical QWERTY keys to JIS kana layout so users can type kana directly without switching to a Japanese IME. E.g. 1=ぬ, 2=ふ, 3=あ, 4=う, 5=え. Enables romaji-to-kana mode on English keyboards. Alternative to requiring Japanese keyboard setup. |
-| Animation asset upgrade | **Small** | **To Do** | Commission or generate a higher-quality cycling character animation if the initial asset needs replacing. |
-| Mnemonic content expansion | **Medium** | **Optional** | Memory-aid strings for kana characters. Not part of the core practice loop. Can be added as a future enhancement if user feedback requests it. Data stub exists at `data/kana/mnemonics.ts`. |
+| Additional language support | **Epic** | **To Do** | Architecture should support this from Phase 1. Korean and Mandarin are the most likely additions. Break into tasks when scoping begins. |
 
 ---
 
@@ -522,3 +536,5 @@ Ideas and improvements not tied to a phase. Pulled in when the time is right.
 | 1.1 | April 2026 | Kanji removed from scope. Phase 3 (Kanji) and Phase 4 (Kanji with Kotoba) backlogs dropped. Game structure simplified to Kana then Kotoba. kotoba_jlpt_level now serves both modes. |
 | 1.2 | April 2026 | Kotoba brought forward from Phase 2 backlog. Phase 2 backlog absorbed into Sprints 5B-9. Sprint 5 closed. Sprint 5B (Kotoba Wiring) added. Sprints 6-9 expanded with Kotoba tasks. Removed: bottom nav, romaji variants/engine, mnemonics (optional in backlog). Kotoba dojo restructured: flat levels of 12 words (no units). |
 | 1.3 | May 2026 | Sprint 8 replaced with Smooth Game Loading and Navigation (performance sprint). Former Sprint 12 (Page Transition Speed) merged into new Sprint 8. Old Sprint 8 (Profile/Settings/Sync) renumbered to Sprint 9. Sprints 9-11 renumbered to 10-12. Three rounds of Codex staff-engineer review incorporated. |
+| 1.4 | May 2026 | Sprints 9-12 reshuffled for launch-first strategy. Sprint 9: Leaderboard + Audio (game-centric). Sprint 10: Accounts, Auth, Membership (guest conversion, OAuth, daily cap). Sprint 11: Security, Email, Polish, Pre-Launch. Sprint 12: Payments (Stripe, post-launch). Google/Apple Sign-In moved from backlog to Sprint 10. Font size linked to mastery, JIS kana keyboard, animation asset upgrade, and mnemonic expansion removed from backlog. Stripe webhook handler and integration tests added to Sprint 12. |
+| 1.5 | May 2026 | Guardrail tasks added to Sprints 9-11. Sprint 9: leaderboard schema redesigned for game_type/input_mode/period with server-only RPC writes, leaderboard privacy (profiles.leaderboard_visibility), audio tasks split (licence confirmation, script creation, manifest build, lazy-load enforcement). Sprint 10: safe guest progress import with validation/sanitization/clamping, profile wiring expanded (fixture removal, distance unit, email/password modals, profile repair), dedicated guest import tests. Sprint 11: CSRF/origin checks and rate limiting for all mutating endpoints, security tests, stale sprint reference cleanup. |

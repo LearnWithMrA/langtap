@@ -268,7 +268,7 @@ Paid tier CTAs: "Get started" (routes to sign-up, Stripe wired in Phase 2 - stub
 Paid tier cards show "Coming soon" badge in Phase 1 with buttons disabled.
 
 Note: distance limits and exact pricing are illustrative for Phase 1 display purposes.
-Final pricing confirmed when Stripe is activated in Sprint 11.
+Final pricing confirmed when Stripe is activated in Sprint 12.
 
 **Section C - Leaderboard preview:**
 This section corresponds to the Leaderboard nav link.
@@ -400,7 +400,7 @@ prominent Skip keep it fast.
 **Deferred notification prompt:** after the user completes their first practice
 session, a single interstitial card appears: "Want daily practice reminders?"
 with a toggle, a brief benefit line, and a Continue button. This is specced
-here for completeness but built in Sprint 10 alongside the notification wiring.
+here for completeness but built in Sprint 11 alongside the notification wiring.
 
 ### 5.0.1 Shared Visual Shell
 
@@ -650,7 +650,7 @@ practising". On tap:
 
 ### 5.6 Deferred: Post-Practice Notification Prompt
 
-Specced here for forward reference. Not built until Sprint 10.
+Specced here for forward reference. Not built until Sprint 11.
 
 After the user's first completed practice session (at least one word fully
 answered), a card appears as an interstitial before returning to the game
@@ -1273,7 +1273,7 @@ Visual style:
 - Label: "Lo-fi" (`text-xs text-warm-600`)
 
 Phase 1 placeholder: button is present but plays nothing until lo-fi tracks
-are sourced in Sprint 10. Plays `ui-audio-toggle` sound on press.
+are sourced in Sprint 9. Plays `ui-audio-toggle` sound on press.
 
 ### 7.7 Sound System
 
@@ -2211,7 +2211,7 @@ uppercase tracking-wider mb-3`)
 
 **Feature flag:** the entire membership card can be hidden via a
 `SHOW_MEMBERSHIP_CARD` environment variable if priorities shift before
-Stripe is wired in Sprint 11.
+Stripe is wired in Sprint 12.
 
 ### 10.5 Account Settings
 

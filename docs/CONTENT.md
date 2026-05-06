@@ -86,7 +86,7 @@ LangTap is currently free, so attribution-required characters are acceptable.
 5. Commit the audio files to the repo.
 6. Deployed app serves them as static files.
 
-**Voice character selection (Sprint 10):**
+**Voice character selection (Sprint 9):**
 Pick one consistent voice for all words. Choose a character whose terms permit
 use in a free application with attribution. Attribution goes on the credits
 screen. Confirm the specific character's terms before generating audio.
@@ -103,7 +103,7 @@ screen. Confirm the specific character's terms before generating audio.
 The pure kana word gap identified in the Kanji Alive audit is fully solved.
 VOICEVOX generates audio for any Japanese text including pure kana words.
 
-**When this runs:** Sprint 10 - Audio Integration.
+**When this runs:** Sprint 9 - Leaderboard and Audio.
 
 ### 2.3 Lo-Fi Background Music: Free Music Archive
 
@@ -462,8 +462,8 @@ This provides phonetic context and is more natural than isolated phoneme playbac
 | Licence | Free and open source. Voice character terms apply. |
 | Format | MP3 |
 | Coverage | Full - covers all words including pure kana words |
-| Phase | Sprint 10 - Audio Integration |
-| Attribution | To be confirmed per chosen voice character before Sprint 10 |
+| Phase | Sprint 9 - Leaderboard and Audio |
+| Attribution | To be confirmed per chosen voice character before Sprint 9 |
 
 ### 8.2 Lo-Fi Background Music
 
@@ -472,7 +472,7 @@ This provides phonetic context and is more natural than isolated phoneme playbac
 | TBD | TBD | TBD | Free Music Archive | Not yet sourced |
 
 Action: Curate 3-5 tracks from https://freemusicarchive.org with CC BY or CC0 licence.
-Confirm licence on each track individually. Populate this table before Sprint 2.
+Confirm licence on each track individually. Populate this table before Sprint 9.
 
 ---
 
@@ -489,7 +489,7 @@ Required attributions at Phase 1 launch:
 
 **Word audio:**
 > Word pronunciation audio generated using VOICEVOX (https://voicevox.hiroshiba.jp).
-> Voice character licence and attribution text to be confirmed before Sprint 10.
+> Voice character licence and attribution text to be confirmed before Sprint 9.
 
 **Lo-fi music:**
 > [Track titles, artists, and licences to be added when tracks are selected]

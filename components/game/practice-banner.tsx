@@ -28,16 +28,16 @@ const VARIANT_STYLES: Record<
   { iconBg: string; icon: string; btnBg: string; btnShadow: string }
 > = {
   kana: {
-    iconBg: 'bg-sage-100',
-    icon: 'あ',
-    btnBg: 'bg-sage-500',
-    btnShadow: 'shadow-[0_3px_0_0_#456e3d]',
-  },
-  kotoba: {
     iconBg: 'bg-[#d0e4f5]',
-    icon: '言',
+    icon: 'あ',
     btnBg: 'bg-[#5a82a8]',
     btnShadow: 'shadow-[0_3px_0_0_#3a6288]',
+  },
+  kotoba: {
+    iconBg: 'bg-sage-100',
+    icon: '言',
+    btnBg: 'bg-sage-500',
+    btnShadow: 'shadow-[0_3px_0_0_#456e3d]',
   },
 }
 

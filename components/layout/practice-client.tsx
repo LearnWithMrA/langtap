@@ -48,8 +48,8 @@ import { DIALOGUE_SCRIPTS } from '@/data/tutorial/dialogue-scripts'
 import { TRIAL_ALLOWED_IDS } from '@/data/tutorial/trial-prompts'
 
 const TRIAL_ALLOWED_SET = new Set(TRIAL_ALLOWED_IDS)
-const KANA_TRIAL_CARD = 'bg-[#ddf0e8] shadow-[0_6px_0_0_#a0d0b8]'
-const KOTOBA_TRIAL_CARD = 'bg-[#dce8f5] shadow-[0_6px_0_0_#a8bed8]'
+const KANA_TRIAL_CARD = 'bg-[#dce8f5] shadow-[0_6px_0_0_#a8bed8]'
+const KOTOBA_TRIAL_CARD = 'bg-[#ddf0e8] shadow-[0_6px_0_0_#a0d0b8]'
 const FROZEN_PROMPT_KEY = 'langtap-frozen-prompt'
 
 // -- Types --------------------------------------------------
@@ -223,7 +223,7 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
         ? {
             script: DIALOGUE_SCRIPTS['kana-first-play'],
             onDismiss: markKanaIntroSeen,
-            theme: 'green' as const,
+            theme: 'blue' as const,
             onSkip: undefined as (() => void) | undefined,
             skipLabel: undefined as string | undefined,
           }
@@ -231,7 +231,7 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
           ? {
               script: DIALOGUE_SCRIPTS['kana-post-trial'],
               onDismiss: markSettingsSeen,
-              theme: 'green' as const,
+              theme: 'blue' as const,
               onSkip: undefined,
               skipLabel: undefined,
             }
@@ -239,7 +239,7 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
             ? {
                 script: DIALOGUE_SCRIPTS[kanaModeKey],
                 onDismiss: markKanaModeSeen,
-                theme: 'green' as const,
+                theme: 'blue' as const,
                 onSkip: skipTrial,
                 skipLabel: 'Skip trial',
               }
@@ -251,7 +251,7 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
       ? {
           script: DIALOGUE_SCRIPTS[kotobaModeKey],
           onDismiss: markKotobaModeSeen,
-          theme: 'blue' as const,
+          theme: 'green' as const,
           onSkip: skipKotobaTrial,
           skipLabel: 'Skip trial',
         }
@@ -289,9 +289,13 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
     if (kotobaTrialSession.isComplete && !hasSeenKotobaTrial) markKotobaTrialSeen()
   }, [kotobaTrialSession.isComplete, hasSeenKotobaTrial, markKotobaTrialSeen])
 
-  // ── Dual mnemonic banner ─────────────────────
-  const { hasSeen: hasSeenMnemonicBanner, markSeen: markMnemonicBannerSeen } =
+  // ── Dual mnemonic banners (two-part, triggered by wrong answer) ──
+  const { hasSeen: hasSeenMnemonicBanner1, markSeen: markMnemonicBanner1Seen } =
     useDialogueSeen('dual-mnemonic-hint')
+  const { hasSeen: hasSeenMnemonicBanner2, markSeen: markMnemonicBanner2Seen } =
+    useDialogueSeen('dual-mnemonic-hint-2')
+  const [mnemonicShown, setMnemonicShown] = useState(false)
+  const handleMnemonicShown = useCallback((): void => setMnemonicShown(true), [])
 
   // ── Special character hints ──────────────────
   const { hasSeen: hasSeenHSokuon, markSeen: markHSokuonSeen } =
@@ -302,14 +306,21 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
     useDialogueSeen('longvowel-hint')
 
   const hintsEnabled = useSettingsStore((s) => s.hints)
-  const isCharacterDrill = kanaSession.prompt?.kind === 'character'
-  const showMnemonicBanner =
-    !hasSeenMnemonicBanner &&
+  const showMnemonicBanner1 =
+    mnemonicShown &&
+    !hasSeenMnemonicBanner1 &&
+    !activeDialogue &&
+    !showKanaTrial &&
+    gameType === 'kana' &&
+    hintsEnabled
+  const showMnemonicBanner2 =
+    hasSeenMnemonicBanner1 &&
+    !hasSeenMnemonicBanner2 &&
     !activeDialogue &&
     !showKanaTrial &&
     gameType === 'kana' &&
     hintsEnabled &&
-    isCharacterDrill
+    mnemonicShown
 
   const currentPromptCharIds = kanaSession.prompt?.characters.map((c) => c.id) ?? []
   const showHiraganaSokuonHint =
@@ -344,7 +355,8 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
   const hasBanner =
     showKotobaBanner ||
     showTrialBanner ||
-    showMnemonicBanner ||
+    showMnemonicBanner1 ||
+    showMnemonicBanner2 ||
     showHiraganaSokuonHint ||
     showKatakanaSokuonHint ||
     showLongVowelHint
@@ -423,11 +435,15 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
               to save your progress. :)
             </PracticeBanner>
           )}
-          {showMnemonicBanner && (
-            <PracticeBanner variant="kana" buttonLabel="Got it" onAction={markMnemonicBannerSeen}>
+          {showMnemonicBanner1 && (
+            <PracticeBanner variant="kana" buttonLabel="Got it" onAction={markMnemonicBanner1Seen}>
               These are dual mnemonics. They link hiragana and katakana pairs through a shared
-              story. Get an answer wrong and one will appear. We recommend writing them down and
-              creating your own dual hiragana/katakana chart.
+              story. Get an answer wrong and one will appear.
+            </PracticeBanner>
+          )}
+          {showMnemonicBanner2 && (
+            <PracticeBanner variant="kana" buttonLabel="Got it" onAction={markMnemonicBanner2Seen}>
+              We recommend writing them down and creating your own dual hiragana/katakana chart.
             </PracticeBanner>
           )}
           {showHiraganaSokuonHint && (
@@ -454,6 +470,7 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
             session={kanaSession}
             allowedCharIds={kanaSession.practiceIds}
             onCharacterCorrect={handleCharacterCorrect}
+            onMnemonicShown={handleMnemonicShown}
           >
             <ModeDropdown mode={mode} onModeChange={setMode} gameType="kana" />
             <DistanceCounter value={counters[mode]} />

@@ -82,7 +82,7 @@ practice, and onboarding step-3.
 |---|---|---|
 | Cyclist animation PNGs | **12 MB** (14 frames, ~860-920 kB each) | All loaded eagerly |
 | Audio (sounds/) | 236 kB | Key click sound only |
-| Audio (audio/) | 0 B | Word audio not yet generated (Sprint 11) |
+| Audio (audio/) | 0 B | Word audio not yet generated (Sprint 9) |
 | SVG images | ~100 kB | Logo, mascot icons, landscape |
 | Mascot PNGs | ~500 kB | 3 poses |
 | Total public/ | **13 MB** | Dominated by cyclist frames |

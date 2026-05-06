@@ -30,6 +30,39 @@ Format per entry:
 
 ---
 
+## 2026-05-06 - Session 92
+
+**Sprint:** Planning and bug fixes (between sprints)
+**Task completed:** Sprint reshuffle, guardrail tasks, stale reference cleanup, mnemonic banner fix, colour theme swap
+**Status:** Done
+
+### Changes made
+- `LangTap_Sprints.md`: Reshuffled Sprints 9-12 for launch-first strategy. Sprint 9: Leaderboard + Audio. Sprint 10: Accounts, Auth, Membership. Sprint 11: Security, Email, Polish, Pre-Launch. Sprint 12: Payments (Stripe, post-launch). Added guardrail tasks across Sprints 9-11 (leaderboard schema redesign, privacy column, audio task split, safe guest import, profile wiring completeness, CSRF/rate limiting, security tests). Removed 4 backlog items (font size mastery, JIS keyboard, animation upgrade, mnemonics). Google/Apple Sign-In moved from backlog to Sprint 10.
+- `data/audio/word-manifest.ts`: Removed stale Kanji Alive reference, updated to VOICEVOX. Sprint 10 -> Sprint 9.
+- `docs/CONTENT.md`: 5 sprint references updated from Sprint 10 to Sprint 9.
+- `docs/PERFORMANCE.md`: Sprint 11 -> Sprint 9 for word audio.
+- `docs/UX_DESIGN.md`: 5 sprint references updated (Stripe Sprint 11 -> 12, lo-fi/notification Sprint 10 -> 9/11).
+- `docs/AUTH.md`: 2 notification prompt references updated from Sprint 10 to Sprint 11.
+- `components/game/game-window.tsx`: Added `onMnemonicShown` callback prop. Fires once per prompt when a dual mnemonic becomes visible (3+ wrong attempts on a character drill). Resets on prompt change.
+- `components/layout/practice-client.tsx`: Mnemonic banner now only appears after `onMnemonicShown` fires (not on first character drill). Split into two sequential banners: (1) what mnemonics are, (2) recommendation to write them down. Swapped all colour themes: kana dialogues/trials/banners from green to blue, kotoba from blue to green.
+- `data/tutorial/dialogue-scripts.ts`: Added `dual-mnemonic-hint-2` to DialogueTrigger union for second banner tracking.
+- `components/game/practice-banner.tsx`: Swapped variant colours: kana from sage/green to blue, kotoba from blue to sage/green.
+- `components/layout/kana-dojo-client.tsx`: Help card changed from default sage/green to blue theme.
+- `components/layout/kotoba-dojo-client.tsx`: Help card changed from blue to sage/green theme.
+
+### Tests
+- All 902 tests pass. No new test files (changes are UI-level colour/timing fixes).
+
+### Next task
+Sprint 9: Design leaderboard Supabase schema
+
+### Notes
+- Colour rule established: kana = blue everywhere, kotoba = green everywhere. Dojo page headers were already correct; the dialogues, banners, trial cards, and help cards were backwards.
+- Mnemonic banner was appearing immediately on first character drill. Now only appears after the player gets a learning character wrong and the mnemonic is actually displayed in the game window.
+- Sprint board history entries (completed sprints) still reference old colours in their notes. Left as-is per changelog immutability rule.
+
+---
+
 ## 2026-05-05 - Session 91
 
 **Sprint:** Sprint 8 - Smooth Game Loading and Navigation

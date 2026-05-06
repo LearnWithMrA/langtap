@@ -269,8 +269,8 @@ function ReadyShell(): ReactNode {
                 title={kotobaTip.title}
                 body={kotobaTip.body}
                 icon="言"
-                iconBg="bg-[#d0e4f5]"
-                buttonClass="bg-[#5a82a8] hover:bg-[#4a7298] border-b-[#3a6288]"
+                iconBg="bg-sage-100"
+                buttonClass="bg-sage-500 hover:bg-sage-600 border-b-sage-600"
                 onDismiss={advanceTip}
               />
             </div>

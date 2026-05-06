@@ -46,6 +46,7 @@ type GameWindowProps = {
   mode: InputMode
   session: UsePracticeSessionReturn
   onCharacterCorrect?: () => void
+  onMnemonicShown?: () => void
   allowedCharIds?: Set<string>
   cardClassName?: string
   children?: ReactNode
@@ -131,6 +132,7 @@ export function GameWindow({
   mode,
   session,
   onCharacterCorrect,
+  onMnemonicShown,
   allowedCharIds,
   cardClassName,
   children,
@@ -210,6 +212,19 @@ export function GameWindow({
   }
   const showHintForChar = (charIdx: number): boolean =>
     getWrongAttempts(charIdx) >= MAX_WRONG_ATTEMPTS
+
+  const mnemonicVisible = dualMnemonic !== null && showHintForChar(0)
+  const mnemonicFiredRef = useRef(false)
+  useEffect(() => {
+    if (mnemonicVisible && !mnemonicFiredRef.current) {
+      mnemonicFiredRef.current = true
+      onMnemonicShown?.()
+    }
+  }, [mnemonicVisible, onMnemonicShown])
+
+  useEffect(() => {
+    mnemonicFiredRef.current = false
+  }, [prompt])
 
   const clearTimers = useCallback((): void => {
     timersRef.current.forEach(clearTimeout)

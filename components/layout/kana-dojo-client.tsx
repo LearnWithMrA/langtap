@@ -426,7 +426,13 @@ function KanaDojoReadyShell(): ReactNode {
           {showHelp && (
             <div className="mb-6">
               {currentTip && (
-                <HelpCard title={currentTip.title} body={currentTip.body} onDismiss={dismissHelp} />
+                <HelpCard
+                  title={currentTip.title}
+                  body={currentTip.body}
+                  iconBg="bg-[#d0e4f5]"
+                  buttonClass="bg-[#5a82a8] hover:bg-[#4a7298] border-b-[#3a6288]"
+                  onDismiss={dismissHelp}
+                />
               )}
             </div>
           )}
