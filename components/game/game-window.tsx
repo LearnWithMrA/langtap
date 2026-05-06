@@ -43,12 +43,15 @@ const TAP_GRID_SIZE = 10
 
 type InputMode = 'type' | 'tap' | 'swipe'
 
+type LeaderboardAttempt = { charIndex: number; submitted: string }
+
 type GameWindowProps = {
   mode: InputMode
   session: UsePracticeSessionReturn
   onCharacterCorrect?: () => void
   onMnemonicShown?: () => void
-  onLeaderboardScore?: (delta: number) => void
+  onLeaderboardStart?: (promptId: string, wordId: string) => void
+  onLeaderboardFinalize?: (promptId: string, attempts: LeaderboardAttempt[]) => void
   allowedCharIds?: Set<string>
   cardClassName?: string
   children?: ReactNode
@@ -135,7 +138,8 @@ export function GameWindow({
   session,
   onCharacterCorrect,
   onMnemonicShown,
-  onLeaderboardScore,
+  onLeaderboardStart,
+  onLeaderboardFinalize,
   allowedCharIds,
   cardClassName,
   children,
@@ -171,6 +175,8 @@ export function GameWindow({
 
   const generationRef = useRef(0)
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
+  const promptIdRef = useRef('')
+  const firstAttemptsRef = useRef<string[]>([])
 
   const characters = useMemo(() => prompt?.characters ?? [], [prompt])
   const isKatakana = characters.length > 0 && isKatakanaChar(characters[0].kana)
@@ -181,6 +187,9 @@ export function GameWindow({
   const isCharacterDrill = prompt?.kind === 'character'
   const currentRomaji = characters[0]?.romaji ?? ''
   const dualMnemonic = isCharacterDrill && hintsEnabled ? getDualMnemonic(currentRomaji) : null
+
+  const startRef = useRef(onLeaderboardStart)
+  startRef.current = onLeaderboardStart
 
   const tapGrid = useMemo(
     () => (characters.length > 0 ? buildTapGrid(characters, isKatakana, allowedCharIds) : []),
@@ -260,6 +269,12 @@ export function GameWindow({
   // Reset on new prompt or mode change
   useEffect((): void => {
     resetInputState()
+    if (prompt?.kind === 'word' && prompt.word.id) {
+      const id = crypto.randomUUID()
+      promptIdRef.current = id
+      firstAttemptsRef.current = new Array(prompt.characters.length).fill('')
+      startRef.current?.(id, prompt.word.id)
+    }
   }, [prompt, mode, resetInputState])
 
   useEffect((): (() => void) => {
@@ -287,9 +302,12 @@ export function GameWindow({
     handleWordComplete(results)
     onCharacterCorrect?.()
 
-    if (!isCharacterDrill && onLeaderboardScore) {
-      const scoreDelta = results.filter((r) => r.isFirstAttemptCorrect).length
-      if (scoreDelta > 0) onLeaderboardScore(scoreDelta)
+    if (!isCharacterDrill && onLeaderboardFinalize) {
+      const attempts = firstAttemptsRef.current.map((submitted, i) => ({
+        charIndex: i,
+        submitted,
+      }))
+      onLeaderboardFinalize(promptIdRef.current, attempts)
     }
 
     scheduleTimeout((): void => {
@@ -311,13 +329,19 @@ export function GameWindow({
     buildResults,
     handleWordComplete,
     onCharacterCorrect,
-    onLeaderboardScore,
+    onLeaderboardFinalize,
     isCharacterDrill,
     advanceToNext,
     inputDirection,
     playWordAudio,
     prompt?.word.id,
   ])
+
+  const recordFirstAttempt = useCallback((charIdx: number, submitted: string): void => {
+    if (firstAttemptsRef.current[charIdx] === '') {
+      firstAttemptsRef.current[charIdx] = submitted
+    }
+  }, [])
 
   const handleWrong = useCallback((): void => {
     clearTimers()
@@ -353,6 +377,9 @@ export function GameWindow({
       const match = evaluateInput(compare, fullAnswer)
 
       if (match === 'no_match') {
+        const prevBp = completedCount > 0 ? breakpoints[completedCount - 1] : ''
+        const segment = compare.substring(prevBp.length)
+        recordFirstAttempt(completedCount, segment)
         handleWrong()
         return
       }
@@ -369,8 +396,14 @@ export function GameWindow({
         }
       }
 
-      // Record start time for newly reached characters
+      // Record first attempts for newly completed characters
       if (newCompleted > completedCount) {
+        for (let idx = completedCount; idx < newCompleted; idx++) {
+          const prevBp = idx > 0 ? breakpoints[idx - 1] : ''
+          const nextBp = breakpoints[idx]
+          const segment = compare.substring(prevBp.length, nextBp.length)
+          recordFirstAttempt(idx, segment)
+        }
         setCharStartTimes((prev) => {
           const next = [...prev]
           while (next.length <= newCompleted) next.push(Date.now())
@@ -395,6 +428,7 @@ export function GameWindow({
       completedCount,
       handleWrong,
       onWordComplete,
+      recordFirstAttempt,
     ],
   )
 
@@ -404,6 +438,7 @@ export function GameWindow({
       if (wordDone || !currentChar) return
       setTapFeedbackId(id)
       const expected = isKanaToRomaji ? currentChar.romaji : currentChar.kana
+      recordFirstAttempt(completedCount, value)
       if (value === expected) {
         setTapFeedbackState('correct')
         const newCompleted = completedCount + 1
@@ -441,6 +476,7 @@ export function GameWindow({
       onWordComplete,
       clearTimers,
       scheduleTimeout,
+      recordFirstAttempt,
     ],
   )
 

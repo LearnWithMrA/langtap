@@ -15,7 +15,7 @@
 
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import dynamic from 'next/dynamic'
 import { GameWindow } from '@/components/game/game-window'
@@ -44,7 +44,8 @@ import { useAuthModalStore } from '@/stores/auth-modal.store'
 import { useUserStore } from '@/stores/user.store'
 import { useOnboardingStore } from '@/stores/onboarding.store'
 import { useGameplayStore } from '@/stores/gameplay.store'
-import { recordLeaderboardCompletion } from '@/services/leaderboard.service'
+import { startLeaderboardSession, finalizeLeaderboardSession } from '@/services/leaderboard.service'
+import type { LeaderboardAttemptEntry, PendingSession } from '@/types/leaderboard.types'
 import { DIALOGUE_SCRIPTS } from '@/data/tutorial/dialogue-scripts'
 import { TRIAL_ALLOWED_IDS } from '@/data/tutorial/trial-prompts'
 
@@ -354,17 +355,51 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
     }
   }, [incrementCorrect, mode, isGuest, incrementGuestDistance, gameType])
 
-  const handleLeaderboardScore = useCallback(
-    (delta: number): void => {
+  const sessionMapRef = useRef(new Map<string, PendingSession>())
+
+  const handleLeaderboardStart = useCallback(
+    (promptId: string, wordId: string): void => {
       if (isGuest) return
-      void recordLeaderboardCompletion({
-        eventId: crypto.randomUUID(),
+      sessionMapRef.current.set(promptId, {
+        wordId,
+        sessionId: null,
+        pendingAttempts: null,
+      })
+      void startLeaderboardSession({
         gameType,
         inputMode: mode,
-        scoreDelta: delta,
+        wordId,
+        kotobaInput: gameType === 'kotoba' ? kotobaInput : null,
+      }).then((result) => {
+        const entry = sessionMapRef.current.get(promptId)
+        if (!entry) return
+        if (!result.ok || !result.data) {
+          sessionMapRef.current.delete(promptId)
+          return
+        }
+        entry.sessionId = result.data
+        if (entry.pendingAttempts) {
+          const attempts = entry.pendingAttempts
+          sessionMapRef.current.delete(promptId)
+          void finalizeLeaderboardSession({ sessionId: result.data, attempts })
+        }
       })
     },
-    [isGuest, gameType, mode],
+    [isGuest, gameType, mode, kotobaInput],
+  )
+
+  const handleLeaderboardFinalize = useCallback(
+    (promptId: string, attempts: LeaderboardAttemptEntry[]): void => {
+      const entry = sessionMapRef.current.get(promptId)
+      if (!entry) return
+      if (entry.sessionId) {
+        sessionMapRef.current.delete(promptId)
+        void finalizeLeaderboardSession({ sessionId: entry.sessionId, attempts })
+      } else {
+        entry.pendingAttempts = attempts
+      }
+    },
+    [],
   )
 
   const hasBanner =
@@ -430,7 +465,8 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
             kotobaInput={kotobaInput}
             jlptLevel={resolvedLevel}
             onCharacterCorrect={handleCharacterCorrect}
-            onLeaderboardScore={handleLeaderboardScore}
+            onLeaderboardStart={handleLeaderboardStart}
+            onLeaderboardFinalize={handleLeaderboardFinalize}
           >
             <ModeDropdown mode={mode} onModeChange={setMode} gameType="kotoba" />
             <DistanceCounter value={counters[mode]} />
@@ -487,7 +523,8 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
             allowedCharIds={kanaSession.practiceIds}
             onCharacterCorrect={handleCharacterCorrect}
             onMnemonicShown={handleMnemonicShown}
-            onLeaderboardScore={handleLeaderboardScore}
+            onLeaderboardStart={handleLeaderboardStart}
+            onLeaderboardFinalize={handleLeaderboardFinalize}
           >
             <ModeDropdown mode={mode} onModeChange={setMode} gameType="kana" />
             <DistanceCounter value={counters[mode]} />

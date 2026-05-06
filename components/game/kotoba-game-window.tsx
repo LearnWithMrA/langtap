@@ -54,7 +54,11 @@ type Props = {
   cardClassName?: string
   children?: ReactNode
   onCharacterCorrect?: () => void
-  onLeaderboardScore?: (delta: number) => void
+  onLeaderboardStart?: (promptId: string, wordId: string) => void
+  onLeaderboardFinalize?: (
+    promptId: string,
+    attempts: Array<{ charIndex: number; submitted: string }>,
+  ) => void
 }
 
 // ── Helpers ───────────────────────────────────
@@ -73,7 +77,8 @@ export function KotobaGameWindow({
   cardClassName,
   children,
   onCharacterCorrect,
-  onLeaderboardScore,
+  onLeaderboardStart,
+  onLeaderboardFinalize,
 }: Props): ReactNode {
   const childArray = Array.isArray(children) ? children : children ? [children] : []
   const topLeft = childArray[0] ?? null
@@ -116,6 +121,12 @@ export function KotobaGameWindow({
 
   const generationRef = useRef(0)
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
+  const promptIdRef = useRef('')
+  const firstAttemptsRef = useRef<string[]>([])
+  const firstKanjiRef = useRef('')
+
+  const startRef = useRef(onLeaderboardStart)
+  startRef.current = onLeaderboardStart
 
   // ── Derived ───────────────────────────────
 
@@ -207,6 +218,17 @@ export function KotobaGameWindow({
   useEffect((): void => {
     resetAll()
   }, [mode, kotobaInput, resetAll])
+
+  useEffect((): void => {
+    if (currentWord?.id) {
+      const id = crypto.randomUUID()
+      promptIdRef.current = id
+      firstAttemptsRef.current = new Array(currentWord.characters.length).fill('')
+      firstKanjiRef.current = ''
+      startRef.current?.(id, currentWord.id)
+    }
+  }, [currentWord, mode, kotobaInput])
+
   useEffect((): (() => void) => clearTimers, [clearTimers])
 
   // ── Complete handlers ─────────────────────
@@ -218,8 +240,15 @@ export function KotobaGameWindow({
     const multiplier = isKanjiMode ? KANJI_INPUT_MULTIPLIER : 1
     recordWordComplete(wasClean, multiplier)
 
-    if (wasClean && onLeaderboardScore) {
-      onLeaderboardScore(multiplier)
+    if (onLeaderboardFinalize && currentWord?.id) {
+      const charAttempts = firstAttemptsRef.current
+        .map((submitted, i) => ({ charIndex: i, submitted }))
+        .filter((a) => a.submitted !== '')
+      const attempts = [...charAttempts]
+      if (isKanjiMode) {
+        attempts.push({ charIndex: -1, submitted: firstKanjiRef.current })
+      }
+      onLeaderboardFinalize(promptIdRef.current, attempts)
     }
 
     setWordDone(true)
@@ -234,7 +263,7 @@ export function KotobaGameWindow({
     kanjiWrongCount,
     recordWordComplete,
     isKanjiMode,
-    onLeaderboardScore,
+    onLeaderboardFinalize,
     playWordAudio,
     currentWord?.id,
   ])
@@ -271,6 +300,9 @@ export function KotobaGameWindow({
       if (wordDone || readingDone || !currentChar) return
       setTapFeedbackId(id)
 
+      if (firstAttemptsRef.current[completedCount] === '') {
+        firstAttemptsRef.current[completedCount] = value
+      }
       if (value === currentChar.kana) {
         setTapFeedbackState('correct')
         const newCompleted = completedCount + 1
@@ -327,6 +359,7 @@ export function KotobaGameWindow({
         const hasKanjiChar = /[一-鿿㐀-䶿]/.test(cleaned)
         if (!hasKanjiChar) return
 
+        if (firstKanjiRef.current === '') firstKanjiRef.current = cleaned
         if (cleaned === currentWord?.kanji) {
           handleWordComplete()
         } else {
@@ -344,6 +377,10 @@ export function KotobaGameWindow({
       if (compare.length === 0) return
 
       if (!fullKanaAnswer.startsWith(compare)) {
+        if (firstAttemptsRef.current[completedCount] === '') {
+          const prevBp = completedCount > 0 ? kanaBreakpoints[completedCount - 1] : ''
+          firstAttemptsRef.current[completedCount] = compare.substring(prevBp.length)
+        }
         handleWrong()
         return
       }
@@ -357,6 +394,11 @@ export function KotobaGameWindow({
       }
       if (newCompleted > completedCount) {
         for (let idx = completedCount; idx < newCompleted; idx++) {
+          if (firstAttemptsRef.current[idx] === '') {
+            const prevBp = idx > 0 ? kanaBreakpoints[idx - 1] : ''
+            const nextBp = kanaBreakpoints[idx]
+            firstAttemptsRef.current[idx] = compare.substring(prevBp.length, nextBp.length)
+          }
           if ((wrongAttemptsMap[idx] ?? 0) === 0) onCharacterCorrect?.()
         }
       }
@@ -387,6 +429,7 @@ export function KotobaGameWindow({
     (kanji: string): void => {
       if (!readingDone || wordDone || !currentWord?.kanji) return
       setSelectedKanji(kanji)
+      if (firstKanjiRef.current === '') firstKanjiRef.current = kanji
       playSound(kanji === currentWord.kanji ? 'e' : 'o')
 
       if (kanji === currentWord.kanji) {
@@ -394,6 +437,7 @@ export function KotobaGameWindow({
         onCharacterCorrect?.()
         schedule(handleWordComplete, FEEDBACK_FLASH_MS)
       } else {
+        setKanjiWrongCount((prev) => prev + 1)
         setKanjiFeedback('wrong')
         schedule((): void => {
           setSelectedKanji(null)

@@ -1,9 +1,9 @@
 // ---------------------------------------------------------
 // File: services/leaderboard.service.ts
-// Purpose: Record leaderboard completion events and fetch
-//          ranked leaderboard data. All writes go through
-//          server-side security-definer RPCs. No direct
-//          table access from the client.
+// Purpose: Server-derived leaderboard scoring and ranked data.
+//          All writes go through security-definer RPCs that
+//          verify attempts against stored expected answers.
+//          No client-provided scores.
 // Depends on: services/supabase-browser.ts,
 //             types/leaderboard.types.ts
 // ---------------------------------------------------------
@@ -12,6 +12,7 @@ import { createBrowserSupabaseClient } from '@/services/supabase-browser'
 import type {
   LeaderboardBoard,
   LeaderboardEntry,
+  LeaderboardAttemptEntry,
   GameType,
   TimePeriod,
 } from '@/types/leaderboard.types'
@@ -28,21 +29,39 @@ type LeaderboardRpcRow = {
   is_current_user: boolean
 }
 
-// ── Main exports ──────────────────────────────
+// ── Session RPCs ──────────────────────────────
 
-export async function recordLeaderboardCompletion(input: {
-  eventId: string
+export async function startLeaderboardSession(input: {
   gameType: GameType
   inputMode: InputMode
-  scoreDelta: number
+  wordId: string
+  kotobaInput: 'readings' | 'kanji' | null
+}): Promise<ServiceResult<string | null>> {
+  const supabase = createBrowserSupabaseClient()
+
+  const { data, error } = await supabase.rpc('start_leaderboard_session', {
+    p_game_type: input.gameType,
+    p_input_mode: input.inputMode,
+    p_word_id: input.wordId,
+    p_kotoba_input: input.kotobaInput,
+  })
+
+  if (error) {
+    return { ok: false, error: error.message }
+  }
+
+  return { ok: true, data: data as string | null }
+}
+
+export async function finalizeLeaderboardSession(input: {
+  sessionId: string
+  attempts: LeaderboardAttemptEntry[]
 }): Promise<ServiceResult<void>> {
   const supabase = createBrowserSupabaseClient()
 
-  const { error } = await supabase.rpc('record_leaderboard_completion', {
-    p_event_id: input.eventId,
-    p_game_type: input.gameType,
-    p_input_mode: input.inputMode,
-    p_score_delta: input.scoreDelta,
+  const { error } = await supabase.rpc('finalize_leaderboard_session', {
+    p_session_id: input.sessionId,
+    p_attempts: input.attempts,
   })
 
   if (error) {
@@ -51,6 +70,8 @@ export async function recordLeaderboardCompletion(input: {
 
   return { ok: true, data: undefined }
 }
+
+// ── Read RPC ──────────────────────────────────
 
 export async function loadLeaderboard(
   gameType: GameType,

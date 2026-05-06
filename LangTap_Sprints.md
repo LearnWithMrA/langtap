@@ -444,6 +444,8 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 | Build VOICEVOX generation script | **Medium** | **Done** | `scripts/generate-audio.ts` created. CLI args: --level, --dry-run, --speaker. Prerequisite checks (VOICEVOX running, ffmpeg installed). Batch processing (5 concurrent) with retry. Incremental (skip-if-exists). Auto-generates word-manifest.ts. npm script added. Session 94. |
 | Generate word audio and build manifest | **Medium** | **Done** | 8,243 words generated via VOICEVOX (Shikoku Metan, 0.85x speed, 44.1kHz, max quality). Organized by JLPT level in public/audio/words/n5..n1/. Manifest maps word ID to level. useWordAudio hook wired into both game windows. Plays on word completion. Session 94. |
 | Write audio tests | **Small** | **Done** | 7 tests: manifest path resolution, useWordAudio no-load-on-mount, settings toggle, unknown IDs, fetch on valid ID. Session 94. |
+| Server-derived leaderboard scoring | **Large** | **Done** | True verification: prompt catalog (8,243 words with expected romaji/kana/kanji), server-issued sessions, server computes scores from raw submitted inputs. Old RPC retired. Codex reviewed through 4 iterations. Session 95. |
+| Leaderboard bug fixes (Codex review) | **Small** | **Done** | Kanji clean scoring checks kanjiWrongCount. Lo-fi auto-advance fixed. Default mode persisted to settings store. Profile visibility wired to Supabase with optimistic update. Wrong kanji tap increments kanjiWrongCount. Session 94-95. |
 
 ---
 

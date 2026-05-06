@@ -21,7 +21,8 @@ const mockLoadLeaderboard = vi.fn().mockResolvedValue({
 
 vi.mock('@/services/leaderboard.service', () => ({
   loadLeaderboard: (...args: unknown[]): unknown => mockLoadLeaderboard(...args),
-  recordLeaderboardCompletion: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
+  startLeaderboardSession: vi.fn().mockResolvedValue({ ok: true, data: 'session-1' }),
+  finalizeLeaderboardSession: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
 }))
 
 beforeEach(() => {

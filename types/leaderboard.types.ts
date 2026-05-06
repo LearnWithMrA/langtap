@@ -19,6 +19,19 @@ export type LeaderboardBoard = {
 export type TimePeriod = 'all-time' | 'this-week'
 export type GameType = 'kana' | 'kotoba'
 
+// ── Attempt types ───────────────────────────
+
+export type LeaderboardAttemptEntry = {
+  readonly charIndex: number
+  readonly submitted: string
+}
+
+export type PendingSession = {
+  wordId: string
+  sessionId: string | null
+  pendingAttempts: LeaderboardAttemptEntry[] | null
+}
+
 // ── Server row types ─────────────────────────
 
 export type LeaderboardScoreRow = {

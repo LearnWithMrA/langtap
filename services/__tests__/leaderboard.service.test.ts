@@ -1,8 +1,8 @@
 // ------------------------------------------------------------
 // File: services/__tests__/leaderboard.service.test.ts
-// Purpose: Unit tests for leaderboard service. Validates RPC
-//          call params, response transformation to LeaderboardBoard,
-//          pinned user separation, and error handling.
+// Purpose: Unit tests for leaderboard service. Validates session
+//          RPCs, response transformation, pinned user separation,
+//          and error handling.
 // Depends on: services/leaderboard.service.ts
 // ------------------------------------------------------------
 
@@ -25,52 +25,127 @@ describe('leaderboard.service', () => {
     vi.clearAllMocks()
   })
 
-  describe('recordLeaderboardCompletion', () => {
-    it('calls RPC with correct params', async () => {
-      mockRpc.mockResolvedValue({ error: null })
+  describe('startLeaderboardSession', () => {
+    it('calls RPC with correct params for kana', async () => {
+      mockRpc.mockResolvedValue({ data: 'session-1', error: null })
 
-      const { recordLeaderboardCompletion } = await import('../leaderboard.service')
-      await recordLeaderboardCompletion({
-        eventId: 'evt-123',
+      const { startLeaderboardSession } = await import('../leaderboard.service')
+      await startLeaderboardSession({
         gameType: 'kana',
         inputMode: 'tap',
-        scoreDelta: 3,
+        wordId: '1198180',
+        kotobaInput: null,
       })
 
-      expect(mockRpc).toHaveBeenCalledWith('record_leaderboard_completion', {
-        p_event_id: 'evt-123',
+      expect(mockRpc).toHaveBeenCalledWith('start_leaderboard_session', {
         p_game_type: 'kana',
         p_input_mode: 'tap',
-        p_score_delta: 3,
+        p_word_id: '1198180',
+        p_kotoba_input: null,
       })
     })
 
-    it('returns ok true on success', async () => {
-      mockRpc.mockResolvedValue({ error: null })
+    it('calls RPC with correct params for kotoba kanji', async () => {
+      mockRpc.mockResolvedValue({ data: 'session-2', error: null })
 
-      const { recordLeaderboardCompletion } = await import('../leaderboard.service')
-      const result = await recordLeaderboardCompletion({
-        eventId: 'evt-456',
+      const { startLeaderboardSession } = await import('../leaderboard.service')
+      await startLeaderboardSession({
         gameType: 'kotoba',
         inputMode: 'type',
-        scoreDelta: 1,
+        wordId: '1198180',
+        kotobaInput: 'kanji',
       })
 
-      expect(result).toEqual({ ok: true, data: undefined })
+      expect(mockRpc).toHaveBeenCalledWith('start_leaderboard_session', {
+        p_game_type: 'kotoba',
+        p_input_mode: 'type',
+        p_word_id: '1198180',
+        p_kotoba_input: 'kanji',
+      })
     })
 
-    it('returns error on RPC failure', async () => {
+    it('returns session ID on success', async () => {
+      mockRpc.mockResolvedValue({ data: 'session-abc', error: null })
+
+      const { startLeaderboardSession } = await import('../leaderboard.service')
+      const result = await startLeaderboardSession({
+        gameType: 'kana',
+        inputMode: 'tap',
+        wordId: '1198180',
+        kotobaInput: null,
+      })
+
+      expect(result).toEqual({ ok: true, data: 'session-abc' })
+    })
+
+    it('returns null for hidden users', async () => {
+      mockRpc.mockResolvedValue({ data: null, error: null })
+
+      const { startLeaderboardSession } = await import('../leaderboard.service')
+      const result = await startLeaderboardSession({
+        gameType: 'kana',
+        inputMode: 'tap',
+        wordId: '1198180',
+        kotobaInput: null,
+      })
+
+      expect(result).toEqual({ ok: true, data: null })
+    })
+
+    it('returns error on failure', async () => {
       mockRpc.mockResolvedValue({ error: { message: 'Rate limit exceeded' } })
 
-      const { recordLeaderboardCompletion } = await import('../leaderboard.service')
-      const result = await recordLeaderboardCompletion({
-        eventId: 'evt-789',
+      const { startLeaderboardSession } = await import('../leaderboard.service')
+      const result = await startLeaderboardSession({
         gameType: 'kana',
-        inputMode: 'swipe',
-        scoreDelta: 5,
+        inputMode: 'tap',
+        wordId: '1198180',
+        kotobaInput: null,
       })
 
       expect(result).toEqual({ ok: false, error: 'Rate limit exceeded' })
+    })
+  })
+
+  describe('finalizeLeaderboardSession', () => {
+    it('calls RPC with session ID and attempts', async () => {
+      mockRpc.mockResolvedValue({ error: null })
+
+      const { finalizeLeaderboardSession } = await import('../leaderboard.service')
+      await finalizeLeaderboardSession({
+        sessionId: 'session-1',
+        attempts: [
+          { charIndex: 0, submitted: 'a' },
+          { charIndex: 1, submitted: 'u' },
+        ],
+      })
+
+      expect(mockRpc).toHaveBeenCalledWith('finalize_leaderboard_session', {
+        p_session_id: 'session-1',
+        p_attempts: [
+          { charIndex: 0, submitted: 'a' },
+          { charIndex: 1, submitted: 'u' },
+        ],
+      })
+    })
+
+    it('returns error on failure', async () => {
+      mockRpc.mockResolvedValue({ error: { message: 'Session expired' } })
+
+      const { finalizeLeaderboardSession } = await import('../leaderboard.service')
+      const result = await finalizeLeaderboardSession({
+        sessionId: 'session-1',
+        attempts: [{ charIndex: 0, submitted: 'a' }],
+      })
+
+      expect(result).toEqual({ ok: false, error: 'Session expired' })
+    })
+  })
+
+  describe('old RPC removal', () => {
+    it('does not export recordLeaderboardCompletion', async () => {
+      const service = await import('../leaderboard.service')
+      expect('recordLeaderboardCompletion' in service).toBe(false)
     })
   })
 

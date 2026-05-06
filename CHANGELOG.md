@@ -30,6 +30,56 @@ Format per entry:
 
 ---
 
+## 2026-05-06 - Session 95
+
+**Sprint:** Sprint 9 - Leaderboard and Audio (extended)
+**Task completed:** Server-derived leaderboard scoring, Codex bug fixes, profile visibility persistence
+**Status:** Done
+
+### Changes made
+
+**Server-derived scoring (3 migrations, 1 script):**
+- `supabase/migrations/20260506130000_create_word_catalog.sql`: New table with RLS for word validation
+- `supabase/migrations/20260506130001_seed_word_catalog.sql`: 8,243 words with expected_romaji (sokuon/longvowel normalized), expected_kana, kanji
+- `supabase/migrations/20260506130002_server_derived_scoring.sql`: Sessions table, `start_leaderboard_session` + `finalize_leaderboard_session` RPCs (atomic finalize, JSON validation CTE, unique indices, exact kana coverage, optional kotoba kanji readings), retired old `record_leaderboard_completion`
+- `scripts/seed-word-catalog.ts`: Generates seed SQL with runtime-matching romaji normalization
+
+**Service layer:**
+- `services/leaderboard.service.ts`: Replaced `recordLeaderboardCompletion` with `startLeaderboardSession` + `finalizeLeaderboardSession`
+- `types/leaderboard.types.ts`: Added `LeaderboardAttemptEntry`, `PendingSession` types
+
+**Client integration:**
+- `components/layout/practice-client.tsx`: Session map keyed by promptId with deferred finalize (handles start-before-finalize race)
+- `components/game/game-window.tsx`: First-attempt tracking in refs, promptId per prompt mount via reset effect, sends raw submitted values
+- `components/game/kotoba-game-window.tsx`: Same pattern, plus first kanji attempt tracking. Filters empty reading attempts for type/swipe kanji mode. Session restarts on mode/kotobaInput change. Wrong kanji tap increments kanjiWrongCount.
+
+**Bug fixes (from Codex reviews):**
+- `components/game/kotoba-game-window.tsx`: wasClean now checks kanjiWrongCount (kanji clean scoring bug)
+- `hooks/useLofiPlayer.ts`: ended listener attached on Audio creation (auto-advance bug)
+- `components/layout/practice-client.tsx`: Mode reads/writes settings store (default mode persistence)
+- `components/dashboard/mode-panel.tsx`: onModeChange callback propagates to settings store
+- `components/layout/game-home-client.tsx`: Wires setInputMode to ModePanel
+- `components/profile/preferences-card.tsx`: Leaderboard visibility wired to Supabase via updateProfile with optimistic update and rollback
+- `components/leaderboard/__tests__/leaderboard-client.test.tsx`: Updated mock for new service exports
+
+### Tests
+- Full suite: 951 passed
+- `npm run check`: prettier, eslint, tsc, vitest all clean
+- Targeted leaderboard tests: 51 passed
+- New test coverage: service RPCs (10), scoring payloads (17), hook (7), UI (13), performance regression (1), manifest (2)
+
+### Next task
+Sprint 10 - Accounts, Auth, and Membership
+
+### Notes
+- Server-derived scoring went through 4 Codex review iterations (v1-v4). Key evolution: client-provided deltas -> client-attested correctness -> true server verification with raw submitted inputs.
+- Prompt catalog stores both expected_romaji and expected_kana to support both input directions. Server accepts submissions matching either.
+- Sokuon/longvowel romaji normalization in seed script matches runtime transforms (getFirstConsonant/getLastVowel).
+- Kotoba kanji type/swipe mode sends only the kanji attempt (no readings). SQL allows 0 character attempts for kanji mode. Tap mode sends readings + kanji (both verified).
+- Profile visibility persistence is wired but updateProfile requires an authenticated user. Full profile wiring is Sprint 10.
+
+---
+
 ## 2026-05-06 - Session 94b
 
 **Sprint:** Sprint 9 - Leaderboard and Audio
