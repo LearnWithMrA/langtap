@@ -18,3 +18,25 @@ export type LeaderboardBoard = {
 
 export type TimePeriod = 'all-time' | 'this-week'
 export type GameType = 'kana' | 'kotoba'
+
+// ── Server row types ─────────────────────────
+
+export type LeaderboardScoreRow = {
+  readonly id: number
+  readonly userId: string
+  readonly gameType: GameType
+  readonly inputMode: 'tap' | 'type' | 'swipe'
+  readonly totalScore: number
+  readonly weekScore: number
+  readonly weekStart: string
+  readonly updatedAt: string
+}
+
+export type LeaderboardScoreEvent = {
+  readonly eventId: string
+  readonly userId: string
+  readonly gameType: GameType
+  readonly inputMode: 'tap' | 'type' | 'swipe'
+  readonly scoreDelta: number
+  readonly createdAt: string
+}

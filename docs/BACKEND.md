@@ -38,7 +38,9 @@ Every table created in this project follows this rule without exception.
 | `mastery` | Per-character mastery scores per user |
 | `word_mastery` | Per-word mastery scores per user (Kotoba mode) |
 | `word_counters` | Per-word show counters per user |
-| `leaderboard` | Cumulative mastery scores for global ranking |
+| `leaderboard` | (Legacy, unused) Original one-row-per-user leaderboard |
+| `leaderboard_scores` | Aggregate leaderboard scores per (user, game_type, input_mode) |
+| `leaderboard_score_events` | Per-completion events for idempotency and audit |
 | `unlock_state` | Which characters each user has unlocked |
 | `word_manual_unlocks` | Which words each user has manually unlocked (Kotoba mode) |
 | `practice_sessions` | Daily practice activity for streak mechanic and heatmap calendar |
@@ -69,6 +71,8 @@ create table public.profiles (
   username_changed_at   timestamptz,  -- last username change, null if never changed
   distance_unit         text not null default 'metric'
                           check (distance_unit in ('metric','imperial')),
+  leaderboard_visibility text not null default 'public'
+                          check (leaderboard_visibility in ('public','hidden')),
   created_at            timestamptz not null default now(),
   updated_at            timestamptz not null default now()
 );
@@ -167,42 +171,60 @@ alter table public.word_counters enable row level security;
 
 RLS policies: same pattern as `mastery`. User reads and writes only their own rows.
 
-### 2.5 leaderboard
+### 2.5 leaderboard (legacy)
 
-One row per user. Updated at session end, not on every answer.
+Original one-row-per-user leaderboard table. Replaced by `leaderboard_scores`
+and `leaderboard_score_events` in Sprint 9. Left in place, not dropped.
+
+### 2.10 leaderboard_scores
+
+Aggregate leaderboard scores. One row per (user_id, game_type, input_mode).
+Maximum 6 rows per user. Updated by the `record_leaderboard_completion` RPC.
+Never written directly by the client.
 
 ```sql
-create table public.leaderboard (
+create table public.leaderboard_scores (
   id            bigint generated always as identity primary key,
-  user_id       uuid not null references auth.users(id) on delete cascade unique,
-  username      text not null,
-  input_mode    text not null check (input_mode in ('tap','type','swipe')),
+  user_id       uuid not null references auth.users(id) on delete cascade,
+  game_type     text not null check (game_type in ('kana', 'kotoba')),
+  input_mode    text not null check (input_mode in ('tap', 'type', 'swipe')),
   total_score   integer not null default 0 check (total_score >= 0),
-  updated_at    timestamptz not null default now()
+  week_score    integer not null default 0 check (week_score >= 0),
+  week_start    date not null default (date_trunc('week', now() at time zone 'UTC'))::date,
+  updated_at    timestamptz not null default now(),
+  unique (user_id, game_type, input_mode)
 );
-
-create index leaderboard_total_score_idx on public.leaderboard
-  using btree (total_score desc);
-
-alter table public.leaderboard enable row level security;
 ```
 
-RLS policies:
+RLS: enabled + forced. No SELECT, INSERT, UPDATE, or DELETE policies.
+All reads go through `get_leaderboard` RPC. All writes go through
+`record_leaderboard_completion` RPC. Raw table is not exposed to clients.
+
+Weekly scoring: `week_start` stores the Monday of the current scoring week
+(UTC ISO). On first write after a new week, `week_score` resets to the
+delta (lazy reset, no cron).
+
+### 2.11 leaderboard_score_events
+
+Per-completion events for idempotency and audit. One row per game completion.
 
 ```sql
--- Anyone authenticated or anonymous can read the leaderboard
-create policy "Leaderboard is public"
-  on public.leaderboard for select
-  to authenticated, anon
-  using (true);
-
--- DELETE: no policy defined. Client cannot delete rows.
--- INSERT: no policy defined. Score writes go through a server-side
---   security definer function only (Sprint 9). No client can write
---   total_score directly - this was identified as a security risk
---   in Codex review (April 2026) and client write policies were removed.
--- UPDATE: no policy defined. Same reason as INSERT.
+create table public.leaderboard_score_events (
+  event_id      uuid primary key,
+  user_id       uuid not null references auth.users(id) on delete cascade,
+  game_type     text not null check (game_type in ('kana', 'kotoba')),
+  input_mode    text not null check (input_mode in ('tap', 'type', 'swipe')),
+  score_delta   integer not null check (score_delta > 0),
+  created_at    timestamptz not null default now()
+);
 ```
+
+RLS: enabled + forced. No policies. All access through RPCs.
+
+Purpose: the `record_leaderboard_completion` RPC checks for an existing
+`event_id` before applying a delta. If the event already exists, the RPC
+returns silently (idempotent). This prevents double-counting on network
+retries.
 
 ### 2.6 unlock_state
 
@@ -456,10 +478,27 @@ syncCounters(userId: string, delta: CounterDelta): Promise<ServiceResult<void>>
 ### 4.4 services/leaderboard.service.ts
 
 ```ts
-getLeaderboard(mode: InputMode): Promise<ServiceResult<LeaderboardEntry[]>>
-getOverallLeaderboard(): Promise<ServiceResult<LeaderboardEntry[]>>
-upsertScore(userId: string, entry: LeaderboardEntry): Promise<ServiceResult<void>>
+recordLeaderboardCompletion(input: {
+  eventId: string
+  gameType: GameType
+  inputMode: InputMode
+  scoreDelta: number
+}): Promise<ServiceResult<void>>
+
+loadLeaderboard(
+  gameType: GameType,
+  inputMode: InputMode,
+  period: TimePeriod,
+): Promise<ServiceResult<LeaderboardBoard>>
 ```
+
+`recordLeaderboardCompletion` calls the `record_leaderboard_completion` RPC.
+Called per word completion from the game window. Accepts a bounded score
+delta (1-20), not a client total. Idempotent via `eventId`.
+
+`loadLeaderboard` calls the `get_leaderboard` RPC. Returns ranked entries
+with hidden users filtered out and the current user's pinned row if they
+are outside the top 50.
 
 ### 4.5 services/unlock.service.ts
 

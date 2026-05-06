@@ -26,6 +26,9 @@ export type AuthUser = {
 
 // ── User Profile ──────────────────────────────
 
+/** Leaderboard visibility options. */
+export type LeaderboardVisibility = 'public' | 'hidden'
+
 /** Row shape from the profiles table. */
 export type UserProfile = {
   id: string
@@ -35,6 +38,7 @@ export type UserProfile = {
   onboardingComplete: boolean
   notificationsEnabled: boolean
   distanceUnit: 'metric' | 'imperial'
+  leaderboardVisibility: LeaderboardVisibility
   usernameChangedAt: string | null
   createdAt: string
 }
