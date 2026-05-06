@@ -9,7 +9,12 @@
 // ---------------------------------------------------------
 
 import { createBrowserSupabaseClient } from '@/services/supabase-browser'
-import type { LeaderboardBoard, LeaderboardEntry, GameType, TimePeriod } from '@/types/leaderboard.types'
+import type {
+  LeaderboardBoard,
+  LeaderboardEntry,
+  GameType,
+  TimePeriod,
+} from '@/types/leaderboard.types'
 import type { InputMode } from '@/types/user.types'
 
 // ── Types ─────────────────────────────────────

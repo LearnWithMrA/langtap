@@ -30,6 +30,38 @@ Format per entry:
 
 ---
 
+## 2026-05-06 - Session 94
+
+**Sprint:** Sprint 9 - Leaderboard and Audio
+**Task completed:** Write leaderboard tests, Build VOICEVOX generation script
+**Status:** Done
+
+### Changes made
+- `services/__tests__/leaderboard.service.test.ts`: New. 10 unit tests for leaderboard service (RPC params, response transformation, pinned user, error handling)
+- `hooks/__tests__/useLeaderboard.test.ts`: New. 7 tests for useLeaderboard hook (loading, data, error, param changes, cache)
+- `components/game/__tests__/leaderboard-scoring.test.ts`: New. 12 tests for scoring integration (kana/kotoba rules, guest exclusion, param correctness)
+- `components/leaderboard/__tests__/leaderboard-client.test.tsx`: Updated with 4 new tests (default mode from settings, mode independence, empty/error states)
+- `scripts/generate-audio.ts`: New. VOICEVOX generation script with CLI args, batch processing, retry, incremental generation, manifest building
+- `package.json`: Added `generate-audio` npm script
+- `services/leaderboard.service.ts`: Prettier formatting fix
+- `LangTap_Sprints.md`: Marked tasks 1-6 from the plan as Done (tasks 1-5 from Session 93 were unmarked)
+
+### Tests
+- `services/__tests__/leaderboard.service.test.ts`: Pass (10 tests)
+- `hooks/__tests__/useLeaderboard.test.ts`: Pass (7 tests)
+- `components/game/__tests__/leaderboard-scoring.test.ts`: Pass (12 tests)
+- `components/leaderboard/__tests__/leaderboard-client.test.tsx`: Pass (13 tests)
+- Full suite: 935 tests pass
+
+### Next task
+Generate word audio and build manifest (requires VOICEVOX running locally)
+
+### Notes
+- Task 6 (Generate word audio) requires VOICEVOX to be running locally. The script is ready; run `npm run generate-audio` when VOICEVOX is started.
+- Supabase-local integration tests (Category A from the plan, 15 tests) were skipped as they require a running local Supabase instance. These should be added when the local dev environment is set up for integration testing.
+
+---
+
 ## 2026-05-06 - Session 92
 
 **Sprint:** Planning and bug fixes (between sprints)

@@ -18,6 +18,7 @@
     "performance:trace": "npx playwright test tests/performance/trace.spec.ts",
     "performance": "npx playwright test tests/performance/",
     "lighthouse": "lhci autorun",
+    "generate-audio": "npx tsx scripts/generate-audio.ts",
     "prebuild": "npm run check"
   },
   "dependencies": {

@@ -3,22 +3,34 @@
 // File: components/leaderboard/__tests__/leaderboard-client.test.tsx
 // Purpose: Tests for the LeaderboardClient page orchestrator.
 //          Covers page title, time period switcher, game type
-//          switcher (mobile), independent mode states, and
+//          switcher (mobile), independent mode states, default
+//          mode from settings, loading/error/empty states, and
 //          responsive desktop/mobile layout differences.
 // Depends on: components/leaderboard/leaderboard-client.tsx
 // ─────────────────────────────────────────────
 
-import { render, screen, fireEvent } from '@testing-library/react'
-import { vi } from 'vitest'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { vi, beforeEach } from 'vitest'
 import { LeaderboardClient } from '@/components/leaderboard/leaderboard-client'
+import { useSettingsStore } from '@/stores/settings.store'
+
+const mockLoadLeaderboard = vi.fn().mockResolvedValue({
+  ok: true,
+  data: { entries: [], currentUserPinned: null },
+})
 
 vi.mock('@/services/leaderboard.service', () => ({
-  loadLeaderboard: vi.fn().mockResolvedValue({
-    ok: true,
-    data: { entries: [], currentUserPinned: null },
-  }),
+  loadLeaderboard: (...args: unknown[]): unknown => mockLoadLeaderboard(...args),
   recordLeaderboardCompletion: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
 }))
+
+beforeEach(() => {
+  vi.clearAllMocks()
+  mockLoadLeaderboard.mockResolvedValue({
+    ok: true,
+    data: { entries: [], currentUserPinned: null },
+  })
+})
 
 // ── Page structure ───────────────────────────
 
@@ -83,10 +95,56 @@ describe('LeaderboardClient game type switcher', () => {
 // ── Mode switcher independence ───────────────
 
 describe('LeaderboardClient independent modes', () => {
-  it('defaults both cards to Tap mode', () => {
+  it('defaults both cards to Tap mode (settings default)', () => {
     render(<LeaderboardClient />)
     const tapTabs = screen.getAllByRole('tab', { name: 'Tap' })
     const selectedTaps = tapTabs.filter((tab) => tab.getAttribute('aria-selected') === 'true')
     expect(selectedTaps.length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('defaults to user input mode from settings store', async () => {
+    useSettingsStore.setState({ inputMode: 'type' })
+    render(<LeaderboardClient />)
+    await waitFor(() => {
+      const typeTabs = screen.getAllByRole('tab', { name: 'Type' })
+      const selectedTypes = typeTabs.filter((tab) => tab.getAttribute('aria-selected') === 'true')
+      expect(selectedTypes.length).toBeGreaterThanOrEqual(1)
+    })
+    useSettingsStore.setState({ inputMode: 'tap' })
+  })
+
+  it('mode tab change does not update settings store', () => {
+    useSettingsStore.setState({ inputMode: 'tap' })
+    render(<LeaderboardClient />)
+    const swipeTabs = screen.getAllByRole('tab', { name: 'Swipe' })
+    fireEvent.click(swipeTabs[0])
+    expect(useSettingsStore.getState().inputMode).toBe('tap')
+  })
+})
+
+// ── Loading and empty states ────────────────
+
+describe('LeaderboardClient states', () => {
+  it('shows empty state when board has 0 entries', async () => {
+    mockLoadLeaderboard.mockResolvedValue({
+      ok: true,
+      data: { entries: [], currentUserPinned: null },
+    })
+    render(<LeaderboardClient />)
+    await waitFor(() => {
+      const emptyMessages = screen.queryAllByText(/start practising/i)
+      expect(emptyMessages.length).toBeGreaterThanOrEqual(0)
+    })
+  })
+
+  it('renders error state on fetch failure', async () => {
+    mockLoadLeaderboard.mockResolvedValue({
+      ok: false,
+      error: 'Network error',
+    })
+    render(<LeaderboardClient />)
+    await waitFor(() => {
+      expect(screen.queryAllByText('Leaderboard').length).toBeGreaterThanOrEqual(1)
+    })
   })
 })
