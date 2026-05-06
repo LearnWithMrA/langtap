@@ -30,6 +30,29 @@ Format per entry:
 
 ---
 
+## 2026-05-07 - Session 97h
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Phase 1, Task 3: Wire word mastery service into checkpoint RPCs
+**Status:** Done
+
+### Changes made
+- `services/word-mastery.service.ts`: Added `loadWordMasterySnapshot(userId)` returning scores + epoch. Added `checkpointWordMastery(rows, epoch)` and `checkpointWordManualUnlocks(ids, epoch)` calling checkpoint RPCs. Legacy functions (`loadWordMastery`, `syncWordMastery`, `syncWordManualUnlocks`) retained for existing callers until direct RLS policies are removed.
+- `services/__tests__/word-mastery.service.test.ts`: Expanded from 12 to 19 tests. New tests cover snapshot load (scores + epoch, empty, errors), checkpoint RPC calls (applied, stale epoch, empty, error), and word unlock checkpoint.
+
+### Tests
+- `services/__tests__/word-mastery.service.test.ts`: 19 passed
+- Full suite: 985 passed (7 new), 0 failures
+- `npm run check`: clean
+
+### Next task
+Phase 2: Wire load-on-start for signed-in users
+
+### Notes
+Phase 1 complete. All three services now have checkpoint RPC functions: mastery (kana scores + learning + unlocks), word mastery (word scores + word unlocks), and counter (best-effort direct upsert). The service layer is ready for Phase 2 sync infrastructure.
+
+---
+
 ## 2026-05-07 - Session 97g
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership
