@@ -467,7 +467,7 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 | Create username change RPC with server-enforced cooldown | **Small** | **Done** | `change_username` RPC, `lower(username)` unique index, BEFORE UPDATE trigger guard with `set_config` bypass. Migration `20260507120003`. Session 97. |
 | Add user_tz, import columns to profiles + app_config table | **Small** | **Done** | `user_tz`, 4 import tracking columns, `app_config` table, `skip_guest_import` and `skip_legacy_import` RPCs. Migration `20260507120003`. Session 97. |
 | Create checkpoint sync RPCs with row lock + exact epoch + ID validation + unlock RPCs | **Medium** | **Done** | 4 RPCs: exact epoch match, catalog validation, deduplication, greatest-merge. Profile row lock serialization shared with reset RPCs. Migration `20260507120004`. Session 97. |
-| Migrate persisted stores to user-scoped localStorage keys | **Medium** | **To Do** | `langtap-{store}-{userId}` for signed-in, `langtap-{store}-guest` for guests. Legacy global keys require non-dismissable confirmation prompt. Dual session markers for guest auto-import. |
+| Migrate persisted stores to user-scoped localStorage keys | **Medium** | **Done** | All 5 persisted stores now use `createScopedStorage` adapter. `AuthInitializer` sets `setStorageUserId` before hydration. `scoped-storage.ts` provides helpers for legacy keys, guest keys, pending keys, session markers, dirty queues, and cleanup. Session 97. |
 
 ### Phase 1: Service Layer
 

@@ -9,6 +9,7 @@
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { createScopedStorage } from '@/stores/scoped-storage'
 
 // -- Types -------------------------------------------------------
 
@@ -99,6 +100,7 @@ export const useOnboardingStore = create<OnboardingState & OnboardingActions>()(
     }),
     {
       name: 'langtap-onboarding',
+      storage: createScopedStorage('langtap-onboarding'),
       skipHydration: true,
       onRehydrateStorage: (): ((
         _state: (OnboardingState & OnboardingActions) | undefined,

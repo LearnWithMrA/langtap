@@ -11,6 +11,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { MasteryScoreMap } from '@/types/game.types'
+import { createScopedStorage } from '@/stores/scoped-storage'
 
 // ── Types ────────────────────────────────────
 
@@ -104,6 +105,7 @@ export const useMasteryStore = create<MasteryState & MasteryActions>()(
     }),
     {
       name: 'langtap-mastery',
+      storage: createScopedStorage('langtap-mastery'),
       version: 2,
       migrate: (persistedState: unknown, version: number): Partial<MasteryState> => {
         const state = persistedState as Partial<MasteryState>

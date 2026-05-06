@@ -12,6 +12,7 @@
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { createScopedStorage } from '@/stores/scoped-storage'
 
 // ── Types ─────────────────────────────────────
 
@@ -55,6 +56,7 @@ export const useGuestDistanceStore = create<GuestDistanceState & GuestDistanceAc
     }),
     {
       name: 'langtap-guest-distance',
+      storage: createScopedStorage('langtap-guest-distance'),
       merge: (persisted, current) => {
         const stored = persisted as Partial<GuestDistanceState> | null
         return {

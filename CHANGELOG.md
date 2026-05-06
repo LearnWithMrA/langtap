@@ -30,6 +30,55 @@ Format per entry:
 
 ---
 
+## 2026-05-07 - Session 97e
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Phase 0h: Migrate persisted stores to user-scoped localStorage keys
+**Status:** Done
+
+### Changes made
+- `stores/scoped-storage.ts`: New file. User-scoped `PersistStorage` adapter for Zustand persist. Namespaces all localStorage keys with `{baseName}-{userId}` for signed-in users, `{baseName}-guest` for guests. Exports helpers for legacy key detection/reading/deletion, guest key management, pending key migration, sessionStorage session markers, pending import flags, dirty queue cleanup, and full user data cleanup.
+- `stores/mastery.store.ts`: Added `storage: createScopedStorage('langtap-mastery')` to persist config.
+- `stores/word-mastery.store.ts`: Added `storage: createScopedStorage('langtap-word-mastery')` to persist config.
+- `stores/settings.store.ts`: Added `storage: createScopedStorage('langtap-settings')` to persist config.
+- `stores/onboarding.store.ts`: Added `storage: createScopedStorage('langtap-onboarding')` to persist config.
+- `stores/guest-distance.store.ts`: Added `storage: createScopedStorage('langtap-guest-distance')` to persist config.
+- `components/performance/auth-initializer.tsx`: Calls `setStorageUserId(userId)` on auth state changes (permanent users get their ID, guests/anonymous get null). Set before store hydration so `StoreHydrator.rehydrate()` reads from the correct user-scoped keys.
+
+### Tests
+- Full suite: 964 passed, 0 failures
+- `npm run check`: clean
+
+### Next task
+Phase 1: Implement kana mastery service
+
+### Notes
+Phase 0 is fully complete (0a through 0h). All database migrations, RPCs, and client storage scoping are in place. The foundation for sync infrastructure is ready. Next is the service layer that wires the client to the checkpoint RPCs.
+
+---
+
+## 2026-05-07 - Session 97d
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Codex review fixes for Phase 0 RPCs
+**Status:** Done
+
+### Changes made
+- `supabase/migrations/20260507120005_fix_rpc_codex_review.sql`: Fixes 8 Codex findings. Checkpoint RPCs: validate JSON type before cast, reject batch on malformed valid-ID rows, pre-aggregate duplicates with `max()` via CTE instead of first-wins loop. `reset_character_mastery`: validate ID against catalog before incrementing epoch. Skip-import RPCs: check for contradictory state (already imported/skipped). `change_username`: catch `unique_violation` exception and return `username_taken` error code.
+
+### Tests
+- Full suite: 964 passed, 0 failures
+- `npm run check`: clean
+- All 14 migrations apply cleanly
+
+### Next task
+Phase 0h: Migrate persisted stores to user-scoped localStorage keys
+
+### Notes
+Finding 1 (direct RLS write policies bypass epoch model) is a known gap until Phase 1 services are updated to use checkpoint RPCs. Direct write policies will be removed at that point.
+
+---
+
 ## 2026-05-07 - Session 97c
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership

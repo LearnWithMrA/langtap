@@ -20,6 +20,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { WordMasteryScoreMap } from '@/types/word.types'
+import { createScopedStorage } from '@/stores/scoped-storage'
 
 // ── Types ────────────────────────────────────
 
@@ -136,6 +137,7 @@ export const useWordMasteryStore = create<WordMasteryState & WordMasteryActions>
     }),
     {
       name: 'langtap-word-mastery',
+      storage: createScopedStorage('langtap-word-mastery'),
       version: 2,
       migrate: (
         persistedState: unknown,

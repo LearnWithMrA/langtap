@@ -21,6 +21,7 @@ import { createBrowserSupabaseClient } from '@/services/supabase-browser'
 import { getUser } from '@/services/auth.service'
 import { loadProfile } from '@/services/profile.service'
 import { useUserStore } from '@/stores/user.store'
+import { setStorageUserId } from '@/stores/scoped-storage'
 
 // ── Main export ───────────────────────────────
 
@@ -36,12 +37,15 @@ export function AuthInitializer(): ReactNode {
 
       if (authUser) {
         activeUserId = authUser.id
+        const isAnon = authUser.isAnonymous ?? false
+        setStorageUserId(isAnon ? null : authUser.id)
         useUserStore.getState().setUser({
           ...authUser,
-          isAnonymous: authUser.isAnonymous ?? false,
+          isAnonymous: isAnon,
         })
       } else {
         activeUserId = null
+        setStorageUserId(null)
         useUserStore.getState().clear()
       }
 
@@ -69,12 +73,14 @@ export function AuthInitializer(): ReactNode {
 
       if (session?.user) {
         const userId = session.user.id
+        const isAnon = session.user.is_anonymous ?? false
         activeUserId = userId
+        setStorageUserId(isAnon ? null : userId)
         useUserStore.getState().setProfile(null)
         useUserStore.getState().setUser({
           id: userId,
           email: session.user.email,
-          isAnonymous: session.user.is_anonymous ?? false,
+          isAnonymous: isAnon,
         })
         loadProfile(userId).then((result) => {
           if (!mounted) return
@@ -88,6 +94,7 @@ export function AuthInitializer(): ReactNode {
         })
       } else {
         activeUserId = null
+        setStorageUserId(null)
         useUserStore.getState().clear()
       }
     })
