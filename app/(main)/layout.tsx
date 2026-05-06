@@ -22,10 +22,11 @@ import { StoreHydrator } from '@/components/performance/store-hydrator'
 import { AuthInitializer } from '@/components/performance/auth-initializer'
 import { AuthModalProvider } from '@/components/layout/auth-modal-provider'
 import { ScrollRestoration } from '@/components/performance/scroll-restoration'
+import { SyncManager } from '@/components/performance/sync-manager'
 
 export default function MainLayout({ children }: { children: ReactNode }): ReactNode {
   return (
-    <>
+    <SyncManager>
       <AppTopBar />
       <GuestBanner />
       {children}
@@ -36,6 +37,6 @@ export default function MainLayout({ children }: { children: ReactNode }): React
       <PracticeDataPreloader />
       <ScrollRestoration />
       <SessionPrefetch />
-    </>
+    </SyncManager>
   )
 }

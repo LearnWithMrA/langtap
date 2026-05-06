@@ -20,6 +20,8 @@ type MasteryState = {
   learningScores: MasteryScoreMap
   epoch: number
   hasHydrated: boolean
+  dirtyVersions: Map<string, number>
+  dirtyUnlockIds: Set<string>
 }
 
 type MasteryActions = {
@@ -35,6 +37,16 @@ type MasteryActions = {
   getLearningScore: (characterId: string) => number
   hasEncountered: (characterId: string) => boolean
   setHasHydrated: (hydrated: boolean) => void
+  markUnlockDirty: (characterId: string) => void
+  getDirtyScoreSnapshot: () => Array<{
+    character_id: string
+    score: number
+    learning_score: number
+  }>
+  getDirtyUnlockIds: () => string[]
+  clearDirtyIfMatch: (entries: Map<string, number>) => void
+  clearDirtyUnlocks: (ids: string[]) => void
+  clearAllDirty: () => void
 }
 
 // ── Helpers ──────────────────────────────────
@@ -54,19 +66,31 @@ export const useMasteryStore = create<MasteryState & MasteryActions>()(
       learningScores: {},
       epoch: 0,
       hasHydrated: false,
+      dirtyVersions: new Map(),
+      dirtyUnlockIds: new Set(),
 
       incrementLearning: (characterId: string): void => {
         set((state) => {
           const current = state.learningScores[characterId] ?? 0
           if (current >= 5) return state
-          return { learningScores: { ...state.learningScores, [characterId]: current + 1 } }
+          const newDirty = new Map(state.dirtyVersions)
+          newDirty.set(characterId, (newDirty.get(characterId) ?? 0) + 1)
+          return {
+            learningScores: { ...state.learningScores, [characterId]: current + 1 },
+            dirtyVersions: newDirty,
+          }
         })
       },
 
       increment: (characterId: string): void => {
         set((state) => {
           const current = state.scores[characterId] ?? 0
-          return { scores: { ...state.scores, [characterId]: current + 1 } }
+          const newDirty = new Map(state.dirtyVersions)
+          newDirty.set(characterId, (newDirty.get(characterId) ?? 0) + 1)
+          return {
+            scores: { ...state.scores, [characterId]: current + 1 },
+            dirtyVersions: newDirty,
+          }
         })
       },
 
@@ -107,14 +131,19 @@ export const useMasteryStore = create<MasteryState & MasteryActions>()(
       },
 
       reset: (characterId: string): void => {
-        set((state) => ({
-          scores: { ...state.scores, [characterId]: 0 },
-          learningScores: { ...state.learningScores, [characterId]: 0 },
-        }))
+        set((state) => {
+          const newDirty = new Map(state.dirtyVersions)
+          newDirty.delete(characterId)
+          return {
+            scores: { ...state.scores, [characterId]: 0 },
+            learningScores: { ...state.learningScores, [characterId]: 0 },
+            dirtyVersions: newDirty,
+          }
+        })
       },
 
       resetAll: (): void => {
-        set({ scores: {}, learningScores: {} })
+        set({ scores: {}, learningScores: {}, dirtyVersions: new Map(), dirtyUnlockIds: new Set() })
       },
 
       getScore: (characterId: string): number => {
@@ -131,6 +160,59 @@ export const useMasteryStore = create<MasteryState & MasteryActions>()(
 
       setHasHydrated: (hydrated: boolean): void => {
         set({ hasHydrated: hydrated })
+      },
+
+      markUnlockDirty: (characterId: string): void => {
+        set((state) => {
+          const newSet = new Set(state.dirtyUnlockIds)
+          newSet.add(characterId)
+          return { dirtyUnlockIds: newSet }
+        })
+      },
+
+      getDirtyScoreSnapshot: (): Array<{
+        character_id: string
+        score: number
+        learning_score: number
+      }> => {
+        const state = get()
+        const rows: Array<{ character_id: string; score: number; learning_score: number }> = []
+        for (const [id] of state.dirtyVersions) {
+          rows.push({
+            character_id: id,
+            score: state.scores[id] ?? 0,
+            learning_score: state.learningScores[id] ?? 0,
+          })
+        }
+        return rows
+      },
+
+      getDirtyUnlockIds: (): string[] => {
+        return [...get().dirtyUnlockIds]
+      },
+
+      clearDirtyIfMatch: (entries: Map<string, number>): void => {
+        set((state) => {
+          const newDirty = new Map(state.dirtyVersions)
+          for (const [id, syncedVersion] of entries) {
+            if (newDirty.get(id) === syncedVersion) {
+              newDirty.delete(id)
+            }
+          }
+          return { dirtyVersions: newDirty }
+        })
+      },
+
+      clearDirtyUnlocks: (ids: string[]): void => {
+        set((state) => {
+          const newSet = new Set(state.dirtyUnlockIds)
+          for (const id of ids) newSet.delete(id)
+          return { dirtyUnlockIds: newSet }
+        })
+      },
+
+      clearAllDirty: (): void => {
+        set({ dirtyVersions: new Map(), dirtyUnlockIds: new Set() })
       },
     }),
     {
@@ -167,4 +249,10 @@ export const useMasteryStore = create<MasteryState & MasteryActions>()(
   ),
 )
 
-registerScopedStore(useMasteryStore, { scores: {}, learningScores: {}, epoch: 0 })
+registerScopedStore(useMasteryStore, {
+  scores: {},
+  learningScores: {},
+  epoch: 0,
+  dirtyVersions: new Map(),
+  dirtyUnlockIds: new Set(),
+})

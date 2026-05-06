@@ -30,6 +30,32 @@ Format per entry:
 
 ---
 
+## 2026-05-07 - Session 97k
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Phase 2, Task 2: Wire checkpoint sync for signed-in users
+**Status:** Done
+
+### Changes made
+- `stores/mastery.store.ts`: Added `dirtyVersions: Map<string, number>` and `dirtyUnlockIds: Set<string>` to state (not persisted). `increment`/`incrementLearning` bump dirty versions. `reset` clears dirty for that ID. `resetAll` clears all dirty. Added `getDirtyScoreSnapshot`, `getDirtyUnlockIds`, `clearDirtyIfMatch`, `clearDirtyUnlocks`, `clearAllDirty`, `markUnlockDirty` actions.
+- `stores/word-mastery.store.ts`: Same dirty version tracking pattern. `increment`/`setScore` bump versions. `reset`/`resetAll` clear. All dirty query/clear actions added.
+- `hooks/useSyncCheckpoint.ts`: New hook. `flushDirty()` sends dirty mastery and word mastery data to checkpoint RPCs with epoch. Handles stale epoch by discarding local state and reloading from server. Exposes `isFlushInFlight` for sync-fence. Deduplication-safe via `clearDirtyIfMatch` with version snapshots.
+- `components/performance/sync-manager.tsx`: New component. Provides `SyncCheckpointContext` so game windows can call `flushDirty`. Registers `visibilitychange` listener that sends beacon with dirty data on page hide. Only active for signed-in permanent users.
+- `app/api/sync/route.ts`: New beacon endpoint. CSRF (Origin + Sec-Fetch-Site), Content-Type flexibility (`application/json` and `text/plain`), payload size limit, server Supabase client from cookies, calls checkpoint RPCs. Stale epoch silently dropped.
+- `app/(main)/layout.tsx`: Wrapped children in `SyncManager`.
+
+### Tests
+- Full suite: 982 passed, 2 pre-existing flaky failures (word-bank meaning quality timeouts)
+- `npm run check`: prettier, eslint, tsc all clean
+
+### Next task
+Phase 2, Task 3: Sync input mode from Supabase profile to settings store on login
+
+### Notes
+The sync infrastructure is now complete: dirty tracking in stores, checkpoint hook with epoch-aware flush and stale-discard, beacon fallback for pagehide, and server-side beacon route. Game windows can call `useSyncContext().flushDirty()` after each prompt completion. The actual integration into game windows will happen alongside the existing leaderboard sync calls.
+
+---
+
 ## 2026-05-07 - Session 97j
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership

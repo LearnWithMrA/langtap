@@ -29,6 +29,8 @@ type WordMasteryState = {
   manuallyUnlockedWords: readonly string[]
   epoch: number
   hasHydrated: boolean
+  dirtyVersions: Map<string, number>
+  dirtyUnlockIds: Set<string>
 }
 
 type WordMasteryActions = {
@@ -44,6 +46,12 @@ type WordMasteryActions = {
   addManualUnlock: (wordId: string) => void
   addManualUnlocks: (wordIds: readonly string[]) => void
   setHasHydrated: (hydrated: boolean) => void
+  markUnlockDirty: (wordId: string) => void
+  getDirtyScoreSnapshot: () => Array<{ word_id: string; score: number }>
+  getDirtyUnlockIds: () => string[]
+  clearDirtyIfMatch: (entries: Map<string, number>) => void
+  clearDirtyUnlocks: (ids: string[]) => void
+  clearAllDirty: () => void
 }
 
 // ── Helpers ──────────────────────────────────
@@ -77,19 +85,31 @@ export const useWordMasteryStore = create<WordMasteryState & WordMasteryActions>
       manuallyUnlockedWords: [],
       epoch: 0,
       hasHydrated: false,
+      dirtyVersions: new Map(),
+      dirtyUnlockIds: new Set(),
 
       increment: (wordId: string): void => {
         set((state) => {
           const current = state.scores[wordId] ?? 0
-          return { scores: { ...state.scores, [wordId]: current + 1 } }
+          const newDirty = new Map(state.dirtyVersions)
+          newDirty.set(wordId, (newDirty.get(wordId) ?? 0) + 1)
+          return {
+            scores: { ...state.scores, [wordId]: current + 1 },
+            dirtyVersions: newDirty,
+          }
         })
       },
 
       setScore: (wordId: string, score: number): void => {
         const sanitized = sanitizeScore(score)
-        set((state) => ({
-          scores: { ...state.scores, [wordId]: sanitized },
-        }))
+        set((state) => {
+          const newDirty = new Map(state.dirtyVersions)
+          newDirty.set(wordId, (newDirty.get(wordId) ?? 0) + 1)
+          return {
+            scores: { ...state.scores, [wordId]: sanitized },
+            dirtyVersions: newDirty,
+          }
+        })
       },
 
       bulkLoad: (incoming: WordMasteryScoreMap): void => {
@@ -113,14 +133,24 @@ export const useWordMasteryStore = create<WordMasteryState & WordMasteryActions>
       },
 
       reset: (wordId: string): void => {
-        set((state) => ({
-          scores: { ...state.scores, [wordId]: 0 },
-          manuallyUnlockedWords: addToUnlockList(state.manuallyUnlockedWords, [wordId]),
-        }))
+        set((state) => {
+          const newDirty = new Map(state.dirtyVersions)
+          newDirty.delete(wordId)
+          return {
+            scores: { ...state.scores, [wordId]: 0 },
+            manuallyUnlockedWords: addToUnlockList(state.manuallyUnlockedWords, [wordId]),
+            dirtyVersions: newDirty,
+          }
+        })
       },
 
       resetAll: (): void => {
-        set({ scores: {}, manuallyUnlockedWords: [] })
+        set({
+          scores: {},
+          manuallyUnlockedWords: [],
+          dirtyVersions: new Map(),
+          dirtyUnlockIds: new Set(),
+        })
       },
 
       getScore: (wordId: string): number => {
@@ -145,6 +175,51 @@ export const useWordMasteryStore = create<WordMasteryState & WordMasteryActions>
 
       setHasHydrated: (hydrated: boolean): void => {
         set({ hasHydrated: hydrated })
+      },
+
+      markUnlockDirty: (wordId: string): void => {
+        set((state) => {
+          const newSet = new Set(state.dirtyUnlockIds)
+          newSet.add(wordId)
+          return { dirtyUnlockIds: newSet }
+        })
+      },
+
+      getDirtyScoreSnapshot: (): Array<{ word_id: string; score: number }> => {
+        const state = get()
+        const rows: Array<{ word_id: string; score: number }> = []
+        for (const [id] of state.dirtyVersions) {
+          rows.push({ word_id: id, score: state.scores[id] ?? 0 })
+        }
+        return rows
+      },
+
+      getDirtyUnlockIds: (): string[] => {
+        return [...get().dirtyUnlockIds]
+      },
+
+      clearDirtyIfMatch: (entries: Map<string, number>): void => {
+        set((state) => {
+          const newDirty = new Map(state.dirtyVersions)
+          for (const [id, syncedVersion] of entries) {
+            if (newDirty.get(id) === syncedVersion) {
+              newDirty.delete(id)
+            }
+          }
+          return { dirtyVersions: newDirty }
+        })
+      },
+
+      clearDirtyUnlocks: (ids: string[]): void => {
+        set((state) => {
+          const newSet = new Set(state.dirtyUnlockIds)
+          for (const id of ids) newSet.delete(id)
+          return { dirtyUnlockIds: newSet }
+        })
+      },
+
+      clearAllDirty: (): void => {
+        set({ dirtyVersions: new Map(), dirtyUnlockIds: new Set() })
       },
     }),
     {
@@ -180,4 +255,10 @@ export const useWordMasteryStore = create<WordMasteryState & WordMasteryActions>
   ),
 )
 
-registerScopedStore(useWordMasteryStore, { scores: {}, manuallyUnlockedWords: [], epoch: 0 })
+registerScopedStore(useWordMasteryStore, {
+  scores: {},
+  manuallyUnlockedWords: [],
+  epoch: 0,
+  dirtyVersions: new Map(),
+  dirtyUnlockIds: new Set(),
+})
