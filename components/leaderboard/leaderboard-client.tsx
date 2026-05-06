@@ -1,21 +1,22 @@
-// ─────────────────────────────────────────────
+// ---------------------------------------------------------
 // File: components/leaderboard/leaderboard-client.tsx
 // Purpose: Leaderboard page orchestrator. Mode selector (Tap/Type/Swipe),
 //          time period switcher (All Time/This Week), and responsive
 //          layout: side-by-side Kana + Kotoba on desktop, single column
 //          with game-type pill on mobile.
 // Depends on: components/leaderboard/leaderboard-list.tsx,
-//             samples/leaderboard-fixtures.ts
-// ─────────────────────────────────────────────
+//             hooks/useLeaderboard.ts
+// ---------------------------------------------------------
 
 'use client'
 
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { LeaderboardList, SkeletonRows } from '@/components/leaderboard/leaderboard-list'
+import { useLeaderboard } from '@/hooks/useLeaderboard'
+import { useSettingsStore } from '@/stores/settings.store'
 import type { InputMode } from '@/types/user.types'
 import type { TimePeriod, GameType } from '@/types/leaderboard.types'
-import { getLeaderboardFixture } from '@/fixtures/samples/leaderboard-fixtures'
 
 // ── Types ─────────────────────────────────────
 
@@ -25,6 +26,11 @@ type PillOption<T extends string> = {
 }
 
 // ── Constants ─────────────────────────────────
+
+const EMPTY_BOARD: import('@/types/leaderboard.types').LeaderboardBoard = {
+  entries: [],
+  currentUserPinned: null,
+}
 
 const TIME_OPTIONS: readonly PillOption<TimePeriod>[] = [
   { value: 'all-time', label: 'All Time' },
@@ -141,17 +147,22 @@ function LoadingState(): ReactNode {
 // ── Main export ───────────────────────────────
 
 export function LeaderboardClient(): ReactNode {
-  const [kanaMode, setKanaMode] = useState<InputMode>('tap')
-  const [kotobaMode, setKotobaMode] = useState<InputMode>('tap')
+  const defaultMode = useSettingsStore((s) => s.inputMode) as InputMode
+  const [kanaMode, setKanaMode] = useState<InputMode>(defaultMode)
+  const [kotobaMode, setKotobaMode] = useState<InputMode>(defaultMode)
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('all-time')
   const [mobileGame, setMobileGame] = useState<GameType>('kana')
-  const [isLoading] = useState(false)
+
+  const { board: kanaBoard, isLoading: kanaLoading } = useLeaderboard('kana', kanaMode, timePeriod)
+  const { board: kotobaBoard, isLoading: kotobaLoading } = useLeaderboard(
+    'kotoba',
+    kotobaMode,
+    timePeriod,
+  )
+  const isLoading = kanaLoading || kotobaLoading
 
   const kanaModeName = MODE_LABELS[kanaMode]
   const kotobaModeName = MODE_LABELS[kotobaMode]
-
-  const kanaBoard = getLeaderboardFixture('kana', kanaMode, timePeriod)
-  const kotobaBoard = getLeaderboardFixture('kotoba', kotobaMode, timePeriod)
 
   return (
     <div className="min-h-svh bg-surface">
@@ -194,14 +205,14 @@ export function LeaderboardClient(): ReactNode {
             {/* Desktop: side-by-side */}
             <div className="hidden lg:grid lg:grid-cols-2 gap-4">
               <LeaderboardList
-                board={kanaBoard}
+                board={kanaBoard ?? EMPTY_BOARD}
                 variant="kana"
                 modeName={kanaModeName}
                 mode={kanaMode}
                 onModeChange={setKanaMode}
               />
               <LeaderboardList
-                board={kotobaBoard}
+                board={kotobaBoard ?? EMPTY_BOARD}
                 variant="kotoba"
                 modeName={kotobaModeName}
                 mode={kotobaMode}
@@ -213,7 +224,7 @@ export function LeaderboardClient(): ReactNode {
             <div className="lg:hidden">
               {mobileGame === 'kana' ? (
                 <LeaderboardList
-                  board={kanaBoard}
+                  board={kanaBoard ?? EMPTY_BOARD}
                   variant="kana"
                   modeName={kanaModeName}
                   mode={kanaMode}
@@ -221,7 +232,7 @@ export function LeaderboardClient(): ReactNode {
                 />
               ) : (
                 <LeaderboardList
-                  board={kotobaBoard}
+                  board={kotobaBoard ?? EMPTY_BOARD}
                   variant="kotoba"
                   modeName={kotobaModeName}
                   mode={kotobaMode}

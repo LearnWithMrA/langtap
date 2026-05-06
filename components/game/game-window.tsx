@@ -47,6 +47,7 @@ type GameWindowProps = {
   session: UsePracticeSessionReturn
   onCharacterCorrect?: () => void
   onMnemonicShown?: () => void
+  onLeaderboardScore?: (delta: number) => void
   allowedCharIds?: Set<string>
   cardClassName?: string
   children?: ReactNode
@@ -133,6 +134,7 @@ export function GameWindow({
   session,
   onCharacterCorrect,
   onMnemonicShown,
+  onLeaderboardScore,
   allowedCharIds,
   cardClassName,
   children,
@@ -283,6 +285,11 @@ export function GameWindow({
     handleWordComplete(results)
     onCharacterCorrect?.()
 
+    if (!isCharacterDrill && onLeaderboardScore) {
+      const scoreDelta = results.filter((r) => r.isFirstAttemptCorrect).length
+      if (scoreDelta > 0) onLeaderboardScore(scoreDelta)
+    }
+
     scheduleTimeout((): void => setShowMeaning(true), MEANING_FADE_MS)
     scheduleTimeout((): void => {
       if (inputDirection === 'alternate') {
@@ -299,6 +306,8 @@ export function GameWindow({
     buildResults,
     handleWordComplete,
     onCharacterCorrect,
+    onLeaderboardScore,
+    isCharacterDrill,
     advanceToNext,
     inputDirection,
   ])

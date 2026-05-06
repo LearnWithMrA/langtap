@@ -44,6 +44,7 @@ import { useAuthModalStore } from '@/stores/auth-modal.store'
 import { useUserStore } from '@/stores/user.store'
 import { useOnboardingStore } from '@/stores/onboarding.store'
 import { useGameplayStore } from '@/stores/gameplay.store'
+import { recordLeaderboardCompletion } from '@/services/leaderboard.service'
 import { DIALOGUE_SCRIPTS } from '@/data/tutorial/dialogue-scripts'
 import { TRIAL_ALLOWED_IDS } from '@/data/tutorial/trial-prompts'
 
@@ -352,6 +353,19 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
     }
   }, [incrementCorrect, mode, isGuest, incrementGuestDistance, gameType])
 
+  const handleLeaderboardScore = useCallback(
+    (delta: number): void => {
+      if (isGuest) return
+      void recordLeaderboardCompletion({
+        eventId: crypto.randomUUID(),
+        gameType,
+        inputMode: mode,
+        scoreDelta: delta,
+      })
+    },
+    [isGuest, gameType, mode],
+  )
+
   const hasBanner =
     showKotobaBanner ||
     showTrialBanner ||
@@ -415,6 +429,7 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
             kotobaInput={kotobaInput}
             jlptLevel={resolvedLevel}
             onCharacterCorrect={handleCharacterCorrect}
+            onLeaderboardScore={handleLeaderboardScore}
           >
             <ModeDropdown mode={mode} onModeChange={setMode} gameType="kotoba" />
             <DistanceCounter value={counters[mode]} />
@@ -471,6 +486,7 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
             allowedCharIds={kanaSession.practiceIds}
             onCharacterCorrect={handleCharacterCorrect}
             onMnemonicShown={handleMnemonicShown}
+            onLeaderboardScore={handleLeaderboardScore}
           >
             <ModeDropdown mode={mode} onModeChange={setMode} gameType="kana" />
             <DistanceCounter value={counters[mode]} />

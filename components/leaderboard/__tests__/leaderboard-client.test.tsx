@@ -9,7 +9,16 @@
 // ─────────────────────────────────────────────
 
 import { render, screen, fireEvent } from '@testing-library/react'
+import { vi } from 'vitest'
 import { LeaderboardClient } from '@/components/leaderboard/leaderboard-client'
+
+vi.mock('@/services/leaderboard.service', () => ({
+  loadLeaderboard: vi.fn().mockResolvedValue({
+    ok: true,
+    data: { entries: [], currentUserPinned: null },
+  }),
+  recordLeaderboardCompletion: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
+}))
 
 // ── Page structure ───────────────────────────
 

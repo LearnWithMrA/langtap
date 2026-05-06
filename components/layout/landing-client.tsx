@@ -26,7 +26,7 @@ import { LogInCard } from '@/components/ui/log-in-card'
 import { SignUpCard } from '@/components/ui/sign-up-card'
 import { useEasterEgg } from '@/hooks/useEasterEgg'
 import { LeaderboardList } from '@/components/leaderboard/leaderboard-list'
-import { getLeaderboardFixture } from '@/fixtures/samples/leaderboard-fixtures'
+import { useLeaderboard } from '@/hooks/useLeaderboard'
 import type { InputMode } from '@/types/user.types'
 
 // -- Types --------------------------------------------------
@@ -40,6 +40,10 @@ export function LandingClient(): ReactNode {
   const [authModal, setAuthModal] = useState<AuthModal_>(null)
   const [kanaMode, setKanaMode] = useState<InputMode>('tap')
   const [kotobaMode, setKotobaMode] = useState<InputMode>('tap')
+  const { board: kanaBoard } = useLeaderboard('kana', kanaMode, 'all-time')
+  const { board: kotobaBoard } = useLeaderboard('kotoba', kotobaMode, 'all-time')
+
+  const EMPTY_BOARD = { entries: [] as const, currentUserPinned: null }
 
   const closeAuth = useCallback((): void => setAuthModal(null), [])
   const openLogIn = useCallback((): void => setAuthModal('log-in'), [])
@@ -134,7 +138,7 @@ export function LandingClient(): ReactNode {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <LeaderboardList
                 board={{
-                  ...getLeaderboardFixture('kana', kanaMode, 'all-time'),
+                  ...(kanaBoard ?? EMPTY_BOARD),
                   currentUserPinned: null,
                 }}
                 variant="kana"
@@ -143,7 +147,7 @@ export function LandingClient(): ReactNode {
               />
               <LeaderboardList
                 board={{
-                  ...getLeaderboardFixture('kotoba', kotobaMode, 'all-time'),
+                  ...(kotobaBoard ?? EMPTY_BOARD),
                   currentUserPinned: null,
                 }}
                 variant="kotoba"

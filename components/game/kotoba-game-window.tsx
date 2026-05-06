@@ -53,6 +53,7 @@ type Props = {
   cardClassName?: string
   children?: ReactNode
   onCharacterCorrect?: () => void
+  onLeaderboardScore?: (delta: number) => void
 }
 
 // ── Helpers ───────────────────────────────────
@@ -71,6 +72,7 @@ export function KotobaGameWindow({
   cardClassName,
   children,
   onCharacterCorrect,
+  onLeaderboardScore,
 }: Props): ReactNode {
   const childArray = Array.isArray(children) ? children : children ? [children] : []
   const topLeft = childArray[0] ?? null
@@ -213,10 +215,23 @@ export function KotobaGameWindow({
     const wasClean = wrongAttemptsMap.every((c) => c === 0)
     const multiplier = isKanjiMode ? KANJI_INPUT_MULTIPLIER : 1
     recordWordComplete(wasClean, multiplier)
+
+    if (wasClean && onLeaderboardScore) {
+      onLeaderboardScore(multiplier)
+    }
+
     setWordDone(true)
     setFeedbackState('correct')
     schedule(advanceWord, KOTOBA_DISPLAY_MS)
-  }, [clearTimers, schedule, advanceWord, wrongAttemptsMap, recordWordComplete, isKanjiMode])
+  }, [
+    clearTimers,
+    schedule,
+    advanceWord,
+    wrongAttemptsMap,
+    recordWordComplete,
+    isKanjiMode,
+    onLeaderboardScore,
+  ])
 
   const handleReadingDone = useCallback((): void => {
     setReadingDone(true)
