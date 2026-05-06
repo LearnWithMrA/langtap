@@ -452,31 +452,74 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 ## Sprint 10 - Accounts, Auth, and Membership
 
 **Goal:** Guest-to-account conversion works end-to-end. Signed-in users have all progress synced to Supabase. Google and Apple sign-in available. Membership tiers defined and enforced (free tier daily cap). Profile and settings fully wired. Guest progress import is validated and safe.
-**Status:** Pending
+**Status:** In Progress
 
-**Assumptions:**
-- Guest localStorage progress imports to Supabase on account creation, but is validated and sanitized server-side. Raw localStorage is never trusted for direct writes.
-- docs/SECURITY.md must be updated to document the safe import policy (currently says guest localStorage is never trusted for server writes).
+**Architecture:** Plans v10 approved after 10 rounds of Codex staff-engineer review. Full plans in `~/Downloads/Plans.md`. Key decisions: profile-level domain epoch with row lock serialization, checkpoint sync via RPCs (not client upsert), user-scoped localStorage, dual-marker guest session verification, import quarantine model.
+
+### Phase 0: Fix RLS + Schema (blockers)
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Implement kana mastery service | **Medium** | **To Do** | `services/mastery.service.ts` is a placeholder (`export {}`). Implement `loadMastery(userId)` and `syncMastery(userId, delta)` following the `word-mastery.service.ts` pattern. Delta upsert on `user_id, character_id`. |
-| Implement word counter service | **Small** | **To Do** | `services/counter.service.ts` is a placeholder (`export {}`). Implement `loadCounters(userId)` and `syncCounters(userId, delta)`. Upsert on `user_id, word_id`. |
-| Wire load-on-start for signed-in users | **Medium** | **To Do** | In `StoreHydrator` or a new provider: after auth check, if user is signed in, fetch kana mastery, word mastery, word counters, and manual unlocks from Supabase. Merge into Zustand stores using `bulkLoad` (max of local vs remote). localStorage stays as cache. |
-| Wire sync-on-end for signed-in users | **Medium** | **To Do** | On `beforeunload` or navigation away from practice: sync dirty kana mastery, word mastery, and word counter deltas to Supabase. Only changed rows upserted. Manual unlocks already sync immediately via `unlock.service.ts`. |
-| Wire word mastery service calls | **Small** | **To Do** | `services/word-mastery.service.ts` is implemented but never called. Wire into load-on-start and sync-on-end flows alongside kana mastery service. |
-| Sync input mode from Supabase profile to settings store on login | **Small** | **To Do** | On login or new device, `useSettingsStore.inputMode` should hydrate from `profiles.input_mode` in Supabase instead of defaulting to `'tap'`. Currently `useSettings.ts` is a placeholder. Implement profile-to-store sync so the user's onboarding choice persists across devices. |
-| Safe guest progress import | **Medium** | **To Do** | Dedicated import function called once, idempotently, after account creation or first sign-in. Validates all character/word IDs against known datasets (reject unknown IDs). Sanitizes shapes (correct types, no extra fields). Clamps suspicious values (mastery scores capped at engine maximums, counters within sane bounds). Documents how imported progress affects leaderboard totals (imported scores count toward leaderboard - user earned them). If import fails, preserve local state and notify user. Update `docs/SECURITY.md` to document the safe import policy replacing the current "guest localStorage is never trusted" statement. See BACKEND.md Section 3.3. |
-| Guest-to-account migration flow | **Medium** | **To Do** | UI flow: on sign-up or first sign-in, run the safe guest progress import. Push validated localStorage state (kana mastery, word mastery, counters, unlocks) to Supabase via the import function. Run before practice screen mounts. Clear local guest state after successful import. |
-| Connect Profile and Settings to Supabase | **Medium** | **To Do** | Full wiring, not just JLPT level. Includes: remove all fixture/mock data from profile screen, wire JLPT level to `updateProfile()` (reuse `buildAutoMasteryScores` for auto-mastery on level change), wire distance unit preference, wire leaderboard visibility toggle, build email change modal, build password change modal, handle profile repair when sign-up succeeds but username write fails (retry or prompt). |
-| Google Sign-In | **Medium** | **To Do** | Add as a second auth option. Supabase OAuth. Update auth modals with Google button. Handle OAuth callback. |
-| Apple Sign-In | **Medium** | **To Do** | Add as a third auth option. Supabase OAuth. Required for any future iOS wrapper. Update auth modals with Apple button. Handle OAuth callback. |
-| Build free tier daily distance cap | **Medium** | **To Do** | Signed-in free users get a daily distance cap (amount TBD). Track daily cumulative distance in a store (reset at midnight local time). When cap is hit, game window greys out and a banner appears: "You've been crushing it! You've hit your limit for today. Come back tomorrow or upgrade to keep going." with a membership link. Same pattern as guest cap but daily reset. Needs daily-reset logic and membership CTA. **Guardrail:** Add the new membership loading flag to `useStuckLoadingWarning` in PracticeClient. Write a regression test using `renderHookStrict` + `deferred` from `test-utils/async-gate.tsx` to prove the gate resolves under Strict Mode. Pattern established in Sprint 8 Session 89 fix. |
-| Build reset progress flow | **Small** | **To Do** | UI warning text exists but no actual reset logic. Need two-step confirmation then `resetAll()` on mastery, word mastery, counter, and unlock stores. Sync reset to Supabase for signed-in users. |
-| Build username change with 30-day cooldown | **Small** | **To Do** | Server validates cooldown via `username_changed_at`. Returns structured error with next-allowed timestamp. Client shows disabled state. UI shell exists. |
-| Build delete account flow | **Medium** | **To Do** | Server-side account deletion. Typed confirmation (`delete-username`). Cascade deletes all user data. See SECURITY.md Section 5.4. |
-| Write accounts and sync tests | **Medium** | **To Do** | Service tests for mastery and counter services. Profile settings save/load. Reset flow. Guest vs signed-in. Sync load/merge/sync cycle. OAuth flow tests. |
-| Write guest import tests | **Small** | **To Do** | Idempotency (running import twice produces same result). Invalid/unknown IDs rejected. Clamped values (scores above engine max are capped). Malformed shapes rejected. Import failure preserves local progress. Imported scores reflected in leaderboard totals correctly. |
+| Fix anonymous write blocking RLS + cleanup rows | **Medium** | **Done** | Broken permissive "block anonymous" policies replaced with combined `user_id + is_permanent_user()` policies. Anonymous-owned rows cleaned up. word_counters and profiles (previously unprotected) now covered. Migration `20260507120000`. Session 97. |
+| Add learning_score, epoch columns + updated_at trigger | **Small** | **Done** | `learning_score` (0-5) on mastery, backfilled with `least(score, 5)`. `mastery_reset_epoch` and `word_mastery_reset_epoch` on profiles. `set_mastery_updated_at` trigger. Same migration `20260507120000`. Session 97. |
+| Create kana_character_catalog + verify word catalog completeness | **Small** | **To Do** | SQL reference table for server-side character ID validation. Seed from `data/kana/characters.ts`. Verify `leaderboard_word_catalog` contains every word bank ID. Phase 0 blocker for import RPC. |
+| Create reset RPCs with row lock + epoch + unlock deletion | **Medium** | **To Do** | 4 RPCs: `reset_character_mastery`, `reset_all_mastery`, `reset_word_mastery`, `reset_all_word_mastery`. Profile row lock serialization. resetAll deletes manual unlocks. Non-optimistic client (spinner, no local change until RPC success). |
+| Create username change RPC with server-enforced cooldown | **Small** | **To Do** | `change_username` RPC with format validation, case-insensitive uniqueness (`lower()` index), 30-day cooldown. BEFORE UPDATE trigger blocks direct username changes. |
+| Add user_tz, import columns to profiles + app_config table | **Small** | **To Do** | `user_tz`, `guest_imported_at/skipped_at`, `legacy_imported_at/skipped_at` on profiles. `app_config` table for server-owned feature flags. `skip_guest_import` and `skip_legacy_import` RPCs. |
+| Create checkpoint sync RPCs with row lock + exact epoch + ID validation + unlock RPCs | **Medium** | **To Do** | `checkpoint_mastery`, `checkpoint_word_mastery`, `checkpoint_manual_unlocks`, `checkpoint_word_manual_unlocks`. Profile row lock, exact epoch match, catalog ID validation, deduplication, `greatest(existing, incoming)` merge. |
+| Migrate persisted stores to user-scoped localStorage keys | **Medium** | **To Do** | `langtap-{store}-{userId}` for signed-in, `langtap-{store}-guest` for guests. Legacy global keys require non-dismissable confirmation prompt. Dual session markers for guest auto-import. |
+
+### Phase 1: Service Layer
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Implement kana mastery service | **Medium** | **To Do** | `loadMasterySnapshot` (scores + learningScores + epoch in one query). `syncMastery` calls checkpoint RPC. `syncManualUnlocks` calls unlock checkpoint RPC. |
+| Implement word counter service | **Small** | **To Do** | `loadCounters` and `syncCounters`. Session-scoped best-effort, no epoch. |
+| Wire word mastery service calls | **Small** | **To Do** | Wire existing `word-mastery.service.ts` into load-on-start and checkpoint flows. |
+
+### Phase 2: Sync Infrastructure
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Wire load-on-start for signed-in users | **Medium** | **To Do** | StoreHydrator: epoch-aware merge, waits for migration decision, gates PracticeClient. |
+| Wire checkpoint sync for signed-in users | **Medium** | **To Do** | Versioned dirty tracking, checkpoint RPCs with epoch, pagehide beacon fallback, persisted retry. |
+| Sync input mode from Supabase profile to settings store on login | **Small** | **To Do** | `useSettings.ts` reads profile fields, pushes to settings store. |
+
+### Phase 3: Guest Conversion
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Safe guest progress import via server RPC | **Medium** | **To Do** | `import_guest_progress` and `import_legacy_progress` RPCs. Server-side validation, catalog checks, greatest-merge, error classification. |
+| Guest-to-account migration flow | **Medium** | **To Do** | Centralized in AuthInitializer. Three scenarios (session marker auto-import, confirmation prompt, legacy modal). Quarantine on pending keys. |
+
+### Phase 4: Profile and Settings
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Connect Profile and Settings to Supabase | **Medium** | **To Do** | Remove fixtures, wire real data, useSettings hook, JLPT change, email/password modals, timezone. |
+| Build username change UI | **Small** | **To Do** | Uses change_username RPC. Disabled state during cooldown. |
+| Build reset progress flow | **Small** | **To Do** | Uses reset RPCs. Non-optimistic. Spinner during RPC. |
+| Build delete account flow | **Medium** | **To Do** | Server-side deletion with CSRF, provider-aware re-auth, cascade verification, cookie cleanup. |
+
+### Phase 5: Auth Expansion
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Google Sign-In | **Medium** | **To Do** | Supabase OAuth. `window.location.origin` for redirect. Callback sanitization. |
+| Apple Sign-In | **Medium** | **To Do** | Supabase OAuth. Apple-specific handling (Private Relay, no name reliance). |
+
+### Phase 6: Membership
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Build free tier daily distance cap | **Medium** | **To Do** | Server-enforced via `daily_cap_events` table. Two-int advisory lock. Feature flag in `app_config`. Cap crossing allowed, next prompt blocked. |
+
+### Phase 7: Tests
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Write accounts and sync tests | **Medium** | **To Do** | ~110 tests: RLS, epoch/lock, reset, import/quarantine, sync versioning, daily cap, OAuth, delete account. |
+| Write guest import tests | **Small** | **To Do** | Catalog completeness, error classification, greatest-merge, pending key ownership. |
 
 ---
 

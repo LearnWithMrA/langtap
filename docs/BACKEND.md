@@ -73,6 +73,8 @@ create table public.profiles (
                           check (distance_unit in ('metric','imperial')),
   leaderboard_visibility text not null default 'public'
                           check (leaderboard_visibility in ('public','hidden')),
+  mastery_reset_epoch   integer not null default 0,
+  word_mastery_reset_epoch integer not null default 0,
   created_at            timestamptz not null default now(),
   updated_at            timestamptz not null default now()
 );
@@ -81,7 +83,13 @@ alter table public.profiles enable row level security;
 alter table public.profiles force row level security;
 ```
 
-RLS policies:
+`mastery_reset_epoch` and `word_mastery_reset_epoch` are domain-level
+reset counters. Incremented by reset RPCs. Checkpoint sync RPCs require
+an exact epoch match; stale or anomalous epochs reject the entire batch.
+Both checkpoint and reset RPCs acquire `SELECT ... FOR UPDATE` on the
+profiles row as a serialization point.
+
+RLS policies (Sprint 10: permanent-user-only writes):
 
 ```sql
 -- Users can read their own profile
@@ -90,12 +98,18 @@ create policy "Users read own profile"
   to authenticated
   using ((select auth.uid()) = id);
 
--- Users can update their own profile
-create policy "Users update own profile"
+-- Permanent users can update their own profile
+create policy "Permanent users update own profile"
   on public.profiles for update
   to authenticated
-  using ((select auth.uid()) = id)
-  with check ((select auth.uid()) = id);
+  using (
+    (select auth.uid()) = id
+    and public.is_permanent_user()
+  )
+  with check (
+    (select auth.uid()) = id
+    and public.is_permanent_user()
+  );
 
 -- Profile is created on sign-up via trigger (see Section 5)
 -- No insert policy needed for client; handled server-side
@@ -112,6 +126,8 @@ create table public.mastery (
   user_id        uuid not null references auth.users(id) on delete cascade,
   character_id   text not null,  -- matches ID from data/kana/characters.ts
   score          integer not null default 0 check (score >= 0),
+  learning_score integer not null default 0
+                   check (learning_score >= 0 and learning_score <= 5),
   updated_at     timestamptz not null default now(),
   unique (user_id, character_id)
 );
@@ -122,7 +138,15 @@ create index mastery_character_id_idx on public.mastery using btree (character_i
 alter table public.mastery enable row level security;
 ```
 
-RLS policies:
+`learning_score` tracks the character learning phase (0-5). Characters with
+`learning_score >= 5` are eligible to appear in word practice. Separate from
+`score`, which tracks word-practice proficiency with no upper bound. Both are
+loaded together via `loadMasterySnapshot()`.
+
+An `updated_at` trigger (`set_mastery_updated_at`) runs before every UPDATE
+to set `updated_at = now()`, matching the `word_mastery` trigger pattern.
+
+RLS policies (Sprint 10: permanent-user-only writes):
 
 ```sql
 create policy "Users read own mastery"
@@ -130,16 +154,25 @@ create policy "Users read own mastery"
   to authenticated
   using ((select auth.uid()) = user_id);
 
-create policy "Users insert own mastery"
+create policy "Permanent users insert own mastery"
   on public.mastery for insert
   to authenticated
-  with check ((select auth.uid()) = user_id);
+  with check (
+    (select auth.uid()) = user_id
+    and public.is_permanent_user()
+  );
 
-create policy "Users update own mastery"
+create policy "Permanent users update own mastery"
   on public.mastery for update
   to authenticated
-  using ((select auth.uid()) = user_id)
-  with check ((select auth.uid()) = user_id);
+  using (
+    (select auth.uid()) = user_id
+    and public.is_permanent_user()
+  )
+  with check (
+    (select auth.uid()) = user_id
+    and public.is_permanent_user()
+  );
 ```
 
 Note on `(select auth.uid())` wrapping: wrapping `auth.uid()` in a

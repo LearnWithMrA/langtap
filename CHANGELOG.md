@@ -30,6 +30,33 @@ Format per entry:
 
 ---
 
+## 2026-05-07 - Session 97
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Phase 0a: Fix anonymous write blocking RLS + Phase 0b: Add learning_score, epochs, trigger
+**Status:** Done
+
+### Changes made
+- `supabase/migrations/20260507120000_fix_anonymous_rls_and_add_epoch.sql`: New migration combining two Phase 0 blockers. (1) Drops all broken permissive "block anonymous" INSERT/UPDATE policies and recreates them with `is_permanent_user()` built into the condition. Covers mastery, word_mastery, word_counters, manual_unlocks, word_manual_unlocks, practice_sessions, and profiles. word_counters and profiles had zero blocking policies before. Includes dry-run count logging and transactional cleanup of any anonymous-owned rows. (2) Adds `learning_score integer not null default 0 check (0-5)` to mastery table, backfilled with `least(score, 5)`. Adds `mastery_reset_epoch` and `word_mastery_reset_epoch` to profiles. Adds `set_mastery_updated_at` trigger.
+- `supabase/migrations/20260506130001_seed_word_catalog.sql`: Fixed stray console output (`Wrote 8243 rows, skipped 1`) at end of file that caused migration apply failure.
+- `docs/SECURITY.md`: Updated Section 3.1 from "Standard user-owns-row pattern" to "Standard permanent-user-owns-row pattern". Documented the combined ownership + `is_permanent_user()` policy pattern. Added note about profiles using `id` not `user_id`.
+- `docs/BACKEND.md`: Updated Section 2.2 (profiles) to document epoch columns and new policy pattern. Updated Section 2.3 (mastery) to document `learning_score` column, `updated_at` trigger, and new permanent-user-only policies.
+- `LangTap_Sprints.md`: Sprint 10 restructured into 7 phases matching Codex-reviewed plans (v10). Phase 0a and 0b marked Done.
+
+### Tests
+- Full suite: 957 passed, 0 failures
+- `npm run check`: prettier, eslint, tsc, vitest all clean
+- Migration verified: `supabase db reset` applies all 9 migrations successfully
+- Schema verified: learning_score column, epoch columns, trigger, and all policy names confirmed via SQL queries
+
+### Next task
+Phase 0c: Create kana_character_catalog + verify word catalog completeness
+
+### Notes
+Sprint 10 plans underwent 10 rounds of Codex staff-engineer review before implementation began. 83 findings resolved. Full plans in ~/Downloads/Plans.md (v10, self-contained). The RLS fix was the highest-priority blocker: anonymous users (who are `authenticated` in Supabase) could write to all user-data tables because the "block anonymous" policies used permissive OR logic instead of AND. Also fixed an existing bug in the word catalog seed migration (stray console output breaking SQL).
+
+---
+
 ## 2026-05-06 - Session 96
 
 **Sprint:** Off-sprint bug fix

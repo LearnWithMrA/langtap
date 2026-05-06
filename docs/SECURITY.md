@@ -104,30 +104,52 @@ required. It instructs the query planner to cache the result rather than
 re-evaluating it for every row, which can improve performance by over 100x on
 large tables.
 
-### 3.1 Standard user-owns-row pattern
+### 3.1 Standard permanent-user-owns-row pattern
 
-Used by: `mastery`, `word_counters`, `manual_unlocks`, `profiles` (update).
+Used by: `mastery`, `word_mastery`, `word_counters`, `manual_unlocks`,
+`word_manual_unlocks`, `practice_sessions`, `profiles` (update).
+
+SELECT policies allow any authenticated user (including anonymous) to read
+their own rows. INSERT and UPDATE policies require both ownership AND
+`is_permanent_user()` to block anonymous writes.
 
 ```sql
--- SELECT
+-- SELECT (any authenticated user, including anonymous)
 create policy "Users read own rows"
   on public.table_name for select
   to authenticated
   using ((select auth.uid()) = user_id);
 
--- INSERT
-create policy "Users insert own rows"
+-- INSERT (permanent users only)
+create policy "Permanent users insert own rows"
   on public.table_name for insert
   to authenticated
-  with check ((select auth.uid()) = user_id);
+  with check (
+    (select auth.uid()) = user_id
+    and public.is_permanent_user()
+  );
 
--- UPDATE
-create policy "Users update own rows"
+-- UPDATE (permanent users only)
+create policy "Permanent users update own rows"
   on public.table_name for update
   to authenticated
-  using ((select auth.uid()) = user_id)
-  with check ((select auth.uid()) = user_id);
+  using (
+    (select auth.uid()) = user_id
+    and public.is_permanent_user()
+  )
+  with check (
+    (select auth.uid()) = user_id
+    and public.is_permanent_user()
+  );
 ```
+
+The `is_permanent_user()` function checks `auth.users.raw_app_meta_data`
+to confirm the user is not anonymous. Supabase anonymous users are
+`authenticated` but not permanent; without this check, they would pass
+ownership-only policies.
+
+Note on `profiles`: uses `id` instead of `user_id` (profiles PK is the
+auth user ID directly).
 
 Note: UPDATE policies must include both `using` and `with check`. PostgreSQL
 needs to read the existing row (using) before updating it, and validate the

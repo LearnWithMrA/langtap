@@ -8251,4 +8251,3 @@ on conflict (word_id) do update set
   expected_romaji = excluded.expected_romaji,
   expected_kana = excluded.expected_kana,
   kanji = excluded.kanji;
-Wrote 8243 rows, skipped 1
