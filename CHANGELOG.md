@@ -30,6 +30,32 @@ Format per entry:
 
 ---
 
+## 2026-05-07 - Session 97c
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Phase 0d + 0e + 0f + 0g: Reset RPCs, username RPC, profile columns, checkpoint RPCs
+**Status:** Done
+
+### Changes made
+- `supabase/migrations/20260507120002_create_reset_rpcs.sql`: 4 reset RPCs (`reset_character_mastery`, `reset_all_mastery`, `reset_word_mastery`, `reset_all_word_mastery`). All use profile row lock (`SELECT ... FOR UPDATE`), increment domain epoch, and return `{ new_epoch }`. `reset_all_mastery` deletes `manual_unlocks`. `reset_all_word_mastery` deletes `word_manual_unlocks`. `reset_word_mastery` validates `p_word_id` against `leaderboard_word_catalog` and inserts `word_manual_unlocks` row to preserve tile visibility. All reject anonymous users.
+- `supabase/migrations/20260507120003_username_rpc_user_tz_app_config.sql`: `change_username` RPC with trim, format validation (`^[a-zA-Z0-9_]+$`, 3-20 chars), case-insensitive uniqueness via `lower()` index, 30-day cooldown, stable error codes. BEFORE UPDATE trigger (`guard_username_change`) blocks direct username changes unless RPC sets `app.allow_username_change` via `set_config`. Adds `user_tz`, 4 import tracking columns (`guest_imported_at/skipped_at`, `legacy_imported_at/skipped_at`) to profiles. Creates `app_config` table (read-only for clients) seeded with `daily_cap_enabled = false`. Creates `skip_guest_import` and `skip_legacy_import` RPCs with profile row lock.
+- `supabase/migrations/20260507120004_create_checkpoint_rpcs.sql`: 4 checkpoint RPCs (`checkpoint_mastery`, `checkpoint_word_mastery`, `checkpoint_manual_unlocks`, `checkpoint_word_manual_unlocks`). All use profile row lock, exact epoch match (stale or anomalous epochs reject entire batch), catalog ID validation (unknown IDs returned in `dropped_invalid_ids`), deduplication, and `greatest(existing, incoming)` merge. REVOKE FROM public, GRANT TO authenticated.
+- `LangTap_Sprints.md`: Phase 0d, 0e, 0f, 0g marked Done.
+
+### Tests
+- Full suite: 964 passed, 0 failures
+- `npm run check`: clean
+- All 13 migrations apply cleanly via `supabase db reset`
+- 11 new RPCs verified via `information_schema.routines`
+
+### Next task
+Phase 0h: Migrate persisted stores to user-scoped localStorage keys
+
+### Notes
+All Phase 0 database work is complete. 5 new migrations, 11 new RPCs. The profile row becomes the serialization point for all write-path operations (checkpoint, reset, import, skip, username change). This is a good point for Codex review of the complete RPC set before moving to client-side implementation.
+
+---
+
 ## 2026-05-07 - Session 97b
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership
