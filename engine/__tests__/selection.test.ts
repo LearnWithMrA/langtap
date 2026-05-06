@@ -334,4 +334,36 @@ describe('selectNextPrompt', () => {
       }
     })
   })
+
+  describe('previousCharacterId exclusion', () => {
+    it('never selects the previous character when alternatives exist', () => {
+      const chars = [makeChar('h-a', 0), makeChar('h-ka', 0)]
+      const words = [makeWord('w1', ['h-a']), makeWord('w2', ['h-ka'])]
+      const unlocked = new Set(['h-a', 'h-ka'])
+      const rng = createSeededRng(42)
+      for (let i = 0; i < 200; i++) {
+        const result = selectNextPrompt(chars, words, {}, unlocked, 'N5', rng, 'h-a')
+        expect(result).not.toBeNull()
+        expect(result!.prompt.characterId).toBe('h-ka')
+      }
+    })
+
+    it('allows the previous character when it is the only option', () => {
+      const chars = [makeChar('h-a', 0)]
+      const words = [makeWord('w1', ['h-a'])]
+      const unlocked = new Set(['h-a'])
+      const result = selectNextPrompt(chars, words, {}, unlocked, 'N5', () => 0.5, 'h-a')
+      expect(result).not.toBeNull()
+      expect(result!.prompt.characterId).toBe('h-a')
+    })
+
+    it('works correctly without a previous character', () => {
+      const chars = [makeChar('h-a', 0)]
+      const words = [makeWord('w1', ['h-a'])]
+      const unlocked = new Set(['h-a'])
+      const result = selectNextPrompt(chars, words, {}, unlocked, 'N5', () => 0.5)
+      expect(result).not.toBeNull()
+      expect(result!.prompt.characterId).toBe('h-a')
+    })
+  })
 })

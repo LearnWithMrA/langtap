@@ -156,6 +156,7 @@ export function selectNextPrompt(
   unlockedIds: Set<string>,
   preferredLevel: JlptLevel,
   rng: () => number = Math.random,
+  previousCharacterId?: string,
 ): SelectionResult | null {
   const wordIndex = buildWordIndex(wordBank, unlockedIds)
 
@@ -164,7 +165,12 @@ export function selectNextPrompt(
 
   if (feasible.length === 0) return null
 
-  const selected = weightedRandomDraw(feasible, rng)
+  const pool =
+    previousCharacterId && feasible.length > 1
+      ? feasible.filter((c) => c.id !== previousCharacterId)
+      : feasible
+
+  const selected = weightedRandomDraw(pool, rng)
 
   const wordResult = selectWordForCharacter(
     selected.id,
@@ -195,6 +201,7 @@ export function selectNextKanaPrompt(
   preferredLevel: JlptLevel,
   minEligibleWords: number,
   rng: () => number = Math.random,
+  previousCharacterId?: string,
 ): KanaSelectionResult | null {
   const soloDrillPool = getSoloDrillPool(practiceIds)
   const drillCandidates = buildCharacterWeights(characters, soloDrillPool).filter(
@@ -207,8 +214,14 @@ export function selectNextKanaPrompt(
   const eligibleWordCount = countEligibleWords(wordEligibleIds, wordBank)
   const canMixWords = eligibleWordCount >= minEligibleWords
 
+  // When a previous character is provided, avoid selecting it again
+  const drillPool =
+    previousCharacterId && needsDrill.length > 1
+      ? needsDrill.filter((c) => c.id !== previousCharacterId)
+      : needsDrill
+
   if (!canMixWords) {
-    if (needsDrill.length === 0) {
+    if (drillPool.length === 0) {
       if (eligibleWordCount > 0) {
         const fallback = selectNextPrompt(
           characters,
@@ -217,6 +230,7 @@ export function selectNextKanaPrompt(
           wordEligibleIds,
           preferredLevel,
           rng,
+          previousCharacterId,
         )
         if (fallback) {
           return {
@@ -229,7 +243,7 @@ export function selectNextKanaPrompt(
       }
       return null
     }
-    const selected = weightedRandomDraw(needsDrill, rng)
+    const selected = weightedRandomDraw(drillPool, rng)
     return {
       kind: 'character',
       characterId: selected.id,
@@ -238,7 +252,7 @@ export function selectNextKanaPrompt(
     }
   }
 
-  const doWordPrompt = needsDrill.length === 0 || rng() < WORD_PROMPT_RATIO
+  const doWordPrompt = drillPool.length === 0 || rng() < WORD_PROMPT_RATIO
 
   if (doWordPrompt) {
     const wordResult = selectNextPrompt(
@@ -248,6 +262,7 @@ export function selectNextKanaPrompt(
       wordEligibleIds,
       preferredLevel,
       rng,
+      previousCharacterId,
     )
     if (wordResult) {
       return {
@@ -259,8 +274,8 @@ export function selectNextKanaPrompt(
     }
   }
 
-  if (needsDrill.length > 0) {
-    const selected = weightedRandomDraw(needsDrill, rng)
+  if (drillPool.length > 0) {
+    const selected = weightedRandomDraw(drillPool, rng)
     return {
       kind: 'character',
       characterId: selected.id,
@@ -276,6 +291,7 @@ export function selectNextKanaPrompt(
     wordEligibleIds,
     preferredLevel,
     rng,
+    previousCharacterId,
   )
   if (!wordResult) return null
   return {

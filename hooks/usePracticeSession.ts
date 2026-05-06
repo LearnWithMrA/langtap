@@ -224,7 +224,7 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
   }, [learningScores])
 
   const selectNext = useCallback(
-    (currentCounters: Record<string, number>): void => {
+    (currentCounters: Record<string, number>, previousCharacterId?: string): void => {
       if (!wordBankData) return
       const cwm = buildCharactersWithMastery(scores)
       const manual = manualSet.current
@@ -240,6 +240,8 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
         learningScores,
         preferredLevel,
         MIN_ELIGIBLE_WORDS_FOR_MIXING,
+        Math.random,
+        previousCharacterId,
       )
 
       if (!result) {
@@ -340,8 +342,8 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
 
   const advanceToNext = useCallback((): void => {
     recomputeUnlocks(learningScores, new Set(manualUnlockIds))
-    selectNext(counters)
-  }, [recomputeUnlocks, learningScores, manualUnlockIds, selectNext, counters])
+    selectNext(counters, currentPrompt?.targetCharacterId)
+  }, [recomputeUnlocks, learningScores, manualUnlockIds, selectNext, counters, currentPrompt?.targetCharacterId])
 
   return {
     prompt: currentPrompt,

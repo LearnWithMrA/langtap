@@ -203,4 +203,86 @@ describe('selectNextKanaPrompt', () => {
       expect(result?.kind).toBe('word')
     }
   })
+
+  describe('previousCharacterId exclusion', () => {
+    it('character drills avoid the previous character when alternatives exist', () => {
+      const chars = [makeChar('h-a', 0), makeChar('h-i', 0)]
+      const practice = new Set(['h-a', 'h-i'])
+      const learning = { 'h-a': 1, 'h-i': 2 }
+      const rng = createSeededRng(42)
+
+      for (let i = 0; i < 100; i++) {
+        const result = selectNextKanaPrompt(
+          chars,
+          words,
+          {},
+          practice,
+          new Set(),
+          new Set(),
+          learning,
+          'N5',
+          10,
+          rng,
+          'h-a',
+        )
+        expect(result).not.toBeNull()
+        expect(result!.kind).toBe('character')
+        expect(result!.characterId).toBe('h-i')
+      }
+    })
+
+    it('word prompts avoid the previous character when alternatives exist', () => {
+      const chars = [
+        makeChar('h-a', 10),
+        makeChar('h-i', 10),
+        makeChar('h-u', 10),
+        makeChar('h-ka', 10),
+        makeChar('h-ki', 10),
+      ]
+      const practice = new Set(['h-a', 'h-i', 'h-u', 'h-ka', 'h-ki'])
+      const wordEligible = new Set(['h-a', 'h-i', 'h-u', 'h-ka', 'h-ki'])
+      const learning = { 'h-a': 5, 'h-i': 5, 'h-u': 5, 'h-ka': 5, 'h-ki': 5 }
+      const rng = createSeededRng(42)
+
+      for (let i = 0; i < 100; i++) {
+        const result = selectNextKanaPrompt(
+          chars,
+          words,
+          {},
+          practice,
+          wordEligible,
+          new Set(),
+          learning,
+          'N5',
+          10,
+          rng,
+          'h-a',
+        )
+        expect(result).not.toBeNull()
+        expect(result!.characterId).not.toBe('h-a')
+      }
+    })
+
+    it('allows the previous character when it is the only drill option', () => {
+      const chars = [makeChar('h-a', 0)]
+      const practice = new Set(['h-a'])
+      const learning = { 'h-a': 1 }
+
+      const result = selectNextKanaPrompt(
+        chars,
+        words,
+        {},
+        practice,
+        new Set(),
+        new Set(),
+        learning,
+        'N5',
+        10,
+        () => 0.5,
+        'h-a',
+      )
+      expect(result).not.toBeNull()
+      expect(result!.characterId).toBe('h-a')
+    })
+  })
 })

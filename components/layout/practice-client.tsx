@@ -425,7 +425,6 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
         />
       ) : showKanaTrial && !trialSession.isComplete ? (
         <GameWindow
-          key={trialSession.prompt?.word.id ?? 'trial'}
           mode={mode}
           session={trialSession}
           allowedCharIds={TRIAL_ALLOWED_SET}
@@ -517,7 +516,6 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
             </PracticeBanner>
           )}
           <GameWindow
-            key={kanaSession.prompt?.word.id ?? 'kana'}
             mode={mode}
             session={kanaSession}
             allowedCharIds={kanaSession.practiceIds}

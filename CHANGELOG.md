@@ -30,6 +30,32 @@ Format per entry:
 
 ---
 
+## 2026-05-06 - Session 96
+
+**Sprint:** Off-sprint bug fix
+**Task completed:** Fix alternating input mode and repeated character selection
+**Status:** Done
+
+### Changes made
+- `components/layout/practice-client.tsx`: Removed dynamic `key` props from both GameWindow instances (trial and main). The prompt-based key caused React to remount the component on every round, resetting `alternateDirection` state back to `'kana-to-romaji'` and breaking alternation.
+- `engine/selection.ts`: Added `previousCharacterId` parameter to `selectNextPrompt` and `selectNextKanaPrompt`. When alternatives exist, the previous character is filtered from the candidate pool before drawing. Falls back to allowing repeats when the pool has only one option.
+- `hooks/usePracticeSession.ts`: Wired `currentPrompt.targetCharacterId` through `selectNext` and `advanceToNext` so the engine knows which character to avoid.
+- `engine/__tests__/selection.test.ts`: 3 new tests for character exclusion in `selectNextPrompt`.
+- `engine/__tests__/kana-selection.test.ts`: 3 new tests for character exclusion in `selectNextKanaPrompt`.
+
+### Tests
+- `engine/__tests__/selection.test.ts`: Pass (40 tests)
+- `engine/__tests__/kana-selection.test.ts`: Pass (9 tests)
+- Full suite: Pass (957 tests)
+
+### Next task
+Resume Sprint 9 board
+
+### Notes
+Two bugs found during gameplay. Bug 1: alternating mode always showed kana-to-romaji because the dynamic React `key` prop remounted GameWindow every round, resetting local state. Bug 2: the selection engine had no deduplication, so the same character could appear consecutively as the flipped prompt.
+
+---
+
 ## 2026-05-06 - Session 95
 
 **Sprint:** Sprint 9 - Leaderboard and Audio (extended)
