@@ -88,27 +88,25 @@ export function ResetProgress(): ReactNode {
       <div
         role="region"
         aria-label="Reset progress"
-        className="bg-surface-raised rounded-2xl border border-border"
+        className="bg-surface-raised rounded-2xl border border-border px-4 py-4"
       >
-        <p className="text-xs font-medium text-warm-400 uppercase tracking-wider px-4 pt-4 pb-0">
+        <p className="text-xs font-medium text-warm-400 uppercase tracking-wider mb-3">
           Reset progress
         </p>
-        <div className="px-4 py-3 flex flex-col gap-2">
+        <div className="flex gap-3">
           <button
             type="button"
             onClick={(): void => setConfirmTarget('kana')}
-            className="w-full px-4 py-3 flex items-center justify-between min-h-[48px] hover:bg-warm-50 transition-colors duration-150 rounded-lg"
+            className="flex-1 bg-red-600/80 text-white rounded-xl px-4 py-3 text-sm font-medium shadow-[0_4px_0_0_#b04050] active:translate-y-[2px] active:shadow-none transition-all duration-75 min-h-[48px]"
           >
-            <span className="text-sm font-medium text-warm-700">Reset kana progress</span>
-            <span className="text-xs text-warm-400">Scores, learning, unlocks</span>
+            Reset Kana
           </button>
           <button
             type="button"
             onClick={(): void => setConfirmTarget('kotoba')}
-            className="w-full px-4 py-3 flex items-center justify-between min-h-[48px] hover:bg-warm-50 transition-colors duration-150 rounded-lg"
+            className="flex-1 bg-red-600/80 text-white rounded-xl px-4 py-3 text-sm font-medium shadow-[0_4px_0_0_#b04050] active:translate-y-[2px] active:shadow-none transition-all duration-75 min-h-[48px]"
           >
-            <span className="text-sm font-medium text-warm-700">Reset word progress</span>
-            <span className="text-xs text-warm-400">Scores, unlocks</span>
+            Reset Kotoba
           </button>
         </div>
       </div>

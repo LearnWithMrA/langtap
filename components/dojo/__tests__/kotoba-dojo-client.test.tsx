@@ -105,9 +105,9 @@ describe('KotobaDojoClient - ready shell', () => {
     expect(screen.getByRole('tab', { name: 'N5' })).toHaveAttribute('aria-selected', 'true')
   })
 
-  it('renders Levels 1-2 and Levels 3-4 group rows for N5', () => {
+  it('renders Levels 1-2 and Levels 3-4 group rows for N5', async () => {
     render(<KotobaDojoClient />)
-    expect(screen.getByRole('button', { name: /^Levels 1-2/ })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /^Levels 1-2/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^Levels 3-4/ })).toBeInTheDocument()
   })
 
