@@ -491,9 +491,9 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Safe guest progress import via server RPC | **Medium** | **To Do** | `import_guest_progress` and `import_legacy_progress` RPCs. Server-side validation, catalog checks, greatest-merge, error classification. |
+| Safe guest progress import via server RPC | **Medium** | **Done** | `import_guest_progress` and `import_legacy_progress` RPCs. Cheap validation before lock, catalog ID validation, abuse detection (>50% invalid), score clamping, greatest-merge, one-time-per-source guard. Client service with error classification. SECURITY.md Section 7.1 added. 13 tests. Session 98. |
 | Guest-to-account migration flow | **Medium** | **To Do** | Centralized in AuthInitializer. Three scenarios (session marker auto-import, confirmation prompt, legacy modal). Quarantine on pending keys. |
-| **Codex gate: Phase 3 review** | - | **To Do** | Review import RPC, migration flow, quarantine state machine, pending key ownership, and error classification routing. |
+| **Codex gate: Phase 3 review** | - | **Done** | Fixed: (1) numeric overflow on large scores - clamp in numeric space before integer cast, (2) per-array count caps to bound lock hold time (500/9000), (3) deduplication via seen-ID arrays, (4) non-JSON-number score fields dropped instead of coerced to zero. Migration `20260507120009`. Session 98. |
 
 ### Phase 4: Profile and Settings
 

@@ -30,6 +30,53 @@ Format per entry:
 
 ---
 
+## 2026-05-07 - Session 98b
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Codex gate: Phase 3 review fixes
+**Status:** Done
+
+### Changes made
+- `supabase/migrations/20260507120009_fix_import_rpcs_codex_review.sql`: Recreates both import RPCs with three Codex fixes: (1) Scores parsed via `jsonb_typeof` check for JSON number type, then extracted as numeric and clamped via `least(greatest(floor(), 0), max)` before integer cast, preventing integer-out-of-range on extreme values like 999999999999999999999. (2) Per-array count caps enforced before acquiring the profile row lock (500 mastery, 9000 word mastery, 500 kana unlocks, 9000 word unlocks) to bound lock hold time. (3) Deduplication via `v_seen_*_ids` arrays skips redundant catalog probes and INSERT attempts. (4) Rows with non-JSON-number score fields (string, boolean, null, object, missing) are dropped and counted toward dropped_count and the abuse ratio instead of being coerced to zero.
+
+### Tests
+- Full suite: 997 tests pass, 0 failures
+
+### Next task
+Guest-to-account migration flow (Phase 3, Plan 5)
+
+### Notes
+- Design decision on malformed score fields: drop the row, don't coerce to zero. Coercion hides snapshot format bugs and risks data loss since keys get deleted after classified responses.
+- SQL-level integration tests are tracked in Plan 7 (Sprint 10 Phase 7). The client-wrapper tests verify the service contract; the SQL behavior is verified via `supabase db reset` locally.
+
+---
+
+## 2026-05-07 - Session 98
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Safe guest progress import via server RPC (Phase 3, Plan 4)
+**Status:** Done
+
+### Changes made
+- `supabase/migrations/20260507120008_create_import_rpcs.sql`: Two security-definer RPCs (`import_guest_progress`, `import_legacy_progress`). Cheap validation before profile row lock (payload size, JSON shape). Catalog ID validation against `kana_character_catalog` and `leaderboard_word_catalog`. Abuse detection (>50% invalid IDs rejects and rolls back). Score clamping (mastery <= 1000, learning <= 5, word mastery <= 1000, negatives to 0, non-integers floored). Greatest-merge for scores, ON CONFLICT DO NOTHING for unlocks. One-time-per-source guard via import/skip profile columns. No leaderboard credit. Classified error responses (success, rejected_abuse, rejected_malformed, rejected_duplicate, error).
+- `services/guest-import.service.ts`: Thin client wrapper calling RPCs. Typed `ImportResult` discriminated union. Distinguishes classified server responses from transport failures. `ImportPayload` type for structured data.
+- `services/__tests__/guest-import.service.test.ts`: 13 tests covering all error classifications, transport failures, partial imports with dropped/clamped counts, and both guest and legacy RPC paths.
+- `docs/SECURITY.md`: Added Section 7.1 (Safe Import Policy) documenting server validation pipeline, one-time import, no leaderboard credit, error classification, and client key deletion rules by classification.
+
+### Tests
+- `services/__tests__/guest-import.service.test.ts`: 13 tests, all pass
+- Full suite: 997 tests pass, 0 failures
+
+### Next task
+Codex gate: Phase 3 review (review import RPC, migration flow, quarantine state machine before Plan 5 coding begins)
+
+### Notes
+- Phase 3 Codex gate should be run before starting Plan 5 (guest-to-account migration flow). Send the import RPC SQL and Plan 5 description to Codex for staff-engineer review. Do not send secrets.
+- The abuse detection uses PostgreSQL exception handling: writes are rolled back when the exception is caught by the EXCEPTION clause, which is correct PL/pgSQL behavior.
+- Word counters are NOT included in the import payload (session-scoped, in-memory only per Plan 5 gating decision).
+
+---
+
 ## 2026-05-07 - Session 97m
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership

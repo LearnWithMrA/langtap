@@ -365,6 +365,55 @@ DevTools. This costs nothing (no server resources consumed) and does not
 affect other users or the leaderboard. The trial cap exists to create a
 natural conversion moment, not to enforce a hard paywall.
 
+### 7.1 Safe Import Policy
+
+When a guest converts to a permanent account, their localStorage progress
+is imported via a server-validated RPC (`import_guest_progress` or
+`import_legacy_progress`). The client never writes imported data directly
+to user tables.
+
+**Server-side validation (inside the RPC):**
+- Payload size check (max 500KB) before acquiring the profile row lock
+- JSON shape validation (all fields must be arrays)
+- Character IDs validated against `kana_character_catalog`
+- Word IDs validated against `leaderboard_word_catalog`
+- Unknown IDs silently dropped (partial import is allowed)
+- Abuse detection: if more than 50% of submitted IDs are invalid, the
+  entire import is rejected and all writes are rolled back
+- Score clamping: mastery score capped at 1000, learning score at 5,
+  word mastery score at 1000. Negative values clamped to 0.
+  Non-integer scores floored.
+- Greatest-merge for scores (`greatest(existing, imported)`), ON CONFLICT
+  DO NOTHING for unlocks (additive)
+
+**One-time import per source:**
+- Guest import checks `guest_imported_at` and `guest_import_skipped_at`
+- Legacy import checks `legacy_imported_at` and `legacy_import_skipped_at`
+- Both column pairs must be null for the import to proceed
+- Both flows can succeed independently for the same user
+- Profile row lock (`SELECT ... FOR UPDATE`) serializes concurrent
+  import and skip operations
+
+**No leaderboard credit:**
+- Imported scores are written to mastery and word_mastery tables only
+- No `leaderboard_score_events` are created during import
+- Leaderboard scores come exclusively from server-validated practice
+  sessions, never from imported localStorage data
+
+**Error classification:**
+- `success`: import completed, `imported_at` timestamp set
+- `rejected_abuse`: too many invalid IDs (>50%), all writes rolled back
+- `rejected_malformed`: bad JSON shape or oversized payload
+- `rejected_duplicate`: already imported or skipped
+- `error`: unexpected server error
+
+**Client key deletion rules by classification:**
+- Classified responses (`success`, `rejected_abuse`, `rejected_malformed`,
+  `rejected_duplicate`): the server made an authoritative decision.
+  Delete or quarantine local keys.
+- Transport failures (network timeout, server 500): the server did not
+  classify the data. Preserve local keys for retry.
+
 ---
 
 ## 8. Security Checklist
