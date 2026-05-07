@@ -25,7 +25,7 @@ import { createBrowserSupabaseClient } from '@/services/supabase-browser'
 import { getUser } from '@/services/auth.service'
 import { loadProfile } from '@/services/profile.service'
 import { importGuestProgress, importLegacyProgress } from '@/services/guest-import.service'
-import { buildImportPayload } from '@/services/import-snapshot'
+import { buildImportPayload, extractGuestSessionId } from '@/services/import-snapshot'
 import { useUserStore } from '@/stores/user.store'
 import type { UserProfile } from '@/types/user.types'
 import {
@@ -37,17 +37,11 @@ import {
   hasLegacyGlobalKeys,
   readLegacyGlobalKeys,
   deleteLegacyGlobalKeys,
-  hasPendingKeys,
-  readPendingKeys,
-  deletePendingKeys,
-  moveToPendingKeys,
-  setPendingGuestImport,
   hasPendingGuestImport,
   clearPendingGuestImport,
+  setPendingGuestImport,
   getGuestSessionMarker,
-  getGuestSnapshotMarker,
   clearGuestSessionMarker,
-  clearGuestSnapshotMarker,
 } from '@/stores/scoped-storage'
 import type { ImportResult } from '@/services/guest-import.service'
 import { ImportPromptModal } from '@/components/ui/import-prompt-modal'
@@ -67,17 +61,28 @@ async function detectOAuthProvider(): Promise<boolean> {
   return typeof provider === 'string' && provider !== 'email'
 }
 
+function checkLegacyAndComplete(profile: UserProfile): void {
+  const store = useUserStore.getState()
+  const legacyDecisionMade =
+    profile.legacyImportedAt !== null || profile.legacyImportSkippedAt !== null
+  if (!legacyDecisionMade && hasLegacyGlobalKeys()) {
+    store.setShowLegacyImportPrompt(true)
+    return
+  }
+  store.setMigrationPhaseComplete(true)
+}
+
 // ── Migration logic ─────────────────────────────
 
 async function runGuestMigrationCheck(userId: string, profile: UserProfile): Promise<void> {
   const store = useUserStore.getState()
 
-  // Already imported or skipped guest data: skip
   const guestDecisionMade =
     profile.guestImportedAt !== null || profile.guestImportSkippedAt !== null
 
-  // Check for pending import from a previous failed attempt
-  if (!guestDecisionMade && hasPendingGuestImport(userId) && hasPendingKeys(userId)) {
+  // Check for pending import from a previous failed attempt.
+  // Stores remain on guest keys (setStorageUserId stays null).
+  if (!guestDecisionMade && hasPendingGuestImport(userId) && hasGuestKeys()) {
     store.setPendingGuestImport(true)
     return
   }
@@ -85,34 +90,25 @@ async function runGuestMigrationCheck(userId: string, profile: UserProfile): Pro
   // Check for current-session guest keys
   if (!guestDecisionMade && hasGuestKeys()) {
     const sessionMarker = getGuestSessionMarker()
-    const snapshotMarker = getGuestSnapshotMarker()
+    const rawKeys = readGuestKeys()
+    const snapshotMarker = extractGuestSessionId(rawKeys)
     const markersMatch =
       sessionMarker !== null && snapshotMarker !== null && sessionMarker === snapshotMarker
     const isOAuth = await detectOAuthProvider()
 
     if (markersMatch && !isOAuth) {
-      // Scenario A: auto-import
-      await handleGuestAutoImport(userId)
-    } else {
-      // Scenario B: show confirmation prompt
-      store.setShowGuestImportPrompt(true)
+      await handleGuestAutoImport(userId, profile)
       return
     }
-  }
 
-  // Check for legacy global keys (pre-Sprint 10)
-  const legacyDecisionMade =
-    profile.legacyImportedAt !== null || profile.legacyImportSkippedAt !== null
-  if (!legacyDecisionMade && hasLegacyGlobalKeys()) {
-    store.setShowLegacyImportPrompt(true)
+    store.setShowGuestImportPrompt(true)
     return
   }
 
-  // No migration needed
-  store.setMigrationPhaseComplete(true)
+  checkLegacyAndComplete(profile)
 }
 
-async function handleGuestAutoImport(userId: string): Promise<void> {
+async function handleGuestAutoImport(userId: string, profile: UserProfile): Promise<void> {
   const store = useUserStore.getState()
   const rawKeys = readGuestKeys()
   const payload = buildImportPayload(rawKeys)
@@ -121,15 +117,13 @@ async function handleGuestAutoImport(userId: string): Promise<void> {
   if (isClassifiedResponse(result)) {
     deleteGuestKeys()
     clearGuestSessionMarker()
-    clearGuestSnapshotMarker()
+    setStorageUserId(userId)
     resetStoresForAuthChange()
-    store.setMigrationPhaseComplete(true)
+    checkLegacyAndComplete(profile)
   } else {
-    // Transient error: quarantine guest keys
-    moveToPendingKeys(userId)
+    // Transient error: stay on guest keys, set pending flag
     setPendingGuestImport(userId)
     clearGuestSessionMarker()
-    clearGuestSnapshotMarker()
     store.setPendingGuestImport(true)
   }
 }
@@ -175,16 +169,17 @@ export function AuthInitializer(): ReactNode {
           useUserStore.getState().setProfileLoaded(true)
         }
 
-        // Run migration check for permanent users
         const isAnon = authUser.isAnonymous ?? false
         if (!isAnon && profileResult.ok) {
+          // For permanent users with pending import, keep stores on guest keys
+          if (hasPendingGuestImport(authUser.id) && hasGuestKeys()) {
+            setStorageUserId(null)
+          }
           await runGuestMigrationCheck(authUser.id, profileResult.data)
         } else {
-          // Guests and anonymous users skip migration
           useUserStore.getState().setMigrationPhaseComplete(true)
         }
       } else {
-        // No user: skip migration
         useUserStore.getState().setMigrationPhaseComplete(true)
       }
     }
@@ -223,6 +218,9 @@ export function AuthInitializer(): ReactNode {
           }
 
           if (!isAnon && result.ok) {
+            if (hasPendingGuestImport(userId) && hasGuestKeys()) {
+              setStorageUserId(null)
+            }
             runGuestMigrationCheck(userId, result.data)
           } else {
             useUserStore.getState().setMigrationPhaseComplete(true)
@@ -247,7 +245,8 @@ export function AuthInitializer(): ReactNode {
 
   const handleGuestImport = useCallback(async (): Promise<void> => {
     const userId = useUserStore.getState().user?.id
-    if (!userId) return
+    const profile = useUserStore.getState().profile
+    if (!userId || !profile) return
 
     const rawKeys = readGuestKeys()
     const payload = buildImportPayload(rawKeys)
@@ -256,16 +255,20 @@ export function AuthInitializer(): ReactNode {
     if (isClassifiedResponse(result)) {
       deleteGuestKeys()
       clearGuestSessionMarker()
-      clearGuestSnapshotMarker()
+      setStorageUserId(userId)
       resetStoresForAuthChange()
       useUserStore.getState().setShowGuestImportPrompt(false)
-      useUserStore.getState().setMigrationPhaseComplete(true)
+      checkLegacyAndComplete(profile)
     } else {
       throw new Error('Import failed')
     }
   }, [])
 
   const handleGuestSkip = useCallback(async (): Promise<void> => {
+    const userId = useUserStore.getState().user?.id
+    const profile = useUserStore.getState().profile
+    if (!userId || !profile) return
+
     const supabase = createBrowserSupabaseClient()
     const { data, error } = await supabase.rpc('skip_guest_import')
 
@@ -275,10 +278,10 @@ export function AuthInitializer(): ReactNode {
     if (d && d['ok'] === true) {
       deleteGuestKeys()
       clearGuestSessionMarker()
-      clearGuestSnapshotMarker()
+      setStorageUserId(userId)
       resetStoresForAuthChange()
       useUserStore.getState().setShowGuestImportPrompt(false)
-      useUserStore.getState().setMigrationPhaseComplete(true)
+      checkLegacyAndComplete(profile)
     } else {
       throw new Error('Skip failed')
     }
@@ -316,18 +319,20 @@ export function AuthInitializer(): ReactNode {
 
   const handlePendingRetry = useCallback(async (): Promise<void> => {
     const userId = useUserStore.getState().user?.id
-    if (!userId) return
+    const profile = useUserStore.getState().profile
+    if (!userId || !profile) return
 
-    const rawKeys = readPendingKeys(userId)
+    const rawKeys = readGuestKeys()
     const payload = buildImportPayload(rawKeys)
     const result = await importGuestProgress(payload)
 
     if (isClassifiedResponse(result)) {
-      deletePendingKeys(userId)
+      deleteGuestKeys()
       clearPendingGuestImport(userId)
+      setStorageUserId(userId)
       resetStoresForAuthChange()
       useUserStore.getState().setPendingGuestImport(false)
-      useUserStore.getState().setMigrationPhaseComplete(true)
+      checkLegacyAndComplete(profile)
     } else {
       throw new Error('Retry failed')
     }
@@ -335,7 +340,8 @@ export function AuthInitializer(): ReactNode {
 
   const handleStartFresh = useCallback(async (): Promise<void> => {
     const userId = useUserStore.getState().user?.id
-    if (!userId) return
+    const profile = useUserStore.getState().profile
+    if (!userId || !profile) return
 
     const supabase = createBrowserSupabaseClient()
     const { data, error } = await supabase.rpc('skip_guest_import')
@@ -344,11 +350,12 @@ export function AuthInitializer(): ReactNode {
 
     const d = data as Record<string, unknown> | null
     if (d && d['ok'] === true) {
-      deletePendingKeys(userId)
+      deleteGuestKeys()
       clearPendingGuestImport(userId)
+      setStorageUserId(userId)
       resetStoresForAuthChange()
       useUserStore.getState().setPendingGuestImport(false)
-      useUserStore.getState().setMigrationPhaseComplete(true)
+      checkLegacyAndComplete(profile)
     } else {
       throw new Error('Start fresh failed')
     }

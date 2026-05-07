@@ -108,3 +108,10 @@ export function buildImportPayload(rawKeys: Record<string, string>): ImportPaylo
 
   return payload
 }
+
+export function extractGuestSessionId(rawKeys: Record<string, string>): string | null {
+  const wrapper = parsePersistedStore(rawKeys['langtap-mastery'])
+  if (!wrapper) return null
+  const id = wrapper.state.guestSessionId
+  return typeof id === 'string' ? id : null
+}

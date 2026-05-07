@@ -19,6 +19,7 @@ type MasteryState = {
   scores: MasteryScoreMap
   learningScores: MasteryScoreMap
   epoch: number
+  guestSessionId: string | null
   hasHydrated: boolean
   dirtyVersions: Map<string, number>
   dirtyUnlockIds: Set<string>
@@ -47,6 +48,7 @@ type MasteryActions = {
   clearDirtyIfMatch: (entries: Map<string, number>) => void
   clearDirtyUnlocks: (ids: string[]) => void
   clearAllDirty: () => void
+  setGuestSessionId: (id: string | null) => void
 }
 
 // ── Helpers ──────────────────────────────────
@@ -65,6 +67,7 @@ export const useMasteryStore = create<MasteryState & MasteryActions>()(
       scores: {},
       learningScores: {},
       epoch: 0,
+      guestSessionId: null,
       hasHydrated: false,
       dirtyVersions: new Map(),
       dirtyUnlockIds: new Set(),
@@ -214,6 +217,10 @@ export const useMasteryStore = create<MasteryState & MasteryActions>()(
       clearAllDirty: (): void => {
         set({ dirtyVersions: new Map(), dirtyUnlockIds: new Set() })
       },
+
+      setGuestSessionId: (id: string | null): void => {
+        set({ guestSessionId: id })
+      },
     }),
     {
       name: 'langtap-mastery',
@@ -237,6 +244,7 @@ export const useMasteryStore = create<MasteryState & MasteryActions>()(
         scores: state.scores,
         learningScores: state.learningScores,
         epoch: state.epoch,
+        guestSessionId: state.guestSessionId,
       }),
       onRehydrateStorage: () => {
         return (_state, error): void => {
@@ -253,6 +261,7 @@ registerScopedStore(useMasteryStore, {
   scores: {},
   learningScores: {},
   epoch: 0,
+  guestSessionId: null,
   dirtyVersions: new Map(),
   dirtyUnlockIds: new Set(),
 })

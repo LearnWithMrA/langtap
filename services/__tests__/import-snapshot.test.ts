@@ -7,7 +7,7 @@
 // ─────────────────────────────────────────────
 
 import { describe, it, expect } from 'vitest'
-import { buildImportPayload } from '../import-snapshot'
+import { buildImportPayload, extractGuestSessionId } from '../import-snapshot'
 
 // ── Helpers ───────────────────────────────────
 
@@ -149,5 +149,39 @@ describe('buildImportPayload', () => {
     const payload = buildImportPayload(keys)
 
     expect(payload.manual_unlocks).toEqual([])
+  })
+})
+
+describe('extractGuestSessionId', () => {
+  it('extracts guestSessionId from mastery snapshot', () => {
+    const keys = {
+      'langtap-mastery': wrap({
+        scores: {},
+        learningScores: {},
+        guestSessionId: 'abc-123',
+      }),
+    }
+
+    expect(extractGuestSessionId(keys)).toBe('abc-123')
+  })
+
+  it('returns null when guestSessionId is missing', () => {
+    const keys = {
+      'langtap-mastery': wrap({ scores: {}, learningScores: {} }),
+    }
+
+    expect(extractGuestSessionId(keys)).toBeNull()
+  })
+
+  it('returns null when mastery key is missing', () => {
+    expect(extractGuestSessionId({})).toBeNull()
+  })
+
+  it('returns null for non-string guestSessionId', () => {
+    const keys = {
+      'langtap-mastery': wrap({ scores: {}, guestSessionId: 42 }),
+    }
+
+    expect(extractGuestSessionId(keys)).toBeNull()
   })
 })

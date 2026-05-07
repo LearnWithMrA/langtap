@@ -30,6 +30,39 @@ Format per entry:
 
 ---
 
+## 2026-05-07 - Session 98d
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Codex gate: Phase 3 review fixes (Plan 5)
+**Status:** Done
+
+### Changes made
+- `stores/mastery.store.ts`: Added `guestSessionId: string | null` to state, partialize, and default. Embedded in the persisted snapshot so stale data from a previous session cannot match a new session marker.
+- `hooks/useGuestUsage.ts`: Writes guest session marker into mastery store via `setGuestSessionId()` instead of a separate localStorage key. Marker is now embedded in the data snapshot.
+- `stores/scoped-storage.ts`: Removed separate `langtap-guest-snapshot-marker` helpers. Added `langtap-onboarding` to `GAME_STORE_NAMES` so guest key helpers include kana manual unlocks.
+- `services/import-snapshot.ts`: Added `extractGuestSessionId()` to read the embedded marker from raw localStorage data.
+- `components/performance/auth-initializer.tsx`: (Fix 1) Reads marker from snapshot via `extractGuestSessionId()` instead of separate localStorage key. (Fix 2) On transient failure, stays on guest keys instead of moving to unreadable pending keys. (Fix 6) After guest import/skip, continues to legacy check via `checkLegacyAndComplete()` instead of immediately setting migrationPhaseComplete.
+- `components/performance/store-hydrator.tsx`: (Fix 3) Checks `pendingGuestImport` BEFORE `migrationPhaseComplete` so practice is unblocked during pending state.
+- `hooks/useSyncCheckpoint.ts`: (Fix 4) Gates `flushDirty` on `pendingGuestImport` to prevent syncing quarantined guest data to the server.
+- `services/__tests__/import-snapshot.test.ts`: 4 new tests for `extractGuestSessionId` (present, missing, no key, non-string).
+
+### Tests
+- `services/__tests__/import-snapshot.test.ts`: 13 tests, all pass
+- Full suite: 1010 tests pass, 0 failures
+
+### Next task
+Phase 4: Connect Profile and Settings to Supabase
+
+### Notes
+- Fix 1 (dual marker): The `guestSessionId` is written to the mastery store when the guest session first starts. It's persisted inside `langtap-mastery-guest`. A stale snapshot from a previous user retains the old marker, so a new session marker in sessionStorage won't match.
+- Fix 2 (pending quarantine): Stores stay on guest keys via `setStorageUserId(null)`. No `moveToPendingKeys()` call. The pending flag (`langtap-pending-import-{userId}`) is owner-tagged for user-specific retry.
+- Fix 3 (practice unblocked): StoreHydrator sets `isServerHydrated = true` on pending path, so PracticeClient renders.
+- Fix 4 (sync disabled): `useSyncCheckpoint.flushDirty()` returns early when `pendingGuestImport` is true.
+- Fix 5 (onboarding store): `GAME_STORE_NAMES` now includes `langtap-onboarding`, so `readGuestKeys()`/`deleteGuestKeys()` cover kana manual unlocks.
+- Fix 6 (sequential prompts): Guest import/skip handlers call `checkLegacyAndComplete(profile)` which checks for legacy keys before setting migrationPhaseComplete.
+
+---
+
 ## 2026-05-07 - Session 98c
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership

@@ -22,11 +22,8 @@ import {
   incrementGuestUsage,
 } from '@/services/guest-usage.service'
 import { GUEST_TRIAL_DISTANCE_CAP } from '@/engine/constants'
-import {
-  getGuestSessionMarker,
-  setGuestSessionMarker,
-  setGuestSnapshotMarker,
-} from '@/stores/scoped-storage'
+import { getGuestSessionMarker, setGuestSessionMarker } from '@/stores/scoped-storage'
+import { useMasteryStore } from '@/stores/mastery.store'
 
 // ── Types ─────────────────────────────────────
 
@@ -58,11 +55,14 @@ export function useGuestUsage(): UseGuestUsageReturn {
     async function init(): Promise<void> {
       const sessionResult = await ensureGuestSession()
 
-      // Set dual session markers for guest-to-account auto-import
+      // Set dual session markers for guest-to-account auto-import.
+      // sessionStorage marker is volatile (cleared on tab close).
+      // Mastery store marker is embedded in the snapshot, so a stale
+      // snapshot from a previous session won't match a new marker.
       if (sessionResult.ok && !getGuestSessionMarker()) {
         const markerId = crypto.randomUUID()
         setGuestSessionMarker(markerId)
-        setGuestSnapshotMarker(markerId)
+        useMasteryStore.getState().setGuestSessionId(markerId)
       }
 
       if (!mounted || !sessionResult.ok) {

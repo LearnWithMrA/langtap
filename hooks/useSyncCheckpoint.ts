@@ -42,11 +42,12 @@ type SyncCheckpoint = {
 
 export function useSyncCheckpoint(): SyncCheckpoint {
   const { isAuthenticated, isGuest } = useAuth()
+  const pendingGuestImport = useUserStore((s) => s.pendingGuestImport)
   const flushInFlightRef = useRef(false)
   const flushPromiseRef = useRef<Promise<void> | null>(null)
 
   const flushDirty = useCallback(async (): Promise<void> => {
-    if (!isAuthenticated || isGuest) return
+    if (!isAuthenticated || isGuest || pendingGuestImport) return
     if (flushInFlightRef.current && flushPromiseRef.current) {
       await flushPromiseRef.current
       return
@@ -62,7 +63,7 @@ export function useSyncCheckpoint(): SyncCheckpoint {
       flushInFlightRef.current = false
       flushPromiseRef.current = null
     }
-  }, [isAuthenticated, isGuest])
+  }, [isAuthenticated, isGuest, pendingGuestImport])
 
   return {
     flushDirty,

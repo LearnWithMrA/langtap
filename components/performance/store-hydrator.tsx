@@ -95,14 +95,15 @@ export function StoreHydrator(): ReactNode {
       return
     }
 
-    // Wait for migration phase to complete before loading server data
-    if (!migrationPhaseComplete) return
-
-    // If pending guest import, skip server load entirely
+    // If pending guest import, skip server load and unblock practice.
+    // Stores remain on guest keys; checkpoint sync is disabled separately.
     if (pendingGuestImport) {
       useUserStore.getState().setServerHydrated(true)
       return
     }
+
+    // Wait for migration phase to complete before loading server data
+    if (!migrationPhaseComplete) return
 
     // Skip if same user already loaded
     if (lastUserIdRef.current === currentUserId) return
