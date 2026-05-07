@@ -16,7 +16,9 @@ import { useCallback, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { Modal } from '@/components/ui/modal'
-import { updateEmail, updatePassword } from '@/services/auth.service'
+import { updateEmail, updatePassword, deleteAccount } from '@/services/auth.service'
+import { clearAllUserLocalStorage } from '@/stores/scoped-storage'
+import { useUserStore } from '@/stores/user.store'
 import { HeaderCard } from '@/components/profile/header-card'
 import { MembershipCard } from '@/components/profile/membership-card'
 import { AccountSettings } from '@/components/profile/account-settings'
@@ -31,6 +33,9 @@ export function ProfileClient(): ReactNode {
   const { user, profile, isGuest } = useAuth()
   const [activeModal, setActiveModal] = useState<ModalType>(null)
   const [deleteInput, setDeleteInput] = useState('')
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [newEmail, setNewEmail] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -39,19 +44,45 @@ export function ProfileClient(): ReactNode {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const closeModal = useCallback((): void => {
+    if (isDeleting) return
     setActiveModal(null)
     setDeleteInput('')
+    setDeletePassword('')
+    setDeleteError(null)
     setNewEmail('')
     setNewPassword('')
     setConfirmPassword('')
     setModalError(null)
     setModalSuccess(null)
     setIsSubmitting(false)
-  }, [])
+  }, [isDeleting])
 
   const username = profile?.username ?? 'Guest'
   const deleteConfirmPhrase = `delete-${username}`
   const canConfirmDelete = deleteInput === deleteConfirmPhrase
+
+  const hasEmailIdentity = true
+
+  const handleDeleteAccount = useCallback(async (): Promise<void> => {
+    if (!canConfirmDelete || isDeleting) return
+
+    setIsDeleting(true)
+    setDeleteError(null)
+
+    const result = await deleteAccount(
+      deleteInput,
+      hasEmailIdentity ? deletePassword || undefined : undefined,
+    )
+
+    if (result.ok) {
+      if (user?.id) clearAllUserLocalStorage(user.id)
+      useUserStore.getState().clear()
+      window.location.href = '/'
+    } else {
+      setDeleteError(result.error ?? 'Failed to delete account.')
+      setIsDeleting(false)
+    }
+  }, [canConfirmDelete, isDeleting, deleteInput, deletePassword, hasEmailIdentity, user?.id])
 
   const handleEmailChange = useCallback(async (): Promise<void> => {
     setModalError(null)
@@ -235,7 +266,7 @@ export function ProfileClient(): ReactNode {
         ]}
       />
 
-      {/* Delete account confirmation dialog (Plan 10 wires this to the server) */}
+      {/* Delete account confirmation dialog */}
       {activeModal === 'delete' && (
         <div
           role="presentation"
@@ -269,22 +300,38 @@ export function ProfileClient(): ReactNode {
                 spellCheck={false}
                 autoFocus
               />
+              {hasEmailIdentity && (
+                <div>
+                  <label className="text-xs text-warm-400 block mb-1" htmlFor="delete-password">
+                    Confirm your password
+                  </label>
+                  <input
+                    id="delete-password"
+                    type="password"
+                    value={deletePassword}
+                    onChange={(e): void => setDeletePassword(e.target.value)}
+                    className="w-full border border-border rounded-lg px-3 py-2 text-sm text-warm-800 bg-surface-raised focus:outline-none focus:ring-2 focus:ring-red-300"
+                  />
+                </div>
+              )}
+              {deleteError !== null && <p className="text-xs text-red-600">{deleteError}</p>}
             </div>
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={closeModal}
+                disabled={isDeleting}
                 className="flex-1 rounded-xl px-4 py-2 text-sm font-medium text-text-secondary hover:bg-warm-100 transition-colors duration-150 min-h-[44px]"
               >
                 Cancel
               </button>
               <button
                 type="button"
-                onClick={closeModal}
-                disabled={!canConfirmDelete}
+                onClick={handleDeleteAccount}
+                disabled={!canConfirmDelete || isDeleting}
                 className="flex-1 rounded-xl px-4 py-2 text-sm font-medium text-white bg-red-800 hover:bg-red-900 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 min-h-[44px]"
               >
-                Delete my account
+                {isDeleting ? 'Deleting...' : 'Delete my account'}
               </button>
             </div>
           </div>

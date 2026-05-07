@@ -30,6 +30,36 @@ Format per entry:
 
 ---
 
+## 2026-05-07 - Session 98g
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Build delete account flow (Phase 4, Plan 10) + Codex gate fixes (reset fence, modal lock, timestamp, JLPT sync, guest email, rollback) + flaky test fix
+**Status:** Done
+
+### Changes made
+- `app/api/auth/delete-account/route.ts`: New route handler. CSRF origin/referer check (403). Server-side auth via getUser (401). Typed confirmation validation (`delete-{username}`). Password re-auth for email-identity users via signInWithPassword. Admin client (service role key, scoped to handler) calls deleteUser. Cascade FKs handle all table cleanup. Clears all sb-* cookies with explicit `path: '/'`.
+- `services/auth.service.ts`: Added `deleteAccount(confirmation, password?)` client function. Calls route handler via fetch POST, returns typed error.
+- `components/profile/profile-client.tsx`: Delete dialog wired to `deleteAccount()`. Password field shown for email users. Error display. Loading state with disabled buttons. Post-deletion: clears all user localStorage, clears Zustand stores, redirects to `/`.
+- `components/profile/reset-progress.tsx`: (Codex fix) Awaits `flushDirty()` before reset RPC to fence in-flight checkpoints. Added `isResetting` re-entry guard. Wrapped in try/catch for thrown exceptions.
+- `components/ui/modal.tsx`: (Codex fix) `onConfirm` type widened to `() => void | Promise<void>`. Detects async returns, sets `isConfirming` state, disables confirm button until settled. Prevents double-submit on all modal actions.
+- `components/profile/profile-helpers.ts`: (Codex fix) Removed `+ 'T00:00:00'` suffix from date parsing. Now handles both date-only and full ISO timestamps from Supabase. Added `isNaN` guards.
+- `components/profile/preferences-card.tsx`: (Codex fix) Removed `useState` snapshot of jlptLevel, now derived from `profile?.jlptLevel`. Rollbacks read fresh profile from `useUserStore.getState()`.
+- `components/profile/account-settings.tsx`: (Codex fix) Email row hidden for guests. Distance unit rollback reads fresh profile from store.
+- `data/words/__tests__/word-bank.test.ts`: N1 denied-bracket test timeout increased to 15s to prevent flaky failures under parallel load.
+
+### Tests
+- Full suite: 1010 tests pass, 0 failures (N1 bracket test no longer flakes)
+
+### Next task
+Google Sign-In (Phase 5, Plan 7) + Apple Sign-In (Plan 8)
+
+### Notes
+- Delete account uses the service role key server-side only. The admin client is created inside the route handler, never at module level.
+- `hasEmailIdentity` is currently hardcoded to `true` in profile-client. When OAuth providers are added (Plans 7+8), this will check `user.identities` to detect OAuth-only users who skip password re-auth.
+- Cascade FK cleanup covers all 11 user-owned tables via `ON DELETE CASCADE` on auth.users.
+
+---
+
 ## 2026-05-07 - Session 98f
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership

@@ -335,3 +335,23 @@ export async function updatePassword(
 
   return { ok: true }
 }
+
+export async function deleteAccount(
+  confirmation: string,
+  password?: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const response = await fetch('/api/auth/delete-account', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ confirmation, password }),
+  })
+
+  if (response.ok) {
+    return { ok: true }
+  }
+
+  const data = (await response.json().catch(() => null)) as Record<string, unknown> | null
+  const error = typeof data?.error === 'string' ? data.error : 'Failed to delete account.'
+
+  return { ok: false, error }
+}
