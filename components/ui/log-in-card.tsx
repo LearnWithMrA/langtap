@@ -15,12 +15,7 @@ import { useRouter } from 'next/navigation'
 import { LogoFull } from '@/components/ui/logo-full'
 import { Input } from '@/components/ui/input'
 import { KeyButton } from '@/components/ui/key-button'
-import {
-  signIn,
-  sendPasswordReset,
-  signInWithGoogle,
-  signInWithApple,
-} from '@/services/auth.service'
+import { signIn, sendPasswordReset } from '@/services/auth.service'
 import { loadProfile } from '@/services/profile.service'
 
 // -- Types ----------------------------------------------------
@@ -43,7 +38,6 @@ export function LogInCard({ onClose, onSwitchToSignUp, initialError }: LogInCard
   const [error, setError] = useState(initialError ?? '')
   const [loading, setLoading] = useState(false)
   const [resetSent, setResetSent] = useState(false)
-  const [oauthLoading, setOauthLoading] = useState<'google' | 'apple' | null>(null)
 
   async function handleLogIn(): Promise<void> {
     setError('')
@@ -258,51 +252,27 @@ export function LogInCard({ onClose, onSwitchToSignUp, initialError }: LogInCard
           <span className="text-sm sm:text-base font-medium text-text-primary">Email</span>
         </button>
 
-        <button
-          type="button"
-          disabled={oauthLoading !== null}
-          onClick={async (): Promise<void> => {
-            setOauthLoading('google')
-            setError('')
-            const result = await signInWithGoogle()
-            if (!result.ok) {
-              setError(result.error ?? 'Google sign-in failed.')
-              setOauthLoading(null)
-            }
-          }}
-          className="flex flex-col items-center gap-2 sm:gap-3 rounded-xl border border-border bg-white p-4 sm:p-6 hover:border-navy-deep hover:shadow-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          aria-label="Log in with Google"
+        <div
+          className="flex flex-col items-center gap-2 sm:gap-3 rounded-xl border border-border bg-white p-4 sm:p-6 opacity-40 cursor-not-allowed"
+          aria-label="Log in with Google (coming soon)"
         >
           <div className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-warm-100">
             <GoogleIcon />
           </div>
-          <span className="text-sm sm:text-base font-medium text-text-primary">
-            {oauthLoading === 'google' ? '...' : 'Google'}
-          </span>
-        </button>
+          <span className="text-sm sm:text-base font-medium text-text-secondary">Google</span>
+          <span className="text-[10px] text-warm-400">Coming soon</span>
+        </div>
 
-        <button
-          type="button"
-          disabled={oauthLoading !== null}
-          onClick={async (): Promise<void> => {
-            setOauthLoading('apple')
-            setError('')
-            const result = await signInWithApple()
-            if (!result.ok) {
-              setError(result.error ?? 'Apple sign-in failed.')
-              setOauthLoading(null)
-            }
-          }}
-          className="flex flex-col items-center gap-2 sm:gap-3 rounded-xl border border-border bg-white p-4 sm:p-6 hover:border-navy-deep hover:shadow-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          aria-label="Log in with Apple"
+        <div
+          className="flex flex-col items-center gap-2 sm:gap-3 rounded-xl border border-border bg-white p-4 sm:p-6 opacity-40 cursor-not-allowed"
+          aria-label="Log in with Apple (coming soon)"
         >
           <div className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-warm-100">
             <AppleIcon />
           </div>
-          <span className="text-sm sm:text-base font-medium text-text-primary">
-            {oauthLoading === 'apple' ? '...' : 'Apple'}
-          </span>
-        </button>
+          <span className="text-sm sm:text-base font-medium text-text-secondary">Apple</span>
+          <span className="text-[10px] text-warm-400">Coming soon</span>
+        </div>
       </div>
 
       <p className="text-base text-text-secondary text-center">

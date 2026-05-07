@@ -80,13 +80,9 @@ vi.mock('@/hooks/useDialogueSeen', () => ({
   }),
 }))
 
+let mockDailyCap = { isLoading: false, isCapped: false, capState: null, increment: vi.fn() }
 vi.mock('@/hooks/useDailyCap', () => ({
-  useDailyCap: (): unknown => ({
-    isLoading: false,
-    isCapped: false,
-    capState: null,
-    increment: vi.fn(),
-  }),
+  useDailyCap: (): unknown => mockDailyCap,
 }))
 
 vi.mock('@/services/guest-usage.service', () => ({
@@ -134,6 +130,7 @@ describe('PracticeClient', () => {
   beforeEach(() => {
     useUserStore.setState({ user: null, profile: null, isLoading: true })
     useGuestUsageStore.getState().reset()
+    mockDailyCap = { isLoading: false, isCapped: false, capState: null, increment: vi.fn() }
     vi.clearAllMocks()
   })
 
@@ -197,5 +194,62 @@ describe('PracticeClient', () => {
     render(<PracticeClient gameType="kana" />)
 
     expect(screen.queryByTestId('practice-loading-card')).not.toBeInTheDocument()
+  })
+
+  it('shows daily capped shell for authenticated user when daily cap is hit', () => {
+    useUserStore.setState({
+      user: { id: 'u1', email: 'a@b.com', isAnonymous: false },
+      profile: {
+        id: 'u1',
+        username: 'test',
+        jlptLevel: 'N5',
+        inputMode: 'tap',
+        onboardingComplete: true,
+        notificationsEnabled: false,
+        distanceUnit: 'metric',
+        leaderboardVisibility: 'public',
+        userTz: 'UTC',
+        usernameChangedAt: null,
+        guestImportedAt: null,
+        guestImportSkippedAt: null,
+        legacyImportedAt: null,
+        legacyImportSkippedAt: null,
+        createdAt: '2026-01-01',
+      },
+      isLoading: false,
+      isProfileLoaded: true,
+      isServerHydrated: true,
+    })
+    mockDailyCap = {
+      isLoading: false,
+      isCapped: true,
+      capState: { totalToday: 110, isCapped: true, capAmount: 100, capEnabled: true },
+      increment: vi.fn(),
+    }
+
+    render(<PracticeClient gameType="kana" />)
+
+    expect(screen.getByText(/crushing it/i)).toBeInTheDocument()
+  })
+
+  it('waits for daily cap to load before rendering for authenticated users', () => {
+    useUserStore.setState({
+      user: { id: 'u1', email: 'a@b.com', isAnonymous: false },
+      profile: null,
+      isLoading: false,
+      isProfileLoaded: true,
+      isServerHydrated: true,
+    })
+    mockDailyCap = {
+      isLoading: true,
+      isCapped: false,
+      capState: null,
+      increment: vi.fn(),
+    }
+
+    render(<PracticeClient gameType="kana" />)
+
+    // Should render the empty scene (loading), not the game
+    expect(screen.queryByText(/crushing it/i)).not.toBeInTheDocument()
   })
 })

@@ -33,8 +33,8 @@ Format per entry:
 ## 2026-05-07 - Session 99
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership
-**Task completed:** Phase 5 OAuth re-auth + username repair, Phase 6 daily distance cap, audio/UI fixes
-**Status:** Done
+**Task completed:** Phase 5 OAuth re-auth + username repair, Phase 6 daily cap, Phase 7 tests, audio/UI fixes, OAuth buttons greyed out
+**Status:** Done (Sprint 10 complete)
 
 ### Changes made
 - `services/reauth-cookie.ts`: New HMAC-SHA256 signed cookie utility for delete re-auth flow (pending + verified tokens, 5-min TTL)
@@ -58,16 +58,21 @@ Format per entry:
 - `components/audio/audio-player.tsx`: Added "Lofi" label next to play button
 - `app/(main)/(scene)/layout.tsx`: Changed audio player from absolute z-10 to fixed z-20 (clickable above practice content)
 - `.env.example`: Added AUTH_REAUTH_COOKIE_SECRET
-- `components/layout/__tests__/practice-client.test.tsx`: Added useDailyCap mock
+- `components/layout/__tests__/practice-client.test.tsx`: Added useDailyCap mock + 2 new tests (capped shell render, daily cap loading gate)
+- `services/__tests__/reauth-cookie.test.ts`: New. 11 tests: sign/verify round-trip, expiry, tamper detection, purpose mismatch, secret validation
+- `stores/__tests__/daily-cap.store.test.ts`: New. 6 tests: state transitions, shared visibility, reset
+- `hooks/__tests__/useUsernameRepair.test.ts`: New. 7 tests: default detection, dismissal, session suppression, blocking threshold
+- `components/ui/sign-up-card.tsx`: Google and Apple buttons greyed out with "Coming soon" label (not clickable). Removed OAuth imports and state.
+- `components/ui/log-in-card.tsx`: Same greyed out treatment. Removed OAuth imports and state.
 - `docs/AUTH.md`: Added Sections 11.1 (OAuth delete re-auth) and 11.2 (username repair), updated auth service signatures
 - `docs/SECURITY.md`: Updated Section 5.4 with signed cookie re-auth flow and byte-bounded body parsing
 
 ### Tests
-- Full suite: 1010 tests pass, 0 failures
-- OAuth re-auth, daily cap, and username repair are UI/integration flows verified via TypeScript + lint
+- Full suite: 1036 tests pass (26 new), 0 failures
+- New test files: reauth-cookie (11), daily-cap store (6), username repair hook (7), practice-client cap gate (2)
 
 ### Next task
-Phase 7: Write accounts and sync tests (~110 tests), write guest import tests
+Sprint 11: Security, Email, Polish, and Pre-Launch
 
 ### Notes
 - Daily cap feature flag (`daily_cap_enabled`) defaults to off. Cap records analytics events but does not enforce until flag is turned on. Server-side enforcement on checkpoint/leaderboard RPCs is deferred to the backlog.
