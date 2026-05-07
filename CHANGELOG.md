@@ -30,6 +30,36 @@ Format per entry:
 
 ---
 
+## 2026-05-07 - Session 98e
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Connect Profile and Settings to Supabase (Phase 4, Plan 6) + Build username change UI
+**Status:** Done
+
+### Changes made
+- `types/user.types.ts`: Added import tracking columns (guestImportedAt, guestImportSkippedAt, legacyImportedAt, legacyImportSkippedAt) to UserProfile. (Done in Plan 5, carried forward.)
+- `services/profile.service.ts`: Added import columns to SELECT and mapping. Added `changeUsername()` function wrapping the `change_username` RPC with typed error codes (cooldown_active, invalid_format, username_taken, unauthorized).
+- `services/auth.service.ts`: Added `updateEmail(newEmail)` and `updatePassword(newPassword)`. Extended `mapAuthError` context union for the new operations.
+- `components/profile/profile-client.tsx`: Removed fixture system and dev fixture selector. Wired to `useAuth()` for real data. Email modal wired to `updateEmail()` with confirmation message. Password modal wired to `updatePassword()` with validation (match check). Sign out submits form POST to `/api/auth/sign-out`. Delete button hidden for guests. Delete account dialog preserved as placeholder (Plan 10).
+- `components/profile/header-card.tsx`: Props changed from `ProfileFixture` to `UserProfile | null` + `isGuest` boolean. Tier badge hardcoded to "Free" (Phase 1). Sign out button hidden for guests.
+- `components/profile/account-settings.tsx`: Props changed from `ProfileFixture` to reading directly from `useAuth()` and `useUserStore()`. Username edit wired to `changeUsername()` RPC with error display. Distance unit toggle wired to `updateProfile()` with optimistic update and rollback. Email comes from `user.email`. Password row hidden for guests.
+- `components/profile/preferences-card.tsx`: JLPT level change now persists to Supabase via `updateProfile()` with optimistic update and rollback on failure.
+
+### Tests
+- Full suite: 1010 tests pass, 0 failures
+- Profile wiring is UI work; verified via TypeScript compilation and lint
+
+### Next task
+Build reset progress flow (Phase 4)
+
+### Notes
+- Schema drift was a non-issue: database uses `jlpt_level`, maps correctly to `jlptLevel`.
+- Timezone auto-detect and profile repair (default username prompt) deferred to follow-up tasks.
+- Delete account remains a non-functional placeholder (Plan 10).
+- GuestBanner import in profile-client removed since guest state is now derived from useAuth().
+
+---
+
 ## 2026-05-07 - Session 98d
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership

@@ -1,29 +1,22 @@
 // ─────────────────────────────────────────────
 // File: components/profile/profile-client.tsx
-// Purpose: Client component for the Profile screen visual shell.
-//          Orchestrates header card, membership card, account settings,
-//          support links, and danger zone. All data is from mock
-//          fixtures. No Supabase calls. No real auth. Modals open
-//          but submit is non-functional. Username inline edit works
-//          in local state only.
-// Depends on: components/layout/app-top-bar.tsx,
-//             components/ui/modal.tsx,
-//             components/profile/guest-banner.tsx,
-//             components/profile/header-card.tsx,
-//             components/profile/membership-card.tsx,
-//             components/profile/account-settings.tsx,
-//             components/layout/landing-footer.tsx,
-//             samples/profile-fixtures.ts
+// Purpose: Client component for the Profile screen. Wired to real
+//          Supabase data via useAuth and useUserStore. Email and
+//          password change modals call auth.service. Sign out calls
+//          the sign-out route handler. Delete account is a placeholder
+//          (Plan 10).
+// Depends on: hooks/useAuth.ts, stores/user.store.ts,
+//             services/auth.service.ts, components/profile/*,
+//             components/ui/modal.tsx
 // ─────────────────────────────────────────────
 
 'use client'
 
 import { useCallback, useState } from 'react'
 import type { ReactNode } from 'react'
+import { useAuth } from '@/hooks/useAuth'
 import { Modal } from '@/components/ui/modal'
-import type { ProfileFixtureKey } from '@/fixtures/samples/profile-fixtures'
-import { getProfileFixture } from '@/fixtures/samples/profile-fixtures'
-import { GuestBanner } from '@/components/profile/guest-banner'
+import { updateEmail, updatePassword } from '@/services/auth.service'
 import { HeaderCard } from '@/components/profile/header-card'
 import { MembershipCard } from '@/components/profile/membership-card'
 import { AccountSettings } from '@/components/profile/account-settings'
@@ -34,28 +27,77 @@ import { LandingFooter } from '@/components/layout/landing-footer'
 // ── Main component ────────────────────────────
 
 export function ProfileClient(): ReactNode {
-  const [fixtureKey, setFixtureKey] = useState<ProfileFixtureKey>('free_user')
-  const profile = getProfileFixture(fixtureKey)
+  const { user, profile, isGuest } = useAuth()
   const [activeModal, setActiveModal] = useState<ModalType>(null)
   const [deleteInput, setDeleteInput] = useState('')
+  const [newEmail, setNewEmail] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [modalError, setModalError] = useState<string | null>(null)
+  const [modalSuccess, setModalSuccess] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const closeModal = useCallback((): void => {
     setActiveModal(null)
     setDeleteInput('')
+    setNewEmail('')
+    setNewPassword('')
+    setConfirmPassword('')
+    setModalError(null)
+    setModalSuccess(null)
+    setIsSubmitting(false)
   }, [])
 
-  const deleteConfirmPhrase = `delete-${profile.username}`
+  const username = profile?.username ?? 'Guest'
+  const deleteConfirmPhrase = `delete-${username}`
   const canConfirmDelete = deleteInput === deleteConfirmPhrase
+
+  const handleEmailChange = useCallback(async (): Promise<void> => {
+    setModalError(null)
+    setIsSubmitting(true)
+    const result = await updateEmail(newEmail)
+    setIsSubmitting(false)
+    if (result.ok) {
+      setModalSuccess('Check your new email for a confirmation link.')
+    } else {
+      setModalError(result.error ?? 'Failed to update email.')
+    }
+  }, [newEmail])
+
+  const handlePasswordChange = useCallback(async (): Promise<void> => {
+    if (newPassword !== confirmPassword) {
+      setModalError('Passwords do not match.')
+      return
+    }
+    setModalError(null)
+    setIsSubmitting(true)
+    const result = await updatePassword(newPassword)
+    setIsSubmitting(false)
+    if (result.ok) {
+      setModalSuccess('Password updated successfully.')
+    } else {
+      setModalError(result.error ?? 'Failed to update password.')
+    }
+  }, [newPassword, confirmPassword])
+
+  const handleSignOut = useCallback((): void => {
+    const form = document.createElement('form')
+    form.method = 'POST'
+    form.action = '/api/auth/sign-out'
+    document.body.appendChild(form)
+    form.submit()
+  }, [])
 
   return (
     <div className="min-h-svh bg-profile-bg flex flex-col">
       <main className="max-w-2xl mx-auto px-4 sm:px-8 pt-20 pb-16 flex-1 w-full">
         <div className="flex flex-col gap-6">
-          {/* Guest conversion banner */}
-          {profile.isGuest && <GuestBanner />}
-
           {/* Header card */}
-          <HeaderCard profile={profile} onSignOut={(): void => setActiveModal('signout')} />
+          <HeaderCard
+            profile={profile}
+            isGuest={isGuest}
+            onSignOut={(): void => setActiveModal('signout')}
+          />
 
           {/* Membership card */}
           <MembershipCard />
@@ -64,19 +106,21 @@ export function ProfileClient(): ReactNode {
           <PreferencesCard />
 
           {/* Account settings */}
-          <AccountSettings profile={profile} onOpenModal={setActiveModal} />
+          <AccountSettings onOpenModal={setActiveModal} />
 
           {/* Delete account */}
-          <div className="mt-3 mb-3 flex justify-center">
-            <button
-              type="button"
-              onClick={(): void => setActiveModal('delete')}
-              aria-label="Delete your account"
-              className="bg-red-800 text-white rounded-xl px-10 py-3 text-sm font-medium shadow-[0_4px_0_0_#6b1c1c] active:translate-y-[2px] active:shadow-none transition-all duration-75 min-h-[48px]"
-            >
-              Delete account
-            </button>
-          </div>
+          {!isGuest && (
+            <div className="mt-3 mb-3 flex justify-center">
+              <button
+                type="button"
+                onClick={(): void => setActiveModal('delete')}
+                aria-label="Delete your account"
+                className="bg-red-800 text-white rounded-xl px-10 py-3 text-sm font-medium shadow-[0_4px_0_0_#6b1c1c] active:translate-y-[2px] active:shadow-none transition-all duration-75 min-h-[48px]"
+              >
+                Delete account
+              </button>
+            </div>
+          )}
         </div>
       </main>
 
@@ -87,16 +131,18 @@ export function ProfileClient(): ReactNode {
       <Modal
         isOpen={activeModal === 'email'}
         onClose={closeModal}
-        onConfirm={closeModal}
+        onConfirm={modalSuccess ? closeModal : handleEmailChange}
         confirmClassName="!bg-profile-accent hover:!bg-profile-accent-dark"
         steps={[
           {
-            title: 'Change email',
-            body: (
+            title: modalSuccess ? 'Email updated' : 'Change email',
+            body: modalSuccess ? (
+              <p className="text-sm text-warm-600">{modalSuccess}</p>
+            ) : (
               <div className="flex flex-col gap-3">
                 <div>
                   <p className="text-xs text-warm-400 mb-1">Current email</p>
-                  <p className="text-sm text-warm-600">{profile.email ?? 'None'}</p>
+                  <p className="text-sm text-warm-600">{user?.email ?? 'None'}</p>
                 </div>
                 <div>
                   <label className="text-xs text-warm-400 block mb-1" htmlFor="new-email">
@@ -105,16 +151,19 @@ export function ProfileClient(): ReactNode {
                   <input
                     id="new-email"
                     type="email"
+                    value={newEmail}
+                    onChange={(e): void => setNewEmail(e.target.value)}
                     placeholder="you@example.com"
                     className="w-full border border-border rounded-lg px-3 py-2 text-sm text-warm-800 bg-surface-raised focus:outline-none focus:ring-2 focus:ring-profile-accent/50"
                   />
                 </div>
+                {modalError !== null && <p className="text-xs text-red-600">{modalError}</p>}
                 <p className="text-xs text-warm-400">
                   We will send a confirmation link to your new email.
                 </p>
               </div>
             ),
-            confirmLabel: 'Update email',
+            confirmLabel: modalSuccess ? 'Done' : isSubmitting ? 'Sending...' : 'Update email',
             cancelLabel: 'Cancel',
           },
         ]}
@@ -124,23 +173,15 @@ export function ProfileClient(): ReactNode {
       <Modal
         isOpen={activeModal === 'password'}
         onClose={closeModal}
-        onConfirm={closeModal}
+        onConfirm={modalSuccess ? closeModal : handlePasswordChange}
         confirmClassName="!bg-profile-accent hover:!bg-profile-accent-dark"
         steps={[
           {
-            title: 'Change password',
-            body: (
+            title: modalSuccess ? 'Password updated' : 'Change password',
+            body: modalSuccess ? (
+              <p className="text-sm text-warm-600">{modalSuccess}</p>
+            ) : (
               <div className="flex flex-col gap-3">
-                <div>
-                  <label className="text-xs text-warm-400 block mb-1" htmlFor="current-password">
-                    Current password
-                  </label>
-                  <input
-                    id="current-password"
-                    type="password"
-                    className="w-full border border-border rounded-lg px-3 py-2 text-sm text-warm-800 bg-surface-raised focus:outline-none focus:ring-2 focus:ring-profile-accent/50"
-                  />
-                </div>
                 <div>
                   <label className="text-xs text-warm-400 block mb-1" htmlFor="new-password">
                     New password
@@ -148,6 +189,8 @@ export function ProfileClient(): ReactNode {
                   <input
                     id="new-password"
                     type="password"
+                    value={newPassword}
+                    onChange={(e): void => setNewPassword(e.target.value)}
                     className="w-full border border-border rounded-lg px-3 py-2 text-sm text-warm-800 bg-surface-raised focus:outline-none focus:ring-2 focus:ring-profile-accent/50"
                   />
                 </div>
@@ -158,12 +201,15 @@ export function ProfileClient(): ReactNode {
                   <input
                     id="confirm-password"
                     type="password"
+                    value={confirmPassword}
+                    onChange={(e): void => setConfirmPassword(e.target.value)}
                     className="w-full border border-border rounded-lg px-3 py-2 text-sm text-warm-800 bg-surface-raised focus:outline-none focus:ring-2 focus:ring-profile-accent/50"
                   />
                 </div>
+                {modalError !== null && <p className="text-xs text-red-600">{modalError}</p>}
               </div>
             ),
-            confirmLabel: 'Update password',
+            confirmLabel: modalSuccess ? 'Done' : isSubmitting ? 'Saving...' : 'Update password',
             cancelLabel: 'Cancel',
           },
         ]}
@@ -173,7 +219,7 @@ export function ProfileClient(): ReactNode {
       <Modal
         isOpen={activeModal === 'signout'}
         onClose={closeModal}
-        onConfirm={closeModal}
+        onConfirm={handleSignOut}
         confirmClassName="!bg-profile-accent hover:!bg-profile-accent-dark"
         steps={[
           {
@@ -185,26 +231,7 @@ export function ProfileClient(): ReactNode {
         ]}
       />
 
-      {/* Fixture selector (dev only, pinned to bottom) */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-4 py-2">
-        <span className="text-xs text-white/70">Fixture:</span>
-        {(['free_user', 'guest', 'recently_changed'] as const).map((key) => (
-          <button
-            key={key}
-            type="button"
-            onClick={(): void => setFixtureKey(key)}
-            className={`text-xs px-2 py-1 rounded-lg transition-colors duration-150 ${
-              fixtureKey === key
-                ? 'bg-white/80 text-warm-700 font-medium'
-                : 'text-white/60 hover:bg-white/30'
-            }`}
-          >
-            {key.replace(/_/g, ' ')}
-          </button>
-        ))}
-      </div>
-
-      {/* Delete account confirmation dialog */}
+      {/* Delete account confirmation dialog (Plan 10 wires this to the server) */}
       {activeModal === 'delete' && (
         <div
           role="presentation"

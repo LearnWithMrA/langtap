@@ -95,3 +95,32 @@ export async function updateProfile(
 
   return { ok: true, data: undefined }
 }
+
+// ── Username change (via RPC) ────────────────
+
+export type UsernameChangeResult =
+  | { ok: true }
+  | { ok: false; errorCode: string; nextAllowedAt?: string }
+
+export async function changeUsername(newUsername: string): Promise<UsernameChangeResult> {
+  const supabase = createBrowserSupabaseClient()
+
+  const { data, error } = await supabase.rpc('change_username', {
+    p_new_username: newUsername,
+  })
+
+  if (error) {
+    return { ok: false, errorCode: 'network' }
+  }
+
+  const d = data as Record<string, unknown> | null
+  if (d && d['ok'] === true) {
+    return { ok: true }
+  }
+
+  const errorCode = typeof d?.['error_code'] === 'string' ? d['error_code'] : 'unknown'
+  const nextAllowedAt =
+    typeof d?.['next_allowed_at'] === 'string' ? d['next_allowed_at'] : undefined
+
+  return { ok: false, errorCode, nextAllowedAt }
+}

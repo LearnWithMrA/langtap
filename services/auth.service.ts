@@ -81,7 +81,10 @@ function validateEmail(email: string): ValidationResult {
 
 // Maps a Supabase AuthError to a plain English string.
 // Priority: error.code (stable enum) -> error.status (HTTP) -> error.message (fragile fallback).
-function mapAuthError(error: AuthError, context: 'signUp' | 'signIn' | 'passwordReset'): string {
+function mapAuthError(
+  error: AuthError,
+  context: 'signUp' | 'signIn' | 'passwordReset' | 'updateEmail' | 'updatePassword',
+): string {
   // code-based mapping (most stable - these are Supabase's documented error codes)
   if (error.code === 'user_already_exists' || error.code === 'email_exists') {
     return 'An account with this email already exists.'
@@ -291,6 +294,43 @@ export async function sendPasswordReset(email: string): Promise<{ ok: boolean; e
 
   if (error) {
     return { ok: false, error: mapAuthError(error, 'passwordReset') }
+  }
+
+  return { ok: true }
+}
+
+export async function updateEmail(newEmail: string): Promise<{ ok: boolean; error?: string }> {
+  const normalizedEmail = newEmail.trim().toLowerCase()
+
+  const validation = validateEmail(normalizedEmail)
+  if (!validation.valid) {
+    return { ok: false, error: validation.error }
+  }
+
+  const { error } = await createBrowserSupabaseClient().auth.updateUser({
+    email: normalizedEmail,
+  })
+
+  if (error) {
+    return { ok: false, error: mapAuthError(error, 'updateEmail') }
+  }
+
+  return { ok: true }
+}
+
+export async function updatePassword(
+  newPassword: string,
+): Promise<{ ok: boolean; error?: string }> {
+  if (newPassword.length < 8) {
+    return { ok: false, error: 'Password must be at least 8 characters.' }
+  }
+
+  const { error } = await createBrowserSupabaseClient().auth.updateUser({
+    password: newPassword,
+  })
+
+  if (error) {
+    return { ok: false, error: mapAuthError(error, 'updatePassword') }
   }
 
   return { ok: true }

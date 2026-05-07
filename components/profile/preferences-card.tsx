@@ -97,11 +97,23 @@ export function PreferencesCard(): ReactNode {
   }
 
   const confirmLevelChange = (): void => {
-    if (pendingLevel) {
-      setJlptLevel(pendingLevel)
+    if (!pendingLevel || !user || !profile) {
+      setPendingLevel(null)
+      return
     }
+
+    const previous = jlptLevel
+    setJlptLevel(pendingLevel)
+    setProfile({ ...profile, jlptLevel: pendingLevel })
     setPendingLevel(null)
     setJlptExpanded(false)
+
+    void updateProfile(user.id, { jlpt_level: pendingLevel }).then((result) => {
+      if (!result.ok) {
+        setJlptLevel(previous)
+        setProfile({ ...profile, jlptLevel: previous })
+      }
+    })
   }
 
   const cancelLevelChange = (): void => {
