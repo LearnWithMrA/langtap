@@ -30,10 +30,10 @@ type SyncPayload = {
 // ── Route handler ─────────────────────────────
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  // CSRF: Origin check
+  // CSRF: exact origin comparison (strip trailing slash for consistency)
   const origin = request.headers.get('origin')
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-  if (origin && siteUrl && !origin.startsWith(siteUrl)) {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')
+  if (origin && siteUrl && origin.replace(/\/$/, '') !== siteUrl) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 

@@ -30,6 +30,31 @@ Format per entry:
 
 ---
 
+## 2026-05-07 - Session 97m
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Codex gate: Phase 2 review fixes
+**Status:** Done
+
+### Changes made
+- `components/performance/store-hydrator.tsx`: Rewrote server load logic. Now uses kana unlock IDs from snapshot (was ignored). Uses `lastUserIdRef` keyed by user ID instead of one-shot `serverLoadAttempted` ref (re-runs on user change). Waits for `isLoading` to settle before deciding guest vs authenticated path. Marks local winners dirty after equal-epoch merge so they sync on next checkpoint. Bootstraps unlock store with server unlock IDs (epoch-aware: reset epoch uses server-only, equal epoch unions).
+- `hooks/useSyncCheckpoint.ts`: Fixed stale-epoch handler ordering: loads replacement data first, then replaces+clears. On load failure, still clears dirty and updates epoch to prevent infinite stale loops.
+- `hooks/useSettings.ts`: Changed from one-shot `syncedRef` to `lastSyncedUserIdRef` keyed by user ID. Re-syncs settings on user change.
+- `stores/settings.store.ts`: Registered with `registerScopedStore` so `resetStoresForAuthChange` clears settings on user switch.
+- `app/api/sync/route.ts`: Fixed CSRF origin check from `startsWith` to exact comparison with trailing-slash normalization.
+
+### Tests
+- Full suite: 984 passed, 0 failures
+- `npm run check`: clean
+
+### Next task
+Phase 3: Guest Conversion (safe guest progress import + migration flow)
+
+### Notes
+Phase 2 Codex gate cleared. Known gaps documented: (1) Manual unlock dirty marking not yet wired into dojo UI (Phase 4). (2) Reset UI not wired to reset RPCs (Phase 4). (3) `flushDirty` not yet called from game windows after prompt completion (will wire when integrating with existing leaderboard sync). (4) No chunking for oversized dirty payloads (unlikely in practice, 200-row cap is generous).
+
+---
+
 ## 2026-05-07 - Session 97l
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership

@@ -186,25 +186,29 @@ async function handleStaleEpoch(
   domain: 'mastery' | 'wordMastery',
   serverEpoch: number,
 ): Promise<void> {
+  // Load replacement data first, then replace+clear.
+  // On failure, keep old data but update epoch to prevent infinite stale loops.
   if (domain === 'mastery') {
-    useMasteryStore.getState().clearAllDirty()
     const result = await loadMasterySnapshot()
     if (result.ok) {
       useMasteryStore
         .getState()
         .replaceAll(result.data.scores, result.data.learningScores, result.data.epoch)
+      useMasteryStore.getState().clearAllDirty()
     } else {
       useMasteryStore.getState().setEpoch(serverEpoch)
+      useMasteryStore.getState().clearAllDirty()
     }
   } else {
-    useWordMasteryStore.getState().clearAllDirty()
     const result = await loadWordMasterySnapshot()
     if (result.ok) {
       useWordMasteryStore
         .getState()
         .replaceAll(result.data.scores, result.data.unlockIds, result.data.epoch)
+      useWordMasteryStore.getState().clearAllDirty()
     } else {
       useWordMasteryStore.getState().setEpoch(serverEpoch)
+      useWordMasteryStore.getState().clearAllDirty()
     }
   }
 

@@ -9,7 +9,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { InputMode, InputDirection, KotobaInput, AutoAdvance } from '@/types/settings.types'
-import { createScopedStorage } from '@/stores/scoped-storage'
+import { createScopedStorage, registerScopedStore } from '@/stores/scoped-storage'
 
 // ── Types ─────────────────────────────────────
 
@@ -109,3 +109,14 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
     },
   ),
 )
+
+registerScopedStore(useSettingsStore, {
+  inputMode: 'tap',
+  inputDirection: 'alternate',
+  kotobaInput: 'readings',
+  hints: true,
+  furigana: true,
+  wordAudio: true,
+  keyClicks: false,
+  autoAdvance: 'delayed',
+})

@@ -485,7 +485,7 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 | Wire load-on-start for signed-in users | **Medium** | **Done** | StoreHydrator loads server data via atomic RPCs with epoch-aware merge. `replaceAll` and `epoch` added to mastery + word-mastery stores. `isServerHydrated` gates PracticeClient. Guests skip server load. Session 97. |
 | Wire checkpoint sync for signed-in users | **Medium** | **Done** | Dirty version tracking in mastery + word-mastery stores. `useSyncCheckpoint` hook with epoch-aware flush, stale-epoch discard + reload. `SyncManager` component with pagehide beacon. `/api/sync` route with CSRF, Content-Type flexibility, server-side RPC calls. Session 97. |
 | Sync input mode from Supabase profile to settings store on login | **Small** | **Done** | `useSettingsSync` hook reads `input_mode` from profile and pushes to settings store on login. Mounted in StoreHydrator. Session 97. |
-| **Codex gate: Phase 2 review** | - | **Pending** | Review StoreHydrator epoch-aware merge, checkpoint sync hook, beacon endpoint, dirty versioning, and auth-change rehydrate flow. |
+| **Codex gate: Phase 2 review** | - | **Done** | Codex found: unlock IDs ignored in merge, auth-change rehydration unsafe, stale-epoch discard ordering wrong, local winners not marked dirty, CSRF origin check weak. All fixed. Session 97. |
 
 ### Phase 3: Guest Conversion
 
