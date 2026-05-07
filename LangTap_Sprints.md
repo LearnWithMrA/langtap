@@ -503,7 +503,7 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 | Build username change UI | **Small** | **Done** | Included in Plan 6. Inline edit with 30-day cooldown, RPC error codes, disabled state. Session 98. |
 | Build reset progress flow | **Small** | **Done** | ResetProgress component in profile screen. Non-optimistic: spinner during RPC, local state cleared only on success. Calls reset_all_mastery and reset_all_word_mastery RPCs. Confirmation modal. Updates epoch from response. Session 98. |
 | Build delete account flow | **Medium** | **Done** | Route handler with CSRF origin check, server-side getUser auth, password re-auth for email users, admin client deletion, sb-* cookie clearing. Client service function. Profile dialog wired with password field, error display, loading state, post-deletion localStorage cleanup and redirect. Session 98. |
-| **Codex gate: Phase 4 review** | - | **To Do** | Review profile wiring, settings sync, username/reset/delete flows, and CSRF/re-auth implementation. |
+| **Codex gate: Phase 4 review** | - | **Done** | Reviewed in Sessions 98-99. All findings addressed. |
 
 ### Phase 5: Auth Expansion
 
@@ -511,14 +511,16 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 |---|---|---|---|
 | Google Sign-In | **Medium** | **Done** | `signInWithGoogle()` via Supabase OAuth. `window.location.origin` for redirect. Tiles enabled in sign-up and log-in cards with loading state. Auth callback updated with onboarding check, OAuth error handling, profile retry. Session 98. |
 | Apple Sign-In | **Medium** | **Done** | `signInWithApple()` via Supabase OAuth. Same callback, same tile pattern. Apple-specific: Private Relay email stored as-is. Session 98. |
-| **Codex gate: Phase 5 review** | - | **To Do** | Review OAuth callback sanitization, redirect origin handling, account linking, and guest migration integration. |
+| OAuth delete re-auth | **Medium** | **Done** | Signed cookie flow: pending + verified HMAC-SHA256 tokens, dynamic provider route with 303 redirect, callback verifies user ID match. Profile delete dialog fetches requirements, renders provider-specific re-auth button. Session 99. |
+| OAuth username repair | **Small** | **Done** | Detects default `user_[uuid-prefix]` username. Soft prompt modal via `changeUsername` RPC. Dismissable initially, blocking after 3 dismissals. Mounted in main layout. Session 99. |
+| **Codex gate: Phase 5 review** | - | **Done** | 6 findings addressed: 303 redirect, dismiss persistence, narrowed callback scope, requirements fetch on URL callback, byte-bounded body parsing, Apple limitation documented. Session 99. |
 
 ### Phase 6: Membership
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Build free tier daily distance cap | **Medium** | **To Do** | Server-enforced via `daily_cap_events` table. Two-int advisory lock. Feature flag in `app_config`. Cap crossing allowed, next prompt blocked. |
-| **Codex gate: Phase 6 review** | - | **To Do** | Review daily cap RPC, advisory lock serialization, feature flag enforcement, cap_enforced tracking, and practice gating. |
+| Build free tier daily distance cap | **Medium** | **Done** | `daily_cap_events` table, `increment_daily_distance` and `get_daily_usage` RPCs with advisory lock + timezone validation + idempotent completion_id. Feature flag in `app_config` (defaults off). 100m/day free cap. Shared Zustand store for cap state. Prompt-level distance tracking covers character drills and word prompts. Server-side enforcement on checkpoint/leaderboard RPCs deferred (cap is client-gated + accounting-only while feature flag is off). `user_tz` added to UserProfile type and loadProfile service. Session 99. |
+| **Codex gate: Phase 6 review** | - | **Done** | 7 findings: shared cap state via Zustand store, prompt-level tracking (not leaderboard-tied), metre bound raised to 500, user_tz wired into profile, fail-open documented as acceptable with flag off, server-side enforcement documented as deferred. Session 99. |
 
 ### Phase 7: Tests
 
@@ -573,6 +575,9 @@ Ideas and improvements not tied to a phase. Pulled in when the time is right.
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
+| Configure Google OAuth provider in Supabase | **Small** | **To Do** | Google Cloud Console: create OAuth 2.0 Client ID, set redirect URI to `https://<project-ref>.supabase.co/auth/v1/callback`. Supabase dashboard: enable Google provider, paste Client ID + Secret. Code already built (Sprint 10 Session 98). |
+| Configure Apple Sign-In provider in Supabase | **Medium** | **To Do** | Apple Developer: register App ID, create Services ID, create private key. Supabase dashboard: enable Apple, paste Services ID + Team ID + Key ID + private key. Code already built (Sprint 10 Session 98). |
+| Server-side daily cap enforcement on checkpoint/leaderboard RPCs | **Medium** | **To Do** | Checkpoint and leaderboard RPCs currently accept writes without verifying a daily cap event. Add optional `p_completion_id` param to checkpoint/leaderboard RPCs. When `daily_cap_enabled` is true, verify an accepted `daily_cap_events` row exists for the completion_id before applying writes. |
 | Cross-reference JMDict JSON files against Jisho Excel word bank | **Small** | **To Do** | Five JSON files (N5-N1) sourced from JMDict via Waller. Each entry has jmdict_seq, kana, kanji, waller_definition. N1 JSON has 3,427 entries vs Excel's 3,444 (17 gap). Script should match on kana, output words unique to each source, and flag definition differences. Goal: confirm nothing is missing from the word bank and evaluate waller_definition as a cleaner alternative to the stripped Jisho definitions. JSON files stored at scripts/source/. |
 | Cross-reference JMDict JSON against Jisho Excel | **Small** | **To Do** | Write `scripts/compare-word-sources.ts`. Match on kana across both sources per JLPT level. Output: words only in Excel, words only in JSON, count totals. Useful for validating word bank completeness. Not blocking anything. |
 | Additional language support | **Epic** | **To Do** | Architecture should support this from Phase 1. Korean and Mandarin are the most likely additions. Break into tasks when scoping begins. |

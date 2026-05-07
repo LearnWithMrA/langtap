@@ -38,12 +38,14 @@ import { useKotobaTrialSession } from '@/hooks/useKotobaTrialSession'
 import { useDialogueSeen } from '@/hooks/useDialogueSeen'
 import { useAuth } from '@/hooks/useAuth'
 import { useGuestUsage } from '@/hooks/useGuestUsage'
+import { useDailyCap } from '@/hooks/useDailyCap'
 import { useStuckLoadingWarning } from '@/hooks/useStuckLoadingWarning'
 import { useSettingsStore } from '@/stores/settings.store'
 import { useAuthModalStore } from '@/stores/auth-modal.store'
 import { useUserStore } from '@/stores/user.store'
 import { useOnboardingStore } from '@/stores/onboarding.store'
 import { useGameplayStore } from '@/stores/gameplay.store'
+import { useSessionStore } from '@/stores/session.store'
 import { startLeaderboardSession, finalizeLeaderboardSession } from '@/services/leaderboard.service'
 import type { LeaderboardAttemptEntry, PendingSession } from '@/types/leaderboard.types'
 import { DIALOGUE_SCRIPTS } from '@/data/tutorial/dialogue-scripts'
@@ -167,6 +169,31 @@ function CappedPracticeShell(): ReactNode {
   )
 }
 
+// -- Daily capped shell (signed-in user hit daily limit) -----
+
+function DailyCappedShell(): ReactNode {
+  const frozen =
+    typeof window !== 'undefined' ? (localStorage.getItem(FROZEN_PROMPT_KEY) ?? 'あ') : 'あ'
+
+  return (
+    <PracticeScene>
+      <div className="opacity-50 pointer-events-none">
+        <div className="bg-[#faf5e4] shadow-[0_6px_0_0_#d4c9b0] rounded-2xl w-full max-w-md mx-auto p-6 md:p-8">
+          <div className="text-5xl md:text-6xl font-bold text-center py-6 select-none text-warm-400">
+            {frozen}
+          </div>
+          <div className="text-base text-warm-400 text-center min-h-6">&nbsp;</div>
+        </div>
+      </div>
+      <div className="mt-6 text-center px-4">
+        <p className="text-sm text-warm-600 font-medium">
+          {"You've been crushing it today! Come back tomorrow to keep going."}
+        </p>
+      </div>
+    </PracticeScene>
+  )
+}
+
 // -- Active practice (hooks mounted only when not capped) ---
 
 function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
@@ -272,8 +299,18 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
   const showKotobaBanner =
     gameType === 'kotoba' && hasSeenKotobaTrial && !hasSeenKotobaBanner && !activeDialogue
 
-  // ── Guest distance tracking (server-side) ───
+  // ── Distance cap tracking (server-side) ─────
   const { increment: incrementGuestDistance } = useGuestUsage()
+  const { increment: incrementDailyCap } = useDailyCap()
+  const completionIdRef = useRef(crypto.randomUUID())
+  const distanceBeforePromptRef = useRef(0)
+
+  // Reset completion tracking when prompt changes (covers words + character drills)
+  const currentPromptId = kanaSession.prompt?.word?.id ?? null
+  useEffect(() => {
+    completionIdRef.current = crypto.randomUUID()
+    distanceBeforePromptRef.current = useSessionStore.getState().distanceMetres
+  }, [currentPromptId])
 
   // Cache current prompt so the capped shell can show it frozen
   useEffect(() => {
@@ -352,8 +389,14 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
     incrementCorrect(mode)
     if (isGuest) {
       void incrementGuestDistance(gameType, 1)
+    } else {
+      const promptMetres =
+        useSessionStore.getState().distanceMetres - distanceBeforePromptRef.current
+      if (promptMetres > 0) {
+        void incrementDailyCap(promptMetres, completionIdRef.current)
+      }
     }
-  }, [incrementCorrect, mode, isGuest, incrementGuestDistance, gameType])
+  }, [incrementCorrect, mode, isGuest, incrementGuestDistance, incrementDailyCap, gameType])
 
   const sessionMapRef = useRef(new Map<string, PendingSession>())
 
@@ -538,14 +581,17 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
 export function PracticeClient({ gameType = 'kana' }: { gameType?: GameType }): ReactNode {
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const { isLoading: usageLoading, isOverCap } = useGuestUsage()
+  const { isLoading: dailyCapLoading, isCapped: isDailyCapped } = useDailyCap()
   const isProfileLoaded = useUserStore((s) => s.isProfileLoaded)
   const isServerHydrated = useUserStore((s) => s.isServerHydrated)
 
-  useStuckLoadingWarning({ authLoading, usageLoading }, 'PracticeClient')
+  useStuckLoadingWarning({ authLoading, usageLoading, dailyCapLoading }, 'PracticeClient')
 
   if (authLoading || usageLoading) return <PracticeScene>{null}</PracticeScene>
+  if (isAuthenticated && dailyCapLoading) return <PracticeScene>{null}</PracticeScene>
   if (isAuthenticated && !isProfileLoaded) return <PracticeScene>{null}</PracticeScene>
   if (isAuthenticated && !isServerHydrated) return <PracticeScene>{null}</PracticeScene>
+  if (isAuthenticated && isDailyCapped) return <DailyCappedShell />
   if (isAuthenticated) return <ActivePracticeClient gameType={gameType} />
   if (isOverCap) return <CappedPracticeShell />
   return <ActivePracticeClient gameType={gameType} />

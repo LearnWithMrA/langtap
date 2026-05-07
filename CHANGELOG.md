@@ -30,6 +30,53 @@ Format per entry:
 
 ---
 
+## 2026-05-07 - Session 99
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Phase 5 OAuth re-auth + username repair, Phase 6 daily distance cap, audio/UI fixes
+**Status:** Done
+
+### Changes made
+- `services/reauth-cookie.ts`: New HMAC-SHA256 signed cookie utility for delete re-auth flow (pending + verified tokens, 5-min TTL)
+- `app/api/auth/delete-account/requirements/route.ts`: New GET endpoint returning password vs OAuth re-auth method based on user identities
+- `app/api/auth/delete-account/reauth/[provider]/start/route.ts`: New dynamic POST route. Validates CSRF + auth + provider, sets signed pending cookie, 303 redirects to Supabase OAuth
+- `app/auth/callback/route.ts`: Detects pending reauth cookie + next marker, mints verified cookie, clears stale pending cookies on all non-reauth redirect paths
+- `app/api/auth/delete-account/route.ts`: OAuth-only users require verified reauth cookie instead of password. Byte-bounded body parsing via arrayBuffer() instead of Content-Length header
+- `services/auth.service.ts`: Added fetchDeleteRequirements() and DeleteRequirements type
+- `components/profile/profile-client.tsx`: Delete dialog fetches requirements on open. Password users: same flow. OAuth users: provider-specific re-auth form button. URL callback detection with requirements fetch. canConfirmDelete requires requirements loaded.
+- `hooks/useUsernameRepair.ts`: New hook detecting default user_[uuid-prefix] username. Dismissal tracking in localStorage with session-level suppression. Blocking after 3 dismissals.
+- `components/ui/username-repair-modal.tsx`: New soft prompt modal using changeUsername RPC
+- `app/(main)/layout.tsx`: Mounted UsernameRepairModal
+- `supabase/migrations/20260507120010_create_daily_cap.sql`: New daily_cap_events table, get_daily_usage and increment_daily_distance RPCs with advisory lock, timezone validation, idempotent completion_id, feature flag gating. 100m/day free cap.
+- `engine/constants.ts`: Added FREE_DAILY_DISTANCE_CAP = 100
+- `stores/daily-cap.store.ts`: New shared Zustand store for daily cap state (wrapper + active client see same state)
+- `hooks/useDailyCap.ts`: Loads usage via RPC, exposes isCapped and increment. Uses shared store.
+- `components/layout/practice-client.tsx`: Daily cap gate in PracticeClient wrapper. DailyCappedShell component. Prompt-level distance tracking via session store delta + completionId per prompt. Covers character drills and word prompts.
+- `types/user.types.ts`: Added userTz to UserProfile
+- `services/profile.service.ts`: Added user_tz to ProfileRow, mapRowToProfile, and loadProfile select
+- `hooks/useWordAudio.ts`: Fixed AudioContext resume() to await before starting playback
+- `components/audio/audio-player.tsx`: Added "Lofi" label next to play button
+- `app/(main)/(scene)/layout.tsx`: Changed audio player from absolute z-10 to fixed z-20 (clickable above practice content)
+- `.env.example`: Added AUTH_REAUTH_COOKIE_SECRET
+- `components/layout/__tests__/practice-client.test.tsx`: Added useDailyCap mock
+- `docs/AUTH.md`: Added Sections 11.1 (OAuth delete re-auth) and 11.2 (username repair), updated auth service signatures
+- `docs/SECURITY.md`: Updated Section 5.4 with signed cookie re-auth flow and byte-bounded body parsing
+
+### Tests
+- Full suite: 1010 tests pass, 0 failures
+- OAuth re-auth, daily cap, and username repair are UI/integration flows verified via TypeScript + lint
+
+### Next task
+Phase 7: Write accounts and sync tests (~110 tests), write guest import tests
+
+### Notes
+- Daily cap feature flag (`daily_cap_enabled`) defaults to off. Cap records analytics events but does not enforce until flag is turned on. Server-side enforcement on checkpoint/leaderboard RPCs is deferred to the backlog.
+- Apple OAuth re-auth has no equivalent of Google's `prompt=login`. Apple may auto-complete without a fresh challenge. Documented as accepted limitation.
+- Production Supabase requires manual configuration: Site URL must point to Vercel URL (not localhost), email confirmations should be disabled, and AUTH_REAUTH_COOKIE_SECRET must be added to Vercel env vars.
+- Word audio files exist for all words but AudioContext suspension was causing intermittent playback. Fixed by awaiting resume() before start().
+
+---
+
 ## 2026-05-07 - Session 98i
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership

@@ -67,11 +67,11 @@ export function useWordAudio(): {
       const path = getWordAudioPath(wordId)
       if (!path) return
 
-      void fetchAndDecode(path).then((buffer) => {
+      void fetchAndDecode(path).then(async (buffer) => {
         if (!buffer) return
         const audioCtx = getContext()
         if (audioCtx.state === 'suspended') {
-          void audioCtx.resume()
+          await audioCtx.resume()
         }
         const source = audioCtx.createBufferSource()
         source.buffer = buffer

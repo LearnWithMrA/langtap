@@ -80,6 +80,15 @@ vi.mock('@/hooks/useDialogueSeen', () => ({
   }),
 }))
 
+vi.mock('@/hooks/useDailyCap', () => ({
+  useDailyCap: (): unknown => ({
+    isLoading: false,
+    isCapped: false,
+    capState: null,
+    increment: vi.fn(),
+  }),
+}))
+
 vi.mock('@/services/guest-usage.service', () => ({
   ensureGuestSession: vi.fn().mockResolvedValue({ ok: true }),
   loadGuestUsage: vi.fn().mockResolvedValue({

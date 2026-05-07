@@ -2,16 +2,23 @@
 // File: app/api/auth/delete-account/route.ts
 // Purpose: POST handler for permanent account deletion. Verifies
 //          CSRF origin, authenticates via server client getUser(),
-//          requires typed confirmation, re-authenticates email
-//          users via password, then deletes via admin client.
-//          Cascade FKs handle all table cleanup. Clears all sb-*
-//          session cookies.
-// Depends on: services/supabase-server.ts, @supabase/supabase-js
+//          requires typed confirmation. Re-authenticates email users
+//          via password, or OAuth-only users via a signed reauth
+//          cookie (set by the /reauth/[provider]/start flow).
+//          Deletes via admin client. Cascade FKs handle table cleanup.
+//          Clears all sb-* session cookies and reauth cookies.
+// Depends on: services/supabase-server.ts, services/reauth-cookie.ts,
+//             @supabase/supabase-js
 // ─────────────────────────────────────────────
 
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerSupabaseClient } from '@/services/supabase-server'
 import { createClient } from '@supabase/supabase-js'
+import {
+  verifyVerifiedToken,
+  VERIFIED_COOKIE_NAME,
+  CLEAR_COOKIE_OPTIONS,
+} from '@/services/reauth-cookie'
 
 // ── Helpers ───────────────────────────────────
 
@@ -40,14 +47,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const contentLength = request.headers.get('content-length')
-  if (contentLength && parseInt(contentLength, 10) > MAX_BODY_BYTES) {
-    return NextResponse.json({ error: 'Request too large' }, { status: 413 })
+  // Byte-bounded body read: reject oversized payloads regardless of Content-Length header
+  let rawText: string
+  try {
+    const bytes = await request.arrayBuffer()
+    if (bytes.byteLength > MAX_BODY_BYTES) {
+      return NextResponse.json({ error: 'Request too large' }, { status: 413 })
+    }
+    rawText = new TextDecoder().decode(bytes)
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
   let body: { confirmation?: string; password?: string }
   try {
-    body = (await request.json()) as { confirmation?: string; password?: string }
+    body = JSON.parse(rawText) as { confirmation?: string; password?: string }
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
@@ -78,7 +92,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Confirmation does not match' }, { status: 400 })
   }
 
-  // Check if user has an email identity (needs password re-auth)
+  // Re-authentication: password for email users, signed cookie for OAuth-only
   const hasEmailIdentity = user.identities?.some((i) => i.provider === 'email') ?? false
 
   if (hasEmailIdentity) {
@@ -93,6 +107,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (signInError) {
       return NextResponse.json({ error: 'Incorrect password' }, { status: 401 })
+    }
+  } else {
+    // OAuth-only: require a valid verified reauth cookie
+    const verifiedToken = request.cookies.get(VERIFIED_COOKIE_NAME)?.value
+    if (!verifiedToken) {
+      return NextResponse.json(
+        { error: 'Re-authentication required. Please verify your identity first.' },
+        { status: 401 },
+      )
+    }
+
+    const verified = await verifyVerifiedToken(verifiedToken)
+    if (!verified || verified.userId !== user.id) {
+      return NextResponse.json(
+        { error: 'Re-authentication expired or invalid. Please try again.' },
+        { status: 401 },
+      )
     }
   }
 
@@ -109,13 +140,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Failed to delete account' }, { status: 500 })
   }
 
-  // Clear all sb-* session cookies
+  // Clear all session and reauth cookies
   const response = NextResponse.json({ ok: true })
   for (const cookie of request.cookies.getAll()) {
     if (cookie.name.startsWith('sb-')) {
       response.cookies.set(cookie.name, '', { path: '/', maxAge: 0 })
     }
   }
+  response.cookies.set(VERIFIED_COOKIE_NAME, '', CLEAR_COOKIE_OPTIONS)
 
   return response
 }

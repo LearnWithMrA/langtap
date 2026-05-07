@@ -423,10 +423,57 @@ async function signIn(
 async function getUser(): Promise<{ user: User | null }>
 
 async function sendPasswordReset(email: string): Promise<{ ok: boolean }>
+
+async function signInWithGoogle(): Promise<{ ok: boolean; error?: string }>
+async function signInWithApple(): Promise<{ ok: boolean; error?: string }>
+
+async function fetchDeleteRequirements(): Promise<{
+  ok: boolean; data?: DeleteRequirements; error?: string
+}>
+
+async function deleteAccount(
+  confirmation: string, password?: string
+): Promise<{ ok: boolean; error?: string }>
 ```
 
 Errors from Supabase are caught in the service and mapped to plain English
 strings before being returned. Raw Supabase error messages never reach the UI.
+
+---
+
+## 11.1 OAuth Delete Re-Authentication
+
+OAuth-only users (Google/Apple, no email identity) cannot provide a password
+to re-authenticate for account deletion. Instead, they re-authenticate via
+a signed cookie flow:
+
+1. Profile fetches `GET /api/auth/delete-account/requirements` to detect
+   password vs OAuth re-auth.
+2. OAuth users submit a form POST to
+   `/api/auth/delete-account/reauth/[provider]/start` (dynamic route).
+3. The start route validates CSRF, auth, and provider. Sets a signed
+   HttpOnly `lt-reauth-pending` cookie (HMAC-SHA256, 5-min TTL). Redirects
+   to Supabase OAuth with 303.
+4. The auth callback detects the pending cookie + `delete_reauth=1` marker
+   in the `next` param. Verifies the returned user ID matches the cookie.
+   Mints `lt-reauth-verified` cookie. Clears pending.
+5. The delete route requires the verified cookie for OAuth-only users
+   (instead of a password). Clears the cookie after deletion.
+
+The signing secret is `AUTH_REAUTH_COOKIE_SECRET` (server-only env var).
+
+---
+
+## 11.2 OAuth Username Repair
+
+OAuth users get a default username `user_[uuid-prefix]` from the database
+trigger. The `UsernameRepairModal` (mounted in the main layout) detects
+this pattern and prompts the user to choose a real username via the
+existing `change_username` RPC.
+
+- Dismissable for the first 3 shows (tracked in localStorage per user).
+- After 3 dismissals, the prompt becomes blocking.
+- Does not block the first OAuth callback or onboarding flow.
 
 ---
 

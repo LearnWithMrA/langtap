@@ -39,6 +39,7 @@ export type UserProfile = {
   notificationsEnabled: boolean
   distanceUnit: 'metric' | 'imperial'
   leaderboardVisibility: LeaderboardVisibility
+  userTz: string
   usernameChangedAt: string | null
   guestImportedAt: string | null
   guestImportSkippedAt: string | null

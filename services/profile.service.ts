@@ -23,6 +23,7 @@ type ProfileRow = {
   notifications_enabled: boolean
   distance_unit: string
   leaderboard_visibility: string
+  user_tz: string
   username_changed_at: string | null
   guest_imported_at: string | null
   guest_import_skipped_at: string | null
@@ -43,6 +44,7 @@ function mapRowToProfile(row: ProfileRow): UserProfile {
     notificationsEnabled: row.notifications_enabled,
     distanceUnit: row.distance_unit as UserProfile['distanceUnit'],
     leaderboardVisibility: row.leaderboard_visibility as UserProfile['leaderboardVisibility'],
+    userTz: row.user_tz,
     usernameChangedAt: row.username_changed_at,
     guestImportedAt: row.guest_imported_at,
     guestImportSkippedAt: row.guest_import_skipped_at,
@@ -60,7 +62,7 @@ export async function loadProfile(userId: string): Promise<ServiceResult<UserPro
   const { data, error } = await supabase
     .from('profiles')
     .select(
-      'id, username, jlpt_level, input_mode, onboarding_complete, notifications_enabled, distance_unit, leaderboard_visibility, username_changed_at, guest_imported_at, guest_import_skipped_at, legacy_imported_at, legacy_import_skipped_at, created_at',
+      'id, username, jlpt_level, input_mode, onboarding_complete, notifications_enabled, distance_unit, leaderboard_visibility, user_tz, username_changed_at, guest_imported_at, guest_import_skipped_at, legacy_imported_at, legacy_import_skipped_at, created_at',
     )
     .eq('id', userId)
     .single()

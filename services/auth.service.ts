@@ -356,6 +356,29 @@ export async function signInWithApple(): Promise<{ ok: boolean; error?: string }
   return { ok: true }
 }
 
+// ── Delete account ───────────────────────────
+
+export type DeleteRequirements =
+  | { method: 'password' }
+  | { method: 'oauth'; provider: 'google' | 'apple' }
+
+export async function fetchDeleteRequirements(): Promise<{
+  ok: boolean
+  data?: DeleteRequirements
+  error?: string
+}> {
+  try {
+    const response = await fetch('/api/auth/delete-account/requirements')
+    if (!response.ok) {
+      return { ok: false, error: 'Could not determine account type.' }
+    }
+    const data = (await response.json()) as DeleteRequirements
+    return { ok: true, data }
+  } catch {
+    return { ok: false, error: 'Could not reach the server.' }
+  }
+}
+
 export async function deleteAccount(
   confirmation: string,
   password?: string,

@@ -75,7 +75,8 @@ export function AudioPlayer(): ReactNode {
     'h-7 w-7 flex items-center justify-center rounded-full bg-white/50 text-warm-800 hover:text-sage-400 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-sage-300 cursor-pointer'
 
   return (
-    <div className="flex items-center gap-1 bg-white/40 backdrop-blur-sm rounded-lg px-1.5 py-1.5">
+    <div className="flex items-center gap-1.5 bg-white/40 backdrop-blur-sm rounded-lg px-2 py-1.5">
+      <span className="text-xs font-medium text-warm-600 select-none">Lofi</span>
       {isPlaying && (
         <button
           type="button"

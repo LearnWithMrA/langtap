@@ -23,6 +23,7 @@ import { AuthInitializer } from '@/components/performance/auth-initializer'
 import { AuthModalProvider } from '@/components/layout/auth-modal-provider'
 import { ScrollRestoration } from '@/components/performance/scroll-restoration'
 import { SyncManager } from '@/components/performance/sync-manager'
+import { UsernameRepairModal } from '@/components/ui/username-repair-modal'
 
 export default function MainLayout({ children }: { children: ReactNode }): ReactNode {
   return (
@@ -33,6 +34,7 @@ export default function MainLayout({ children }: { children: ReactNode }): React
       <SettingsDialog />
       <AuthModalProvider />
       <AuthInitializer />
+      <UsernameRepairModal />
       <StoreHydrator />
       <PracticeDataPreloader />
       <ScrollRestoration />

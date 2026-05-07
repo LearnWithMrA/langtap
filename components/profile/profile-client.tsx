@@ -12,11 +12,18 @@
 
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { Modal } from '@/components/ui/modal'
-import { updateEmail, updatePassword, deleteAccount } from '@/services/auth.service'
+import {
+  updateEmail,
+  updatePassword,
+  deleteAccount,
+  fetchDeleteRequirements,
+} from '@/services/auth.service'
+import type { DeleteRequirements } from '@/services/auth.service'
 import { clearAllUserLocalStorage } from '@/stores/scoped-storage'
 import { useUserStore } from '@/stores/user.store'
 import { HeaderCard } from '@/components/profile/header-card'
@@ -31,11 +38,16 @@ import { LandingFooter } from '@/components/layout/landing-footer'
 
 export function ProfileClient(): ReactNode {
   const { user, profile, isGuest } = useAuth()
+  const searchParams = useSearchParams()
+  const router = useRouter()
   const [activeModal, setActiveModal] = useState<ModalType>(null)
   const [deleteInput, setDeleteInput] = useState('')
   const [deletePassword, setDeletePassword] = useState('')
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteReqs, setDeleteReqs] = useState<DeleteRequirements | null>(null)
+  const [deleteReqsLoading, setDeleteReqsLoading] = useState(false)
+  const [oauthReauthComplete, setOauthReauthComplete] = useState(false)
   const [newEmail, setNewEmail] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -43,12 +55,38 @@ export function ProfileClient(): ReactNode {
   const [modalSuccess, setModalSuccess] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Detect OAuth re-auth callback result from URL
+  useEffect((): void => {
+    const reauthStatus = searchParams.get('delete_reauth')
+    if (!reauthStatus) return
+
+    if (reauthStatus === 'success') {
+      setOauthReauthComplete(true)
+      setActiveModal('delete')
+      // Fetch requirements so the modal renders the verified state
+      setDeleteReqsLoading(true)
+      fetchDeleteRequirements().then((result) => {
+        setDeleteReqsLoading(false)
+        if (result.ok && result.data) {
+          setDeleteReqs(result.data)
+        }
+      })
+    } else if (reauthStatus === 'failed') {
+      setDeleteError('Re-authentication failed. Please try again.')
+      setActiveModal('delete')
+    }
+
+    router.replace('/profile')
+  }, [searchParams, router])
+
   const closeModal = useCallback((): void => {
     if (isDeleting) return
     setActiveModal(null)
     setDeleteInput('')
     setDeletePassword('')
     setDeleteError(null)
+    setDeleteReqs(null)
+    setOauthReauthComplete(false)
     setNewEmail('')
     setNewPassword('')
     setConfirmPassword('')
@@ -59,12 +97,24 @@ export function ProfileClient(): ReactNode {
 
   const username = profile?.username ?? 'Guest'
   const deleteConfirmPhrase = `delete-${username}`
-  const canConfirmDelete = deleteInput === deleteConfirmPhrase
 
-  // Server checks user.identities for provider detection. Client always
-  // shows the password field; if the user is OAuth-only the server skips
-  // password verification and the field is harmless.
-  const showPasswordOnDelete = true
+  const canConfirmDelete =
+    deleteInput === deleteConfirmPhrase &&
+    deleteReqs !== null &&
+    (deleteReqs.method === 'password' ? deletePassword.length > 0 : oauthReauthComplete)
+
+  // Fetch delete requirements when the delete modal opens
+  const openDeleteModal = useCallback(async (): Promise<void> => {
+    setActiveModal('delete')
+    setDeleteReqsLoading(true)
+    const result = await fetchDeleteRequirements()
+    setDeleteReqsLoading(false)
+    if (result.ok && result.data) {
+      setDeleteReqs(result.data)
+    } else {
+      setDeleteError(result.error ?? 'Could not determine account type.')
+    }
+  }, [])
 
   const handleDeleteAccount = useCallback(async (): Promise<void> => {
     if (!canConfirmDelete || isDeleting) return
@@ -72,7 +122,10 @@ export function ProfileClient(): ReactNode {
     setIsDeleting(true)
     setDeleteError(null)
 
-    const result = await deleteAccount(deleteInput, deletePassword || undefined)
+    const result = await deleteAccount(
+      deleteInput,
+      deleteReqs?.method === 'password' ? deletePassword : undefined,
+    )
 
     if (result.ok) {
       if (user?.id) clearAllUserLocalStorage(user.id)
@@ -82,7 +135,7 @@ export function ProfileClient(): ReactNode {
       setDeleteError(result.error ?? 'Failed to delete account.')
       setIsDeleting(false)
     }
-  }, [canConfirmDelete, isDeleting, deleteInput, deletePassword, user?.id])
+  }, [canConfirmDelete, isDeleting, deleteInput, deletePassword, deleteReqs, user?.id])
 
   const handleEmailChange = useCallback(async (): Promise<void> => {
     setModalError(null)
@@ -148,7 +201,7 @@ export function ProfileClient(): ReactNode {
             <div className="mt-3 mb-3 flex justify-center">
               <button
                 type="button"
-                onClick={(): void => setActiveModal('delete')}
+                onClick={openDeleteModal}
                 aria-label="Delete your account"
                 className="bg-red-800 text-white rounded-xl px-10 py-3 text-sm font-medium shadow-[0_4px_0_0_#6b1c1c] active:translate-y-[2px] active:shadow-none transition-all duration-75 min-h-[48px]"
               >
@@ -285,6 +338,35 @@ export function ProfileClient(): ReactNode {
               <p>
                 This will permanently delete your account and all progress. This cannot be undone.
               </p>
+
+              {deleteReqsLoading && (
+                <p className="text-xs text-warm-400">Loading account details...</p>
+              )}
+
+              {/* OAuth re-auth section */}
+              {deleteReqs?.method === 'oauth' && !oauthReauthComplete && (
+                <div className="flex flex-col gap-2">
+                  <p className="text-xs text-warm-400">Verify your identity to continue.</p>
+                  <form
+                    method="POST"
+                    action={`/api/auth/delete-account/reauth/${deleteReqs.provider}/start`}
+                  >
+                    <button
+                      type="submit"
+                      className="w-full rounded-xl px-4 py-2.5 text-sm font-medium text-white bg-warm-700 hover:bg-warm-800 transition-colors duration-150 min-h-[44px]"
+                    >
+                      Re-authenticate with {deleteReqs.provider === 'google' ? 'Google' : 'Apple'}
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {deleteReqs?.method === 'oauth' && oauthReauthComplete && (
+                <p className="text-xs text-green-600 font-medium">
+                  Identity verified. You may now delete your account.
+                </p>
+              )}
+
               <p>
                 Type{' '}
                 <span className="font-mono font-bold text-text-primary">{deleteConfirmPhrase}</span>{' '}
@@ -298,9 +380,11 @@ export function ProfileClient(): ReactNode {
                 className="w-full border border-border rounded-lg px-3 py-2 text-sm text-warm-800 bg-surface-raised focus:outline-none focus:ring-2 focus:ring-red-300"
                 autoComplete="off"
                 spellCheck={false}
-                autoFocus
+                autoFocus={!oauthReauthComplete}
               />
-              {showPasswordOnDelete && (
+
+              {/* Password field for email-identity users */}
+              {deleteReqs?.method === 'password' && (
                 <div>
                   <label className="text-xs text-warm-400 block mb-1" htmlFor="delete-password">
                     Confirm your password
@@ -314,6 +398,7 @@ export function ProfileClient(): ReactNode {
                   />
                 </div>
               )}
+
               {deleteError !== null && <p className="text-xs text-red-600">{deleteError}</p>}
             </div>
             <div className="flex gap-3">

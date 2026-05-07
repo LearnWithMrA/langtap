@@ -276,9 +276,24 @@ with check (user_id = current_setting('app.current_user_id'))
 
 The delete account flow on the Profile screen requires the user to type
 `delete-[username]` as confirmation. This prevents accidental deletion.
+
+**Email-identity users:** re-authenticate via password before deletion.
+
+**OAuth-only users (Google/Apple):** re-authenticate via a signed cookie
+flow. The `AUTH_REAUTH_COOKIE_SECRET` env var (server-only, min 32 chars)
+signs HMAC-SHA256 cookies with a 5-minute TTL. The flow:
+- Pending cookie set before OAuth redirect (binds userId + provider)
+- Callback verifies user ID match, mints verified cookie
+- Delete route requires the verified cookie
+- Stale pending cookies are cleared on all non-reauth callbacks
+
+Request bodies on the delete route are byte-bounded (1KB max via
+`arrayBuffer()` read, not Content-Length header).
+
 Server-side validation must confirm:
 - The authenticated user's session is valid
 - The typed confirmation matches the account being deleted
+- Re-authentication succeeded (password or signed cookie)
 - All user data is cascade-deleted via the `on delete cascade` foreign
   key constraints on all tables
 

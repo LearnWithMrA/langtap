@@ -72,6 +72,11 @@ export const WORD_PROMPT_RATIO = 0.6
 /** Maximum cumulative distance (metres) a guest can practise across all modes */
 export const GUEST_TRIAL_DISTANCE_CAP = 30
 
+// -- Daily distance cap -------------------------------
+
+/** Maximum distance (metres) a free-tier user can practise per day */
+export const FREE_DAILY_DISTANCE_CAP = 100
+
 // -- Streak -------------------------------------------
 
 /** Number of consecutive practice days required before a streak starts */
