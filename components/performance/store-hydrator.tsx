@@ -25,6 +25,7 @@ import { useOnboardingStore } from '@/stores/onboarding.store'
 import { useUnlockStore } from '@/stores/unlock.store'
 import { useUserStore } from '@/stores/user.store'
 import { useAuth } from '@/hooks/useAuth'
+import { useSettingsSync } from '@/hooks/useSettings'
 import { loadMasterySnapshot } from '@/services/mastery.service'
 import { loadWordMasterySnapshot } from '@/services/word-mastery.service'
 import type { MasteryScoreMap } from '@/types/game.types'
@@ -54,6 +55,8 @@ export function StoreHydrator(): ReactNode {
   const bootstrapped = useUnlockStore((s) => s.bootstrapped)
   const { isAuthenticated, isGuest } = useAuth()
   const serverLoadAttempted = useRef(false)
+
+  useSettingsSync()
 
   // Step 1: Trigger localStorage rehydration for skipHydration stores
   useEffect(() => {

@@ -30,6 +30,28 @@ Format per entry:
 
 ---
 
+## 2026-05-07 - Session 97l
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Phase 2, Task 3: Sync input mode from profile to settings store
+**Status:** Done
+
+### Changes made
+- `hooks/useSettings.ts`: Replaced placeholder. `useSettingsSync` hook reads `input_mode` from the loaded profile and pushes to `useSettingsStore.setInputMode()`. Only runs once per session for signed-in permanent users. Guests use localStorage defaults.
+- `components/performance/store-hydrator.tsx`: Calls `useSettingsSync()` so settings are synced after profile loads.
+
+### Tests
+- Full suite: 984 passed, 0 failures
+- `npm run check`: clean (prettier, eslint, tsc pass)
+
+### Next task
+Codex gate: Phase 2 review
+
+### Notes
+Phase 2 (Sync Infrastructure) is complete. All three tasks done: epoch-aware server load, checkpoint sync with dirty versioning, and settings sync from profile. Ready for Codex review before Phase 3 (Guest Conversion).
+
+---
+
 ## 2026-05-07 - Session 97k
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership
