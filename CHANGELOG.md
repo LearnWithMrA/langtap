@@ -30,6 +30,40 @@ Format per entry:
 
 ---
 
+## 2026-05-07 - Session 98c
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Guest-to-account migration flow (Phase 3, Plan 5)
+**Status:** Done
+
+### Changes made
+- `types/user.types.ts`: Added `guestImportedAt`, `guestImportSkippedAt`, `legacyImportedAt`, `legacyImportSkippedAt` to UserProfile type.
+- `services/profile.service.ts`: Added import tracking columns to ProfileRow, SELECT query, and mapRowToProfile.
+- `stores/user.store.ts`: Added migration state: `migrationPhaseComplete`, `pendingGuestImport`, `showGuestImportPrompt`, `showLegacyImportPrompt` with setters. Clear resets all migration flags.
+- `stores/scoped-storage.ts`: Added guest snapshot marker helpers (`setGuestSnapshotMarker`, `getGuestSnapshotMarker`, `clearGuestSnapshotMarker`) for the localStorage pair of the dual-marker system.
+- `hooks/useGuestUsage.ts`: Sets dual session markers (sessionStorage + localStorage) when guest session is first created. Both markers share the same UUID for auto-import verification.
+- `services/import-snapshot.ts`: New file. Builds ImportPayload from raw localStorage data. Parses Zustand persist format, handles v1 mastery stores (backfills learningScores from scores capped at 5), extracts word manual unlocks and kana manual unlocks from onboarding store.
+- `services/__tests__/import-snapshot.test.ts`: 9 tests covering v2 stores, v1 backfill, word mastery + unlocks, onboarding unlocks, combined payload, malformed JSON, empty keys, corrupt score maps.
+- `components/performance/auth-initializer.tsx`: Major rewrite. After profile loads for permanent users, runs migration check with three scenarios: (A) dual-marker match + non-OAuth triggers auto-import via importGuestProgress, (B) missing/mismatched markers or OAuth shows non-dismissable ImportPromptModal, (C) legacy global keys show separate legacy modal. Pending import from previous session detected via localStorage flag. Transient failures quarantine guest keys to pending-{userId}. Now renders import modals and pending banner (was previously null-rendering).
+- `components/performance/store-hydrator.tsx`: Server load gated on `migrationPhaseComplete`. Pending guest import skips server load entirely and sets isServerHydrated immediately.
+- `components/ui/import-prompt-modal.tsx`: New non-dismissable modal with Import/Skip buttons, loading states, error display. Reusable for both guest and legacy variants.
+- `components/ui/pending-import-banner.tsx`: New fixed banner with Retry/Start fresh buttons for quarantined import state.
+
+### Tests
+- `services/__tests__/import-snapshot.test.ts`: 9 tests, all pass
+- Full suite: 1006 tests pass, 0 failures
+
+### Next task
+Phase 4: Connect Profile and Settings to Supabase
+
+### Notes
+- OAuth detection uses `app_metadata.provider` from Supabase raw user (not the mapped AuthUser type) via a separate `detectOAuthProvider()` call.
+- The dual-marker system sets both markers in `useGuestUsage` when the anonymous session is first created (not on every page load).
+- StoreHydrator now depends on migrationPhaseComplete before loading server data, preventing server hydration from racing with the import decision.
+- Pending import quarantine keeps the user on guest keys (30m combined cap applies, checkpoint sync disabled).
+
+---
+
 ## 2026-05-07 - Session 98b
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership

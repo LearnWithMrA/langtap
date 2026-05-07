@@ -22,6 +22,11 @@ import {
   incrementGuestUsage,
 } from '@/services/guest-usage.service'
 import { GUEST_TRIAL_DISTANCE_CAP } from '@/engine/constants'
+import {
+  getGuestSessionMarker,
+  setGuestSessionMarker,
+  setGuestSnapshotMarker,
+} from '@/stores/scoped-storage'
 
 // ── Types ─────────────────────────────────────
 
@@ -52,6 +57,14 @@ export function useGuestUsage(): UseGuestUsageReturn {
 
     async function init(): Promise<void> {
       const sessionResult = await ensureGuestSession()
+
+      // Set dual session markers for guest-to-account auto-import
+      if (sessionResult.ok && !getGuestSessionMarker()) {
+        const markerId = crypto.randomUUID()
+        setGuestSessionMarker(markerId)
+        setGuestSnapshotMarker(markerId)
+      }
+
       if (!mounted || !sessionResult.ok) {
         if (mounted) {
           useGuestUsageStore.getState().setLoading(false)

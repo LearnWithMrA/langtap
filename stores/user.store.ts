@@ -18,6 +18,10 @@ type UserState = {
   isLoading: boolean
   isProfileLoaded: boolean
   isServerHydrated: boolean
+  migrationPhaseComplete: boolean
+  pendingGuestImport: boolean
+  showGuestImportPrompt: boolean
+  showLegacyImportPrompt: boolean
 }
 
 type UserActions = {
@@ -26,6 +30,10 @@ type UserActions = {
   setLoading: (loading: boolean) => void
   setProfileLoaded: (loaded: boolean) => void
   setServerHydrated: (hydrated: boolean) => void
+  setMigrationPhaseComplete: (complete: boolean) => void
+  setPendingGuestImport: (pending: boolean) => void
+  setShowGuestImportPrompt: (show: boolean) => void
+  setShowLegacyImportPrompt: (show: boolean) => void
   clear: () => void
 }
 
@@ -39,6 +47,10 @@ export const useUserStore = create<UserStore>()((set) => ({
   isLoading: true,
   isProfileLoaded: false,
   isServerHydrated: false,
+  migrationPhaseComplete: false,
+  pendingGuestImport: false,
+  showGuestImportPrompt: false,
+  showLegacyImportPrompt: false,
 
   setUser: (user: AuthUser | null): void => {
     set({ user })
@@ -60,7 +72,32 @@ export const useUserStore = create<UserStore>()((set) => ({
     set({ isServerHydrated: hydrated })
   },
 
+  setMigrationPhaseComplete: (complete: boolean): void => {
+    set({ migrationPhaseComplete: complete })
+  },
+
+  setPendingGuestImport: (pending: boolean): void => {
+    set({ pendingGuestImport: pending })
+  },
+
+  setShowGuestImportPrompt: (show: boolean): void => {
+    set({ showGuestImportPrompt: show })
+  },
+
+  setShowLegacyImportPrompt: (show: boolean): void => {
+    set({ showLegacyImportPrompt: show })
+  },
+
   clear: (): void => {
-    set({ user: null, profile: null, isProfileLoaded: false, isServerHydrated: false })
+    set({
+      user: null,
+      profile: null,
+      isProfileLoaded: false,
+      isServerHydrated: false,
+      migrationPhaseComplete: false,
+      pendingGuestImport: false,
+      showGuestImportPrompt: false,
+      showLegacyImportPrompt: false,
+    })
   },
 }))

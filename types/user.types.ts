@@ -40,5 +40,9 @@ export type UserProfile = {
   distanceUnit: 'metric' | 'imperial'
   leaderboardVisibility: LeaderboardVisibility
   usernameChangedAt: string | null
+  guestImportedAt: string | null
+  guestImportSkippedAt: string | null
+  legacyImportedAt: string | null
+  legacyImportSkippedAt: string | null
   createdAt: string
 }

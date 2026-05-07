@@ -194,6 +194,22 @@ export function clearGuestSessionMarker(): void {
   sessionStorage.removeItem(GUEST_SESSION_MARKER_KEY)
 }
 
+// ── Guest snapshot marker (localStorage pair) ─
+
+const GUEST_SNAPSHOT_MARKER_KEY = 'langtap-guest-snapshot-marker'
+
+export function setGuestSnapshotMarker(sessionId: string): void {
+  localStorage.setItem(GUEST_SNAPSHOT_MARKER_KEY, sessionId)
+}
+
+export function getGuestSnapshotMarker(): string | null {
+  return localStorage.getItem(GUEST_SNAPSHOT_MARKER_KEY)
+}
+
+export function clearGuestSnapshotMarker(): void {
+  localStorage.removeItem(GUEST_SNAPSHOT_MARKER_KEY)
+}
+
 // ── Pending import flag ───────────────────────
 
 export function setPendingGuestImport(userId: string): void {

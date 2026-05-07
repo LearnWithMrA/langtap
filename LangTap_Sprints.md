@@ -492,7 +492,7 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 | Task | Size | Status | Notes |
 |---|---|---|---|
 | Safe guest progress import via server RPC | **Medium** | **Done** | `import_guest_progress` and `import_legacy_progress` RPCs. Cheap validation before lock, catalog ID validation, abuse detection (>50% invalid), score clamping, greatest-merge, one-time-per-source guard. Client service with error classification. SECURITY.md Section 7.1 added. 13 tests. Session 98. |
-| Guest-to-account migration flow | **Medium** | **To Do** | Centralized in AuthInitializer. Three scenarios (session marker auto-import, confirmation prompt, legacy modal). Quarantine on pending keys. |
+| Guest-to-account migration flow | **Medium** | **Done** | Centralized in AuthInitializer. Three scenarios: (A) dual-marker auto-import for same-session non-OAuth, (B) confirmation prompt for missing markers or OAuth, (C) legacy modal for pre-Sprint-10 keys. Pending import quarantine with Retry/Start fresh banner. StoreHydrator gates on migrationPhaseComplete. Snapshot builder parses Zustand persist format with v1 backfill. Profile type extended with import tracking columns. 9 snapshot builder tests. Session 98. |
 | **Codex gate: Phase 3 review** | - | **Done** | Fixed: (1) numeric overflow on large scores - clamp in numeric space before integer cast, (2) per-array count caps to bound lock hold time (500/9000), (3) deduplication via seen-ID arrays, (4) non-JSON-number score fields dropped instead of coerced to zero. Migration `20260507120009`. Session 98. |
 
 ### Phase 4: Profile and Settings
