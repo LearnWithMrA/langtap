@@ -43,7 +43,11 @@ function mapRowToProfile(row: ProfileRow): UserProfile {
     onboardingComplete: bool(row, 'onboarding_complete', false),
     notificationsEnabled: bool(row, 'notifications_enabled', false),
     distanceUnit: str(row, 'distance_unit', 'metric') as UserProfile['distanceUnit'],
-    leaderboardVisibility: str(row, 'leaderboard_visibility', 'public') as UserProfile['leaderboardVisibility'],
+    leaderboardVisibility: str(
+      row,
+      'leaderboard_visibility',
+      'public',
+    ) as UserProfile['leaderboardVisibility'],
     userTz: str(row, 'user_tz', 'UTC'),
     usernameChangedAt: strNull(row, 'username_changed_at'),
     guestImportedAt: strNull(row, 'guest_imported_at'),
@@ -61,11 +65,7 @@ export async function loadProfile(userId: string): Promise<ServiceResult<UserPro
 
   // SELECT * so missing columns from unapplied migrations don't
   // cause a PostgREST 400. The mapper provides safe defaults.
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single()
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single()
 
   if (error) {
     return { ok: false, error: 'Failed to load profile.' }
