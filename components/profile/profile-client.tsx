@@ -37,8 +37,7 @@ import { LandingFooter } from '@/components/layout/landing-footer'
 // ── Main component ────────────────────────────
 
 export function ProfileClient(): ReactNode {
-  const { user, profile, isGuest, isLoading } = useAuth()
-  const isProfileLoaded = useUserStore((s) => s.isProfileLoaded)
+  const { user, profile, isGuest } = useAuth()
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -174,14 +173,6 @@ export function ProfileClient(): ReactNode {
     document.body.appendChild(form)
     form.submit()
   }, [])
-
-  if (isLoading || (!isGuest && !isProfileLoaded)) {
-    return (
-      <div className="min-h-svh bg-profile-bg flex items-center justify-center">
-        <p className="text-sm text-warm-400">Loading profile...</p>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-svh bg-profile-bg flex flex-col">

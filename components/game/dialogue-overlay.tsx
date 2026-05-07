@@ -109,27 +109,16 @@ export function DialogueOverlay({
     }
   }, [startDelayMs])
 
+  // Typewriter effect only: no auto-advance between messages
   useEffect(() => {
-    if (!ready) return
-    if (!isTypingCurrent) {
-      if (messageIndex < messages.length - 1) {
-        const pause = setTimeout((): void => {
-          setMessageIndex((prev) => prev + 1)
-          setCharCount(0)
-        }, 400)
-        return (): void => {
-          clearTimeout(pause)
-        }
-      }
-      return
-    }
+    if (!ready || !isTypingCurrent) return
     const timer = setInterval(() => {
       setCharCount((prev) => Math.min(prev + 1, currentMessage.length))
     }, TYPEWRITER_SPEED_MS)
     return (): void => {
       clearInterval(timer)
     }
-  }, [ready, isTypingCurrent, currentMessage.length, messageIndex, messages.length])
+  }, [ready, isTypingCurrent, currentMessage.length])
 
   useEffect(() => {
     if (bubbleRef.current?.scrollTo) {
@@ -137,10 +126,15 @@ export function DialogueOverlay({
     }
   }, [messageIndex, charCount])
 
-  const skipAll = useCallback((): void => {
-    setMessageIndex(messages.length - 1)
-    setCharCount(messages[messages.length - 1]?.length ?? 0)
-  }, [messages])
+  // Tap/click: if typing, reveal current line. If line done, advance to next.
+  const handleAdvance = useCallback((): void => {
+    if (isTypingCurrent) {
+      setCharCount(currentMessage.length)
+    } else if (messageIndex < messages.length - 1) {
+      setMessageIndex((prev) => prev + 1)
+      setCharCount(0)
+    }
+  }, [isTypingCurrent, currentMessage.length, messageIndex, messages.length])
 
   if (messages.length === 0) return null
 
@@ -159,7 +153,7 @@ export function DialogueOverlay({
       <div
         ref={bubbleRef}
         className="absolute top-4 right-4 bottom-14 left-[120px] bg-white rounded-2xl p-4 overflow-y-auto [scrollbar-gutter:stable] cursor-pointer [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-warm-200 [&::-webkit-scrollbar-thumb]:rounded-full"
-        onClick={isTyping ? skipAll : undefined}
+        onClick={isTyping ? handleAdvance : undefined}
         data-testid="dialogue-bubble"
         role="presentation"
       >
@@ -197,10 +191,10 @@ export function DialogueOverlay({
         {isTyping ? (
           <button
             type="button"
-            onClick={skipAll}
+            onClick={handleAdvance}
             className={`px-3 py-2.5 text-xs font-bold rounded-lg ${styles.skipBg} ${styles.skipText} ${styles.skipShadow} hover:brightness-105 active:translate-y-[2px] active:shadow-none transition-all duration-75`}
           >
-            Skip
+            {isTypingCurrent ? 'Skip' : 'Next'}
           </button>
         ) : (
           <>

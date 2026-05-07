@@ -49,7 +49,7 @@ describe('DialogueOverlay', () => {
     expect(screen.getByTestId('dialogue-text').textContent).toBe('Hello')
   })
 
-  it('flows messages continuously without user interaction', () => {
+  it('does not auto-advance: requires user click to move to next message', () => {
     render(<DialogueOverlay messages={['Hi', 'Bye']} mascotPose="neutral" onDismiss={vi.fn()} />)
 
     flushMicrotasks()
@@ -60,16 +60,19 @@ describe('DialogueOverlay', () => {
     })
     expect(screen.getByTestId('dialogue-text').textContent).toBe('Hi')
 
-    // 400ms pause fires the setTimeout, advancing to next message
+    // Wait well past what was the old 400ms auto-advance pause
     act(() => {
-      vi.advanceTimersByTime(400)
+      vi.advanceTimersByTime(1000)
     })
-    // Then 140ms for 2 chars of "Bye" at 70ms each
+    // Still only first message shown (no auto-advance)
+    expect(screen.getByTestId('dialogue-text').textContent).not.toContain('Bye')
+
+    // Click Next to advance
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
     act(() => {
-      vi.advanceTimersByTime(140)
+      vi.advanceTimersByTime(210)
     })
-    expect(screen.getByTestId('dialogue-text').textContent).toContain('Hi')
-    expect(screen.getByTestId('dialogue-text').textContent).toContain('By')
+    expect(screen.getByTestId('dialogue-text').textContent).toContain('Bye')
   })
 
   it('shows Got it button when all messages are done', () => {
@@ -98,7 +101,7 @@ describe('DialogueOverlay', () => {
     expect(screen.getByRole('button', { name: 'Skip' })).toBeInTheDocument()
   })
 
-  it('skip reveals all messages immediately', () => {
+  it('skip reveals current line only, then Next advances', () => {
     render(
       <DialogueOverlay
         messages={['First message', 'Second message']}
@@ -111,10 +114,20 @@ describe('DialogueOverlay', () => {
     act(() => {
       vi.advanceTimersByTime(100)
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Skip' }))
 
+    // Skip reveals current line fully
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }))
+    expect(screen.getByTestId('dialogue-text').textContent).toContain('First message')
+    expect(screen.getByTestId('dialogue-text').textContent).not.toContain('Second message')
+
+    // Button now says Next
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+
+    // Second message starts typing
+    act(() => {
+      vi.advanceTimersByTime(1500)
+    })
     expect(screen.getByTestId('dialogue-text').textContent).toContain('Second message')
-    expect(screen.getByRole('button', { name: 'Got it' })).toBeInTheDocument()
   })
 
   it('calls onDismiss when Got it is clicked', () => {

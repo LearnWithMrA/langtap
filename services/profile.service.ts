@@ -13,44 +13,44 @@ import type { UserProfile } from '@/types/user.types'
 
 type ServiceResult<T> = { ok: true; data: T } | { ok: false; error: string }
 
-// Raw row shape from Supabase (snake_case)
-type ProfileRow = {
-  id: string
-  username: string
-  jlpt_level: string
-  input_mode: string
-  onboarding_complete: boolean
-  notifications_enabled: boolean
-  distance_unit: string
-  leaderboard_visibility: string
-  user_tz: string
-  username_changed_at: string | null
-  guest_imported_at: string | null
-  guest_import_skipped_at: string | null
-  legacy_imported_at: string | null
-  legacy_import_skipped_at: string | null
-  created_at: string
-}
+// Raw row from Supabase. Uses Record so missing columns (from
+// unapplied migrations) don't crash the mapper.
+type ProfileRow = Record<string, unknown>
 
 // ── Helpers ───────────────────────────────────
 
+function str(row: ProfileRow, key: string, fallback: string): string {
+  const v = row[key]
+  return typeof v === 'string' ? v : fallback
+}
+
+function bool(row: ProfileRow, key: string, fallback: boolean): boolean {
+  const v = row[key]
+  return typeof v === 'boolean' ? v : fallback
+}
+
+function strNull(row: ProfileRow, key: string): string | null {
+  const v = row[key]
+  return typeof v === 'string' ? v : null
+}
+
 function mapRowToProfile(row: ProfileRow): UserProfile {
   return {
-    id: row.id,
-    username: row.username,
-    jlptLevel: row.jlpt_level as UserProfile['jlptLevel'],
-    inputMode: row.input_mode as UserProfile['inputMode'],
-    onboardingComplete: row.onboarding_complete,
-    notificationsEnabled: row.notifications_enabled,
-    distanceUnit: row.distance_unit as UserProfile['distanceUnit'],
-    leaderboardVisibility: row.leaderboard_visibility as UserProfile['leaderboardVisibility'],
-    userTz: row.user_tz,
-    usernameChangedAt: row.username_changed_at,
-    guestImportedAt: row.guest_imported_at,
-    guestImportSkippedAt: row.guest_import_skipped_at,
-    legacyImportedAt: row.legacy_imported_at,
-    legacyImportSkippedAt: row.legacy_import_skipped_at,
-    createdAt: row.created_at,
+    id: str(row, 'id', ''),
+    username: str(row, 'username', ''),
+    jlptLevel: str(row, 'jlpt_level', 'N5') as UserProfile['jlptLevel'],
+    inputMode: str(row, 'input_mode', 'tap') as UserProfile['inputMode'],
+    onboardingComplete: bool(row, 'onboarding_complete', false),
+    notificationsEnabled: bool(row, 'notifications_enabled', false),
+    distanceUnit: str(row, 'distance_unit', 'metric') as UserProfile['distanceUnit'],
+    leaderboardVisibility: str(row, 'leaderboard_visibility', 'public') as UserProfile['leaderboardVisibility'],
+    userTz: str(row, 'user_tz', 'UTC'),
+    usernameChangedAt: strNull(row, 'username_changed_at'),
+    guestImportedAt: strNull(row, 'guest_imported_at'),
+    guestImportSkippedAt: strNull(row, 'guest_import_skipped_at'),
+    legacyImportedAt: strNull(row, 'legacy_imported_at'),
+    legacyImportSkippedAt: strNull(row, 'legacy_import_skipped_at'),
+    createdAt: str(row, 'created_at', new Date().toISOString()),
   }
 }
 
@@ -59,11 +59,11 @@ function mapRowToProfile(row: ProfileRow): UserProfile {
 export async function loadProfile(userId: string): Promise<ServiceResult<UserProfile>> {
   const supabase = createBrowserSupabaseClient()
 
+  // SELECT * so missing columns from unapplied migrations don't
+  // cause a PostgREST 400. The mapper provides safe defaults.
   const { data, error } = await supabase
     .from('profiles')
-    .select(
-      'id, username, jlpt_level, input_mode, onboarding_complete, notifications_enabled, distance_unit, leaderboard_visibility, user_tz, username_changed_at, guest_imported_at, guest_import_skipped_at, legacy_imported_at, legacy_import_skipped_at, created_at',
-    )
+    .select('*')
     .eq('id', userId)
     .single()
 
