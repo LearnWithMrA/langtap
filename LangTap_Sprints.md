@@ -501,7 +501,7 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 |---|---|---|---|
 | Connect Profile and Settings to Supabase | **Medium** | **Done** | Fixtures removed. All components wired to useAuth/useUserStore. Username change via RPC with cooldown UI and error codes. Email/password change modals wired to auth service. Distance unit persists optimistically with rollback. JLPT level change persists to Supabase. Leaderboard visibility already working. Session 98. |
 | Build username change UI | **Small** | **Done** | Included in Plan 6. Inline edit with 30-day cooldown, RPC error codes, disabled state. Session 98. |
-| Build reset progress flow | **Small** | **To Do** | Uses reset RPCs. Non-optimistic. Spinner during RPC. |
+| Build reset progress flow | **Small** | **Done** | ResetProgress component in profile screen. Non-optimistic: spinner during RPC, local state cleared only on success. Calls reset_all_mastery and reset_all_word_mastery RPCs. Confirmation modal. Updates epoch from response. Session 98. |
 | Build delete account flow | **Medium** | **To Do** | Server-side deletion with CSRF, provider-aware re-auth, cascade verification, cookie cleanup. |
 | **Codex gate: Phase 4 review** | - | **To Do** | Review profile wiring, settings sync, username/reset/delete flows, and CSRF/re-auth implementation. |
 

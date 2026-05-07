@@ -105,11 +105,13 @@ export function AccountSettings({
 
     const newUnit = distanceUnit === 'metric' ? 'imperial' : 'metric'
     const previous = profile.distanceUnit
-    setProfile({ ...profile, distanceUnit: newUnit })
+    const current = useUserStore.getState().profile
+    if (current) setProfile({ ...current, distanceUnit: newUnit })
 
     void updateProfile(user.id, { distance_unit: newUnit }).then((result) => {
       if (!result.ok) {
-        setProfile({ ...profile, distanceUnit: previous })
+        const latest = useUserStore.getState().profile
+        if (latest) setProfile({ ...latest, distanceUnit: previous })
       }
     })
   }, [user, profile, distanceUnit, setProfile])
@@ -183,20 +185,22 @@ export function AccountSettings({
         )}
       </div>
 
-      {/* Email row */}
-      <div className="border-b border-border">
-        <button
-          type="button"
-          onClick={(): void => onOpenModal('email')}
-          className="w-full px-4 py-3 flex items-center justify-between min-h-[48px] hover:bg-warm-50 transition-colors duration-150"
-        >
-          <span className="text-sm font-medium text-warm-700">Email</span>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-warm-500">{email ?? 'No email'}</span>
-            <span className="text-warm-300">{email ? <IconPencil /> : <IconChevron />}</span>
-          </div>
-        </button>
-      </div>
+      {/* Email row (hidden for guests) */}
+      {!isGuest && (
+        <div className="border-b border-border">
+          <button
+            type="button"
+            onClick={(): void => onOpenModal('email')}
+            className="w-full px-4 py-3 flex items-center justify-between min-h-[48px] hover:bg-warm-50 transition-colors duration-150"
+          >
+            <span className="text-sm font-medium text-warm-700">Email</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-warm-500">{email ?? 'No email'}</span>
+              <span className="text-warm-300">{email ? <IconPencil /> : <IconChevron />}</span>
+            </div>
+          </button>
+        </div>
+      )}
 
       {/* Password row (hidden for guests) */}
       {!isGuest && (

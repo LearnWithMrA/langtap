@@ -30,6 +30,30 @@ Format per entry:
 
 ---
 
+## 2026-05-07 - Session 98f
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Build reset progress flow (Phase 4)
+**Status:** Done
+
+### Changes made
+- `services/reset.service.ts`: New file. Client wrappers for `reset_all_mastery` and `reset_all_word_mastery` RPCs. Parses `new_epoch` from response.
+- `components/profile/reset-progress.tsx`: New file. Reset progress section with kana and kotoba reset buttons. Non-optimistic flow: confirmation modal, spinner during RPC, local state (scores + unlocks + epoch) updated only on success. Error display on failure. Modal not dismissable while resetting.
+- `components/profile/profile-client.tsx`: Mounted `ResetProgress` component between account settings and delete account button. Hidden for guests.
+
+### Tests
+- Full suite: 1010 tests pass (1 flaky timeout in word-bank N1 bracket test under parallel load, passes individually)
+
+### Next task
+Build delete account flow (Phase 4, Plan 10)
+
+### Notes
+- Reset clears local store state via `resetAll()` (which also clears dirty versions) and updates epoch from the RPC response.
+- Unlock store is recomputed with empty scores and unlocks after kana reset.
+- Non-optimistic per Plan 0d: no local state change until RPC success, no premature dirty clearing.
+
+---
+
 ## 2026-05-07 - Session 98e
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership

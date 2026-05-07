@@ -62,7 +62,7 @@ export function PreferencesCard(): ReactNode {
   const profile = useUserStore((s) => s.profile)
   const setProfile = useUserStore((s) => s.setProfile)
 
-  const [jlptLevel, setJlptLevel] = useState<JlptLevel>((profile?.jlptLevel as JlptLevel) ?? 'N5')
+  const jlptLevel: JlptLevel = (profile?.jlptLevel as JlptLevel) ?? 'N5'
   const [jlptExpanded, setJlptExpanded] = useState(false)
   const [pendingLevel, setPendingLevel] = useState<JlptLevel | null>(null)
   const [sceneTheme] = useState<SceneTheme>('day')
@@ -76,12 +76,14 @@ export function PreferencesCard(): ReactNode {
       if (!user || !profile) return
 
       const previous = profile.leaderboardVisibility
-      setProfile({ ...profile, leaderboardVisibility: newVisibility })
+      const current = useUserStore.getState().profile
+      if (current) setProfile({ ...current, leaderboardVisibility: newVisibility })
       setVisibilityExpanded(false)
 
       void updateProfile(user.id, { leaderboard_visibility: newVisibility }).then((result) => {
         if (!result.ok) {
-          setProfile({ ...profile, leaderboardVisibility: previous })
+          const latest = useUserStore.getState().profile
+          if (latest) setProfile({ ...latest, leaderboardVisibility: previous })
         }
       })
     },
@@ -103,15 +105,15 @@ export function PreferencesCard(): ReactNode {
     }
 
     const previous = jlptLevel
-    setJlptLevel(pendingLevel)
-    setProfile({ ...profile, jlptLevel: pendingLevel })
+    const current = useUserStore.getState().profile
+    if (current) setProfile({ ...current, jlptLevel: pendingLevel })
     setPendingLevel(null)
     setJlptExpanded(false)
 
     void updateProfile(user.id, { jlpt_level: pendingLevel }).then((result) => {
       if (!result.ok) {
-        setJlptLevel(previous)
-        setProfile({ ...profile, jlptLevel: previous })
+        const latest = useUserStore.getState().profile
+        if (latest) setProfile({ ...latest, jlptLevel: previous })
       }
     })
   }

@@ -22,6 +22,7 @@ import { MembershipCard } from '@/components/profile/membership-card'
 import { AccountSettings } from '@/components/profile/account-settings'
 import type { ModalType } from '@/components/profile/account-settings'
 import { PreferencesCard } from '@/components/profile/preferences-card'
+import { ResetProgress } from '@/components/profile/reset-progress'
 import { LandingFooter } from '@/components/layout/landing-footer'
 
 // ── Main component ────────────────────────────
@@ -107,6 +108,9 @@ export function ProfileClient(): ReactNode {
 
           {/* Account settings */}
           <AccountSettings onOpenModal={setActiveModal} />
+
+          {/* Reset progress */}
+          {!isGuest && <ResetProgress />}
 
           {/* Delete account */}
           {!isGuest && (
