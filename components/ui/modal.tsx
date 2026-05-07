@@ -14,7 +14,7 @@
 
 'use client'
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 
@@ -35,7 +35,7 @@ export type ModalSecondaryAction = {
 type ModalProps = {
   isOpen: boolean
   onClose: () => void
-  onConfirm: () => void
+  onConfirm: () => void | Promise<void>
   steps: [ModalStep] | [ModalStep, ModalStep]
   currentStep?: number
   onNextStep?: () => void
@@ -144,6 +144,7 @@ export function Modal({
   confirmClassName,
 }: ModalProps): ReactNode {
   const panelRef = useRef<HTMLDivElement>(null)
+  const [isConfirming, setIsConfirming] = useState(false)
 
   useScrollLock(isOpen)
   useFocusTrap(panelRef, isOpen, onClose)
@@ -155,10 +156,18 @@ export function Modal({
   const cancelLabel = step.cancelLabel ?? 'Cancel'
 
   const handleConfirm = (): void => {
+    if (isConfirming) return
     if (!isFinalStep && onNextStep) {
       onNextStep()
     } else {
-      onConfirm()
+      const result = onConfirm()
+      if (result && typeof result.then === 'function') {
+        setIsConfirming(true)
+        result.then(
+          () => setIsConfirming(false),
+          () => setIsConfirming(false),
+        )
+      }
     }
   }
 
@@ -206,6 +215,7 @@ export function Modal({
             variant={isDanger && isFinalStep ? 'danger' : 'primary'}
             size="sm"
             onClick={handleConfirm}
+            disabled={isConfirming}
           >
             {step.confirmLabel}
           </Button>

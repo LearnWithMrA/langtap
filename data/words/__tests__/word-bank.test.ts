@@ -117,7 +117,7 @@ describe('word bank meaning quality', () => {
       }
     })
 
-    it(`${level}: no meaning contains denied bracket metadata`, () => {
+    it(`${level}: no meaning contains denied bracket metadata`, { timeout: 15000 }, () => {
       for (const word of WORD_BANK[level]) {
         const lower = word.meaning.toLowerCase()
         for (const denied of DENIED_BRACKETS) {

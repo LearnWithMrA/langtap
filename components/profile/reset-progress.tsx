@@ -18,6 +18,7 @@ import { resetAllMastery, resetAllWordMastery } from '@/services/reset.service'
 import { useMasteryStore } from '@/stores/mastery.store'
 import { useWordMasteryStore } from '@/stores/word-mastery.store'
 import { useUnlockStore } from '@/stores/unlock.store'
+import { useSyncCheckpoint } from '@/hooks/useSyncCheckpoint'
 
 // ── Types ─────────────────────────────────────
 
@@ -29,36 +30,46 @@ export function ResetProgress(): ReactNode {
   const [confirmTarget, setConfirmTarget] = useState<ResetTarget>(null)
   const [isResetting, setIsResetting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { flushDirty } = useSyncCheckpoint()
 
   const handleReset = useCallback(async (): Promise<void> => {
-    if (!confirmTarget) return
+    if (!confirmTarget || isResetting) return
 
     setIsResetting(true)
     setError(null)
 
-    if (confirmTarget === 'kana') {
-      const result = await resetAllMastery()
-      if (result.ok) {
-        useMasteryStore.getState().resetAll()
-        useMasteryStore.getState().setEpoch(result.data.newEpoch)
-        useUnlockStore.getState().recompute({}, new Set())
-        setConfirmTarget(null)
+    try {
+      // Fence: wait for any in-flight checkpoint to complete before
+      // calling reset, so the reset epoch is never overwritten by a
+      // stale checkpoint response.
+      await flushDirty()
+
+      if (confirmTarget === 'kana') {
+        const result = await resetAllMastery()
+        if (result.ok) {
+          useMasteryStore.getState().resetAll()
+          useMasteryStore.getState().setEpoch(result.data.newEpoch)
+          useUnlockStore.getState().recompute({}, new Set())
+          setConfirmTarget(null)
+        } else {
+          setError(result.error)
+        }
       } else {
-        setError(result.error)
+        const result = await resetAllWordMastery()
+        if (result.ok) {
+          useWordMasteryStore.getState().resetAll()
+          useWordMasteryStore.getState().setEpoch(result.data.newEpoch)
+          setConfirmTarget(null)
+        } else {
+          setError(result.error)
+        }
       }
-    } else {
-      const result = await resetAllWordMastery()
-      if (result.ok) {
-        useWordMasteryStore.getState().resetAll()
-        useWordMasteryStore.getState().setEpoch(result.data.newEpoch)
-        setConfirmTarget(null)
-      } else {
-        setError(result.error)
-      }
+    } catch {
+      setError('Something went wrong. Please try again.')
     }
 
     setIsResetting(false)
-  }, [confirmTarget])
+  }, [confirmTarget, isResetting, flushDirty])
 
   const closeModal = useCallback((): void => {
     if (isResetting) return
