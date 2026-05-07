@@ -97,14 +97,14 @@ export function ResetProgress(): ReactNode {
           <button
             type="button"
             onClick={(): void => setConfirmTarget('kana')}
-            className="flex-1 bg-red-600/80 text-white rounded-xl px-4 py-3 text-sm font-medium shadow-[0_4px_0_0_#b04050] active:translate-y-[2px] active:shadow-none transition-all duration-75 min-h-[48px]"
+            className="flex-1 bg-red-600/80 text-white rounded-xl px-4 py-2 text-xs font-medium shadow-[0_3px_0_0_#b04050] active:translate-y-[2px] active:shadow-none transition-all duration-75 min-h-[36px]"
           >
             Reset Kana
           </button>
           <button
             type="button"
             onClick={(): void => setConfirmTarget('kotoba')}
-            className="flex-1 bg-red-600/80 text-white rounded-xl px-4 py-3 text-sm font-medium shadow-[0_4px_0_0_#b04050] active:translate-y-[2px] active:shadow-none transition-all duration-75 min-h-[48px]"
+            className="flex-1 bg-red-600/80 text-white rounded-xl px-4 py-2 text-xs font-medium shadow-[0_3px_0_0_#b04050] active:translate-y-[2px] active:shadow-none transition-all duration-75 min-h-[36px]"
           >
             Reset Kotoba
           </button>

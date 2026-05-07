@@ -49,7 +49,7 @@ describe('DialogueOverlay', () => {
     expect(screen.getByTestId('dialogue-text').textContent).toBe('Hello')
   })
 
-  it('does not auto-advance: requires user click to move to next message', () => {
+  it('auto-advances between messages after typing completes', () => {
     render(<DialogueOverlay messages={['Hi', 'Bye']} mascotPose="neutral" onDismiss={vi.fn()} />)
 
     flushMicrotasks()
@@ -60,15 +60,10 @@ describe('DialogueOverlay', () => {
     })
     expect(screen.getByTestId('dialogue-text').textContent).toBe('Hi')
 
-    // Wait well past what was the old 400ms auto-advance pause
+    // 400ms pause then auto-advance + typing "Bye"
     act(() => {
-      vi.advanceTimersByTime(1000)
+      vi.advanceTimersByTime(400)
     })
-    // Still only first message shown (no auto-advance)
-    expect(screen.getByTestId('dialogue-text').textContent).not.toContain('Bye')
-
-    // Click Next to advance
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
     act(() => {
       vi.advanceTimersByTime(210)
     })
@@ -101,7 +96,7 @@ describe('DialogueOverlay', () => {
     expect(screen.getByRole('button', { name: 'Skip' })).toBeInTheDocument()
   })
 
-  it('skip reveals current line only, then Next advances', () => {
+  it('skip reveals current paragraph only, auto-advance continues', () => {
     render(
       <DialogueOverlay
         messages={['First message', 'Second message']}
@@ -115,15 +110,15 @@ describe('DialogueOverlay', () => {
       vi.advanceTimersByTime(100)
     })
 
-    // Skip reveals current line fully
+    // Skip reveals current paragraph fully
     fireEvent.click(screen.getByRole('button', { name: 'Skip' }))
     expect(screen.getByTestId('dialogue-text').textContent).toContain('First message')
     expect(screen.getByTestId('dialogue-text').textContent).not.toContain('Second message')
 
-    // Button now says Next
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
-
-    // Second message starts typing
+    // Auto-advance kicks in after 400ms pause, then types second message
+    act(() => {
+      vi.advanceTimersByTime(400)
+    })
     act(() => {
       vi.advanceTimersByTime(1500)
     })

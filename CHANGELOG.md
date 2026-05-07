@@ -33,7 +33,7 @@ Format per entry:
 ## 2026-05-07 - Session 99
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership
-**Task completed:** Phase 5 OAuth re-auth + username repair, Phase 6 daily cap, Phase 7 tests, audio/UI fixes, OAuth buttons greyed out
+**Task completed:** Sprint 10 complete: Phase 5-7, daily cap, profile fix, dialogue, audio, reset buttons, OAuth buttons, flaky test
 **Status:** Done (Sprint 10 complete)
 
 ### Changes made
@@ -70,6 +70,13 @@ Format per entry:
 ### Tests
 - Full suite: 1036 tests pass (26 new), 0 failures
 - New test files: reauth-cookie (11), daily-cap store (6), username repair hook (7), practice-client cap gate (2)
+- `components/profile/profile-client.tsx`: Removed loading gate (user request). Profile renders immediately.
+- `services/profile.service.ts`: Changed to `SELECT *` with safe-default mapper. Resilient to missing columns from unapplied migrations.
+- `components/profile/reset-progress.tsx`: Two side-by-side buttons (Reset Kana / Reset Kotoba), thinner styling.
+- `components/game/dialogue-overlay.tsx`: Auto-advance restored. "Skip" only skips current paragraph (not all). Always labelled "Skip".
+- `components/game/__tests__/dialogue-overlay.test.tsx`: Tests updated for auto-advance + per-line skip behaviour.
+- `components/dojo/__tests__/kotoba-dojo-client.test.tsx`: Fixed flaky test (sync getByRole to async findByRole).
+- `.gitignore`: Added `supabase/.temp/` to prevent linked-project.json from being committed.
 
 ### Next task
 Sprint 11: Security, Email, Polish, and Pre-Launch
@@ -77,8 +84,10 @@ Sprint 11: Security, Email, Polish, and Pre-Launch
 ### Notes
 - Daily cap feature flag (`daily_cap_enabled`) defaults to off. Cap records analytics events but does not enforce until flag is turned on. Server-side enforcement on checkpoint/leaderboard RPCs is deferred to the backlog.
 - Apple OAuth re-auth has no equivalent of Google's `prompt=login`. Apple may auto-complete without a fresh challenge. Documented as accepted limitation.
-- Production Supabase requires manual configuration: Site URL must point to Vercel URL (not localhost), email confirmations should be disabled, and AUTH_REAUTH_COOKIE_SECRET must be added to Vercel env vars.
-- Word audio files exist for all words but AudioContext suspension was causing intermittent playback. Fixed by awaiting resume() before start().
+- Production Supabase configuration done: Site URL set to Vercel URL, email confirmations disabled, AUTH_REAUTH_COOKIE_SECRET added to Vercel env vars. Migrations pushed via `supabase db push`.
+- Word audio AudioContext suspension fixed by awaiting resume() before start().
+- Google/Apple OAuth buttons greyed out with "Coming soon" until providers are configured (backlog task).
+- Profile service uses SELECT * with typed getters so unapplied migrations don't break profile loading.
 
 ---
 

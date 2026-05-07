@@ -922,9 +922,9 @@ The dialogue card is a themed overlay rendered by `components/game/dialogue-over
 - Text appears with a typewriter effect (character-by-character reveal).
 - All messages in a script flow continuously: the next message begins automatically
   after the previous one finishes typing.
-- A "Skip" button reveals all remaining text in the current script instantly.
-- The card auto-dismisses after the final message has been fully displayed (with a
-  short delay).
+- A "Skip" button reveals the current paragraph instantly. Messages continue to
+  auto-advance after the skipped paragraph is fully revealed.
+- The card shows "Got it" after the final message has been fully displayed.
 
 ### 14.4 Dialogue Scripts
 
