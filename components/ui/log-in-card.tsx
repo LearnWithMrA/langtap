@@ -30,16 +30,17 @@ type Step = 'pick' | 'email' | 'forgot'
 type LogInCardProps = {
   onClose: () => void
   onSwitchToSignUp: () => void
+  initialError?: string | null
 }
 
 // -- Component ------------------------------------------------
 
-export function LogInCard({ onClose, onSwitchToSignUp }: LogInCardProps): ReactNode {
+export function LogInCard({ onClose, onSwitchToSignUp, initialError }: LogInCardProps): ReactNode {
   const router = useRouter()
   const [step, setStep] = useState<Step>('pick')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [error, setError] = useState(initialError ?? '')
   const [loading, setLoading] = useState(false)
   const [resetSent, setResetSent] = useState(false)
   const [oauthLoading, setOauthLoading] = useState<'google' | 'apple' | null>(null)

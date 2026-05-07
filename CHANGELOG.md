@@ -30,6 +30,30 @@ Format per entry:
 
 ---
 
+## 2026-05-07 - Session 98i
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Phase 5 Codex fixes (partial): OAuth error display, auth callback getUser, delete body cap
+**Status:** Partial
+
+### Changes made
+- `components/layout/landing-client.tsx`: Reads `auth_error` query param on mount. Opens log-in modal with error message. Removes param via `router.replace('/')`.
+- `components/ui/log-in-card.tsx`: Added `initialError` prop. Pre-populates error state from OAuth callback redirect.
+- `app/auth/callback/route.ts`: Captures `getUser()` once after code exchange (was called inline twice). Handles missing user explicitly with error redirect. Uses captured user.id for profile lookup.
+- `app/api/auth/delete-account/route.ts`: Added 1KB Content-Length cap before `request.json()` to prevent memory abuse.
+
+### Tests
+- Full suite: 1010 tests pass, 0 failures
+
+### Next task
+Remaining Phase 5 Codex fixes: OAuth re-auth flow for delete account, username repair for OAuth users. Then Phase 6: daily distance cap with server-gated completion authorization.
+
+### Notes
+- Context was running low. OAuth re-auth (signed cookie infrastructure) and Phase 6 (completion authorization system) should start in a fresh session.
+- The approved Phase 6 architecture requires: completion contract through game windows, server-verified daily cap on checkpoint + leaderboard RPCs, user_tz and membership_tier on UserProfile, and hooks/useDailyCap.ts.
+
+---
+
 ## 2026-05-07 - Session 98h
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership

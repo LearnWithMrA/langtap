@@ -33,9 +33,16 @@ function isAllowedOrigin(request: NextRequest): boolean {
 
 // ── Handler ───────────────────────────────────
 
+const MAX_BODY_BYTES = 1024
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!isAllowedOrigin(request)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  const contentLength = request.headers.get('content-length')
+  if (contentLength && parseInt(contentLength, 10) > MAX_BODY_BYTES) {
+    return NextResponse.json({ error: 'Request too large' }, { status: 413 })
   }
 
   let body: { confirmation?: string; password?: string }

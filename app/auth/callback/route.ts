@@ -26,34 +26,42 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+function authErrorRedirect(origin: string, message: string): NextResponse {
+  return NextResponse.redirect(`${origin}/?auth_error=${encodeURIComponent(message)}`)
+}
+
 // ── Handler ───────────────────────────────────
 
 export async function GET(request: Request): Promise<NextResponse> {
   const { searchParams, origin } = new URL(request.url)
 
-  // Handle OAuth error responses
   const oauthError = searchParams.get('error')
   if (oauthError) {
     const description = searchParams.get('error_description') ?? 'Sign-in failed'
-    return NextResponse.redirect(`${origin}/?auth_error=${encodeURIComponent(description)}`)
+    return authErrorRedirect(origin, description)
   }
 
   const code = searchParams.get('code')
   const redirectTo = sanitizeNext(searchParams.get('next'))
 
   if (!code) {
-    return NextResponse.redirect(
-      `${origin}/?auth_error=${encodeURIComponent('No auth code received')}`,
-    )
+    return authErrorRedirect(origin, 'No auth code received')
   }
 
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error) {
-    return NextResponse.redirect(
-      `${origin}/?auth_error=${encodeURIComponent('Sign-in failed. Please try again.')}`,
-    )
+    return authErrorRedirect(origin, 'Sign-in failed. Please try again.')
+  }
+
+  // Capture user once after exchange
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return authErrorRedirect(origin, 'Could not verify your identity. Please try again.')
   }
 
   // For password reset callbacks, go directly to the requested page
@@ -61,11 +69,11 @@ export async function GET(request: Request): Promise<NextResponse> {
     return NextResponse.redirect(`${origin}${redirectTo}`)
   }
 
-  // Check onboarding status for OAuth sign-ups
+  // Check onboarding status
   const { data: profile } = await supabase
     .from('profiles')
     .select('onboarding_complete')
-    .eq('id', (await supabase.auth.getUser()).data.user?.id ?? '')
+    .eq('id', user.id)
     .single()
 
   if (profile) {
@@ -79,7 +87,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   const { data: retryProfile } = await supabase
     .from('profiles')
     .select('onboarding_complete')
-    .eq('id', (await supabase.auth.getUser()).data.user?.id ?? '')
+    .eq('id', user.id)
     .single()
 
   if (retryProfile) {
@@ -87,6 +95,5 @@ export async function GET(request: Request): Promise<NextResponse> {
     return NextResponse.redirect(`${origin}${dest}`)
   }
 
-  // Fallback: send to onboarding (profile will be created by the time they load)
   return NextResponse.redirect(`${origin}/onboarding/step-1`)
 }

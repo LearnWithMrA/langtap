@@ -14,8 +14,9 @@
 
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import type { ReactNode } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { LandingNav } from '@/components/layout/landing-nav'
 import { LandingScene } from '@/components/layout/landing-scene'
 import { LandingFooter } from '@/components/layout/landing-footer'
@@ -37,7 +38,19 @@ type AuthModal_ = 'log-in' | 'sign-up' | null
 
 export function LandingClient(): ReactNode {
   const { isActive: easterEggActive } = useEasterEgg()
+  const searchParams = useSearchParams()
+  const router = useRouter()
   const [authModal, setAuthModal] = useState<AuthModal_>(null)
+  const [authError, setAuthError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const errorParam = searchParams.get('auth_error')
+    if (errorParam) {
+      setAuthError(decodeURIComponent(errorParam))
+      setAuthModal('log-in')
+      router.replace('/')
+    }
+  }, [searchParams, router])
   const [kanaMode, setKanaMode] = useState<InputMode>('tap')
   const [kotobaMode, setKotobaMode] = useState<InputMode>('tap')
   const { board: kanaBoard } = useLeaderboard('kana', kanaMode, 'all-time')
@@ -165,7 +178,7 @@ export function LandingClient(): ReactNode {
       {authModal !== null && (
         <AuthModal onClose={closeAuth}>
           {authModal === 'log-in' ? (
-            <LogInCard onClose={closeAuth} onSwitchToSignUp={openSignUp} />
+            <LogInCard onClose={closeAuth} onSwitchToSignUp={openSignUp} initialError={authError} />
           ) : (
             <SignUpCard onClose={closeAuth} onSwitchToLogIn={openLogIn} />
           )}
