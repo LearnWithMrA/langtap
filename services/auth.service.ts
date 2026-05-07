@@ -336,6 +336,26 @@ export async function updatePassword(
   return { ok: true }
 }
 
+export async function signInWithGoogle(): Promise<{ ok: boolean; error?: string }> {
+  const redirectTo = `${window.location.origin}/auth/callback`
+  const { error } = await createBrowserSupabaseClient().auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo },
+  })
+  if (error) return { ok: false, error: 'Failed to start Google sign-in.' }
+  return { ok: true }
+}
+
+export async function signInWithApple(): Promise<{ ok: boolean; error?: string }> {
+  const redirectTo = `${window.location.origin}/auth/callback`
+  const { error } = await createBrowserSupabaseClient().auth.signInWithOAuth({
+    provider: 'apple',
+    options: { redirectTo },
+  })
+  if (error) return { ok: false, error: 'Failed to start Apple sign-in.' }
+  return { ok: true }
+}
+
 export async function deleteAccount(
   confirmation: string,
   password?: string,

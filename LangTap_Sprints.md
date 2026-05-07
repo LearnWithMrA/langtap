@@ -509,8 +509,8 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Google Sign-In | **Medium** | **To Do** | Supabase OAuth. `window.location.origin` for redirect. Callback sanitization. |
-| Apple Sign-In | **Medium** | **To Do** | Supabase OAuth. Apple-specific handling (Private Relay, no name reliance). |
+| Google Sign-In | **Medium** | **Done** | `signInWithGoogle()` via Supabase OAuth. `window.location.origin` for redirect. Tiles enabled in sign-up and log-in cards with loading state. Auth callback updated with onboarding check, OAuth error handling, profile retry. Session 98. |
+| Apple Sign-In | **Medium** | **Done** | `signInWithApple()` via Supabase OAuth. Same callback, same tile pattern. Apple-specific: Private Relay email stored as-is. Session 98. |
 | **Codex gate: Phase 5 review** | - | **To Do** | Review OAuth callback sanitization, redirect origin handling, account linking, and guest migration integration. |
 
 ### Phase 6: Membership

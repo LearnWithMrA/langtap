@@ -61,7 +61,10 @@ export function ProfileClient(): ReactNode {
   const deleteConfirmPhrase = `delete-${username}`
   const canConfirmDelete = deleteInput === deleteConfirmPhrase
 
-  const hasEmailIdentity = true
+  // Server checks user.identities for provider detection. Client always
+  // shows the password field; if the user is OAuth-only the server skips
+  // password verification and the field is harmless.
+  const showPasswordOnDelete = true
 
   const handleDeleteAccount = useCallback(async (): Promise<void> => {
     if (!canConfirmDelete || isDeleting) return
@@ -69,10 +72,7 @@ export function ProfileClient(): ReactNode {
     setIsDeleting(true)
     setDeleteError(null)
 
-    const result = await deleteAccount(
-      deleteInput,
-      hasEmailIdentity ? deletePassword || undefined : undefined,
-    )
+    const result = await deleteAccount(deleteInput, deletePassword || undefined)
 
     if (result.ok) {
       if (user?.id) clearAllUserLocalStorage(user.id)
@@ -82,7 +82,7 @@ export function ProfileClient(): ReactNode {
       setDeleteError(result.error ?? 'Failed to delete account.')
       setIsDeleting(false)
     }
-  }, [canConfirmDelete, isDeleting, deleteInput, deletePassword, hasEmailIdentity, user?.id])
+  }, [canConfirmDelete, isDeleting, deleteInput, deletePassword, user?.id])
 
   const handleEmailChange = useCallback(async (): Promise<void> => {
     setModalError(null)
@@ -300,7 +300,7 @@ export function ProfileClient(): ReactNode {
                 spellCheck={false}
                 autoFocus
               />
-              {hasEmailIdentity && (
+              {showPasswordOnDelete && (
                 <div>
                   <label className="text-xs text-warm-400 block mb-1" htmlFor="delete-password">
                     Confirm your password

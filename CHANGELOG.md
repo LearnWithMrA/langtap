@@ -30,6 +30,35 @@ Format per entry:
 
 ---
 
+## 2026-05-07 - Session 98h
+
+**Sprint:** Sprint 10 - Accounts, Auth, and Membership
+**Task completed:** Google Sign-In (Phase 5, Plan 7) + Apple Sign-In (Phase 5, Plan 8) + Delete Account Flow (Phase 4, Plan 10)
+**Status:** Done
+
+### Changes made
+- `services/auth.service.ts`: Added `signInWithGoogle()` and `signInWithApple()` using `supabase.auth.signInWithOAuth()` with `window.location.origin` for redirect URL (works for localhost, preview, production).
+- `app/auth/callback/route.ts`: Rewritten. Handles OAuth error params (`error`, `error_description`) with redirect to landing page. Sanitizes `next` param (relative paths only). After code exchange, checks onboarding status and routes new users to `/onboarding/step-1`, returning users to `/home`. Retries profile load once after 500ms if trigger hasn't fired yet. Password reset callbacks go directly to requested page.
+- `components/ui/sign-up-card.tsx`: Google and Apple tiles enabled (were disabled with "coming soon"). Loading state per provider. OAuth errors shown inline. "Coming soon" text removed.
+- `components/ui/log-in-card.tsx`: Same tile activation as sign-up card.
+- `app/api/auth/delete-account/route.ts`: New route handler (from Plan 10). CSRF origin check, server-side getUser auth, password re-auth for email-identity users, admin client deletion with cascade, sb-* cookie clearing.
+- `components/profile/profile-client.tsx`: Delete dialog wired to real `deleteAccount()` service. Password field always shown (server detects OAuth-only). Post-deletion cleanup (localStorage + stores + redirect).
+
+### Tests
+- Full suite: 1010 tests pass, 0 failures
+- OAuth and delete flows are UI/integration work; verified via TypeScript compilation and lint
+
+### Next task
+Codex gate: Phase 5 review, then Phase 6 (daily distance cap)
+
+### Notes
+- Supabase dashboard configuration (enable Google/Apple providers, set Client ID + Secret) must be done manually by the owner before OAuth works.
+- Guest migration after OAuth sign-up is handled by AuthInitializer (Plan 5). The OAuth detection in auth-initializer uses `detectOAuthProvider()` to force the confirmation prompt instead of auto-import.
+- Account linking behavior depends on Supabase dashboard config. The callback handles "account already exists" errors via the error param redirect.
+- Delete account password field: always shown on client. Server checks `user.identities` for provider detection and skips password for OAuth-only users.
+
+---
+
 ## 2026-05-07 - Session 98g
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership
