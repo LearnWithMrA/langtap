@@ -78,9 +78,11 @@ afterEach(() => {
 // ── Tests ────────────────────────────────────
 
 describe('KotobaDojoClient - ready shell', () => {
-  it('renders the page heading and the JLPT tab row', () => {
+  it('renders the page heading and the JLPT tab row', async () => {
     render(<KotobaDojoClient />)
-    expect(screen.getByRole('heading', { level: 1, name: 'Kotoba Dojo' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Kotoba Dojo' }),
+    ).toBeInTheDocument()
     expect(screen.getByRole('tablist', { name: 'JLPT level' })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: 'N5' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('tab', { name: 'N4' })).toHaveAttribute('aria-selected', 'false')

@@ -84,26 +84,26 @@ beforeEach(() => {
 // ── Tests ───────────────────────────────────
 
 describe('KanaDojoClient', () => {
-  it('renders the page heading and both script groups', () => {
+  it('renders the page heading and both script groups', async () => {
     seedVarietyState()
     render(<KanaDojoClient />)
-    expect(screen.getByRole('heading', { level: 1, name: 'Kana Dojo' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Kana Dojo' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Hiragana' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Katakana' })).toBeInTheDocument()
   })
 
-  it('opens Hiragana by default and shows stage headings inside it', () => {
+  it('opens Hiragana by default and shows stage headings inside it', async () => {
     seedVarietyState()
     render(<KanaDojoClient />)
-    expect(screen.getByRole('heading', { name: 'Seion' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Seion' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Dakuon' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Combination' })).toBeInTheDocument()
   })
 
-  it('shows the welcome card on first visit regardless of unlock state', () => {
+  it('shows the welcome card on first visit regardless of unlock state', async () => {
     seedVarietyState()
     render(<KanaDojoClient />)
-    expect(screen.getByRole('complementary', { name: 'Dojo tip' })).toBeInTheDocument()
+    expect(await screen.findByRole('complementary', { name: 'Dojo tip' })).toBeInTheDocument()
   })
 
   it('shows the welcome card when all characters are locked', () => {

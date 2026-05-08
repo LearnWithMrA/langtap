@@ -92,11 +92,14 @@ export function LandingFooter(): ReactNode {
 
         {/* Legal column */}
         <div className="flex flex-col gap-2">
-          <a href="#" className="hover:text-text-primary transition-colors">
+          <a href="/privacy" className="hover:text-text-primary transition-colors">
             Privacy Policy
           </a>
-          <a href="#" className="hover:text-text-primary transition-colors">
+          <a href="/terms" className="hover:text-text-primary transition-colors">
             Terms of Service
+          </a>
+          <a href="/credits" className="hover:text-text-primary transition-colors">
+            Credits
           </a>
         </div>
 
