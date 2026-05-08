@@ -94,38 +94,75 @@ export function LandingClient(): ReactNode {
         {/* Section A: How it works */}
         <section id="about" className="px-4 pt-7 pb-12 md:pt-11 md:pb-20">
           <div className="mx-auto max-w-4xl">
-            <h2 className="text-2xl md:text-3xl font-bold text-warm-800 text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold text-warm-800 text-center mb-4">
               How it works
             </h2>
+            <p className="text-sm text-warm-500 text-center max-w-lg mx-auto mb-12">
+              LangTap builds your Japanese typing fluency through repetition. No quizzes, no grades.
+              Just practice at your own pace.
+            </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="flex flex-col items-center text-center gap-3">
                 <div className="w-16 h-16 rounded-2xl bg-sage-100 flex items-center justify-center">
-                  <span className="text-2xl text-sage-500"> </span>
+                  <span className="text-2xl">あ</span>
                 </div>
-                <h3 className="text-lg font-medium text-warm-800">Choose your characters</h3>
+                <h3 className="text-lg font-medium text-warm-800">Learn kana naturally</h3>
                 <p className="text-sm text-warm-600 leading-relaxed">
-                  Start with the basics and unlock new characters as you go. Or skip ahead if you
-                  already know some kana.
+                  Start with 10 hiragana characters. Each one unlocks after 5 correct answers.
+                  Mnemonics help you remember. Over 200 characters across hiragana and katakana.
                 </p>
               </div>
               <div className="flex flex-col items-center text-center gap-3">
                 <div className="w-16 h-16 rounded-2xl bg-mint-100 flex items-center justify-center">
-                  <span className="text-2xl text-mint-500"> </span>
+                  <span className="text-2xl">水</span>
                 </div>
-                <h3 className="text-lg font-medium text-warm-800">Type, tap, or swipe</h3>
+                <h3 className="text-lg font-medium text-warm-800">Build vocabulary</h3>
                 <p className="text-sm text-warm-600 leading-relaxed">
-                  Use your physical keyboard, tap on screen, or swipe on your phone. Three ways to
-                  build speed.
+                  Practice real Japanese words from JLPT N5 to N1. Type the reading or select the
+                  kanji. Over 8,000 words with native audio pronunciation.
                 </p>
               </div>
               <div className="flex flex-col items-center text-center gap-3">
                 <div className="w-16 h-16 rounded-2xl bg-blush-100 flex items-center justify-center">
-                  <span className="text-2xl text-blush-300"> </span>
+                  <span className="text-2xl">🥋</span>
                 </div>
-                <h3 className="text-lg font-medium text-warm-800">Watch your progress</h3>
+                <h3 className="text-lg font-medium text-warm-800">Track in the Dojo</h3>
                 <p className="text-sm text-warm-600 leading-relaxed">
-                  The Dojo shows your mastery heatmap. Characters you struggle with appear more
-                  often.
+                  Your Dojo shows every character and word with a mastery heatmap. Unlock, reset, or
+                  skip ahead. Characters you struggle with appear more often.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
+              <div className="flex flex-col items-center text-center gap-3">
+                <div className="w-16 h-16 rounded-2xl bg-[#e8e4f0] flex items-center justify-center">
+                  <span className="text-2xl">⌨️</span>
+                </div>
+                <h3 className="text-lg font-medium text-warm-800">Three input modes</h3>
+                <p className="text-sm text-warm-600 leading-relaxed">
+                  Type on a physical keyboard, tap character buttons on screen, or swipe on your
+                  phone's Japanese keyboard. Switch any time.
+                </p>
+              </div>
+              <div className="flex flex-col items-center text-center gap-3">
+                <div className="w-16 h-16 rounded-2xl bg-[#fef3e0] flex items-center justify-center">
+                  <span className="text-2xl">🏆</span>
+                </div>
+                <h3 className="text-lg font-medium text-warm-800">Compete on the leaderboard</h3>
+                <p className="text-sm text-warm-600 leading-relaxed">
+                  Every correct answer earns points. Separate boards for kana and vocabulary, each
+                  input mode, weekly and all-time. See how you compare.
+                </p>
+              </div>
+              <div className="flex flex-col items-center text-center gap-3">
+                <div className="w-16 h-16 rounded-2xl bg-[#e0f0f0] flex items-center justify-center">
+                  <span className="text-2xl">🎵</span>
+                </div>
+                <h3 className="text-lg font-medium text-warm-800">Calm, focused sessions</h3>
+                <p className="text-sm text-warm-600 leading-relaxed">
+                  Lo-fi background music, word audio pronunciation, and a gentle cycling animation.
+                  No timers, no pressure. Practice for as long as you like.
                 </p>
               </div>
             </div>

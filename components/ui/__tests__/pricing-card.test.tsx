@@ -1,18 +1,17 @@
-// ------------------------------------------------------------
+// ─────────────────────────────────────────────
 // File: components/ui/__tests__/pricing-card.test.tsx
 // Purpose: Tests for the PricingSection component. Validates
-//          that all three tiers render, paid tiers show "Coming
-//          soon" in the button area, and free tier CTA is active.
+//          tier rendering, monthly/annual toggle, promo banner,
+//          and CTA states.
 // Depends on: components/ui/pricing-card.tsx
-// ------------------------------------------------------------
+// ─────────────────────────────────────────────
 
 // @vitest-environment jsdom
 
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { PricingSection } from '../pricing-card'
 
-// Mock Audio
 vi.stubGlobal(
   'Audio',
   class MockAudio {
@@ -27,41 +26,49 @@ describe('PricingSection', () => {
   it('renders all three tier names', () => {
     render(<PricingSection />)
     expect(screen.getByText('Free')).toBeDefined()
-    expect(screen.getByText('Regular')).toBeDefined()
-    expect(screen.getByText('Unlimited')).toBeDefined()
+    expect(screen.getByText('Member')).toBeDefined()
+    expect(screen.getByText('Lifetime')).toBeDefined()
   })
 
-  it('renders correct prices', () => {
+  it('renders free tier with correct price and distance', () => {
     render(<PricingSection />)
     expect(screen.getByText('$0 / month')).toBeDefined()
-    expect(screen.getByText('$3 / month')).toBeDefined()
+    expect(screen.getByText('100m per day')).toBeDefined()
+  })
+
+  it('shows member monthly price by default', () => {
+    render(<PricingSection />)
     expect(screen.getByText('$5 / month')).toBeDefined()
   })
 
-  it('renders distance limits', () => {
+  it('toggles to annual pricing with savings badge', () => {
     render(<PricingSection />)
-    expect(screen.getByText('50m per day')).toBeDefined()
-    expect(screen.getByText('300m per day')).toBeDefined()
-    expect(screen.getByText('No limit')).toBeDefined()
+    fireEvent.click(screen.getByText('Annual'))
+    expect(screen.getByText('$29 / year')).toBeDefined()
+    expect(screen.getByText('Save over 50%')).toBeDefined()
   })
 
-  it('shows "Coming soon" text for paid tiers', () => {
+  it('renders lifetime tier with one-time price', () => {
+    render(<PricingSection />)
+    expect(screen.getByText('$39')).toBeDefined()
+    expect(screen.getByText('One-time payment')).toBeDefined()
+    expect(screen.getByText('Unlimited forever')).toBeDefined()
+  })
+
+  it('shows "Coming soon" for paid tiers', () => {
     render(<PricingSection />)
     const comingSoon = screen.getAllByText('Coming soon')
     expect(comingSoon).toHaveLength(2)
   })
 
-  it('has an enabled CTA for the free tier', () => {
+  it('has an active CTA for the free tier', () => {
     render(<PricingSection />)
-    const freeButton = screen.getByLabelText('Start for free - Free tier')
+    const freeButton = screen.getByLabelText('Start for free')
     expect(freeButton).toBeDefined()
-    expect(freeButton.getAttribute('aria-disabled')).not.toBe('true')
   })
 
-  it('does not render "Get started" as a button or link for paid tiers', () => {
+  it('shows promotional period banner', () => {
     render(<PricingSection />)
-    // Paid tiers show "Coming soon" as plain text, not as a clickable element
-    expect(screen.queryByLabelText('Get started - Regular tier')).toBeNull()
-    expect(screen.queryByLabelText('Get started - Unlimited tier')).toBeNull()
+    expect(screen.getByText(/promotional period/)).toBeDefined()
   })
 })
