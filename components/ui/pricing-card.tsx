@@ -18,7 +18,6 @@ export function PricingSection(): ReactNode {
   const [annual, setAnnual] = useState(false)
 
   const memberPrice = annual ? '$29 / year' : '$5 / month'
-  const memberSaving = annual ? 'Save over 50%' : null
 
   return (
     <div className="flex flex-col items-center gap-8">
@@ -29,7 +28,7 @@ export function PricingSection(): ReactNode {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-3xl mx-auto items-stretch">
         {/* Free */}
-        <div className="flex flex-col items-center rounded-2xl p-6 bg-sage-100 text-warm-800 shadow-[0_4px_0_0_var(--color-sage-300)]">
+        <div className="flex flex-col items-center text-center rounded-2xl p-6 bg-sage-100 text-warm-800 shadow-[0_4px_0_0_var(--color-sage-300)]">
           <h3 className="text-xl font-bold">Free</h3>
           <p className="text-2xl font-bold mt-3">$0 / month</p>
           <p className="text-sm opacity-80 mt-2">100m per day</p>
@@ -44,8 +43,15 @@ export function PricingSection(): ReactNode {
         </div>
 
         {/* Member (monthly / annual toggle) */}
-        <div className="flex flex-col items-center rounded-2xl p-6 bg-sage-500 text-white shadow-[0_4px_0_0_var(--color-sage-600)]">
+        <div className="relative overflow-hidden flex flex-col items-center text-center rounded-2xl p-6 bg-sage-500 text-white shadow-[0_4px_0_0_var(--color-sage-600)]">
           <h3 className="text-xl font-bold">Member</h3>
+
+          {/* Corner ribbon: annual savings */}
+          {annual && (
+            <div className="absolute top-[18px] -right-[36px] rotate-45 bg-white/30 text-[10px] font-bold text-white tracking-wider px-12 py-1 text-center">
+              SAVE 50%
+            </div>
+          )}
 
           {/* Toggle */}
           <div className="flex items-center gap-2 mt-3 bg-white/15 rounded-full px-1 py-1">
@@ -54,7 +60,7 @@ export function PricingSection(): ReactNode {
               onClick={(): void => setAnnual(false)}
               className={[
                 'px-3 py-1 text-xs font-medium rounded-full transition-all duration-150',
-                !annual ? 'bg-white text-sage-700' : 'text-white/80 hover:text-white',
+                !annual ? 'bg-white text-sage-600' : 'text-white/80 hover:text-white',
               ].join(' ')}
             >
               Monthly
@@ -64,7 +70,7 @@ export function PricingSection(): ReactNode {
               onClick={(): void => setAnnual(true)}
               className={[
                 'px-3 py-1 text-xs font-medium rounded-full transition-all duration-150',
-                annual ? 'bg-white text-sage-700' : 'text-white/80 hover:text-white',
+                annual ? 'bg-white text-sage-600' : 'text-white/80 hover:text-white',
               ].join(' ')}
             >
               Annual
@@ -72,11 +78,6 @@ export function PricingSection(): ReactNode {
           </div>
 
           <p className="text-2xl font-bold mt-3">{memberPrice}</p>
-          {memberSaving && (
-            <p className="text-xs font-medium bg-white/20 rounded-full px-3 py-0.5 mt-1">
-              {memberSaving}
-            </p>
-          )}
           <p className="text-sm opacity-80 mt-2">Unlimited</p>
           <div className="flex-1" />
           <div className="w-full rounded-xl bg-white/20 px-4 py-3 text-center text-sm font-medium mt-4">
@@ -85,7 +86,7 @@ export function PricingSection(): ReactNode {
         </div>
 
         {/* Lifetime */}
-        <div className="flex flex-col items-center rounded-2xl p-6 bg-warm-800 text-white shadow-[0_4px_0_0_#1a1408]">
+        <div className="flex flex-col items-center text-center rounded-2xl p-6 bg-warm-800 text-white shadow-[0_4px_0_0_#1a1408]">
           <h3 className="text-xl font-bold">Lifetime</h3>
           <p className="text-2xl font-bold mt-3">$39</p>
           <p className="text-xs font-medium bg-white/15 rounded-full px-3 py-0.5 mt-1">

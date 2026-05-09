@@ -1,11 +1,12 @@
 // ─────────────────────────────────────────────
 // File: hooks/useWordAudio.ts
-// Purpose: On-demand word pronunciation playback. Fetches and
-//          decodes MP3 audio only when playWordAudio() is called.
-//          Nothing loads on page load. Respects the wordAudio
-//          setting from settings.store.ts. Shares a single
-//          AudioContext with useKeySound via lazy init.
+// Purpose: On-demand pronunciation playback for words and
+//          individual kana characters. Fetches and decodes MP3
+//          audio only when play functions are called. Nothing
+//          loads on page load. Respects the wordAudio setting
+//          from settings.store.ts.
 // Depends on: data/audio/word-manifest.ts,
+//             data/audio/kana-manifest.ts,
 //             stores/settings.store.ts
 // ─────────────────────────────────────────────
 
@@ -13,6 +14,7 @@
 
 import { useCallback } from 'react'
 import { getWordAudioPath } from '@/data/audio/word-manifest'
+import { getKanaAudioPath } from '@/data/audio/kana-manifest'
 import { useSettingsStore } from '@/stores/settings.store'
 
 // ── Module-level singletons ─────────────────
@@ -53,34 +55,49 @@ async function fetchAndDecode(path: string): Promise<AudioBuffer | null> {
   return promise
 }
 
+// ── Shared playback ─────────────────────────
+
+function playBuffer(path: string): void {
+  void fetchAndDecode(path).then(async (buffer) => {
+    if (!buffer) return
+    const audioCtx = getContext()
+    if (audioCtx.state === 'suspended') {
+      await audioCtx.resume()
+    }
+    const source = audioCtx.createBufferSource()
+    source.buffer = buffer
+    source.connect(audioCtx.destination)
+    source.start(0)
+  })
+}
+
 // ── Hook ─────────────────────────────────────
 
 export function useWordAudio(): {
   playWordAudio: (wordId: string) => void
+  playKanaAudio: (kana: string) => void
 } {
   const wordAudio = useSettingsStore((s) => s.wordAudio)
 
   const playWordAudio = useCallback(
     (wordId: string): void => {
       if (!wordAudio) return
-
       const path = getWordAudioPath(wordId)
       if (!path) return
-
-      void fetchAndDecode(path).then(async (buffer) => {
-        if (!buffer) return
-        const audioCtx = getContext()
-        if (audioCtx.state === 'suspended') {
-          await audioCtx.resume()
-        }
-        const source = audioCtx.createBufferSource()
-        source.buffer = buffer
-        source.connect(audioCtx.destination)
-        source.start(0)
-      })
+      playBuffer(path)
     },
     [wordAudio],
   )
 
-  return { playWordAudio }
+  const playKanaAudio = useCallback(
+    (kana: string): void => {
+      if (!wordAudio) return
+      const path = getKanaAudioPath(kana)
+      if (!path) return
+      playBuffer(path)
+    },
+    [wordAudio],
+  )
+
+  return { playWordAudio, playKanaAudio }
 }

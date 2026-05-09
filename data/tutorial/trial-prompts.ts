@@ -74,11 +74,11 @@ export const TRIAL_PROMPTS: PracticePrompt[] = [
     { id: 'h-a', kana: 'あ', romaji: 'a' },
     { id: 'h-u', kana: 'う', romaji: 'u' },
   ]),
-  wordPrompt('1587900', 'いえ', '家', 'House', [
+  wordPrompt('1191730', 'いえ', '家', 'House', [
     { id: 'h-i', kana: 'い', romaji: 'i' },
     { id: 'h-e', kana: 'え', romaji: 'e' },
   ]),
-  wordPrompt('1415510', 'うえ', '上', 'On top of', [
+  wordPrompt('1352130', 'うえ', '上', 'On top of', [
     { id: 'h-u', kana: 'う', romaji: 'u' },
     { id: 'h-e', kana: 'え', romaji: 'e' },
   ]),

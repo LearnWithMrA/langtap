@@ -113,12 +113,7 @@ describe('LeaderboardList rows', () => {
 describe('LeaderboardList empty state', () => {
   it('shows empty message when no entries', () => {
     render(<LeaderboardList board={EMPTY_BOARD} variant="kana" />)
-    expect(screen.getByText('No scores yet. Start practising to appear here.')).toBeTruthy()
-  })
-
-  it('shows CTA button', () => {
-    render(<LeaderboardList board={EMPTY_BOARD} variant="kana" />)
-    expect(screen.getByRole('button', { name: 'Start practising' })).toBeTruthy()
+    expect(screen.getByText('No scores yet.')).toBeTruthy()
   })
 })
 

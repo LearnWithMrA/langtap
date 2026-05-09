@@ -29,6 +29,7 @@ import {
 } from '@/components/game/tap-grids'
 import { useKeySound } from '@/hooks/useKeySound'
 import { useWordAudio } from '@/hooks/useWordAudio'
+import { getWordAudioPath } from '@/data/audio/word-manifest'
 import { useSettingsStore } from '@/stores/settings.store'
 import {
   useKotobaPracticeSession,
@@ -84,7 +85,7 @@ export function KotobaGameWindow({
   const topLeft = childArray[0] ?? null
   const topRight = childArray[1] ?? null
   const { playSound } = useKeySound()
-  const { playWordAudio } = useWordAudio()
+  const { playWordAudio, playKanaAudio } = useWordAudio()
   const hintsEnabled = useSettingsStore((s) => s.hints)
 
   const isKanjiMode = kotobaInput === 'kanji'
@@ -253,7 +254,13 @@ export function KotobaGameWindow({
 
     setWordDone(true)
     setFeedbackState('correct')
-    if (currentWord?.id) playWordAudio(currentWord.id)
+    const wordId = currentWord?.id
+    if (wordId && getWordAudioPath(wordId)) {
+      playWordAudio(wordId)
+    } else {
+      const kana = currentWord?.characters[0]?.kana
+      if (kana) playKanaAudio(kana)
+    }
     schedule(advanceWord, KOTOBA_DISPLAY_MS)
   }, [
     clearTimers,
@@ -265,7 +272,8 @@ export function KotobaGameWindow({
     isKanjiMode,
     onLeaderboardFinalize,
     playWordAudio,
-    currentWord?.id,
+    playKanaAudio,
+    currentWord,
   ])
 
   const handleReadingDone = useCallback((): void => {

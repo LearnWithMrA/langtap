@@ -45,7 +45,7 @@ describe('PricingSection', () => {
     render(<PricingSection />)
     fireEvent.click(screen.getByText('Annual'))
     expect(screen.getByText('$29 / year')).toBeDefined()
-    expect(screen.getByText('Save over 50%')).toBeDefined()
+    expect(screen.getByText('SAVE 50%')).toBeDefined()
   })
 
   it('renders lifetime tier with one-time price', () => {

@@ -267,14 +267,7 @@ export function LeaderboardList({
         </>
       ) : (
         <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-          <p className="text-sm text-warm-500">No scores yet. Start practising to appear here.</p>
-          <button
-            type="button"
-            className="mt-4 bg-mint-500 text-white text-sm font-bold px-6 py-3 rounded-xl shadow-[0_4px_0_0_#2e9a73] active:translate-y-[2px] active:shadow-none transition-all duration-75 min-h-[44px]"
-            aria-label="Start practising"
-          >
-            Start practising
-          </button>
+          <p className="text-sm text-warm-500">No scores yet.</p>
         </div>
       )}
     </div>

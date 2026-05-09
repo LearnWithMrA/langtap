@@ -30,6 +30,37 @@ Format per entry:
 
 ---
 
+## 2026-05-09 - Session 101
+
+**Sprint:** Off-sprint
+**Task completed:** Pricing polish, leaderboard cleanup, audio fix, kana character audio
+**Status:** Done
+
+### Changes made
+- `components/ui/pricing-card.tsx`: Added `text-center` to all three card wrappers. Changed selected toggle text from `text-sage-700` (undefined) to `text-sage-600` (dark green). Replaced inline "Save over 50%" pill with a diagonal corner ribbon ("SAVE 50%") on the Member card. Removed unused `memberSaving` variable.
+- `components/layout/landing-client.tsx`: Reduced dead space above pricing section (top padding from `py-16 md:py-24` to `pt-8 pb-16 md:pt-12 md:pb-24`, heading margin from `mb-12` to `mb-8`).
+- `components/leaderboard/leaderboard-list.tsx`: Removed "Start practising to appear here" text and "Start practising" button from empty state. Now shows only "No scores yet."
+- `data/tutorial/trial-prompts.ts`: Fixed incorrect word IDs for trial words. 家 was `1587900` (nonexistent), corrected to `1191730`. 上 was `1415510` (nonexistent), corrected to `1352130`. This was the root cause of audio not playing after the first trial word.
+- `data/audio/kana-manifest.ts`: New manifest mapping 123 kana characters to audio file paths. Katakana falls back to hiragana equivalent audio.
+- `public/audio/kana/`: Added 123 individual kana character audio files (hiragana seion, dakuon, combination, and extended katakana).
+- `hooks/useWordAudio.ts`: Added `playKanaAudio(kana)` function alongside existing `playWordAudio`. Extracted shared `playBuffer` helper.
+- `components/game/game-window.tsx`: Audio now plays on every correct completion. Uses word audio when available, falls back to kana character audio for character drills and words without word audio.
+- `components/game/kotoba-game-window.tsx`: Same word-to-kana audio fallback added.
+- `components/ui/__tests__/pricing-card.test.tsx`: Updated savings badge test to match new "SAVE 50%" text.
+- `components/leaderboard/__tests__/leaderboard-list.test.tsx`: Removed CTA button test, updated empty state text assertion.
+
+### Tests
+- All 1037 tests passing
+
+### Next task
+TBD
+
+### Notes
+- All 7,711 words in the word bank already had audio coverage. The trial audio issue was caused by two nonexistent word IDs, not a manifest gap.
+- Kana character audio files were provided by the owner from an external source (123 files).
+
+---
+
 ## 2026-05-07 - Session 99
 
 **Sprint:** Sprint 10 - Accounts, Auth, and Membership

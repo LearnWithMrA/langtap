@@ -29,6 +29,7 @@ import { KANA_CHARACTERS } from '@/data/kana/characters'
 import { getDualMnemonic } from '@/data/kana/mnemonics'
 import { useSettingsStore } from '@/stores/settings.store'
 import { useWordAudio } from '@/hooks/useWordAudio'
+import { getWordAudioPath } from '@/data/audio/word-manifest'
 import type { Stage } from '@/types/kana.types'
 import type {
   UsePracticeSessionReturn,
@@ -152,7 +153,7 @@ export function GameWindow({
 
   const inputDirection = useSettingsStore((s) => s.inputDirection)
   const hintsEnabled = useSettingsStore((s) => s.hints)
-  const { playWordAudio } = useWordAudio()
+  const { playWordAudio, playKanaAudio } = useWordAudio()
 
   type Direction = 'kana-to-romaji' | 'romaji-to-kana'
   const [alternateDirection, setAlternateDirection] = useState<Direction>('kana-to-romaji')
@@ -312,7 +313,13 @@ export function GameWindow({
 
     scheduleTimeout((): void => {
       setShowMeaning(true)
-      if (prompt?.word.id) playWordAudio(prompt.word.id)
+      const wordId = prompt?.word.id
+      if (wordId && getWordAudioPath(wordId)) {
+        playWordAudio(wordId)
+      } else {
+        const kana = prompt?.characters[0]?.kana
+        if (kana) playKanaAudio(kana)
+      }
     }, MEANING_FADE_MS)
     scheduleTimeout((): void => {
       if (inputDirection === 'alternate') {
@@ -334,7 +341,9 @@ export function GameWindow({
     advanceToNext,
     inputDirection,
     playWordAudio,
+    playKanaAudio,
     prompt?.word.id,
+    prompt?.characters,
   ])
 
   const recordFirstAttempt = useCallback((charIdx: number, submitted: string): void => {

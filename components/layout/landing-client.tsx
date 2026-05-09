@@ -170,9 +170,9 @@ export function LandingClient(): ReactNode {
         </section>
 
         {/* Section B: Pricing */}
-        <section id="pricing" className="px-4 py-16 md:py-24 bg-cream">
+        <section id="pricing" className="px-4 pt-8 pb-16 md:pt-12 md:pb-24 bg-cream">
           <div className="mx-auto max-w-4xl">
-            <h2 className="text-2xl md:text-3xl font-bold text-warm-800 text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold text-warm-800 text-center mb-8">
               Pricing
             </h2>
             <PricingSection />
