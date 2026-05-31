@@ -452,7 +452,7 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 ## Sprint 10 - Accounts, Auth, and Membership
 
 **Goal:** Guest-to-account conversion works end-to-end. Signed-in users have all progress synced to Supabase. Google and Apple sign-in available. Membership tiers defined and enforced (free tier daily cap). Profile and settings fully wired. Guest progress import is validated and safe.
-**Status:** In Progress
+**Status:** Complete
 
 **Architecture:** Plans v10 approved after 10 rounds of Codex staff-engineer review. Full plans in `~/Downloads/Plans.md`. Key decisions: profile-level domain epoch with row lock serialization, checkpoint sync via RPCs (not client upsert), user-scoped localStorage, dual-marker guest session verification, import quarantine model.
 
@@ -531,37 +531,166 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 
 ---
 
-## Sprint 11 - Security, Email, Polish, and Pre-Launch
+## Sprint 11 - Bug Fixes and Polish
 
-**Goal:** App is launch-ready. Email deliverability is production-grade. Mutating endpoints are protected with CSRF/origin checks and rate limits. Accessibility and cross-browser verified. Privacy policy and credits in place. Soft launch to testers.
+**Goal:** Quick wins from playtesting. Fix mobile UX bugs and visual polish issues that affect every session.
+**Status:** Pending
+
+**Note:** Privacy policy, terms of service, credits page, pricing redesign, kana character audio, and stale sprint reference fixes were completed in Sessions 92, 100-101 as part of the previous Sprint 11 scope.
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Fix mobile keyboard closing between prompts | **Small** | **To Do** | `type-input.tsx:66` and `swipe-input.tsx:65`: the focus `useEffect` depends on `[disabled, value]`. When `resetInputState()` clears value between prompts, this triggers re-focus, which on mobile causes the keyboard to close and reopen. Fix: remove `value` from the dependency array so focus only fires on `disabled` change. Mobile keyboard stays open between prompt transitions. Desktop input remains focused. |
+| Fix mobile audio not playing without lo-fi | **Small** | **To Do** | `useWordAudio.ts`: Web AudioContext only unlocks on a user gesture. The lo-fi play button provides that gesture, but if the user never taps lo-fi, the AudioContext is never unlocked and word pronunciation audio silently fails. Fix: add a one-time `pointerdown` listener (same pattern already proven in `useKeySound.ts:89-101`) to unlock the AudioContext on the first user interaction regardless of lo-fi state. Test on iOS Safari. |
+| Darken mnemonic text orange for readability | **Small** | **To Do** | The mnemonic/meaning text in `meaning-reveal.tsx:35` uses `text-feedback-wrong` (`#f59e60`), which is too light against the cream card background (`#faf5e4`). Fix: create a new CSS token `--color-feedback-mnemonic` in `globals.css` with a darker orange (~`#d4782a`). Use `text-feedback-mnemonic` in `meaning-reveal.tsx` only. Do NOT change `--color-feedback-wrong` or the `WRONG_COLOURS` array in `game-window.tsx`. Must pass WCAG 4.5:1 contrast against `#faf5e4`. |
+| Show dual mnemonic in dojo tile detail | **Small** | **To Do** | `tile-detail-popover.tsx` currently shows kana, romaji, and mastery score. Import `DUAL_MNEMONICS` from `data/kana/mnemonics.ts` and look up the character's romaji. If a mnemonic exists, render the `.text` field below the mastery score. Show the full dual text (covers both hiragana and katakana in one story, e.g. "あ is an apple with a stem, and ア is an axe cutting it"). Only for characters that have a mnemonic entry. |
+
+---
+
+## Sprint 12 - Reset Progress Upgrade
+
+**Goal:** Reset progress becomes a full factory reset. App state returns to identical-to-new-account. Typed confirmation prevents accidental resets.
 **Status:** Pending
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Implement CSRF/origin checks for mutating endpoints | **Medium** | **To Do** | All mutating route handlers and RPC callers must verify origin/referer headers against allowed origins. Covers: sign-out, delete account, username change, leaderboard score sync RPC, guest import RPC, and future Stripe endpoints. Use Next.js middleware or per-route validation. Reject requests with missing or mismatched origin. Document the approach in `docs/SECURITY.md`. |
-| Implement rate limiting for mutating endpoints | **Medium** | **To Do** | Rate limit all mutating API routes and RPC-calling service endpoints. Suggested limits: auth actions (sign-up, sign-in, password reset) 5/min per IP, profile mutations (username, delete) 3/min per user, leaderboard sync 10/min per user, guest import 3/hour per IP. Use Vercel Edge middleware or an in-memory/Redis store. Return 429 with Retry-After header. Document limits in `docs/SECURITY.md`. |
-| Configure custom SMTP with domain authentication | **Medium** | **To Do** | Supabase's default SMTP has poor deliverability - password reset and confirmation emails go to spam or promotions tab. Fix: choose a transactional email provider (Resend or Postmark). In Supabase dashboard: Auth > SMTP Settings > configure custom SMTP with the provider's credentials. On the domain registrar: add SPF record (TXT, `v=spf1 include:<provider> ~all`), DKIM record (TXT, provider-generated key), and DMARC record (TXT, `v=DMARC1; p=quarantine; rua=mailto:dmarc@langtap.com`). Test with mail-tester.com before launch - target score 9/10 or higher. Document the provider choice and DNS records in `docs/DEVOPS.md`. |
-| Build onboarding email sequence | **Medium** | **To Do** | Three-email drip sequence using the chosen email provider (Resend or Postmark). Day 0: welcome email ("You're in! Here's how to start practising"). Day 2: activation nudge ("Have you tried [kana/kotoba] practice yet? Here's a quick tip"). Day 7: social proof ("Other learners at your JLPT level are practising X minutes a day"). Trigger Day 0 on sign-up via a Supabase database webhook or edge function on `auth.users` insert. Days 2 and 7 via the email provider's drip/sequence feature or a scheduled edge function. All emails must include an unsubscribe link (GDPR). Respect the `notifications_enabled` field on the profiles table. |
-| Accessibility audit | **Medium** | **To Do** | Every interactive element: ARIA labels, keyboard navigation, focus states, touch targets minimum 44x44pt. |
-| Cross-browser and cross-device testing | **Medium** | **To Do** | Chrome, Safari, Firefox. Desktop, tablet, mobile. iOS and Android swipe keyboard behaviour. |
-| Error boundary implementation | **Small** | **To Do** | Global error boundary. All screens handle error state with a human-readable message and a recovery action. |
-| Build credits / attribution screen | **Small** | **To Do** | List VOICEVOX attribution, font licences, and any other third-party credits. |
-| Write privacy policy and terms of service | **Medium** | **To Do** | Plain language. Cover data storage (Supabase), leaderboard visibility of username, guest mode data loss warning, email communications and unsubscribe rights, and cookie usage (localStorage for guest state). |
-| Write security tests | **Small** | **To Do** | CSRF/origin rejection: requests with missing or wrong origin are rejected with 403. Rate limit: rapid requests return 429 after threshold. Covers all mutating endpoints listed above. |
-| Update stale sprint references in docs | **Small** | **Done** | Fixed 12 stale references: CONTENT.md (5x Sprint 10 -> 9), PERFORMANCE.md (Sprint 11 -> 9), UX_DESIGN.md (2x Sprint 10 -> 11, 2x Sprint 11 -> 12, 1x Sprint 10 -> 9), AUTH.md (2x Sprint 10 -> 11), data/audio/word-manifest.ts (Kanji Alive -> VOICEVOX, Sprint 10 -> 9). Session 92. |
-| Final end-to-end test pass | **Large** | **To Do** | Full user journey: guest entry, sign up (verify email lands in inbox, not spam), onboarding, Kana practice (all three modes), Kotoba practice (Readings + Kanji), Dojo (Kana + Kotoba), Profile, Settings, Leaderboard. Include: password reset email deliverability test, rate limit verification (hit endpoint rapidly, confirm 429 response), CSRF rejection verification. |
-| Soft launch on Vercel | **Small** | **To Do** | Share URL with a small group of testers. Monitor for errors. Confirm email deliverability with real inboxes (Gmail, Outlook, iCloud). |
+| Build full factory reset with typed confirmation | **Medium** | **To Do** | `reset-progress.tsx`: Add a "Full Reset" option alongside the existing separate Kana/Kotoba resets. Uses typed confirmation (user types "RESET" to confirm, same pattern as the delete account flow in the profile screen). Calls both `resetAllMastery` and `resetAllWordMastery` RPCs. Clears tutorial/dialogue tracking (`langtap-dialogues-seen` localStorage key; export a `clearAll()` function from `useDialogueSeen.ts`). Clears learning scores. Recomputes unlock store to re-lock all characters and words. Result: app state identical to a fresh account. Everything re-locked, all scores zero, tutorials replay from scratch. |
 
 ---
 
-## Sprint 12 - Payments (Stripe)
+## Sprint 13 - Streak Calendar
+
+**Goal:** Streak calendar on the home dashboard shows real practice data. Currently hardcoded to empty (`EMPTY_HEATMAP`, `streakCount={0}` in `game-home-client.tsx:95`). The `practice_sessions` table exists (migration `20260428120000`) but nothing in the codebase writes to or reads from it.
+**Status:** Pending
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Build practice session write path | **Medium** | **To Do** | The `practice_sessions` table exists but NOTHING writes to it. This is the critical missing piece. Add a write in the practice hooks or SyncManager: upsert a row with the user's `local_date` on each prompt completion for signed-in users. Must handle timezone correctly (use `user_tz` from profile). Guests do not write practice sessions. |
+| Build streak service and hook | **Medium** | **To Do** | New `services/streak.service.ts` with `loadPracticeDates(userId: string, since: string): Promise<string[]>` that queries distinct `local_date` values from `practice_sessions`. New `hooks/useStreak.ts` that loads practice dates on mount for signed-in users, derives streak state via `deriveStreakState()` and calendar days via `getCalendarDays()` from `engine/streak.ts`. Returns `{ heatmap, streakCount, isLoading }`. |
+| Wire streak to dashboard | **Small** | **To Do** | `game-home-client.tsx:95`: replace `<StreakCalendar heatmap={EMPTY_HEATMAP} streakCount={0} />` with the `useStreak()` hook output. Handle loading state. Show empty calendar for guests (no streak tracking without an account). |
+
+---
+
+## Sprint 14 - Email Deliverability
+
+**Goal:** Authentication and transactional emails land in inboxes, not spam. Email templates match LangTap's visual identity. Onboarding drip sequence encourages activation.
+**Status:** Pending
+
+**Provider choice:** Brevo (formerly Sendinblue, est. 2012) is the primary choice (300 emails/day free tier, established service). Resend (est. 2023, 100/day free, official Supabase partner with best integration docs) is the fallback if Brevo's shared IP pool causes deliverability issues.
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Set up email provider with domain authentication | **Medium** | **To Do** | Create provider account (Brevo or Resend). Add domain DNS records: SPF (TXT, `v=spf1 include:<provider> ~all`), DKIM (TXT, provider-generated key), DMARC (TXT, `v=DMARC1; p=quarantine; rua=mailto:dmarc@langtap.com`). Configure SMTP credentials in Supabase dashboard (Auth > SMTP Settings). Test with mail-tester.com targeting score 9/10 or higher. Document provider choice and DNS records in `docs/DEVOPS.md`. |
+| Customise email templates | **Small** | **To Do** | Design sign-up confirmation, password reset, and email change templates via the provider's template system. Match LangTap's visual identity (sage greens, clean typography). Plain language. |
+| Build onboarding email sequence | **Medium** | **To Do** | Three-email drip sequence. Day 0: welcome ("You're in! Here's how to start practising"). Day 2: activation nudge ("Have you tried [kana/kotoba] practice yet? Here's a quick tip"). Day 7: social proof ("Other learners at your JLPT level are practising X minutes a day"). Trigger Day 0 on sign-up via Supabase database webhook or edge function on `auth.users` insert. Days 2 and 7 via provider's drip/sequence feature or scheduled edge function. All emails include an unsubscribe link (GDPR). Respect `notifications_enabled` field on profiles table. |
+
+---
+
+## Sprint 15 - Trial Mode Redesign
+
+**Goal:** Replace the complex guest trial system (anonymous Supabase auth, 30m server-enforced distance cap, guest usage table/RPCs, guest-to-account import flow) with a purely client-side curated demo experience. "Try it out" becomes a fixed taster showing a mature-account preview. No anonymous auth, no distance cap, no server tracking. Skip onboarding for trial. Clicking "Try it out" again resets the demo. Simplifies the codebase significantly by removing all guest complexity.
+**Status:** Pending
+
+**Why:** The old demo system was useful for owner testing but creates complexity (anonymous auth, server-side caps, import flow, edge cases). Now that accounts exist, the owner tests via their account. The trial should be simple: show visitors what the app looks and feels like on a mature account, then ask them to sign up. Full account users get free daily usage (existing server-side daily cap).
+
+### Phase A: Demo Data
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Design curated demo prompt set | **Small** | **To Do** | ~20-30 fixed prompts showing breadth: hiragana seion, dakuon, and combination; katakana basics; kotoba readings and kanji mode. Deterministic sequence (not random). Store in `data/demo/demo-prompts.ts`. |
+| Build demo mastery fixtures | **Small** | **To Do** | Pre-built mastery and word-mastery scores for a "mature account" preview. Varied heat levels (1/3/5), partial unlocks, some characters mastered. For dojo: some stages partially unlocked, some fully mastered. Store in `data/demo/demo-mastery.ts` and `data/demo/demo-word-mastery.ts`. Reuse existing `samples/` fixture data as reference. |
+
+### Phase B: Demo Practice Flow
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Build `useDemoPracticeSession` hook | **Medium** | **To Do** | Reads from demo prompt set sequentially (not mastery-weighted). No mastery/counter store writes. No server calls. No anonymous auth. Returns the same interface as `usePracticeSession` so game windows work unchanged. Tracks progress through demo set locally (in-memory only). |
+| Build demo welcome dialogue | **Small** | **To Do** | Short welcome messages (2-3 max): "Welcome to the taster! This is a mini version of LangTap. The full game teaches you and introduces new content bit by bit. For now, just click away and explore. If you don't know the answer, just guess and the game will guide you. Explore different input modes, kotoba mode, the home page and more. Or sign up to jump right in!" |
+| Wire "Try it out" to demo mode | **Medium** | **To Do** | Landing page "Try it now" button routes to demo practice (route param or dedicated `/demo` route). Practice client detects demo mode and uses `useDemoPracticeSession` instead of real session hook. No onboarding redirect. No anonymous auth call. If someone clicks "Try it out" again after a previous visit, it resets the demo from the start. |
+| Build demo completion screen | **Small** | **To Do** | After all demo prompts are completed, show a card: "That's the taster! Sign up to keep practising and track your progress." with a sign-up CTA button. |
+
+### Phase C: Demo Dojo
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Build demo dojo views | **Medium** | **To Do** | When in demo mode, dojo screens read from demo mastery fixtures instead of real stores. Shows varied unlock states, mastery heatmap colors, and progression at different stages. Read-only (no unlock/reset buttons in demo mode). Navigation header shows "Demo" or "Taster" label. |
+
+### Phase D: Guest Infrastructure Removal
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Remove anonymous auth sign-in | **Small** | **To Do** | Remove `signInAnonymously()` call from `ensureGuestSession()` in `guest-usage.service.ts`. Remove `isAnonymous` handling from `useAuth`. Remove anonymous user middleware rules. |
+| Remove guest usage service, store, and hook | **Small** | **To Do** | Remove `services/guest-usage.service.ts`, `stores/guest-usage.store.ts`, `hooks/useGuestUsage.ts`. Remove imports from `practice-client.tsx`, `guest-banner.tsx`, and the `(main)` layout. |
+| Remove guest distance store | **Small** | **To Do** | Remove `stores/guest-distance.store.ts` and all references throughout the codebase. |
+| Remove guest-to-account import flow | **Medium** | **To Do** | Remove `services/guest-import.service.ts` and `services/import-snapshot.ts`. Remove import confirmation modal from `AuthInitializer`. Remove pending import banner. Remove `skip_guest_import` / `skip_legacy_import` profile column usage from the UI. |
+| Remove or repurpose GuestBanner | **Small** | **To Do** | Either remove `components/layout/guest-banner.tsx` entirely, or repurpose it to show a simple "Sign up to save your progress" message for demo users (no cap tracking, no distance). |
+| Update terms of service guest section | **Small** | **To Do** | The terms page has a "Guest mode" section about localStorage data loss. Update to reflect the new demo model instead. |
+| Flag database cleanup for owner | **Small** | **To Do** | Flag for owner review: `guest_usage` table, `get_or_create_guest_usage` RPC, `increment_guest_usage` RPC, and anonymous-specific RLS policies can be removed via a migration. The AI does not delete per project rules. The owner performs all destructive database operations manually. |
+
+### Phase E: Tests
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Write demo mode tests | **Medium** | **To Do** | Demo practice: fixed prompt sequence, no mastery/counter store writes, completion screen appears at end, reset on replay. Demo dojo: fixture data renders with varied states. "Try it out" resets demo. No anonymous auth calls during demo. |
+| Flag obsolete guest tests for removal | **Small** | **To Do** | Existing guest cap tests, guest import tests, and anonymous auth tests become obsolete after the demo system replaces the guest system. Flag for owner review. |
+
+---
+
+## Sprint 16 - Bug Reporting
+
+**Goal:** Users can report bugs and request features directly from the app. Reports stored in Supabase with image upload support. Owner notified when new reports arrive.
+**Status:** Pending
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Create `bug_reports` table and storage bucket | **Medium** | **To Do** | Migration: `bug_reports` table with `id` (UUID PK), `user_id` (nullable FK to auth.users, null for demo users), `type` (enum: bug/feature/other), `description` (text, required), `screenshot_url` (text, nullable), `app_state` (jsonb, nullable, stores current page, settings, mastery snapshot), `page_url` (text), `user_agent` (text), `created_at` (timestamptz). RLS: insert for all (including unauthenticated demo users), select for admin only. Supabase Storage: `bug-reports` bucket for screenshot uploads. |
+| Build bug report button and modal | **Medium** | **To Do** | `components/layout/bug-report-button.tsx`. Positioned `fixed bottom-4 left-4 z-20` (opposite the lo-fi player at bottom-right). Same styling: `bg-white/40 backdrop-blur-sm rounded-lg`. Question mark icon. Opens a modal with: type dropdown (Bug / Feature Request / Other), text description field (required), optional image upload (manual, not auto-screenshot). On submit: uploads image to Supabase Storage, inserts row into `bug_reports`. Defer auto-screenshot (`html2canvas` is 100KB+ and has rendering edge cases), start with manual upload only. |
+| Mount bug report button in app layout | **Small** | **To Do** | Add `<BugReportButton />` to `app/(main)/layout.tsx`. Appears on every page within the main app (home, practice, dojo, profile, leaderboard). Also consider mounting in the demo/trial layout so trial users can report issues. |
+| Set up new report notification | **Small** | **To Do** | Owner needs to know when reports arrive without manually checking the Supabase table. Option A: Supabase database webhook on `bug_reports` insert that sends an email to the owner. Option B: daily digest edge function that summarises new reports. Choose based on volume expectations (low volume at soft launch favours per-report email). |
+
+---
+
+## Sprint 17 - Analytics
+
+**Goal:** Measure who visits, how many sign up, and how they use the app. Start with Vercel Analytics free tier. Track key funnel events.
+**Status:** Pending
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Add Vercel Analytics | **Small** | **To Do** | Install `@vercel/analytics` (free tier: 2,500 events/month). Add `<Analytics />` component to `app/layout.tsx` alongside existing `<SpeedInsights />`. Provides automatic page views, unique visitors, top pages, referrers, and geographic data via the Vercel dashboard. Zero config beyond the component mount. |
+| Add custom event tracking | **Medium** | **To Do** | New `services/analytics.ts` with a thin wrapper: `trackEvent(name: string, properties?: Record<string, string | number>)` that calls `track()` from `@vercel/analytics`. Add event calls at key moments: `sign_up` (in `auth.service.ts` after successful sign-up), `first_practice` (first prompt completion), `trial_complete` (demo completion screen), `daily_cap_hit` (in `daily-cap.store.ts`), `email_verified` (auth callback). Stay under 2,500 events/month during soft launch. Can upgrade to Vercel Pro later if needed. |
+
+---
+
+## Sprint 18 - Security and Pre-Launch QA
+
+**Goal:** Mutating endpoints protected with CSRF/origin checks and rate limits. Accessibility and cross-browser verified. Legal pages updated for payments. Error boundaries in place. Full end-to-end test pass. Soft launch to testers.
+**Status:** Pending
+
+**Note:** If Sprint 15 (Trial Mode Redesign) ships before this sprint, the security scope is reduced: no guest usage RPCs to protect, no anonymous auth endpoints to rate-limit, no guest import RPC to validate.
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Implement CSRF/origin checks for mutating endpoints | **Medium** | **To Do** | All mutating route handlers and RPC callers verify origin/referer headers against allowed origins. Covers: sign-out, delete account, username change, leaderboard score sync, and future Stripe endpoints. Reject requests with missing or mismatched origin with 403. Use Next.js middleware or per-route validation. Document the approach in `docs/SECURITY.md`. |
+| Implement rate limiting for mutating endpoints | **Medium** | **To Do** | Auth actions (sign-up, sign-in, password reset) 5/min per IP. Profile mutations (username, delete) 3/min per user. Leaderboard sync 10/min per user. Use Vercel Edge middleware or in-memory store. Return 429 with Retry-After header. Document limits in `docs/SECURITY.md`. |
+| Add no refunds policy to terms of service | **Small** | **To Do** | New "Payments and Refunds" section in `app/terms/page.tsx`: "All payments are final. We do not offer refunds. If you cancel a membership, you keep access until the end of your current billing period." Update "Last updated" date. Must exist before Sprint 19 payments go live. |
+| Error boundary implementation | **Small** | **To Do** | Global error boundary. All screens handle error state with a human-readable message and a recovery action (retry or navigate home). |
+| Accessibility audit | **Medium** | **To Do** | Every interactive element: ARIA labels, keyboard navigation, focus states, touch targets minimum 44x44pt. Screen reader flow tested. Colour contrast WCAG AA verified. |
+| Cross-browser and cross-device testing | **Medium** | **To Do** | Chrome, Safari, Firefox on desktop. Mobile Safari (iOS) and Chrome (Android). Tablet viewport. iOS and Android swipe keyboard behaviour. Physical keyboard IME input. |
+| Write security tests | **Small** | **To Do** | CSRF/origin rejection: requests with missing or wrong origin are rejected with 403. Rate limit: rapid requests return 429 after threshold. Covers all mutating endpoints. |
+| Final end-to-end test pass | **Large** | **To Do** | Full user journey: sign up (verify email lands in inbox, not spam), onboarding, Kana practice (all three modes), Kotoba practice (Readings + Kanji), Dojo (Kana + Kotoba), Profile, Settings, Leaderboard. Password reset email deliverability test. Rate limit verification (hit endpoint rapidly, confirm 429). CSRF rejection verification. |
+| Soft launch on Vercel | **Small** | **To Do** | Share URL with a small group of testers. Monitor for errors. Confirm email deliverability with real inboxes (Gmail, Outlook, iCloud). Bug reporting button (Sprint 16) should be live before this. |
+
+---
+
+## Sprint 19 - Payments (Stripe)
 
 **Goal:** Stripe payments integrated post-launch. Hosted checkout, customer portal for subscription management. No custom payment UI. Membership unlocks unlimited daily practice.
 **Status:** Pending
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Set up Stripe account with hosted Checkout Sessions | **Medium** | **To Do** | Create Stripe account. Define membership product (details TBD). Use Stripe-hosted Checkout Sessions (prebuilt page) instead of custom payment UI. This handles PCI compliance, webhook signature verification, and payment flow out of the box. Wire a checkout session creation endpoint at `app/api/stripe/checkout/route.ts` that calls `stripe.checkout.sessions.create()` server-side and returns the session URL. Client redirects to Stripe's hosted page. Success/cancel URLs point back to the app. No custom webhook handler needed for basic checkout - Stripe's hosted page manages payment confirmation. |
+| Set up Stripe account with hosted Checkout Sessions | **Medium** | **To Do** | Create Stripe account. Define membership product (details TBD). Use Stripe-hosted Checkout Sessions (prebuilt page) instead of custom payment UI. This handles PCI compliance, webhook signature verification, and payment flow out of the box. Wire a checkout session creation endpoint at `app/api/stripe/checkout/route.ts` that calls `stripe.checkout.sessions.create()` server-side and returns the session URL. Client redirects to Stripe's hosted page. Success/cancel URLs point back to the app. |
 | Activate Stripe membership | **Epic** | **To Do** | Break into smaller tasks at the time. Define pricing model first. For subscription management, use Stripe Customer Portal (hosted) so users can update payment methods, cancel, and view invoices without custom UI. |
 | Wire membership card to Stripe Customer Portal | **Small** | **To Do** | "Manage billing" link opens Stripe portal session. "Notify me" button captures demand. Feature flag `SHOW_MEMBERSHIP_CARD`. |
 | Build Stripe webhook handler | **Medium** | **To Do** | Listen for `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`. Update user's membership status in Supabase. Verify webhook signatures. Idempotent processing. |
@@ -569,9 +698,23 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 
 ---
 
+## Sprint 20 - Marketing
+
+**Goal:** Build a marketing strategy and content workflow. Research the Japanese learning niche. Create a sustainable posting schedule. All marketing assets stay local (not pushed to GitHub).
+**Status:** Pending
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Set up marketing folder | **Small** | **To Do** | Create `marketing/` in project root. Add to `.gitignore` so it stays local and is not pushed to GitHub. This folder lives inside the project so the marketing AI assistant has full project context for content creation. |
+| Build marketing research document | **Medium** | **To Do** | AI-powered competitor analysis for the Japanese learning niche. Research what works on TikTok, Instagram, Reddit, and YouTube for language learning apps. Identify content pillars, target audience segments, and messaging angles. Stored in `marketing/STRATEGY.md`. |
+| Build content calendar | **Medium** | **To Do** | Weekly/monthly posting schedule. Platform-specific content ideas (short-form video, carousels, text posts). Templates for different post types. Schedule designed to be sustainable without overwhelming the owner. Stored in `marketing/CALENDAR.md`. |
+| Build social media asset creation workflow | **Medium** | **To Do** | Document the end-to-end workflow: research trending topics, create posts, schedule them. What tools to use, what to research, how to schedule. Includes a recurring prompt/checklist the owner can follow. Stored in `marketing/WORKFLOW.md`. |
+
+---
+
 ## Future Backlog - Platform Improvements
 
-Ideas and improvements not tied to a phase. Pulled in when the time is right.
+Ideas and improvements not tied to a sprint. Pulled in when the time is right.
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
@@ -594,3 +737,4 @@ Ideas and improvements not tied to a phase. Pulled in when the time is right.
 | 1.3 | May 2026 | Sprint 8 replaced with Smooth Game Loading and Navigation (performance sprint). Former Sprint 12 (Page Transition Speed) merged into new Sprint 8. Old Sprint 8 (Profile/Settings/Sync) renumbered to Sprint 9. Sprints 9-11 renumbered to 10-12. Three rounds of Codex staff-engineer review incorporated. |
 | 1.4 | May 2026 | Sprints 9-12 reshuffled for launch-first strategy. Sprint 9: Leaderboard + Audio (game-centric). Sprint 10: Accounts, Auth, Membership (guest conversion, OAuth, daily cap). Sprint 11: Security, Email, Polish, Pre-Launch. Sprint 12: Payments (Stripe, post-launch). Google/Apple Sign-In moved from backlog to Sprint 10. Font size linked to mastery, JIS kana keyboard, animation asset upgrade, and mnemonic expansion removed from backlog. Stripe webhook handler and integration tests added to Sprint 12. |
 | 1.5 | May 2026 | Guardrail tasks added to Sprints 9-11. Sprint 9: leaderboard schema redesigned for game_type/input_mode/period with server-only RPC writes, leaderboard privacy (profiles.leaderboard_visibility), audio tasks split (licence confirmation, script creation, manifest build, lazy-load enforcement). Sprint 10: safe guest progress import with validation/sanitization/clamping, profile wiring expanded (fixture removal, distance unit, email/password modals, profile repair), dedicated guest import tests. Sprint 11: CSRF/origin checks and rate limiting for all mutating endpoints, security tests, stale sprint reference cleanup. |
+| 1.6 | May 2026 | Major restructure from playtesting notes. Sprint 10 marked complete. Old Sprint 11 (Security, Email, Polish) split into 10 focused sprints (11-20) ordered by priority. Sprint 11: Bug Fixes (mobile keyboard, audio, mnemonic). Sprint 12: Reset Progress (full factory reset). Sprint 13: Streak Calendar (wire to Supabase). Sprint 14: Email Deliverability (Brevo/Resend). Sprint 15: Trial Mode Redesign (replace guest system with curated demo). Sprint 16: Bug Reporting (in-app feedback). Sprint 17: Analytics (Vercel). Sprint 18: Security and Pre-Launch QA (CSRF, rate limiting, accessibility, soft launch). Sprint 19: Payments (Stripe, renumbered from old Sprint 12). Sprint 20: Marketing (local strategy and content). Privacy, terms, credits completed in Sessions 100-101 noted in Sprint 11 header. |

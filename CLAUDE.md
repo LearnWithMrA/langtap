@@ -441,44 +441,45 @@ openings (one-off questions, mid-session resumes, ad-hoc edits).
 
 ### Codex review checkpoints
 
-Codex is used as a manual reviewer at deliberate stage gates. It is not
-the primary implementer. It is a reviewer, challenger, and parallel thinker.
-Reviews on every task degrade quality. Reviews at the right moments compound value.
+Codex is configured as an MCP server. Claude calls Codex directly for reviews.
+No manual copy-paste required. See `AGENTS.md` for the full review role
+definitions and setup instructions.
 
-The review workflow is manual: copy the plan or question, paste it into Codex
-(web or terminal), ask for a staff-engineer review, bring the response back
-into the session. No plugin or API key required.
+Codex is a reviewer, challenger, and parallel thinker. It is not the
+implementer. Claude implements. Codex reviews. The owner decides.
+
+**The review cycle (all task sizes):**
+
+| Stage | What happens | Who |
+|---|---|---|
+| 1. Plan | Claude drafts the implementation plan | Claude |
+| 2. Plan Review | Codex reviews the plan for blind spots, edge cases, risks | Codex |
+| 3. Revise | Claude revises the plan based on Codex feedback | Claude |
+| 4. Plan Sign-off | Codex reviews the revised plan. Must pass before coding. | Codex |
+| 5. Implement | Claude writes the code | Claude |
+| 6. Code Review | Codex reviews the implementation for issues | Codex |
 
 **Stage gates by task size:**
 
 | Task size | Gates |
 |---|---|
-| Small | None. Build it. |
-| Medium | Codex review on the plan before coding. One gate. |
-| Large | Codex review after Claude drafts the plan. Codex review before coding begins. Two gates. |
-| Epic | Codex brainstorm before breaking it down. Codex review on the breakdown. Codex review before the first sprint of work. Three gates. |
+| Small | Implement, then Codex code review (stage 6). One gate. |
+| Medium | Full cycle: plan review, plan sign-off, code review. Three gates. |
+| Large | Full cycle + Codex brainstorm before Claude drafts the plan. Four gates. |
+| Epic | Full cycle + Codex brainstorm + Codex breakdown review. Five gates. |
 
-**The four stages for Large and Epic tasks:**
+Small tasks skip the plan review loop (stages 2-4) but always get a code
+review after implementation. No code ships without at least one Codex review.
 
-1. **Plan** - Claude drafts the plan. Copy it to Codex. Codex produces an
-   alternative or critique. Compare and decide before any code is written.
-
-2. **Purpose** - Before implementation, send the agreed plan to Codex.
-   Codex checks for blind spots, edge cases, and risks. Resolve any concerns
-   here, not mid-code.
-
-3. **Review** - After code is written but before the task is marked Done,
-   send the output to Codex. Final gate before moving on.
-
-4. **Implement** - Code is written only after Plan and Purpose have cleared
-   both Codex gates. No Large or Epic task starts coding without this.
-
-**Prompt to use when sending to Codex:**
-"Review this plan as a staff engineer. Find blind spots, edge cases, and risks."
+**Fix-and-resubmit loop:** After a code review, Claude fixes any issues
+Codex raised, then presents the fixes to the owner and waits. The owner
+decides whether to send fixes back to Codex for a follow-up review. Claude
+does not automatically resubmit. Maximum two review passes per task; after
+that, remaining issues are listed for the owner to decide.
 
 **Never send to Codex:** secrets, environment variables, API keys, or
-`.env` files of any kind. Send plan descriptions, doc sections, and
-architecture questions only.
+`.env` files of any kind. Send plan descriptions, diffs, and architecture
+questions only.
 
 ### At the end of every session
 

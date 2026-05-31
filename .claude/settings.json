@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "codex": {
+      "command": "/usr/local/bin/codex",
+      "args": ["mcp-server"]
+    }
+  }
+}

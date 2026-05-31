@@ -30,6 +30,32 @@ Format per entry:
 
 ---
 
+## 2026-05-31 - Session 102
+
+**Sprint:** Off-sprint
+**Task completed:** Codex MCP server setup, AGENTS.md creation, sprint board restructure
+**Status:** Done
+
+### Changes made
+- `AGENTS.md`: New file. Codex review role definitions (Plan, Architecture, Frontend, Game Engine, Security, Code), review protocol, setup guide, prompt templates, consistency audit rules. Defines stage gates by task size (Small: 1 gate, Medium: 3, Large: 4, Epic: 5).
+- `.claude/settings.json`: New file. Registered Codex as an MCP server (`codex mcp-server`). Claude Code now calls Codex directly for reviews without manual copy-paste.
+- `CLAUDE.md`: Updated Codex review checkpoints section. Old manual copy-paste workflow replaced with MCP server integration. Review cycle table added (6 stages). Stage gates updated: Small tasks now get a code review (previously none). Fix-and-resubmit loop documented (max two review passes per task, owner decides on resubmission).
+- `LangTap_Sprints.md`: Major restructure from playtesting notes. Sprint 10 marked Complete. Old Sprint 11 (Security, Email, Polish, and Pre-Launch) replaced with 10 focused sprints (11-20): Sprint 11 Bug Fixes and Polish, Sprint 12 Reset Progress Upgrade, Sprint 13 Streak Calendar, Sprint 14 Email Deliverability, Sprint 15 Trial Mode Redesign (5 phases), Sprint 16 Bug Reporting, Sprint 17 Analytics, Sprint 18 Security and Pre-Launch QA, Sprint 19 Payments (renumbered from old Sprint 12), Sprint 20 Marketing. Version history updated to v1.6.
+
+### Tests
+- No code changes, no tests affected
+
+### Next task
+Sprint 11: Fix mobile keyboard closing between prompts
+
+### Notes
+- Codex MCP server is configured and the CLI responds to MCP handshake, but may not connect on every session startup. Restart the session if the tool is unavailable.
+- Sprint board restructure was based on owner's playtesting notes. Key decisions documented in sprint task notes: trial mode is curated demo (no anon auth), bug reports to Supabase with image upload, analytics via Vercel Analytics, email via Brevo, marketing stays local (gitignored).
+- The `.claude/settings.local.json` file (gitignored) already has `mcp__codex__codex` in the allow list.
+- Sessions 100-101 work (privacy, terms, credits, pricing, kana audio) noted in Sprint 11 header.
+
+---
+
 ## 2026-05-09 - Session 101
 
 **Sprint:** Off-sprint
