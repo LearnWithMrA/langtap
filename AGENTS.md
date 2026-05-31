@@ -75,22 +75,19 @@ Copy this process for any new project.
 
 ### Step 1: Register the MCP Server
 
-Create or edit `.claude/settings.json` in the project root (this file is committed
-to the repo so the MCP server is available in every session):
+Run from the project root:
 
-```json
-{
-  "mcpServers": {
-    "codex": {
-      "command": "codex",
-      "args": ["mcp-server"]
-    }
-  }
-}
+```bash
+claude mcp add --transport stdio --scope project codex -- /usr/local/bin/codex mcp-server
 ```
 
-This tells Claude Code to start `codex mcp-server` as a stdio-based MCP server.
-Codex runs in the project directory, so it has full read access to the codebase.
+This creates a root `.mcp.json` file (committed to the repo so the MCP server
+is available in every session). On first session start, Claude Code will prompt
+to approve the project-scoped server.
+
+**Note:** MCP servers are configured via `.mcp.json` or `claude mcp add`, not
+`.claude/settings.json`. The settings file is for permissions and other Claude
+Code config.
 
 ### Step 2: Allow the MCP Tool Permission
 

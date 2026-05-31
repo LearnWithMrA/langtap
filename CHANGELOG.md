@@ -30,6 +30,28 @@ Format per entry:
 
 ---
 
+## 2026-05-31 - Session 103
+
+**Sprint:** Off-sprint
+**Task completed:** Codex Plan Review of Sprints 11-20 (three review rounds)
+**Status:** Done
+
+### Changes made
+- `LangTap_Sprints.md`: Three rounds of Codex review applied to Sprints 11-20. Version history updated to v1.7. Sprint 1 Vercel task status fixed to Done. Sprint 9 status fixed to Complete. **Sprint 11:** Added stale route cleanup task (duplicate `practice/page.tsx` and `credits/page.tsx` placeholders), special character ID normalization across docs, home leaderboard glance wiring. **Sprint 12:** Factory reset expanded: explicit scope contract with epoch ownership (factory RPC performs DELETEs directly, avoids double-increment by not calling sub-RPCs), profile settings preserved, settings store preserved, daily cap events preserved. **Sprint 13:** Practice session recording RPC reads `user_tz` server-side (client does not pass timezone), `practice_activity_events` table for idempotency, `practice_sessions` RLS locked to RPC-only writes, explicit batching contract (flush every 10 completions / 30s / pagehide / route change), streak tests added. **Sprint 14:** Notification opt-in prompt added (consent dependency), Day 0 email triggers on `notifications_enabled` transition to true (not sign-up), email confirmation status reconciled. **Sprint 15:** Demo practice split into kana and kotoba adapters with demo route/state task, demo dojo split into kana and kotoba (both Medium), file removal tasks reworded to "disconnect and flag for owner deletion" (CLAUDE.md compliance), documentation cleanup task expanded to Large absorbing doc drift fixes (BACKEND.md missing tables, LangTap_Planning.md Kotoba phase, theme/colors.ts source of truth). **Sprint 16:** Route handler owns all writes (no direct client-to-Supabase inserts), server-side rate gate via database-level cooldown, service/hook/route-handler task merged and upsized, authenticated-only submissions, abuse controls from day one. **Sprint 17:** Service renamed to `analytics.service.ts`, `email_verified` event removed, `daily_cap_hit` tracking via hook/effect (not from store). **Sprint 18:** Mutation inventory upsized to Medium with three-way classification (route-handler / SQL-RPC / Supabase Auth), terms and conditions checkbox added to sign-up, OAuth launch decision task added, privacy/legal sweep task added. **Sprint 19:** Membership schema and Stripe customer mapping task added before cap enforcement, webhook task reordered before enforcement, pricing definition as first gate, planning doc update task covers CLAUDE.md/AGENTS.md/UX_DESIGN.md. Every task across Sprints 11-20 now has explicit "Docs:" references.
+- `.mcp.json`: Prettier formatting fix.
+
+### Tests
+- No code changes, no tests affected. `npm run check` passes.
+
+### Next task
+Sprint 11: Fix mobile keyboard closing between prompts
+
+### Notes
+- Three Codex review rounds: (1) Plan Review found 8 issues (factory reset scope, streak server contract, bug report abuse surface, guest doc cleanup, demo sizing, email consent, security inventory, payments without cap enforcement). (2) Sign-off Review found 7 more issues (timezone client-side pass, idempotency schema, RLS gap, email trigger timing, CLAUDE.md file deletion rule, client-only rate limiting, store-to-service import). (3) Comprehensive Project Review found 10 findings + 5 consistency issues (stale routes, board statuses, direct Supabase RPC security gap, bug report write path contradiction, reset epoch double-increment, streak batching, home leaderboard glance, OAuth state, Sprint 19 ordering, privacy/legal pages).
+- Key owner decisions during review: daily cap events are preserved across factory resets (resetting progress does not restore daily allowance), settings store is preserved (user preferences are not progress).
+
+---
+
 ## 2026-05-31 - Session 102
 
 **Sprint:** Off-sprint
