@@ -30,6 +30,27 @@ Format per entry:
 
 ---
 
+## 2026-06-01 - Session 104
+
+**Sprint:** Off-sprint
+**Task completed:** Fix Vercel build: remove duplicate route placeholders
+**Status:** Done
+
+### Changes made
+- `app/(main)/practice/page.tsx`: Removed stale placeholder (returned null). Conflicted with the real redirect at `app/(main)/(scene)/practice/page.tsx`, causing a Next.js duplicate route error.
+- `app/(main)/credits/page.tsx`: Removed stale placeholder (returned null). Conflicted with the real credits page at `app/credits/page.tsx`, causing a Next.js duplicate route error.
+
+### Tests
+- No test changes. All 1037 tests already passing (69 files).
+
+### Next task
+Continue with Sprint 11 board.
+
+### Notes
+Both deleted files were empty stubs from April 8 that were superseded by real implementations. The Vercel build failed at the `next build` step because Next.js does not allow two pages resolving to the same path.
+
+---
+
 ## 2026-05-31 - Session 103
 
 **Sprint:** Off-sprint
