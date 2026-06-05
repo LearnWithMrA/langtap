@@ -6,7 +6,7 @@
 //          responses by discarding local state and reloading.
 //          Exposes flushDirty() for prompt-completion sync and
 //          isFlushInFlight for reset sync-fence.
-//          Disabled during pendingGuestImport.
+//          Disabled for guest users.
 // Depends on: stores/mastery.store.ts, stores/word-mastery.store.ts,
 //             services/mastery.service.ts, services/word-mastery.service.ts,
 //             hooks/useAuth.ts
@@ -42,12 +42,11 @@ type SyncCheckpoint = {
 
 export function useSyncCheckpoint(): SyncCheckpoint {
   const { isAuthenticated, isGuest } = useAuth()
-  const pendingGuestImport = useUserStore((s) => s.pendingGuestImport)
   const flushInFlightRef = useRef(false)
   const flushPromiseRef = useRef<Promise<void> | null>(null)
 
   const flushDirty = useCallback(async (): Promise<void> => {
-    if (!isAuthenticated || isGuest || pendingGuestImport) return
+    if (!isAuthenticated || isGuest) return
     if (flushInFlightRef.current && flushPromiseRef.current) {
       await flushPromiseRef.current
       return
@@ -63,7 +62,7 @@ export function useSyncCheckpoint(): SyncCheckpoint {
       flushInFlightRef.current = false
       flushPromiseRef.current = null
     }
-  }, [isAuthenticated, isGuest, pendingGuestImport])
+  }, [isAuthenticated, isGuest])
 
   return {
     flushDirty,

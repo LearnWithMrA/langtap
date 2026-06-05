@@ -79,7 +79,6 @@ export function StoreHydrator(): ReactNode {
   }, [onboardingHydrated])
 
   const migrationPhaseComplete = useUserStore((s) => s.migrationPhaseComplete)
-  const pendingGuestImport = useUserStore((s) => s.pendingGuestImport)
 
   // Step 2: For signed-in users, load server data with epoch-aware merge
   useEffect(() => {
@@ -91,13 +90,6 @@ export function StoreHydrator(): ReactNode {
 
     if (!isAuthenticated || isGuest) {
       lastUserIdRef.current = null
-      useUserStore.getState().setServerHydrated(true)
-      return
-    }
-
-    // If pending guest import, skip server load and unblock practice.
-    // Stores remain on guest keys; checkpoint sync is disabled separately.
-    if (pendingGuestImport) {
       useUserStore.getState().setServerHydrated(true)
       return
     }
@@ -208,7 +200,6 @@ export function StoreHydrator(): ReactNode {
     isGuest,
     user,
     migrationPhaseComplete,
-    pendingGuestImport,
   ])
 
   // Step 3: Bootstrap unlock store after local hydration (guest path)

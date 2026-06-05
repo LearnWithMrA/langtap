@@ -766,18 +766,11 @@ Explain why there is nothing to show and offer a next action.
 
 ---
 
-## 11. Guest Mode Banner
+## 11. Demo Mode (Sprint 14)
 
-Shown persistently on every screen for guest users until they create an account
-or dismiss it for the session.
-
-Style: a thin banner at the top of the content area, below the TopBar.
-- Background: `bg-warm-100 border-b border-border`.
-- Text: `text-sm text-text-secondary`.
-- Copy: "Your progress will be lost when you close this tab."
-- Action: "Create an account" link (navigates to sign-up).
-- Dismiss: an X button that hides the banner for the current session only.
-  Dismissal is stored in session state, not persisted to localStorage.
+The guest banner was removed in Sprint 14. Visitors now use curated demo routes
+instead. See `docs/AUTH.md` Section 8 for the full demo mode specification and
+`docs/FRONTEND.md` Section 6.4 for demo dojo client props.
 
 ---
 

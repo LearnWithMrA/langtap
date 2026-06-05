@@ -79,7 +79,7 @@ engine/                 # Game logic (pure functions, no UI, no side effects)
   counter.ts            # Word counter logic
   distance.ts           # Distance/progress mechanic
 theme/                  # Design tokens
-  colors.ts             # All colour values
+  colors.ts             # Placeholder (real tokens in app/globals.css)
   typography.ts         # Font families, sizes, weights
   spacing.ts            # Spacing scale
 types/                  # TypeScript type definitions (one file per domain)
@@ -136,7 +136,8 @@ Do not assume. Do not guess.
 - All global state goes through Zustand stores in `stores/`. One store per domain.
 - All static game data (kana characters, word banks, mnemonics) lives in `data/`.
   It is imported directly - not fetched from Supabase.
-- All colours come from `theme/colors.ts`. No hardcoded colour values anywhere.
+- All colours come from `app/globals.css` CSS variables (Tailwind v4 `@theme`
+  directive). `theme/colors.ts` is a placeholder. No hardcoded colour values anywhere.
 - All spacing values come from `theme/spacing.ts` or Tailwind tokens. No hardcoded
   pixel values.
 - All user-facing strings must use constants or a future i18n setup. No hardcoded

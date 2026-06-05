@@ -41,10 +41,16 @@ Every table created in this project follows this rule without exception.
 | `leaderboard` | (Legacy, unused) Original one-row-per-user leaderboard |
 | `leaderboard_scores` | Aggregate leaderboard scores per (user, game_type, input_mode) |
 | `leaderboard_score_events` | Per-completion events for idempotency and audit |
+| `leaderboard_sessions` | Server-issued practice sessions for leaderboard scoring |
+| `leaderboard_word_catalog` | Word catalog for server-side prompt validation |
+| `kana_character_catalog` | Kana character catalog for validation (234 chars) |
 | `unlock_state` | Which characters each user has unlocked |
 | `word_manual_unlocks` | Which words each user has manually unlocked (Kotoba mode) |
 | `practice_sessions` | Daily practice activity for streak mechanic and heatmap calendar |
 | `practice_activity_events` | Per-batch events for idempotency (same pattern as leaderboard_score_events) |
+| `daily_cap_events` | Per-prompt distance events for daily distance cap |
+| `app_config` | Feature flags and app-wide configuration |
+| `guest_usage` | (Deprecated) Guest trial distance tracking. Flagged for removal. |
 
 All tables are in the `public` schema. All have RLS enabled.
 

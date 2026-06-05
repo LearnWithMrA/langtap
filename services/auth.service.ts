@@ -257,7 +257,8 @@ export async function getUser(): Promise<{
 }> {
   const { data } = await createBrowserSupabaseClient().auth.getUser()
 
-  if (!data.user) {
+  // Treat stale anonymous sessions (from before demo mode) as unauthenticated
+  if (!data.user || data.user.is_anonymous) {
     return { user: null }
   }
 
@@ -265,7 +266,7 @@ export async function getUser(): Promise<{
     user: {
       id: data.user.id,
       email: data.user.email,
-      isAnonymous: data.user.is_anonymous ?? false,
+      isAnonymous: false,
     },
   }
 }

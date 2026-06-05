@@ -37,7 +37,6 @@ import { useTutorialTrial } from '@/hooks/useTutorialTrial'
 import { useKotobaTrialSession } from '@/hooks/useKotobaTrialSession'
 import { useDialogueSeen } from '@/hooks/useDialogueSeen'
 import { useAuth } from '@/hooks/useAuth'
-import { useGuestUsage } from '@/hooks/useGuestUsage'
 import { useDailyCap } from '@/hooks/useDailyCap'
 import { useStuckLoadingWarning } from '@/hooks/useStuckLoadingWarning'
 import { usePracticeActivityTracker } from '@/hooks/usePracticeActivityTracker'
@@ -148,26 +147,6 @@ function PracticeScene({
         {children}
       </div>
     </div>
-  )
-}
-
-// -- Capped shell (no practice hooks mounted) ---------------
-
-function CappedPracticeShell(): ReactNode {
-  const frozen =
-    typeof window !== 'undefined' ? (localStorage.getItem(FROZEN_PROMPT_KEY) ?? 'あ') : 'あ'
-
-  return (
-    <PracticeScene>
-      <div className="opacity-50 pointer-events-none">
-        <div className="bg-[#faf5e4] shadow-[0_6px_0_0_#d4c9b0] rounded-2xl w-full max-w-md mx-auto p-6 md:p-8">
-          <div className="text-5xl md:text-6xl font-bold text-center py-6 select-none text-warm-400">
-            {frozen}
-          </div>
-          <div className="text-base text-warm-400 text-center min-h-6">&nbsp;</div>
-        </div>
-      </div>
-    </PracticeScene>
   )
 }
 
@@ -308,8 +287,7 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
   const showKotobaBanner =
     gameType === 'kotoba' && hasSeenKotobaTrial && !hasSeenKotobaBanner && !activeDialogue
 
-  // ── Distance cap tracking (server-side) ─────
-  const { increment: incrementGuestDistance } = useGuestUsage()
+  // ── Daily distance cap tracking ─────────────
   const { increment: incrementDailyCap } = useDailyCap()
   const completionIdRef = useRef(crypto.randomUUID())
   const distanceBeforePromptRef = useRef(0)
@@ -398,9 +376,7 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
     (characterCount: number = 1): void => {
       incrementCorrect(mode)
       trackCompletion(characterCount)
-      if (isGuest) {
-        void incrementGuestDistance(gameType, 1)
-      } else {
+      if (!isGuest) {
         const promptMetres =
           useSessionStore.getState().distanceMetres - distanceBeforePromptRef.current
         if (promptMetres > 0) {
@@ -408,15 +384,7 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
         }
       }
     },
-    [
-      incrementCorrect,
-      mode,
-      trackCompletion,
-      isGuest,
-      incrementGuestDistance,
-      incrementDailyCap,
-      gameType,
-    ],
+    [incrementCorrect, mode, trackCompletion, isGuest, incrementDailyCap],
   )
 
   const sessionMapRef = useRef(new Map<string, PendingSession>())
@@ -602,19 +570,16 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
 
 export function PracticeClient({ gameType = 'kana' }: { gameType?: GameType }): ReactNode {
   const { isAuthenticated, isLoading: authLoading } = useAuth()
-  const { isLoading: usageLoading, isOverCap } = useGuestUsage()
   const { isLoading: dailyCapLoading, isCapped: isDailyCapped } = useDailyCap()
   const isProfileLoaded = useUserStore((s) => s.isProfileLoaded)
   const isServerHydrated = useUserStore((s) => s.isServerHydrated)
 
-  useStuckLoadingWarning({ authLoading, usageLoading, dailyCapLoading }, 'PracticeClient')
+  useStuckLoadingWarning({ authLoading, dailyCapLoading }, 'PracticeClient')
 
-  if (authLoading || usageLoading) return <PracticeScene>{null}</PracticeScene>
+  if (authLoading) return <PracticeScene>{null}</PracticeScene>
   if (isAuthenticated && dailyCapLoading) return <PracticeScene>{null}</PracticeScene>
   if (isAuthenticated && !isProfileLoaded) return <PracticeScene>{null}</PracticeScene>
   if (isAuthenticated && !isServerHydrated) return <PracticeScene>{null}</PracticeScene>
   if (isAuthenticated && isDailyCapped) return <DailyCappedShell />
-  if (isAuthenticated) return <ActivePracticeClient gameType={gameType} />
-  if (isOverCap) return <CappedPracticeShell />
   return <ActivePracticeClient gameType={gameType} />
 }

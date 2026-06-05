@@ -27,14 +27,13 @@ import { useSettingsStore } from '@/stores/settings.store'
 import { useWordMasteryStore } from '@/stores/word-mastery.store'
 import { buildAutoMasteryScores } from '@/engine/kotoba-progression'
 import { preloadPracticeDataForLevel, getWordBankSync } from '@/data/words/word-bank-loader'
-import { ensureGuestSession } from '@/services/guest-usage.service'
 import type { JlptLevel } from '@/types/user.types'
 
 // -- Component ---------------------------------------------------
 
 export default function OnboardingStep3Page(): ReactNode {
   const router = useRouter()
-  const { user, isLoading: authLoading } = useAuth()
+  const { user } = useAuth()
   const completeOnboarding = useOnboardingStore((s: OnboardingStore) => s.completeOnboarding)
   const onboardingComplete = useOnboardingStore((s: OnboardingStore) => s.onboardingComplete)
   const inputMode = useOnboardingStore((s: OnboardingStore) => s.inputMode)
@@ -64,7 +63,6 @@ export default function OnboardingStep3Page(): ReactNode {
     setSaving(true)
 
     router.prefetch('/practice/kana')
-    if (!authLoading && !user) void ensureGuestSession()
     await preloadPracticeDataForLevel(jlptLevel)
 
     if (user) {

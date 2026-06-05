@@ -14,7 +14,6 @@
 
 import type { ReactNode } from 'react'
 import { AppTopBar } from '@/components/layout/app-top-bar'
-import { GuestBanner } from '@/components/layout/guest-banner'
 import { SettingsDialog } from '@/components/settings/settings-dialog'
 import { SessionPrefetch } from '@/components/performance/session-prefetch'
 import { PracticeDataPreloader } from '@/components/performance/practice-data-preloader'
@@ -29,7 +28,6 @@ export default function MainLayout({ children }: { children: ReactNode }): React
   return (
     <SyncManager>
       <AppTopBar />
-      <GuestBanner />
       {children}
       <SettingsDialog />
       <AuthModalProvider />

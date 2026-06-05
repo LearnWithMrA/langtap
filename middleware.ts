@@ -71,10 +71,10 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
   const { pathname } = request.nextUrl
 
-  const isAnonymous = user?.is_anonymous ?? false
-  const isPermanentUser = user !== null && !isAnonymous
+  // Treat stale anonymous sessions (from before demo mode) as unauthenticated
+  const isPermanentUser = user !== null && !(user.is_anonymous ?? false)
 
-  // Redirect guests and anonymous users from /profile to /sign-up.
+  // Redirect unauthenticated users from /profile and /dojo to /sign-up.
   const isGuestToSignup = GUEST_TO_SIGNUP_ROUTES.some((route) => pathname.startsWith(route))
   if (!isPermanentUser && isGuestToSignup) {
     const url = request.nextUrl.clone()

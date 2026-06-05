@@ -96,13 +96,13 @@ The only scope for initial development.
 - Mobile-aware layout (empty space reserved for native keyboard)
 - Payments infrastructure in place but not activated (free during phase 1)
 
-### Phase 2 - Kana with Kotoba
+### Phase 2 - Library and Extended Features
+
+Note: Kotoba Mode was brought forward from Phase 2 into Phase 1 during
+Sprints 5B-7. It is available from the start with no kana mastery gate.
 
 - Library screen (word bank organised by JLPT N5-N1)
-- Kotoba Mode: English word shown, user types the correct kana
-- Word mastery tracking (separate from character mastery)
-- Kotoba leaderboards
-- Requires full Kana mastery to unlock
+- Extended vocabulary features beyond what Phase 1 Kotoba provides
 
 ---
 

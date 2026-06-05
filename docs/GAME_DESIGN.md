@@ -2,7 +2,7 @@
 
 Version 1.1 | May 2026
 Domain: Engine logic, mastery system, unlocking, word counters, input modes, feedback,
-tutorial system, guest trial cap, special character hints.
+tutorial system, demo mode, special character hints.
 Reference: LangTap_Planning.md Sections 5.2 – 5.8, 5.13.
 Owner document: CLAUDE.md
 
@@ -652,30 +652,28 @@ derived local dates. Client never computes streak state.
 
 ---
 
-## 8.6 Guest Trial Cap
+## 8.6 Demo Mode (Sprint 14)
 
 ### 8.6.1 Overview
 
-Guest users (not signed in) have a combined practice distance cap of 30 metres
-across kana and kotoba modes. The cap is a conversion nudge, not a security
-control. A guest can edit localStorage in DevTools to bypass it.
+Visitors try the app via curated demo routes (`/demo/kana`, `/demo/kotoba`,
+`/demo/dojo/kana`, `/demo/dojo/kotoba`). Demo mode replaced the guest trial
+cap system in Sprint 14. No progress persists; no server interaction occurs.
 
-### 8.6.2 Rules
+### 8.6.2 Demo practice
 
-- Distance is tracked per game type (kana, kotoba) in `stores/guest-distance.store.ts`,
-  persisted to localStorage under the key `langtap-guest-distance`.
-- The cap applies to the sum of both game types: `kana + kotoba >= GUEST_TRIAL_DISTANCE_CAP`.
-- The constant `GUEST_TRIAL_DISTANCE_CAP` is defined in `engine/constants.ts` (value: 30).
-- When the cap is reached, the game is disabled: no active practice sessions mount.
-  The user sees the guest banner with a sign-up CTA instead.
-- Signed-in users never interact with the guest distance store.
+- 18 kana prompts and 8 kotoba prompts in `data/demo/demo-prompts.ts`.
+- Deterministic sequence (no weighted selection).
+- Custom hooks (`useDemoKanaPracticeSession`, `useDemoKotobaPracticeSession`)
+  return the same interface as real practice hooks.
+- No mastery, counter, or session store writes.
 
-### 8.6.3 Guest Banner
+### 8.6.3 Demo dojo
 
-When the cap is reached, `components/layout/guest-banner.tsx` renders a fixed
-banner below the top bar. The banner shows the message "You've hit the limit as
-a guest" with a link to open the sign-up modal. A dismiss button hides the banner
-for the current page visit only (reappears on navigation).
+- `KanaDojoClient` and `KotobaDojoClient` accept a `demo` prop.
+- When `demo=true`, mastery data comes from `data/demo/demo-mastery.ts` via
+  local `useState`. All interactions write to component state only.
+- Practice links point to `/demo/kana` or `/demo/kotoba` in demo mode.
 
 ---
 
@@ -851,7 +849,7 @@ export const METRES_TO_FEET = 3.28084      // conversion factor for US locale
 export const KANA_WORD_ELIGIBLE_THRESHOLD = 5   // learning score before character appears in words
 export const MIN_ELIGIBLE_WORDS_FOR_MIXING = 10 // eligible words before word prompts mix in
 export const WORD_PROMPT_RATIO = 0.6       // probability of word prompt when mixing is active
-export const GUEST_TRIAL_DISTANCE_CAP = 30 // max cumulative metres for guest users
+export const GUEST_TRIAL_DISTANCE_CAP = 30 // deprecated (Sprint 14, demo mode replaces guest trial)
 export const STREAK_START_THRESHOLD = 3    // consecutive practice days to start a streak
 
 // Deferred to the sprint that implements their consumers:

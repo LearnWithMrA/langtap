@@ -52,11 +52,10 @@ export default function TermsPage(): ReactNode {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-warm-800 mb-2">Guest mode</h2>
+            <h2 className="text-lg font-semibold text-warm-800 mb-2">Demo mode</h2>
             <p>
-              Guest mode stores data in your browser only. If you clear your browser data, your
-              guest progress is permanently lost. We are not responsible for lost guest data. Create
-              an account to save your progress to the server.
+              The demo lets you try LangTap without an account. Demo progress is not saved. Create
+              an account to save your progress and access the full app.
             </p>
           </section>
 

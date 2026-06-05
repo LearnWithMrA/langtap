@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────
 // File: app/(main)/privacy/page.tsx
 // Purpose: Privacy policy page. Plain language. Covers data storage,
-//          leaderboard visibility, guest mode, email, and cookies.
+//          leaderboard visibility, demo mode, email, and cookies.
 // Depends on: components/layout/landing-footer.tsx
 // ─────────────────────────────────────────────
 
@@ -65,11 +65,10 @@ export default function PrivacyPage(): ReactNode {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-warm-800 mb-2">Guest mode</h2>
+            <h2 className="text-lg font-semibold text-warm-800 mb-2">Demo mode</h2>
             <p>
-              You can use LangTap without creating an account. Guest progress is stored in your
-              browser (localStorage) and is not sent to our servers. If you clear your browser data,
-              guest progress is lost. Guest mode has a 30-metre practice cap.
+              You can try LangTap without creating an account using the demo. Demo progress is not
+              saved and no data is sent to our servers. Create an account to save your progress.
             </p>
           </section>
 
@@ -77,8 +76,7 @@ export default function PrivacyPage(): ReactNode {
             <h2 className="text-lg font-semibold text-warm-800 mb-2">Cookies</h2>
             <p>
               LangTap uses HTTP-only session cookies to keep you signed in. These are managed by our
-              auth provider (Supabase) and are not used for tracking or advertising. Guest mode uses
-              localStorage, not cookies.
+              auth provider (Supabase) and are not used for tracking or advertising.
             </p>
           </section>
 

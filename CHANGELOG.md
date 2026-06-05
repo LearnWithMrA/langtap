@@ -30,6 +30,88 @@ Format per entry:
 
 ---
 
+## 2026-06-06 - Session 111
+
+**Sprint:** Sprint 14 - Trial Mode Redesign
+**Task completed:** Phase D (Guest Infrastructure Removal, 8 tasks) + Phase E (Tests, 2 tasks)
+**Status:** Done (Sprint 14 complete)
+
+### Changes made
+- `middleware.ts`: Simplified. Stale anonymous sessions treated as unauthenticated via `is_anonymous` guard. Removed isAnonymous variable.
+- `hooks/useAuth.ts`: Removed isAnonymous from return type. isGuest = `user === null && !isLoading`, isAuthenticated = `user !== null`.
+- `services/auth.service.ts`: getUser() returns null for anonymous users (treats stale anonymous sessions as unauthenticated). isAnonymous field always false.
+- `components/performance/auth-initializer.tsx`: Fully rewritten. All import flow logic removed. Component renders null. migrationPhaseComplete set immediately after profile load. Daily cap store reset on auth change.
+- `stores/user.store.ts`: Removed pendingGuestImport, showGuestImportPrompt, showLegacyImportPrompt and their setters.
+- `components/performance/store-hydrator.tsx`: Removed pendingGuestImport check and dependency.
+- `hooks/useSyncCheckpoint.ts`: Removed pendingGuestImport guard.
+- `components/layout/practice-client.tsx`: Removed useGuestUsage, CappedPracticeShell, guest distance increment. Simplified wrapper to auth + daily cap gates.
+- `app/(main)/layout.tsx`: Removed GuestBanner import and render.
+- `stores/scoped-storage.ts`: Removed all guest/import helpers (guest keys, pending keys, session markers, legacy keys). Kept scoped storage adapter and auth change helpers.
+- `stores/mastery.store.ts`: Removed guestSessionId state, setter, partialize entry.
+- `app/(onboarding)/onboarding/step-3/page.tsx`: Removed ensureGuestSession import and call.
+- `app/terms/page.tsx`: "Guest mode" section updated to "Demo mode".
+- `app/privacy/page.tsx`: "Guest mode" section updated to "Demo mode".
+- `components/layout/guest-banner.tsx`: Made inert (returns null). Flagged for owner deletion.
+- `components/ui/pending-import-banner.tsx`: Made inert (returns null). Flagged for owner deletion.
+- `hooks/useGuestUsage.ts`: Made compile-clean (removed broken imports). Flagged for owner deletion.
+- `docs/AUTH.md`: Section 8 rewritten from "Guest Mode" to "Demo Mode". Route protection table updated with demo routes.
+- `docs/FRONTEND.md`: Section 11 updated from guest banner to demo mode reference.
+- `docs/GAME_DESIGN.md`: Section 8.6 rewritten from "Guest Trial Cap" to "Demo Mode".
+- `docs/SECURITY.md`: Section 7 rewritten from "Guest Mode Security" to "Demo Mode Security". Section 7.1 marked deprecated.
+- `docs/ARCHITECTURE.md`: Removed guest-distance.store.ts references.
+- `docs/BACKEND.md`: Added 6 missing tables to Section 2.1 (leaderboard_sessions, leaderboard_word_catalog, kana_character_catalog, daily_cap_events, app_config, guest_usage as deprecated).
+- `LangTap_Planning.md`: Updated Kotoba from Phase 2 to Phase 1 (brought forward in Sprints 5B-7).
+- `CLAUDE.md`: Colors source of truth updated to `app/globals.css` (theme/colors.ts is a placeholder).
+- New test: `stores/__tests__/demo.store.test.ts` (7 tests)
+- New test: `hooks/__tests__/useDemoKanaPracticeSession.test.ts` (6 tests)
+- New test: `hooks/__tests__/useDemoKotobaPracticeSession.test.ts` (6 tests)
+- New test: `data/demo/__tests__/demo-prompts.test.ts` (6 tests)
+- Updated test: `components/layout/__tests__/practice-client.test.tsx` (removed guest cap tests)
+- Updated test: `components/game/__tests__/tutorial-system.test.tsx` (removed guest distance and cap gate tests)
+- Updated test: `hooks/__tests__/useAuth.test.ts` (removed anonymous auth test)
+- Updated test: `components/layout/__tests__/guest-banner.test.tsx` (updated to verify inert component)
+
+### Tests
+- All 1102 tests pass, 0 failures.
+- 25 new demo mode tests added.
+- 17 obsolete guest tests removed or updated.
+- Test count: 1094 (Session 110) -> 1102 (Session 111).
+
+### Next task
+Sprint 15 - Bug Reporting
+
+### Notes
+- Codex reviewed x4 across the session: Tasks 1-3 plan review (5 findings, all addressed), Task 4 plan review (5 findings, all addressed), Task 8 doc plan review (5 findings, all addressed), final code review (2 P1 + 1 P2 + 2 consistency, P1s fixed).
+- P1 fix: getUser() now returns null for stale anonymous Supabase sessions (not just isAnonymous: false). Prevents anonymous users from being treated as authenticated on the client.
+- P1 fix: Daily cap store reset on auth state change to prevent stale cap state carrying between users.
+- Sprint 14 is complete: Phases A-E all Done. Demo mode fully replaces the guest trial system.
+
+### Database cleanup flagged for owner
+The following can be removed via a migration (AI does not delete per CLAUDE.md):
+- Tables: `guest_usage`, `user_guest_usage_history`
+- RPCs: `get_or_create_guest_usage`, `increment_guest_usage`, `import_guest_progress`, `import_legacy_progress`, `skip_guest_import`, `skip_legacy_import`
+- RLS: anonymous-specific policies (any checking is_anonymous JWT claim)
+- Profile columns (optional): `guest_imported_at`, `guest_import_skipped_at`, `legacy_imported_at`, `legacy_import_skipped_at`
+- Migrations to review: `20260504120000`, `20260507120008`, `20260507120009`, `cleanup-guest-usage.sql`
+
+### Files flagged for owner deletion
+- `services/guest-usage.service.ts` + test
+- `stores/guest-usage.store.ts` + test
+- `stores/guest-distance.store.ts` + test
+- `hooks/useGuestUsage.ts` + test
+- `services/guest-import.service.ts` + test
+- `services/import-snapshot.ts` + test
+- `components/layout/guest-banner.tsx` + test
+- `components/ui/import-prompt-modal.tsx`
+- `components/ui/pending-import-banner.tsx`
+
+### Tech debt spotted
+- `kana-dojo-client.tsx` remains at ~575 lines (over 500-line ceiling). Flagged in Session 110 for handler extraction.
+- `types/user.types.ts` still has `isAnonymous: boolean` on AuthUser type (always false). Remove when owner deletes inert files.
+- `types/user.types.ts` still has `guestImportedAt`, `guestImportSkippedAt`, `legacyImportedAt`, `legacyImportSkippedAt` on UserProfile. Remove when owner drops the profile columns.
+
+---
+
 ## 2026-06-05 - Session 110
 
 **Sprint:** Sprint 14 - Trial Mode Redesign

@@ -22,8 +22,6 @@ import {
   incrementGuestUsage,
 } from '@/services/guest-usage.service'
 import { GUEST_TRIAL_DISTANCE_CAP } from '@/engine/constants'
-import { getGuestSessionMarker, setGuestSessionMarker } from '@/stores/scoped-storage'
-import { useMasteryStore } from '@/stores/mastery.store'
 
 // ── Types ─────────────────────────────────────
 
@@ -37,7 +35,7 @@ type UseGuestUsageReturn = {
 // ── Hook ──────────────────────────────────────
 
 export function useGuestUsage(): UseGuestUsageReturn {
-  const { isGuest, isLoading: authLoading, isAnonymous } = useAuth()
+  const { isGuest, isLoading: authLoading } = useAuth()
   const usage = useGuestUsageStore((s) => s.usage)
   const storeLoading = useGuestUsageStore((s) => s.isLoading)
   const isInitialized = useGuestUsageStore((s) => s.isInitialized)
@@ -54,16 +52,6 @@ export function useGuestUsage(): UseGuestUsageReturn {
 
     async function init(): Promise<void> {
       const sessionResult = await ensureGuestSession()
-
-      // Set dual session markers for guest-to-account auto-import.
-      // sessionStorage marker is volatile (cleared on tab close).
-      // Mastery store marker is embedded in the snapshot, so a stale
-      // snapshot from a previous session won't match a new marker.
-      if (sessionResult.ok && !getGuestSessionMarker()) {
-        const markerId = crypto.randomUUID()
-        setGuestSessionMarker(markerId)
-        useMasteryStore.getState().setGuestSessionId(markerId)
-      }
 
       if (!mounted || !sessionResult.ok) {
         if (mounted) {
@@ -94,13 +82,13 @@ export function useGuestUsage(): UseGuestUsageReturn {
 
   const increment = useCallback(
     async (gameType: 'kana' | 'kotoba', metres: number): Promise<void> => {
-      if (!isGuest || !isAnonymous || isOverCap) return
+      if (!isGuest || isOverCap) return
       const result = await incrementGuestUsage(gameType, metres)
       if (result.ok) {
         useGuestUsageStore.getState().setUsage(result.data)
       }
     },
-    [isGuest, isAnonymous, isOverCap],
+    [isGuest, isOverCap],
   )
 
   return {

@@ -1,16 +1,15 @@
 // ─────────────────────────────────────────────
 // File: components/layout/__tests__/practice-client.test.tsx
 // Purpose: Regression test for PracticeClient render gate. Proves
-//          practice renders immediately for guests (no loading gate),
-//          and cap is enforced only after usage resolves.
+//          authenticated users see daily cap and loading gates.
+//          Guest users render practice immediately.
 // Depends on: components/layout/practice-client.tsx,
-//             stores/user.store.ts, stores/guest-usage.store.ts
+//             stores/user.store.ts
 // ─────────────────────────────────────────────
 
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useUserStore } from '@/stores/user.store'
-import { useGuestUsageStore } from '@/stores/guest-usage.store'
 import { PracticeClient } from '../practice-client'
 
 // ── Mocks ─────────────────────────────────────
@@ -85,17 +84,7 @@ vi.mock('@/hooks/useDailyCap', () => ({
   useDailyCap: (): unknown => mockDailyCap,
 }))
 
-vi.mock('@/services/guest-usage.service', () => ({
-  ensureGuestSession: vi.fn().mockResolvedValue({ ok: true }),
-  loadGuestUsage: vi.fn().mockResolvedValue({
-    ok: true,
-    data: { kanaDistance: 0, kotobaDistance: 0, cappedAt: null },
-  }),
-  incrementGuestUsage: vi.fn(),
-}))
-
 vi.mock('@/engine/constants', () => ({
-  GUEST_TRIAL_DISTANCE_CAP: 1800,
   FEEDBACK_FLASH_MS: 300,
   MEANING_DISPLAY_MS: 1500,
   MEANING_FADE_MS: 300,
@@ -129,67 +118,12 @@ vi.mock('next/dynamic', () => ({
 describe('PracticeClient', () => {
   beforeEach(() => {
     useUserStore.setState({ user: null, profile: null, isLoading: true })
-    useGuestUsageStore.getState().reset()
     mockDailyCap = { isLoading: false, isCapped: false, capState: null, increment: vi.fn() }
     vi.clearAllMocks()
   })
 
-  it('renders game immediately for guests without waiting for usage to load', () => {
+  it('renders game for guest users without loading gate', () => {
     useUserStore.setState({ user: null, profile: null, isLoading: false })
-    // Guest usage store is still loading (default state)
-
-    render(<PracticeClient gameType="kana" />)
-
-    // Should NOT show a loading card - game renders immediately
-    expect(screen.queryByTestId('practice-loading-card')).not.toBeInTheDocument()
-  })
-
-  it('does not show capped shell while usage is still loading', () => {
-    useUserStore.setState({ user: null, profile: null, isLoading: false })
-    // Even if somehow isOverCap would be true while loading, don't show cap
-
-    render(<PracticeClient gameType="kana" />)
-
-    expect(screen.queryByText(/hit the limit/i)).not.toBeInTheDocument()
-  })
-
-  it('shows capped shell only after usage resolves and user is over cap', async () => {
-    useUserStore.setState({ user: null, profile: null, isLoading: false })
-    useGuestUsageStore.setState({
-      usage: { kanaDistance: 1000, kotobaDistance: 900, cappedAt: null },
-      isLoading: false,
-      isInitialized: true,
-    })
-
-    render(<PracticeClient gameType="kana" />)
-
-    await waitFor(() => {
-      // CappedPracticeShell renders a frozen character
-      expect(screen.getByText('あ')).toBeInTheDocument()
-    })
-  })
-
-  it('renders game content when usage resolves under cap', async () => {
-    useUserStore.setState({ user: null, profile: null, isLoading: false })
-    useGuestUsageStore.setState({
-      usage: { kanaDistance: 0, kotobaDistance: 0, cappedAt: null },
-      isLoading: false,
-      isInitialized: true,
-    })
-
-    render(<PracticeClient gameType="kana" />)
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('practice-loading-card')).not.toBeInTheDocument()
-    })
-  })
-
-  it('skips cap gate entirely for authenticated users', () => {
-    useUserStore.setState({
-      user: { id: 'u1', email: 'a@b.com', isAnonymous: false },
-      profile: null,
-      isLoading: false,
-    })
 
     render(<PracticeClient gameType="kana" />)
 
@@ -249,7 +183,6 @@ describe('PracticeClient', () => {
 
     render(<PracticeClient gameType="kana" />)
 
-    // Should render the empty scene (loading), not the game
     expect(screen.queryByText(/crushing it/i)).not.toBeInTheDocument()
   })
 })

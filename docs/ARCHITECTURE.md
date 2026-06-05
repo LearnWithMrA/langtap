@@ -261,7 +261,6 @@ langtap/
 |  |- session.store.ts          # Current session score and distance
 |  |- settings.store.ts         # User settings (mode, font, audio toggle)
 |  |- user.store.ts             # Authenticated user state
-|  |- guest-distance.store.ts   # Guest cumulative distance (localStorage)
 |
 |- services/                    # All external API calls (Supabase, Stripe)
 |  |- supabase.ts               # Supabase client (anon key only)
@@ -554,10 +553,6 @@ export function updateScore(char: KanaCharacter) {
 - Input sanitization: `bulkLoad` actions validate incoming values at the boundary
   (finite, integer, non-negative) before merging. Invalid values are clamped to safe
   defaults rather than rejected.
-- `guest-distance.store.ts` is localStorage-persisted, keyed by `gameType` (kana
-  or kotoba). It tracks cumulative distance for the guest trial cap only. It is
-  never synced to Supabase and is not used for authenticated users.
-
 ---
 
 ## 9. Service Rules

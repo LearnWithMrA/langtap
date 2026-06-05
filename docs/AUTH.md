@@ -179,18 +179,19 @@ serves sensitive data. Never rely on middleware alone to protect data.
 | `/` (landing page) | Public. No auth required. |
 | `/(auth)/sign-up` | Public. Redirect to practice if already logged in. |
 | `/(auth)/log-in` | Public. Redirect to practice if already logged in. |
-| `/(onboarding)/*` | Guest or authenticated. Guests use localStorage for onboarding state. |
-| `/(main)/practice` | Guest or authenticated. Guests see guest banner. |
-| `/(main)/dojo` | Authenticated only. Guests redirected to /sign-up. Demo dojo at /demo/dojo/*. |
-| `/(main)/library` | Guest or authenticated. Shows under-construction in Phase 1. |
-| `/(main)/leaderboard` | Authenticated only. Guests see a sign-up prompt. |
-| `/(main)/profile` | Authenticated only. Restored to auth-only in Sprint 3. |
-| `/(main)/settings` | Guest or authenticated. |
+| `/(onboarding)/*` | Public. Onboarding state stored in localStorage. |
+| `/(main)/practice` | Public. Unauthenticated users use localStorage only. |
+| `/(main)/dojo` | Authenticated only. Redirects to /sign-up. Demo dojo at /demo/dojo/*. |
+| `/(main)/demo/*` | Public. Curated demo experience, no persistence. |
+| `/(main)/library` | Public. Shows under-construction in Phase 1. |
+| `/(main)/leaderboard` | Public. Unauthenticated users see empty state. |
+| `/(main)/profile` | Authenticated only. Redirects to /sign-up. |
+| `/(main)/settings` | Public. |
 | `/(main)/credits` | Public. |
 
-Guest users can access the practice screen and Settings.
-Dojo, Leaderboard, and Profile require a full account. A demo dojo is
-available at /demo/dojo/* for unauthenticated users.
+Demo routes provide the curated trial for visitors. The full practice screen
+remains accessible to unauthenticated users but nothing syncs to the server
+without an account. Dojo and Profile require a full account.
 
 ---
 
@@ -259,46 +260,33 @@ the redirect.
 
 ---
 
-## 8. Guest Mode
+## 8. Demo Mode
 
-Guest users enter the app from the landing page without creating an account.
+Visitors try the app via curated demo routes without creating an account.
+Clicking "Try it out" on the landing page opens `/demo/kana`.
 
-**What they can access:**
-- Practice screen (all input modes)
-- Dojo screen (read-only mastery progress)
-- Settings screen
-- Credits screen
+**Demo routes (all public, no auth required):**
+- `/demo/kana` - Curated kana practice (18 prompts, deterministic sequence)
+- `/demo/kotoba` - Curated kotoba practice (8 prompts)
+- `/demo/dojo/kana` - Kana dojo with pre-built fixture mastery data
+- `/demo/dojo/kotoba` - Kotoba dojo with pre-built fixture mastery data
 
-**What they cannot access:**
-- Leaderboard (they see a sign-up prompt)
-- Profile screen (they see a sign-up prompt)
+**How demo works:**
+Demo practice uses `useDemoKanaPracticeSession` and `useDemoKotobaPracticeSession`
+hooks that read from fixed prompt sets in `data/demo/demo-prompts.ts`. No mastery,
+counter, or session stores are written to. Nothing persists.
 
-**How their state is stored:**
-All game state (learning scores, mastery scores, word counters, manual unlocks,
-settings) is stored in `localStorage` via Zustand persist middleware. Nothing goes
-to Supabase. Learning scores (0-5) unlock characters. Mastery scores come from
-word practice only. Both persist across refreshes, but localStorage limits are
-UX nudges, not security controls.
+Demo dojo passes a `demo` prop to `KanaDojoClient` and `KotobaDojoClient`. When
+`demo=true`, mastery data comes from local `useState` initialised from fixtures
+in `data/demo/demo-mastery.ts`. All interactions (unlock, reset, bulk unlock,
+mark mastered) write to local component state only.
 
-**Distance cap:**
-Guests have a 30m combined distance cap across kana and kotoba practice. When the
-cap is reached, the game window is disabled: a static card replaces it and no
-active game sessions mount.
+**Completion:** After the demo sequence, a sign-up CTA card appears with a link
+to try the other mode. A `langtap-demo-completed` localStorage flag is set so
+the real practice tutorial can show "Redo tutorial" on the proceed button.
 
-**Guest banner:**
-The guest banner does not show persistently on every screen. It appears only when
-the guest hits the 30m combined practice distance cap:
-
-> "You've hit the limit as a guest. Create an account to continue."
-
-The banner has a "Create account" link and a dismiss button. Dismissal is stored
-in React state (not persisted), so the banner resets on route navigation and
-reappears on every page visit while the guest remains at the cap.
-
-**Guest state on sign-up:**
-When a guest creates an account, their local state is migrated to Supabase
-immediately after auth completes. See BACKEND.md Section 3.3 for the full
-migration flow.
+**No server interaction:** Demo mode does not create anonymous Supabase sessions,
+does not track distance, and does not write to any database table.
 
 ---
 

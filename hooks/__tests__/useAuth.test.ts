@@ -1,9 +1,8 @@
 // ------------------------------------------------------------
 // File: hooks/__tests__/useAuth.test.ts
-// Purpose: Tests for the useAuth hook. After B2, useAuth is a pure
-//          Zustand selector. Tests validate state derivation from
-//          the store, not initialization logic (which lives in
-//          AuthInitializer).
+// Purpose: Tests for the useAuth hook. useAuth is a pure Zustand
+//          selector. Tests validate state derivation from the store,
+//          not initialization logic (which lives in AuthInitializer).
 // Depends on: hooks/useAuth.ts, stores/user.store.ts
 // ------------------------------------------------------------
 
@@ -17,7 +16,6 @@ import { useAuth } from '../useAuth'
 // ── Fixtures ─────────────────────────────────
 
 const MOCK_USER = { id: 'abc-123', email: 'test@example.com', isAnonymous: false }
-const ANON_USER = { id: 'anon-123', email: undefined, isAnonymous: true }
 
 const MOCK_PROFILE = {
   id: 'abc-123',
@@ -55,7 +53,7 @@ describe('useAuth', () => {
     expect(result.current.user).toBeNull()
   })
 
-  it('returns isAuthenticated true when user exists and not anonymous', () => {
+  it('returns isAuthenticated true when user exists', () => {
     useUserStore.setState({ user: MOCK_USER, profile: MOCK_PROFILE, isLoading: false })
     const { result } = renderHook(() => useAuth())
 
@@ -71,14 +69,5 @@ describe('useAuth', () => {
 
     expect(result.current.isAuthenticated).toBe(true)
     expect(result.current.profile).toBeNull()
-  })
-
-  it('treats anonymous user as guest, not authenticated', () => {
-    useUserStore.setState({ user: ANON_USER, profile: null, isLoading: false })
-    const { result } = renderHook(() => useAuth())
-
-    expect(result.current.isGuest).toBe(true)
-    expect(result.current.isAuthenticated).toBe(false)
-    expect(result.current.isAnonymous).toBe(true)
   })
 })
