@@ -1,38 +1,21 @@
 // ─────────────────────────────────────────────
 // File: components/layout/kana-dojo-client.tsx
-// Purpose: Client island for /dojo/kana. Orchestrates the script-first
-//          hierarchy: two top-level CharacterGroups (Hiragana, Katakana)
-//          with three nested stage blocks each (Seion, Dakuon, Combination).
-//          Reads mastery scores from useMasteryStore and manual unlocks
-//          from useOnboardingStore. Rebuilds the locked set internally
-//          for O(1) reads.
-//          Derived state per render:
-//          - lockedIds: Set<string>
-//          - Active script = earliest script with locked characters.
-//          - Active stage (within each script) = earliest stage with
-//            locked characters in that script.
-//          - Script activity: completed / active / in-progress / future.
-//          - Stage activity: same semantics, scoped within the parent
-//            script.
-//          Handlers:
-//          - handleTileClick: opens TileDetailPopover (unlocked) or
-//            UnlockPrompt (locked).
-//          - handleIndividualUnlock: adds id to manuallyUnlocked via
-//            the onboarding store.
-//          - handleResetCharacter: clears the score via mastery store
-//            and ensures the character stays manually unlocked.
-//          - handleBulkUnlockConfirm: merges the scope's ids into
-//            manuallyUnlocked via the onboarding store.
-//          Open-state:
-//          - scriptOpen: Set<Script>. Active script defaults open.
-//          - stageOpen: Record<Script, Set<Stage>>. Active stage in each
-//            active/in-progress script defaults open.
+// Purpose: Client island for /dojo/kana and /demo/dojo/kana. Orchestrates
+//          the script-first hierarchy: two top-level CharacterGroups
+//          (Hiragana, Katakana) with three nested stage blocks each
+//          (Seion, Dakuon, Combination).
+//          When demo=false (default): reads from persisted Zustand stores,
+//          writes go to stores and sync to Supabase.
+//          When demo=true: reads from local useState initialised from
+//          demo fixtures. All interactions work but write to local state
+//          only. Nothing persists.
 // Depends on: components/dojo/character-group.tsx,
 //             components/dojo/tile-detail-popover.tsx,
 //             components/dojo/unlock-prompt.tsx,
 //             components/dojo/bulk-unlock-prompt.tsx,
 //             components/dojo/help-card.tsx,
 //             data/kana/characters.ts,
+//             data/demo/demo-mastery.ts,
 //             engine/constants.ts,
 //             stores/mastery.store.ts,
 //             stores/onboarding.store.ts,
@@ -72,7 +55,12 @@ import { HelpCard, useKanaTips } from '@/components/dojo/help-card'
 import { MASTERY_THRESHOLD } from '@/engine/mastery'
 import { useMasteryStore } from '@/stores/mastery.store'
 import { useOnboardingStore } from '@/stores/onboarding.store'
-import type { MasteryState } from '@/types/game.types'
+import {
+  DEMO_KANA_MASTERY_SCORES,
+  DEMO_KANA_LEARNING_SCORES,
+  DEMO_KANA_MANUAL_UNLOCK_IDS,
+} from '@/data/demo/demo-mastery'
+import type { MasteryScoreMap, MasteryState } from '@/types/game.types'
 import type { KanaCharacter, Script, Stage } from '@/types/kana.types'
 
 // ── Types ─────────────────────────────────────
@@ -86,6 +74,7 @@ export type KanaDojoClientState = 'ready' | 'loading' | 'error' | 'empty'
 
 type KanaDojoClientProps = {
   state?: KanaDojoClientState
+  demo?: boolean
 }
 
 // ── Constants ─────────────────────────────────
@@ -108,11 +97,26 @@ const STAGE_LABELS: Readonly<Record<Stage, string>> = {
 // shells without violating the rules of hooks. Parity with the
 // Kotoba client.
 
-function KanaDojoReadyShell(): ReactNode {
-  // ── Mastery state derived from stores ──
-  const scores = useMasteryStore((s) => s.scores)
-  const learningScores = useMasteryStore((s) => s.learningScores)
-  const selectedCharacterIds = useOnboardingStore((s) => s.selectedCharacterIds)
+function KanaDojoReadyShell({ demo }: { demo?: boolean }): ReactNode {
+  // ── Store hooks (always called per React rules of hooks) ──
+  const storeScores = useMasteryStore((s) => s.scores)
+  const storeLearning = useMasteryStore((s) => s.learningScores)
+  const storeUnlocks = useOnboardingStore((s) => s.selectedCharacterIds)
+
+  // ── Demo local state (initialised from fixtures, not persisted) ──
+  const [demoScores, setDemoScores] = useState<MasteryScoreMap>(() =>
+    demo ? { ...DEMO_KANA_MASTERY_SCORES } : {},
+  )
+  const [demoLearning, setDemoLearning] = useState<MasteryScoreMap>(() =>
+    demo ? { ...DEMO_KANA_LEARNING_SCORES } : {},
+  )
+  const [demoUnlocks, setDemoUnlocks] = useState<string[]>(() =>
+    demo ? [...DEMO_KANA_MANUAL_UNLOCK_IDS] : [],
+  )
+
+  const scores = demo ? demoScores : storeScores
+  const learningScores = demo ? demoLearning : storeLearning
+  const selectedCharacterIds = demo ? demoUnlocks : storeUnlocks
 
   const mastery = useMemo<MasteryState>(
     () => ({
@@ -194,11 +198,17 @@ function KanaDojoReadyShell(): ReactNode {
   // Computed once from the store snapshot at mount time.
 
   const [scriptOpen, setScriptOpen] = useState<Set<Script>>(() => {
-    const initialMastery: MasteryState = {
-      scores: useMasteryStore.getState().scores,
-      learningScores: useMasteryStore.getState().learningScores,
-      manuallyUnlocked: useOnboardingStore.getState().selectedCharacterIds,
-    }
+    const initialMastery: MasteryState = demo
+      ? {
+          scores: { ...DEMO_KANA_MASTERY_SCORES },
+          learningScores: { ...DEMO_KANA_LEARNING_SCORES },
+          manuallyUnlocked: [...DEMO_KANA_MANUAL_UNLOCK_IDS],
+        }
+      : {
+          scores: useMasteryStore.getState().scores,
+          learningScores: useMasteryStore.getState().learningScores,
+          manuallyUnlocked: useOnboardingStore.getState().selectedCharacterIds,
+        }
     const initialLocked = buildLockedSet(initialMastery)
     const open = new Set<Script>()
     for (const script of SCRIPT_ORDER) {
@@ -207,17 +217,22 @@ function KanaDojoReadyShell(): ReactNode {
         break
       }
     }
-    // If all scripts are already completed, open hiragana by default
     if (open.size === 0) open.add('hiragana')
     return open
   })
 
   const [stageOpen, setStageOpen] = useState<Record<Script, Set<Stage>>>(() => {
-    const initialMastery: MasteryState = {
-      scores: useMasteryStore.getState().scores,
-      learningScores: useMasteryStore.getState().learningScores,
-      manuallyUnlocked: useOnboardingStore.getState().selectedCharacterIds,
-    }
+    const initialMastery: MasteryState = demo
+      ? {
+          scores: { ...DEMO_KANA_MASTERY_SCORES },
+          learningScores: { ...DEMO_KANA_LEARNING_SCORES },
+          manuallyUnlocked: [...DEMO_KANA_MANUAL_UNLOCK_IDS],
+        }
+      : {
+          scores: useMasteryStore.getState().scores,
+          learningScores: useMasteryStore.getState().learningScores,
+          manuallyUnlocked: useOnboardingStore.getState().selectedCharacterIds,
+        }
     const initialLocked = buildLockedSet(initialMastery)
     const out: Record<Script, Set<Stage>> = {
       hiragana: new Set(),
@@ -267,39 +282,77 @@ function KanaDojoReadyShell(): ReactNode {
     [tileStates],
   )
 
-  const handleIndividualUnlock = useCallback((characterId: string): void => {
-    const current = useOnboardingStore.getState().selectedCharacterIds
-    if (!current.includes(characterId)) {
-      useOnboardingStore.getState().toggleCharacter(characterId)
-    }
-    setPendingIndividual(null)
-  }, [])
+  const handleIndividualUnlock = useCallback(
+    (characterId: string): void => {
+      if (demo) {
+        setDemoUnlocks((prev) => (prev.includes(characterId) ? prev : [...prev, characterId]))
+        setDemoLearning((prev) => ({ ...prev, [characterId]: Math.max(prev[characterId] ?? 0, 5) }))
+      } else {
+        const current = useOnboardingStore.getState().selectedCharacterIds
+        if (!current.includes(characterId)) {
+          useOnboardingStore.getState().toggleCharacter(characterId)
+        }
+      }
+      setPendingIndividual(null)
+    },
+    [demo],
+  )
 
-  const handleBulkUnlockConfirm = useCallback((characterIds: readonly string[]): void => {
-    const current = new Set(useOnboardingStore.getState().selectedCharacterIds)
-    const merged = new Set(current)
-    for (const id of characterIds) merged.add(id)
-    // Only update if there are new ids to add
-    if (merged.size !== current.size) {
-      useOnboardingStore.getState().setSelectedBulk(Array.from(merged))
-    }
-    setBulkScope(null)
-  }, [])
+  const handleBulkUnlockConfirm = useCallback(
+    (characterIds: readonly string[]): void => {
+      if (demo) {
+        setDemoUnlocks((prev) => {
+          const set = new Set(prev)
+          for (const id of characterIds) set.add(id)
+          return Array.from(set)
+        })
+        setDemoLearning((prev) => {
+          const next = { ...prev }
+          for (const id of characterIds) next[id] = Math.max(next[id] ?? 0, 5)
+          return next
+        })
+      } else {
+        const current = new Set(useOnboardingStore.getState().selectedCharacterIds)
+        const merged = new Set(current)
+        for (const id of characterIds) merged.add(id)
+        if (merged.size !== current.size) {
+          useOnboardingStore.getState().setSelectedBulk(Array.from(merged))
+        }
+      }
+      setBulkScope(null)
+    },
+    [demo],
+  )
 
-  // Reset: clear the score for one character, ensure it stays in the manually
-  // unlocked set so the tile remains visible as unlocked-at-0.
-  const handleResetCharacter = useCallback((characterId: string): void => {
-    useMasteryStore.getState().reset(characterId)
-    // Ensure the character stays manually unlocked
-    const current = useOnboardingStore.getState().selectedCharacterIds
-    if (!current.includes(characterId)) {
-      useOnboardingStore.getState().toggleCharacter(characterId)
-    }
-  }, [])
+  const handleResetCharacter = useCallback(
+    (characterId: string): void => {
+      if (demo) {
+        setDemoScores((prev) => ({ ...prev, [characterId]: 0 }))
+        setDemoUnlocks((prev) => (prev.includes(characterId) ? prev : [...prev, characterId]))
+      } else {
+        useMasteryStore.getState().reset(characterId)
+        const current = useOnboardingStore.getState().selectedCharacterIds
+        if (!current.includes(characterId)) {
+          useOnboardingStore.getState().toggleCharacter(characterId)
+        }
+      }
+    },
+    [demo],
+  )
 
-  const handleMarkCharacterMastered = useCallback((characterId: string): void => {
-    useMasteryStore.getState().bulkLoad({ [characterId]: MASTERY_THRESHOLD + 5 })
-  }, [])
+  const handleMarkCharacterMastered = useCallback(
+    (characterId: string): void => {
+      if (demo) {
+        setDemoScores((prev) => ({
+          ...prev,
+          [characterId]: Math.max(prev[characterId] ?? 0, MASTERY_THRESHOLD + 5),
+        }))
+      } else {
+        useMasteryStore.getState().bulkLoad({ [characterId]: MASTERY_THRESHOLD + 5 })
+      }
+    },
+    [demo],
+  )
 
   const handleUnlockScript = useCallback(
     (script: Script): void => {
@@ -330,32 +383,54 @@ function KanaDojoReadyShell(): ReactNode {
     })
   }, [lockedIds])
 
-  // Reset variants: clear mastery scores for every character in the scope,
-  // keep every one of them in manuallyUnlocked so tiles stay visible as
-  // unlocked-at-0.
-  const handleBulkResetConfirm = useCallback((characterIds: readonly string[]): void => {
-    // Reset each character's mastery score
-    for (const id of characterIds) {
-      useMasteryStore.getState().reset(id)
-    }
-    // Ensure all reset characters stay manually unlocked
-    const current = new Set(useOnboardingStore.getState().selectedCharacterIds)
-    const merged = new Set(current)
-    for (const id of characterIds) merged.add(id)
-    if (merged.size !== current.size) {
-      useOnboardingStore.getState().setSelectedBulk(Array.from(merged))
-    }
-    setBulkResetScope(null)
-  }, [])
+  const handleBulkResetConfirm = useCallback(
+    (characterIds: readonly string[]): void => {
+      if (demo) {
+        setDemoScores((prev) => {
+          const next = { ...prev }
+          for (const id of characterIds) next[id] = 0
+          return next
+        })
+        setDemoUnlocks((prev) => {
+          const set = new Set(prev)
+          for (const id of characterIds) set.add(id)
+          return Array.from(set)
+        })
+      } else {
+        for (const id of characterIds) {
+          useMasteryStore.getState().reset(id)
+        }
+        const current = new Set(useOnboardingStore.getState().selectedCharacterIds)
+        const merged = new Set(current)
+        for (const id of characterIds) merged.add(id)
+        if (merged.size !== current.size) {
+          useOnboardingStore.getState().setSelectedBulk(Array.from(merged))
+        }
+      }
+      setBulkResetScope(null)
+    },
+    [demo],
+  )
 
-  const handleBulkMarkMastered = useCallback((characterIds: readonly string[]): void => {
-    const scoreMap: Record<string, number> = {}
-    for (const id of characterIds) {
-      scoreMap[id] = MASTERY_THRESHOLD + 5
-    }
-    useMasteryStore.getState().bulkLoad(scoreMap)
-    setBulkResetScope(null)
-  }, [])
+  const handleBulkMarkMastered = useCallback(
+    (characterIds: readonly string[]): void => {
+      if (demo) {
+        setDemoScores((prev) => {
+          const next = { ...prev }
+          for (const id of characterIds) next[id] = Math.max(next[id] ?? 0, MASTERY_THRESHOLD + 5)
+          return next
+        })
+      } else {
+        const scoreMap: Record<string, number> = {}
+        for (const id of characterIds) {
+          scoreMap[id] = MASTERY_THRESHOLD + 5
+        }
+        useMasteryStore.getState().bulkLoad(scoreMap)
+      }
+      setBulkResetScope(null)
+    },
+    [demo],
+  )
 
   const handleResetScript = useCallback((script: Script): void => {
     const ids = scriptCharacters(script).map((c) => c.id)
@@ -411,7 +486,7 @@ function KanaDojoReadyShell(): ReactNode {
               />
             )}
             <Link
-              href="/practice/kana"
+              href={demo ? '/demo/kana' : '/practice/kana'}
               className="inline-flex items-center justify-center px-3 font-bold text-white bg-sky-600/85 hover:bg-sky-700/85 active:translate-y-[2px] active:border-b-[2px] transition-colors border-b-[clamp(2px,calc(1.25vw-2px),4px)] border-b-sky-700/85"
               style={{
                 height: 'clamp(30px, calc(6.25vw + 10px), 40px)',
@@ -507,9 +582,9 @@ function KanaDojoReadyShell(): ReactNode {
 // ready shell. Non-ready values render the matching deterministic shell
 // for tests and design review.
 
-export function KanaDojoClient({ state = 'ready' }: KanaDojoClientProps): ReactNode {
+export function KanaDojoClient({ state = 'ready', demo }: KanaDojoClientProps): ReactNode {
   if (state === 'loading') return <KanaLoadingShell />
   if (state === 'error') return <KanaErrorShell />
   if (state === 'empty') return <KanaEmptyShell />
-  return <KanaDojoReadyShell />
+  return <KanaDojoReadyShell demo={demo} />
 }

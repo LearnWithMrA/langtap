@@ -7,8 +7,8 @@
 //          code sample that was updated to match Section 4.
 //
 //          Route protection summary (AUTH.md Section 4):
-//            Auth-only:        (none)
-//            Guest or authed:  /practice, /dojo, /library, /settings, /leaderboard, /profile
+//            Auth-only:        /dojo, /profile
+//            Guest or authed:  /practice, /library, /settings, /leaderboard
 //            Public:           /, /sign-up, /log-in, /credits, /auth/*
 //
 //          IMPORTANT: middleware is not a security boundary. It can be
@@ -30,7 +30,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 // Guests hitting /profile are redirected to /sign-up (they already
 // went through the guest flow, so sign-up is the next step).
 // All other routes are open to guests.
-const GUEST_TO_SIGNUP_ROUTES = ['/profile']
+const GUEST_TO_SIGNUP_ROUTES = ['/profile', '/dojo']
 
 // Auth pages. Authenticated users are redirected to /practice.
 const AUTH_PAGES = ['/sign-up', '/log-in']

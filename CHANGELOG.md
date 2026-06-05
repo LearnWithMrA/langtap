@@ -30,6 +30,39 @@ Format per entry:
 
 ---
 
+## 2026-06-05 - Session 110
+
+**Sprint:** Sprint 14 - Trial Mode Redesign
+**Task completed:** Phase C: Demo Dojo (demo kana dojo view + demo kotoba dojo view)
+**Status:** Done
+
+### Changes made
+- `components/layout/kana-dojo-client.tsx`: Added `demo` prop. When true, reads mastery data from local `useState` initialised from demo fixtures instead of persisted Zustand stores. All interactions (unlock, reset, bulk unlock, mark mastered) write to local state only. Practice link points to `/demo/kana` in demo mode. Math.max on mark-mastered to avoid reducing scores above threshold.
+- `components/layout/kotoba-dojo-client.tsx`: Added `demo` prop with same pattern. Local `useState` from word mastery fixtures. All JLPT tabs work (N5 has fixture scores, N4-N1 load real level structure with zero scores). Reset adds word to demoUnlocks to prevent relocking.
+- `app/(main)/demo/dojo/kana/page.tsx`: New route rendering `KanaDojoClient` with `demo`.
+- `app/(main)/demo/dojo/kotoba/page.tsx`: New route rendering `KotobaDojoClient` with `demo`.
+- `middleware.ts`: Added `/dojo` to `GUEST_TO_SIGNUP_ROUTES`. Unauthenticated users hitting `/dojo/*` are redirected to `/sign-up`. Demo routes (`/demo/dojo/*`) remain public.
+- `docs/AUTH.md`: Updated route protection table and code sample to reflect `/dojo` is now auth-only. Updated summary paragraph.
+- `docs/FRONTEND.md`: Added Section 6.4 documenting demo mode for dojo clients.
+- `LangTap_Sprints.md`: Phase C tasks marked Done.
+
+### Tests
+- All 1094 tests pass, 0 failures.
+- No new tests this session (Phase E covers demo tests).
+
+### Next task
+Sprint 14 Phase D: Guest Infrastructure Removal (8 tasks)
+
+### Notes
+- Codex reviewed x2. Round 1 found 2 bugs (mark-mastered reducing high scores, word reset not preserving unlock state) and 1 doc inconsistency. All fixed. Round 2 verified fixes, flagged stale AUTH.md code sample (fixed) and noted demo branches need test coverage (deferred to Phase E).
+- Owner decision: demo is interactive (not read-only as originally spec'd in sprint board). Users can unlock, reset, bulk unlock in demo mode. Nothing persists. Sprint board updated to reflect this.
+- File size: kana-dojo-client.tsx grew from 515 to ~575 lines (over 500-line hard ceiling). Flagged for future extraction of handler logic into a custom hook.
+
+### Tech debt spotted
+- `kana-dojo-client.tsx` is ~575 lines, exceeds the 500-line hard ceiling. Handler logic could be extracted into a `useKanaDojoHandlers` hook.
+
+---
+
 ## 2026-06-05 - Session 109
 
 **Sprint:** Sprint 14 - Trial Mode Redesign

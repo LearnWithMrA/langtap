@@ -613,8 +613,8 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Build demo kana dojo view | **Medium** | **To Do** | When in demo mode, kana dojo reads from demo mastery fixtures instead of real mastery store. Shows varied unlock states, mastery heatmap colours, and progression at different stages. Read-only (no unlock/reset buttons in demo mode). Navigation header shows "Demo" or "Taster" label. Docs: update `docs/FRONTEND.md` (dojo demo mode). |
-| Build demo kotoba dojo view | **Medium** | **To Do** | When in demo mode, kotoba dojo reads from demo word-mastery fixtures instead of real word mastery store. Shows varied level unlock states, word tile mastery levels, and JLPT tab data. Read-only (no unlock/reset buttons in demo mode). Navigation header shows "Demo" or "Taster" label. Docs: update `docs/FRONTEND.md` (dojo demo mode). |
+| Build demo kana dojo view | **Medium** | **Done** | Added `demo` prop to `KanaDojoClient`. When `demo=true`, reads from fixture data via local `useState` instead of persisted Zustand stores. All interactions work (unlock, reset, bulk unlock, mark mastered) but write to local component state, not persisted stores. Nothing saves. Same view layer, no component duplication. Route: `app/(main)/demo/dojo/kana/page.tsx` renders `KanaDojoClient` with `demo`. Middleware: added `/dojo` to `GUEST_TO_SIGNUP_ROUTES`. Practice link points to `/demo/kana` in demo mode. Codex-reviewed x2: fixed Math.max on mark-mastered, added demoUnlocks on reset. Session 110. |
+| Build demo kotoba dojo view | **Medium** | **Done** | Added `demo` prop to `KotobaDojoClient`. When `demo=true`, reads from fixture data via local `useState` instead of persisted Zustand stores. All JLPT tabs work (N5 has fixture scores, N4-N1 load real level structure with zero scores). All interactions work but write to local state only. Practice link points to `/demo/kotoba` in demo mode. Codex-reviewed x2: fixed Math.max on mark-mastered, added demoUnlocks on word reset. Session 110. |
 
 ### Phase D: Guest Infrastructure Removal
 

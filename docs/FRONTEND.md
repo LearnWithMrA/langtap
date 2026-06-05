@@ -538,6 +538,24 @@ Individual character cell in the Dojo grid. Shows:
 - Tapping the progress bar of an unlocked tile opens `BulkUnlockPrompt` (if in
   the same group as locked tiles).
 
+### 6.4 Demo Mode
+
+Both dojo clients (`KanaDojoClient`, `KotobaDojoClient`) accept an optional
+`demo` boolean prop. When `demo=true`:
+
+- Mastery scores, learning scores, and manual unlock IDs are read from local
+  `useState` initialised from demo fixtures (`data/demo/demo-mastery.ts`),
+  not from the persisted Zustand stores.
+- All interactions work (unlock, reset, bulk unlock, mark mastered) but write
+  to local component state only. Nothing persists.
+- The Practice button links to `/demo/kana` or `/demo/kotoba` instead of the
+  real practice routes.
+- Help card tips still render (not suppressed in demo mode).
+
+Demo dojo routes: `/demo/dojo/kana` and `/demo/dojo/kotoba`. These render the
+same dojo clients with `demo` passed. Real `/dojo/*` routes require auth;
+unauthenticated users are redirected to `/sign-up`.
+
 ---
 
 ## 7. Animation

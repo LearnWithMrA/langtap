@@ -131,13 +131,14 @@ export async function middleware(request: NextRequest) {
 
   // Auth-only routes: require a full account. Guests are redirected.
   // Source of truth for route access rules: Section 4 of this document.
-  // Do not add /practice, /dojo, /settings here - guests can access those.
-  const AUTHED_ONLY_ROUTES = ['/leaderboard', '/profile']
+  // Do not add /practice, /settings here - guests can access those.
+  // /dojo is auth-only (redirects to /sign-up). Demo dojo at /demo/dojo/*.
+  const AUTHED_ONLY_ROUTES = ['/leaderboard', '/profile', '/dojo']
   const isAuthedOnly = AUTHED_ONLY_ROUTES.some((r) => pathname.startsWith(r))
 
   if (!user && isAuthedOnly) {
     const url = request.nextUrl.clone()
-    url.pathname = '/log-in'
+    url.pathname = '/sign-up'
     return NextResponse.redirect(url)
   }
 
@@ -180,15 +181,16 @@ serves sensitive data. Never rely on middleware alone to protect data.
 | `/(auth)/log-in` | Public. Redirect to practice if already logged in. |
 | `/(onboarding)/*` | Guest or authenticated. Guests use localStorage for onboarding state. |
 | `/(main)/practice` | Guest or authenticated. Guests see guest banner. |
-| `/(main)/dojo` | Guest or authenticated. |
+| `/(main)/dojo` | Authenticated only. Guests redirected to /sign-up. Demo dojo at /demo/dojo/*. |
 | `/(main)/library` | Guest or authenticated. Shows under-construction in Phase 1. |
 | `/(main)/leaderboard` | Authenticated only. Guests see a sign-up prompt. |
 | `/(main)/profile` | Authenticated only. Restored to auth-only in Sprint 3. |
 | `/(main)/settings` | Guest or authenticated. |
 | `/(main)/credits` | Public. |
 
-Guest users can access the practice screen, Dojo, and Settings.
-Leaderboard and Profile require a full account.
+Guest users can access the practice screen and Settings.
+Dojo, Leaderboard, and Profile require a full account. A demo dojo is
+available at /demo/dojo/* for unauthenticated users.
 
 ---
 

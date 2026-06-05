@@ -1,14 +1,13 @@
 // ─────────────────────────────────────────────
 // File: components/layout/kotoba-dojo-client.tsx
-// Purpose: Client island for /dojo/kotoba. Orchestrates the JLPT-level
-//          tab row and the level-group accordion rows. Reads mastery
-//          scores and manual unlocks from useWordMasteryStore. Level
-//          data comes from the real word bank and kotoba-levels.
-//          N5 loads eagerly (default tab). N4-N1 lazy-load on tab
-//          switch with race-safe async handling.
-//          Unlock flows (page, group, word scope) write to the store.
-//          Keeps a `state` prop for deterministic loading/error/empty
-//          shells in tests.
+// Purpose: Client island for /dojo/kotoba and /demo/dojo/kotoba.
+//          Orchestrates the JLPT-level tab row and the level-group
+//          accordion rows.
+//          When demo=false (default): reads from persisted Zustand
+//          stores, writes sync to Supabase.
+//          When demo=true: reads from local useState initialised from
+//          demo fixtures. All interactions work but write to local
+//          state only. Nothing persists.
 // Depends on: components/dojo/kotoba-level-tabs.tsx,
 //             components/dojo/kotoba-level-group.tsx,
 //             components/dojo/kotoba-word-popover.tsx,
@@ -17,6 +16,7 @@
 //             components/dojo/kotoba-bulk-reset-prompt.tsx,
 //             components/dojo/group-bar.tsx,
 //             data/words/kotoba-dojo-data.ts,
+//             data/demo/demo-mastery.ts,
 //             stores/word-mastery.store.ts,
 //             engine/constants.ts,
 //             types/kotoba.types.ts
@@ -46,6 +46,8 @@ import { HelpCard, useKotobaTips } from '@/components/dojo/help-card'
 import { KOTOBA_MASTERY_THRESHOLD } from '@/engine/constants'
 import { getUnlockedKotobaWordIds } from '@/engine/kotoba-progression'
 import { useWordMasteryStore } from '@/stores/word-mastery.store'
+import { DEMO_WORD_MASTERY_SCORES, DEMO_WORD_MANUAL_UNLOCK_IDS } from '@/data/demo/demo-mastery'
+import type { MasteryScoreMap } from '@/types/game.types'
 import { getN5DojoData, loadKotobaDojoData } from '@/data/words/kotoba-dojo-data'
 import type { KotobaDojoLevelData } from '@/data/words/kotoba-dojo-data'
 import { JLPT_LABELS } from '@/types/kotoba.types'
@@ -60,13 +62,25 @@ import type {
 
 type KotobaDojoClientProps = {
   state?: KotobaClientState
+  demo?: boolean
 }
 
 // ── Ready screen ──────────────────────────────
 
-function ReadyShell(): ReactNode {
-  const scores = useWordMasteryStore((s) => s.scores)
-  const manuallyUnlockedWords = useWordMasteryStore((s) => s.manuallyUnlockedWords)
+function ReadyShell({ demo }: { demo?: boolean }): ReactNode {
+  const storeScores = useWordMasteryStore((s) => s.scores)
+  const storeUnlocks = useWordMasteryStore((s) => s.manuallyUnlockedWords)
+
+  // ── Demo local state ──
+  const [demoScores, setDemoScores] = useState<MasteryScoreMap>(() =>
+    demo ? { ...DEMO_WORD_MASTERY_SCORES } : {},
+  )
+  const [demoUnlocks, setDemoUnlocks] = useState<readonly string[]>(() =>
+    demo ? [...DEMO_WORD_MANUAL_UNLOCK_IDS] : [],
+  )
+
+  const scores = demo ? demoScores : storeScores
+  const manuallyUnlockedWords = demo ? demoUnlocks : storeUnlocks
   const { currentTip: kotobaTip, advance: advanceTip } = useKotobaTips()
 
   const n5Data = useMemo(() => getN5DojoData(), [])
@@ -155,23 +169,59 @@ function ReadyShell(): ReactNode {
     [lockedWordIds],
   )
 
-  const handleResetWord = useCallback((wordId: string): void => {
-    useWordMasteryStore.getState().reset(wordId)
-  }, [])
+  const handleResetWord = useCallback(
+    (wordId: string): void => {
+      if (demo) {
+        setDemoScores((prev) => ({ ...prev, [wordId]: 0 }))
+        setDemoUnlocks((prev) => (prev.includes(wordId) ? prev : [...prev, wordId]))
+      } else {
+        useWordMasteryStore.getState().reset(wordId)
+      }
+    },
+    [demo],
+  )
 
-  const handleMarkMastered = useCallback((wordId: string): void => {
-    useWordMasteryStore.getState().setScore(wordId, KOTOBA_MASTERY_THRESHOLD + 5)
-  }, [])
+  const handleMarkMastered = useCallback(
+    (wordId: string): void => {
+      if (demo) {
+        setDemoScores((prev) => ({
+          ...prev,
+          [wordId]: Math.max(prev[wordId] ?? 0, KOTOBA_MASTERY_THRESHOLD + 5),
+        }))
+      } else {
+        useWordMasteryStore.getState().setScore(wordId, KOTOBA_MASTERY_THRESHOLD + 5)
+      }
+    },
+    [demo],
+  )
 
-  const handleIndividualUnlock = useCallback((wordId: string): void => {
-    useWordMasteryStore.getState().addManualUnlock(wordId)
-    setPendingUnlockWord(null)
-  }, [])
+  const handleIndividualUnlock = useCallback(
+    (wordId: string): void => {
+      if (demo) {
+        setDemoUnlocks((prev) => (prev.includes(wordId) ? prev : [...prev, wordId]))
+      } else {
+        useWordMasteryStore.getState().addManualUnlock(wordId)
+      }
+      setPendingUnlockWord(null)
+    },
+    [demo],
+  )
 
-  const handleBulkUnlockConfirm = useCallback((wordIds: readonly string[]): void => {
-    useWordMasteryStore.getState().addManualUnlocks(wordIds)
-    setBulkScope(null)
-  }, [])
+  const handleBulkUnlockConfirm = useCallback(
+    (wordIds: readonly string[]): void => {
+      if (demo) {
+        setDemoUnlocks((prev) => {
+          const set = new Set(prev)
+          for (const id of wordIds) set.add(id)
+          return Array.from(set)
+        })
+      } else {
+        useWordMasteryStore.getState().addManualUnlocks(wordIds)
+      }
+      setBulkScope(null)
+    },
+    [demo],
+  )
 
   const handleUnlockGroup = useCallback(
     (group: KotobaLevelGroup): void => {
@@ -190,21 +240,48 @@ function ReadyShell(): ReactNode {
     })
   }, [activeLevel, lockedAtLevel])
 
-  const handleBulkResetConfirm = useCallback((wordIds: readonly string[]): void => {
-    const store = useWordMasteryStore.getState()
-    for (const id of wordIds) {
-      store.reset(id)
-    }
-    setBulkResetScope(null)
-  }, [])
+  const handleBulkResetConfirm = useCallback(
+    (wordIds: readonly string[]): void => {
+      if (demo) {
+        setDemoScores((prev) => {
+          const next = { ...prev }
+          for (const id of wordIds) next[id] = 0
+          return next
+        })
+        setDemoUnlocks((prev) => {
+          const set = new Set(prev)
+          for (const id of wordIds) set.add(id)
+          return Array.from(set)
+        })
+      } else {
+        const store = useWordMasteryStore.getState()
+        for (const id of wordIds) {
+          store.reset(id)
+        }
+      }
+      setBulkResetScope(null)
+    },
+    [demo],
+  )
 
-  const handleBulkMarkMastered = useCallback((wordIds: readonly string[]): void => {
-    const store = useWordMasteryStore.getState()
-    for (const id of wordIds) {
-      store.setScore(id, KOTOBA_MASTERY_THRESHOLD + 5)
-    }
-    setBulkResetScope(null)
-  }, [])
+  const handleBulkMarkMastered = useCallback(
+    (wordIds: readonly string[]): void => {
+      if (demo) {
+        setDemoScores((prev) => {
+          const next = { ...prev }
+          for (const id of wordIds) next[id] = Math.max(next[id] ?? 0, KOTOBA_MASTERY_THRESHOLD + 5)
+          return next
+        })
+      } else {
+        const store = useWordMasteryStore.getState()
+        for (const id of wordIds) {
+          store.setScore(id, KOTOBA_MASTERY_THRESHOLD + 5)
+        }
+      }
+      setBulkResetScope(null)
+    },
+    [demo],
+  )
 
   const handleResetLevel = useCallback((): void => {
     const allIds = currentGroups.flatMap((g) => [...g.wordIds])
@@ -251,7 +328,7 @@ function ReadyShell(): ReactNode {
               />
             )}
             <Link
-              href="/practice/kotoba"
+              href={demo ? '/demo/kotoba' : '/practice/kotoba'}
               className="inline-flex items-center justify-center px-3 font-bold text-white bg-sage-600/85 hover:bg-sage-700/85 active:translate-y-[2px] active:border-b-[2px] transition-colors border-b-[clamp(2px,calc(1.25vw-2px),4px)] border-b-[color:var(--color-sage-600)]"
               style={{
                 height: 'clamp(30px, calc(6.25vw + 10px), 40px)',
@@ -356,9 +433,9 @@ function ReadyShell(): ReactNode {
 
 // ── Root dispatcher ───────────────────────────
 
-export function KotobaDojoClient({ state = 'ready' }: KotobaDojoClientProps): ReactNode {
+export function KotobaDojoClient({ state = 'ready', demo }: KotobaDojoClientProps): ReactNode {
   if (state === 'loading') return <KotobaLoadingShell />
   if (state === 'error') return <KotobaErrorShell />
   if (state === 'empty') return <KotobaEmptyShell />
-  return <ReadyShell />
+  return <ReadyShell demo={demo} />
 }
