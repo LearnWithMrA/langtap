@@ -12,7 +12,7 @@
 
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import { getWordAudioPath } from '@/data/audio/word-manifest'
 import { getKanaAudioPath } from '@/data/audio/kana-manifest'
 import { useSettingsStore } from '@/stores/settings.store'
@@ -22,10 +22,28 @@ import { useSettingsStore } from '@/stores/settings.store'
 let ctx: AudioContext | null = null
 const bufferCache = new Map<string, AudioBuffer>()
 const pendingFetches = new Map<string, Promise<AudioBuffer | null>>()
+let gestureUnlocked = false
 
 function getContext(): AudioContext {
   if (!ctx) ctx = new AudioContext()
   return ctx
+}
+
+function unlockAudioContext(): void {
+  gestureUnlocked = true
+  const audioCtx = getContext()
+  if (audioCtx.state === 'suspended') {
+    void audioCtx.resume()
+  }
+  document.removeEventListener('pointerdown', unlockAudioContext)
+  document.removeEventListener('touchstart', unlockAudioContext)
+}
+
+function ensureGestureUnlock(): void {
+  if (gestureUnlocked) return
+  if (typeof document === 'undefined') return
+  document.addEventListener('pointerdown', unlockAudioContext, { once: true })
+  document.addEventListener('touchstart', unlockAudioContext, { once: true })
 }
 
 async function fetchAndDecode(path: string): Promise<AudioBuffer | null> {
@@ -78,6 +96,10 @@ export function useWordAudio(): {
   playKanaAudio: (kana: string) => void
 } {
   const wordAudio = useSettingsStore((s) => s.wordAudio)
+
+  useEffect(() => {
+    if (wordAudio) ensureGestureUnlock()
+  }, [wordAudio])
 
   const playWordAudio = useCallback(
     (wordId: string): void => {

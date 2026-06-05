@@ -19,6 +19,8 @@ import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Modal } from '@/components/ui/modal'
 import type { KanaCharacter } from '@/types/kana.types'
+import { DUAL_MNEMONICS } from '@/data/kana/mnemonics'
+import { useSettingsStore } from '@/stores/settings.store'
 
 // ── Types ─────────────────────────────────────
 
@@ -40,6 +42,7 @@ export function TileDetailPopover({
   onClose,
 }: TileDetailPopoverProps): ReactNode {
   const [step, setStep] = useState<0 | 1>(0)
+  const hintsEnabled = useSettingsStore((s) => s.hints)
 
   // Reset the step index whenever the flow is (re)opened or closed so a fresh
   // invocation always starts at step 1 ("Reset progress on X?").
@@ -48,6 +51,8 @@ export function TileDetailPopover({
   }, [character])
 
   if (!character) return null
+
+  const mnemonic = hintsEnabled ? DUAL_MNEMONICS[character.romaji] : undefined
 
   const handleClose = (): void => {
     setStep(0)
@@ -79,7 +84,15 @@ export function TileDetailPopover({
       steps={[
         {
           title: `${character.kana} (${character.romaji})`,
-          body: `Current mastery: ${score}. What would you like to do?`,
+          body: mnemonic ? (
+            <>
+              <p>Current mastery: {score}.</p>
+              <p className="mt-2 text-feedback-mnemonic italic">{mnemonic.text}</p>
+              <p className="mt-2">What would you like to do?</p>
+            </>
+          ) : (
+            `Current mastery: ${score}. What would you like to do?`
+          ),
           confirmLabel: 'Reset progress',
           cancelLabel: 'Cancel',
         },

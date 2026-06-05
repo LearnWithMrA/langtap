@@ -31,7 +31,7 @@ export function MeaningReveal({
       <div
         className={[
           'text-sm text-center transition-colors duration-150 min-h-6 leading-snug',
-          isCorrect ? 'text-feedback-correct' : 'text-feedback-wrong',
+          isCorrect ? 'text-feedback-correct' : 'text-feedback-mnemonic',
         ].join(' ')}
         aria-live="polite"
       >

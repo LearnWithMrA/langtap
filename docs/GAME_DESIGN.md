@@ -438,7 +438,7 @@ ka → "か is a ka-ite with string, and カ is the kite's sharp frame."
 ```
 
 **On learning cards (character drills):** the dual mnemonic is shown immediately
-in the meaning area in orange (`text-feedback-wrong`). When the user answers
+in the meaning area in dark orange (`text-feedback-mnemonic`). When the user answers
 correctly, the text turns green (`text-feedback-correct`), giving time to read
 the mnemonic before the prompt auto-advances. Lookup: `getDualMnemonic(romaji)`
 in `data/kana/mnemonics.ts`.

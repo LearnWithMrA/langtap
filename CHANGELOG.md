@@ -30,6 +30,40 @@ Format per entry:
 
 ---
 
+## 2026-06-05 - Session 105
+
+**Sprint:** Sprint 11 - Bug Fixes and Polish
+**Task completed:** All 7 Sprint 11 tasks
+**Status:** Done
+
+### Changes made
+- `components/game/type-input.tsx`: Removed `value` from focus useEffect deps. Mobile keyboard stays open between prompts.
+- `components/game/swipe-input.tsx`: Same focus fix as type-input.
+- `hooks/useWordAudio.ts`: Added gesture-based AudioContext unlock via `pointerdown` + `touchstart` listeners. Audio now plays without needing lo-fi interaction first.
+- `app/globals.css`: Added `--color-feedback-mnemonic: #a65b20` token (WCAG 4.65:1 contrast vs cream).
+- `components/game/meaning-reveal.tsx`: Mnemonic text uses `text-feedback-mnemonic` instead of `text-feedback-wrong`.
+- `components/dojo/tile-detail-popover.tsx`: Shows dual mnemonic text in tile detail modal, gated by hints setting.
+- `components/layout/game-home-client.tsx`: Wired `useLeaderboard` hook for kana/kotoba dashboard glance. Searches entries then pinned user.
+- `docs/CONTENT.md`: Normalised sokuon/longvowel IDs to match `data/kana/characters.ts` (`h-sokuon`, `k-sokuon`, `k-longvowel`).
+- `docs/FRONTEND.md`: Documented `--color-feedback-mnemonic` token, updated mnemonic class reference, updated input focus behaviour.
+- `docs/GAME_DESIGN.md`: Updated mnemonic class reference from `text-feedback-wrong` to `text-feedback-mnemonic`.
+- `LangTap_Sprints.md`: Sprint 11 marked Complete. All 7 tasks Done.
+- `archive/engine/sokuon.ts`, `archive/engine/sokuon.test.ts`: Archived stale Sprint 4 placeholders. Originals flagged for owner deletion.
+
+### Tests
+- 1037 tests pass, 0 failures, 1 skipped (sokuon placeholder being archived)
+
+### Next task
+Sprint 12 - Reset Progress Upgrade (factory reset scope, atomic RPC, typed confirmation)
+
+### Notes
+- Codex code review completed (1 pass, 4 findings all fixed). Second pass blocked by Codex usage limit.
+- Task 5 (stale route placeholders) was already done in commit 6bcb550.
+- Stale `engine/sokuon.ts` and `engine/__tests__/sokuon.test.ts` archived to `archive/engine/`. Owner should delete originals from `engine/`.
+- User question about app versioning/backwards compatibility: localStorage Zustand stores have version migrations, Supabase schema uses additive migrations, Vercel deploys atomically. Gap: no "new version available" banner for long-lived tabs. Suggested as Future Backlog item.
+
+---
+
 ## 2026-06-01 - Session 104
 
 **Sprint:** Off-sprint

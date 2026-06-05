@@ -28,8 +28,10 @@ import { useSettingsStore } from '@/stores/settings.store'
 import { useOnboardingStore } from '@/stores/onboarding.store'
 import { KANA_CHARACTERS } from '@/data/kana/characters'
 import { MASTERY_THRESHOLD } from '@/engine/mastery'
+import { useLeaderboard } from '@/hooks/useLeaderboard'
 import type { StageProgress, LeaderboardGlance, HeatmapDay } from '@/types/dashboard.types'
 import type { Stage } from '@/types/kana.types'
+import type { InputMode } from '@/types/user.types'
 
 // ── Helpers ──────────────────────────────────
 
@@ -57,7 +59,6 @@ function deriveKanaStages(
   })
 }
 
-const EMPTY_LEADERBOARD: LeaderboardGlance = { rank: null, username: '', score: 0 }
 const EMPTY_HEATMAP: readonly HeatmapDay[] = []
 
 // ── Main component ────────────────────────────
@@ -76,6 +77,27 @@ export function GameHomeClient(): ReactNode {
   const kanaStages = useMemo(() => deriveKanaStages(scores, unlockedIds), [scores, unlockedIds])
 
   const jlptLevel = useOnboardingStore((s) => s.jlptLevel)
+
+  const kanaBoard = useLeaderboard('kana', inputMode as InputMode, 'all-time')
+  const kotobaBoard = useLeaderboard('kotoba', inputMode as InputMode, 'all-time')
+
+  const kanaLeaderboard: LeaderboardGlance = useMemo(() => {
+    if (!kanaBoard.board) return { rank: null, username: '', score: 0 }
+    const user =
+      kanaBoard.board.entries.find((e) => e.isCurrentUser) ??
+      kanaBoard.board.currentUserPinned
+    if (!user) return { rank: null, username: '', score: 0 }
+    return { rank: user.rank, username: user.username, score: user.score }
+  }, [kanaBoard.board])
+
+  const kotobaLeaderboard: LeaderboardGlance = useMemo(() => {
+    if (!kotobaBoard.board) return { rank: null, username: '', score: 0 }
+    const user =
+      kotobaBoard.board.entries.find((e) => e.isCurrentUser) ??
+      kotobaBoard.board.currentUserPinned
+    if (!user) return { rank: null, username: '', score: 0 }
+    return { rank: user.rank, username: user.username, score: user.score }
+  }, [kotobaBoard.board])
 
   const kotobaStages: StageProgress[] = useMemo(() => {
     const levels: string[] = ['N5', 'N4', 'N3', 'N2', 'N1']
@@ -99,7 +121,7 @@ export function GameHomeClient(): ReactNode {
             <ModePanel
               variant="kana"
               stages={kanaStages}
-              leaderboard={EMPTY_LEADERBOARD}
+              leaderboard={kanaLeaderboard}
               inputMode={inputMode}
               onModeChange={setInputMode}
             />
@@ -108,7 +130,7 @@ export function GameHomeClient(): ReactNode {
             <ModePanel
               variant="kotoba"
               stages={kotobaStages}
-              leaderboard={EMPTY_LEADERBOARD}
+              leaderboard={kotobaLeaderboard}
               inputMode={inputMode}
               onModeChange={setInputMode}
             />

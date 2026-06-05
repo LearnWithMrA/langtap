@@ -224,7 +224,7 @@ first-attempt scoring rules as every other character.
 In Tap mode, the sokuon has its own button (っ or ッ depending on the word).
 Tapping it at the correct position is a valid first-attempt correct answer.
 
-IDs: `hira-sokuon`, `kata-sokuon`
+IDs: `h-sokuon`, `k-sokuon`
 Romaji input: no standalone input. Position is validated contextually via the
 doubled consonant in the full word romaji string.
 Progression stage: Seion (introduced with the final seion group, as it appears
@@ -242,7 +242,7 @@ is familiar to anyone who has used a Japanese keyboard layout.
 In Type and Swipe modes: user types "-" at the correct position in the word.
 In Tap mode: ー has its own button.
 
-ID: `kata-longvowel`
+ID: `k-longvowel`
 Progression stage: Seion (introduced with the katakana seion groups, as it
 appears in common katakana loanwords from the very beginning: コーヒー, スーパー).
 

@@ -62,7 +62,7 @@ export function SwipeInput({
     if (!disabled && inputRef.current) {
       inputRef.current.focus()
     }
-  }, [disabled, value])
+  }, [disabled])
 
   const fieldClasses = [
     'w-full rounded-xl border-2 bg-surface-raised px-4 py-3',

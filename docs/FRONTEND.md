@@ -75,6 +75,7 @@ variables in `app/globals.css` using the `@theme` directive.
   /* Feedback colours */
   --color-feedback-wrong:   #f59e60;  /* orange - wrong answer highlight */
   --color-feedback-correct: #7da873;  /* sage-400 - correct answer confirm */
+  --color-feedback-mnemonic: #a65b20; /* dark orange - mnemonic hint text (WCAG 4.5:1 vs cream) */
 
   /* Heatmap colours (mastery progress, traffic-light palette) */
   --color-heat-0:  #ebe2da;  /* score 0 - warm beige, untouched */
@@ -109,6 +110,7 @@ variables in `app/globals.css` using the `@theme` directive.
 - Muted text (placeholders, hints): `text-text-muted`.
 - Wrong answer highlight: `bg-feedback-wrong` or `text-feedback-wrong`.
 - Correct answer confirm: `text-feedback-correct`.
+- Mnemonic hint text: `text-feedback-mnemonic` (dark orange, WCAG 4.5:1 against cream).
 - Borders: `border-border`.
 
 ### 2.3 Scene Theme Tokens
@@ -452,7 +454,8 @@ space (`U+200B`) after each hiragana so the Japanese IME treats each kana as
 separate and does not offer kanji suggestions (see `docs/UX_DESIGN.md` section
 7.3 for detail). When the current word is katakana, the real `<input>` has
 transparent text and a katakana overlay `<div>` renders the converted display
-value on top. Auto-focuses on mount and after each word advance.
+value on top. Auto-focuses on mount when enabled (focus depends on `disabled`
+prop only, not on value changes, so mobile keyboards stay open between prompts).
 
 **SwipeInput**
 
@@ -480,8 +483,8 @@ Dual-purpose component below the character prompt. Two modes:
 - **Word prompts:** shows the English meaning after correct answer. Fades in via
   opacity transition. Props: `meaning`, `visible`.
 - **Learning cards (character drills) with hints enabled:** shows the dual mnemonic
-  text immediately in orange (`text-feedback-wrong`). On correct answer, transitions
-  to green (`text-feedback-correct`). Props: `mnemonic`, `isCorrect`.
+  text immediately in dark orange (`text-feedback-mnemonic`). On correct answer,
+  transitions to green (`text-feedback-correct`). Props: `mnemonic`, `isCorrect`.
 
 When hints are disabled or no mnemonic exists, the area stays blank (non-breaking
 space, `min-h-6` to prevent layout shift).
