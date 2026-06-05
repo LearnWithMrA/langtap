@@ -72,6 +72,7 @@ type DialogueOverlayProps = {
   onDismiss: () => void
   onSkip?: () => void
   skipLabel?: string
+  dismissLabel?: string
 }
 
 // ── Main export ───────────────────────────────
@@ -84,6 +85,7 @@ export function DialogueOverlay({
   onDismiss,
   onSkip,
   skipLabel,
+  dismissLabel,
 }: DialogueOverlayProps): ReactNode {
   const [ready, setReady] = useState(false)
   const [messageIndex, setMessageIndex] = useState(0)
@@ -221,7 +223,7 @@ export function DialogueOverlay({
               onClick={onDismiss}
               className={`px-3 py-2.5 text-xs font-bold rounded-lg ${styles.gotItBg} text-white ${styles.gotItShadow} hover:brightness-105 active:translate-y-[2px] active:shadow-none transition-all duration-75`}
             >
-              Got it
+              {dismissLabel ?? 'Got it'}
             </button>
           </>
         )}

@@ -51,6 +51,7 @@ import { startLeaderboardSession, finalizeLeaderboardSession } from '@/services/
 import type { LeaderboardAttemptEntry, PendingSession } from '@/types/leaderboard.types'
 import { DIALOGUE_SCRIPTS } from '@/data/tutorial/dialogue-scripts'
 import { TRIAL_ALLOWED_IDS } from '@/data/tutorial/trial-prompts'
+import { hasDemoBeenCompleted } from '@/components/layout/demo-practice-client'
 
 const TRIAL_ALLOWED_SET = new Set(TRIAL_ALLOWED_IDS)
 const KANA_TRIAL_CARD = 'bg-[#dce8f5] shadow-[0_6px_0_0_#a8bed8]'
@@ -249,6 +250,8 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
     markKotobaTrialSeen()
   }, [markKotobaModeSeen, markKotobaTrialSeen])
 
+  const trialProceedLabel = hasDemoBeenCompleted() ? 'Redo tutorial' : undefined
+
   const kanaDialogue =
     gameType === 'kana'
       ? !hasSeenKanaIntro
@@ -258,6 +261,7 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
             theme: 'blue' as const,
             onSkip: undefined as (() => void) | undefined,
             skipLabel: undefined as string | undefined,
+            dismissLabel: undefined as string | undefined,
           }
         : !hasSeenSettings
           ? {
@@ -266,6 +270,7 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
               theme: 'blue' as const,
               onSkip: undefined,
               skipLabel: undefined,
+              dismissLabel: undefined,
             }
           : !hasSeenKanaMode
             ? {
@@ -274,6 +279,7 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
                 theme: 'blue' as const,
                 onSkip: skipTrial,
                 skipLabel: 'Skip trial',
+                dismissLabel: trialProceedLabel,
               }
             : null
       : null
@@ -286,6 +292,7 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
           theme: 'green' as const,
           onSkip: skipKotobaTrial,
           skipLabel: 'Skip trial',
+          dismissLabel: trialProceedLabel,
         }
       : null
 
@@ -479,6 +486,7 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
           onDismiss={activeDialogue.onDismiss}
           onSkip={activeDialogue.onSkip}
           skipLabel={activeDialogue.skipLabel}
+          dismissLabel={activeDialogue.dismissLabel}
         />
       ) : showKanaTrial && !trialSession.isComplete ? (
         <GameWindow

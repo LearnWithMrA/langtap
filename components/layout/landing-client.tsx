@@ -28,6 +28,8 @@ import { SignUpCard } from '@/components/ui/sign-up-card'
 import { useEasterEgg } from '@/hooks/useEasterEgg'
 import { LeaderboardList } from '@/components/leaderboard/leaderboard-list'
 import { useLeaderboard } from '@/hooks/useLeaderboard'
+import { useDemoStore } from '@/stores/demo.store'
+import { preloadPracticeDataForLevel } from '@/data/words/word-bank-loader'
 import type { InputMode } from '@/types/user.types'
 
 // -- Types --------------------------------------------------
@@ -58,9 +60,20 @@ export function LandingClient(): ReactNode {
 
   const EMPTY_BOARD = { entries: [] as const, currentUserPinned: null }
 
+  const [demoLoading, setDemoLoading] = useState(false)
+  const resetDemo = useDemoStore((s) => s.reset)
+
   const closeAuth = useCallback((): void => setAuthModal(null), [])
   const openLogIn = useCallback((): void => setAuthModal('log-in'), [])
   const openSignUp = useCallback((): void => setAuthModal('sign-up'), [])
+
+  const handleTryItNow = useCallback(async (): Promise<void> => {
+    setDemoLoading(true)
+    resetDemo()
+    router.prefetch('/demo/kana')
+    await preloadPracticeDataForLevel('N5')
+    router.push('/demo/kana')
+  }, [resetDemo, router])
 
   return (
     <div className="min-h-svh">
@@ -80,11 +93,12 @@ export function LandingClient(): ReactNode {
             A journey of a thousand miles begins with a single tap.
           </h1>
           <KeyButton
-            href="/onboarding/step-1"
+            onClick={handleTryItNow}
+            disabled={demoLoading}
             className="bg-[#4a90c4] text-white px-6 py-1.5 text-lg sm:px-8 sm:py-2 sm:text-xl shadow-[0_4px_0_0_#3570a0]"
-            aria-label="Try LangTap now as a guest"
+            aria-label="Try LangTap now"
           >
-            Try it now
+            {demoLoading ? 'Loading...' : 'Try it now'}
           </KeyButton>
         </div>
       </LandingScene>

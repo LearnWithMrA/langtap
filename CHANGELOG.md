@@ -30,6 +30,42 @@ Format per entry:
 
 ---
 
+## 2026-06-05 - Session 109
+
+**Sprint:** Sprint 14 - Trial Mode Redesign
+**Task completed:** Phase A (Demo Data) + Phase B (Demo Practice Flow)
+**Status:** Partial (Phases C, D, E remain)
+
+### Changes made
+- `data/demo/demo-prompts.ts`: New file. 18 curated kana prompts (seion chars, seion words, katakana chars, katakana words, dakuon words, combination words, sokuon/long vowel words, capstone words) and 8 kotoba prompts (common N5 vocabulary). Deterministic sequence. DEMO_ALLOWED_IDS for tap grid. Sokuon/long vowel romaji matches real usePracticeSession logic.
+- `data/demo/demo-mastery.ts`: New file. Pre-built mastery fixtures for mature-account dojo preview. Kana: all hiragana seion + katakana seion groups 1-3 + hiragana dakuon group 1 with varied heat band scores. Kotoba: first 3 N5 levels + partial level 4 using real JMDict IDs from kotoba-levels/n5.ts.
+- `stores/demo.store.ts`: New file. In-memory Zustand store tracking demo state: kanaIndex, kotobaIndex, completion flags, activate/advance/reset actions. Not persisted to localStorage.
+- `hooks/useDemoKanaPracticeSession.ts`: New file. Returns UsePracticeSessionReturn interface, reads DEMO_KANA_PROMPTS sequentially, no store writes, advances via demo store.
+- `hooks/useDemoKotobaPracticeSession.ts`: New file. Returns UseKotobaPracticeReturn interface, reads DEMO_KOTOBA_PROMPTS sequentially, no store writes, advances via demo store.
+- `components/layout/demo-practice-client.tsx`: New file. Stripped-down practice client for demo: welcome dialogue (blue for kana, green for kotoba), game windows with demo sessions, completion screen with sign-up CTA and link to try other mode. Sets localStorage flag on demo completion for redo tutorial detection.
+- `app/(main)/(scene)/demo/page.tsx`: New file. Bare /demo redirects to /demo/kana.
+- `app/(main)/(scene)/demo/kana/page.tsx`: New file. Demo kana practice route.
+- `app/(main)/(scene)/demo/kotoba/page.tsx`: New file. Demo kotoba practice route.
+- `components/layout/landing-client.tsx`: "Try it now" button changed from href="/onboarding/step-1" to onClick handler with loading state. Resets demo store, prefetches route, preloads N5 practice data before navigating to /demo/kana.
+- `components/game/dialogue-overlay.tsx`: Added optional dismissLabel prop to override "Got it" button text.
+- `components/layout/practice-client.tsx`: Mode dialogues pass dismissLabel="Redo tutorial" when demo was previously completed (localStorage check). Skip trial label unchanged.
+
+### Tests
+- All 1094 tests pass, 0 failures.
+- No new tests this session (Phase E covers demo tests).
+
+### Next task
+Sprint 14 Phase C: Demo Dojo views (demo kana dojo, demo kotoba dojo)
+
+### Notes
+- Owner feedback: demo is the tutorial expanded, not a separate rebuild. The existing mini tutorial becomes "Redo Tutorial" for users who completed the full demo.
+- "Redo tutorial" label appears only on the proceed/"Got it" button of mode dialogues (not the skip button, not the trial game window label). Simple localStorage flag set on demo completion.
+- Demo routes sit inside (scene) layout so landscape/cyclist persists.
+- No middleware changes needed (unauthenticated users can access all routes except /profile).
+- Phase C (Demo Dojo) deferred to next session.
+
+---
+
 ## 2026-06-05 - Session 108
 
 **Sprint:** Sprint board maintenance
