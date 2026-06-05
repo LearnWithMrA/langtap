@@ -22,7 +22,6 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { GameWindow } from '@/components/game/game-window'
 import { DialogueOverlay } from '@/components/game/dialogue-overlay'
-import { DistanceCounter } from '@/components/game/distance-counter'
 import { useDemoKanaPracticeSession } from '@/hooks/useDemoKanaPracticeSession'
 import { useDemoKotobaPracticeSession } from '@/hooks/useDemoKotobaPracticeSession'
 import { useDemoStore } from '@/stores/demo.store'
@@ -56,7 +55,7 @@ const MODE_LABELS: Record<InputMode, string> = {
 const DEMO_WELCOME_MESSAGES: string[] = [
   'Welcome to the taster! This is a mini version of LangTap.',
   'The full game teaches you and introduces new content bit by bit.',
-  'For now, just click away and explore. If you don\'t know the answer, just guess and the game will guide you.',
+  "For now, just click away and explore. If you don't know the answer, just guess and the game will guide you.",
   'Explore different input modes, kotoba mode, the home page and more. Or sign up to jump right in!',
 ]
 
@@ -133,16 +132,14 @@ function DemoCompletionCard({ gameType }: { gameType: GameType }): ReactNode {
   const otherType = gameType === 'kana' ? 'kotoba' : 'kana'
   const otherLabel = gameType === 'kana' ? 'Kotoba' : 'Kana'
   const otherRoute = `/demo/${otherType}`
-  const isOtherComplete = useDemoStore(
-    (s) => (otherType === 'kana' ? s.isKanaComplete : s.isKotobaComplete),
+  const isOtherComplete = useDemoStore((s) =>
+    otherType === 'kana' ? s.isKanaComplete : s.isKotobaComplete,
   )
 
   return (
     <DemoPracticeScene>
       <div className="bg-[#faf5e4] shadow-[0_6px_0_0_#d4c9b0] rounded-2xl w-full max-w-md mx-auto p-6 md:p-8 text-center">
-        <p className="text-2xl font-bold text-warm-800 mb-3">
-          {"That's the taster!"}
-        </p>
+        <p className="text-2xl font-bold text-warm-800 mb-3">{"That's the taster!"}</p>
         <p className="text-base text-warm-600 mb-6">
           Sign up to keep practising and track your progress.
         </p>
@@ -212,15 +209,9 @@ export function DemoPracticeClient({ gameType = 'kana' }: { gameType?: GameType 
   if (gameType === 'kotoba') {
     return (
       <DemoPracticeScene>
-        <LazyKotobaGameWindow
-          mode={mode}
-          kotobaInput={kotobaInput}
-          session={kotobaSession}
-        >
+        <LazyKotobaGameWindow mode={mode} kotobaInput={kotobaInput} session={kotobaSession}>
           <ModeDropdown mode={mode} onModeChange={setMode} gameType="kotoba" />
-          <span className="text-xs font-semibold text-sage-500 tracking-wider uppercase">
-            Demo
-          </span>
+          <span className="text-xs font-semibold text-sage-500 tracking-wider uppercase">Demo</span>
         </LazyKotobaGameWindow>
       </DemoPracticeScene>
     )
@@ -228,11 +219,7 @@ export function DemoPracticeClient({ gameType = 'kana' }: { gameType?: GameType 
 
   return (
     <DemoPracticeScene>
-      <GameWindow
-        mode={mode}
-        session={kanaSession}
-        allowedCharIds={DEMO_ALLOWED_SET}
-      >
+      <GameWindow mode={mode} session={kanaSession} allowedCharIds={DEMO_ALLOWED_SET}>
         <ModeDropdown mode={mode} onModeChange={setMode} gameType="kana" />
         <span className="text-xs font-semibold text-sage-500 tracking-wider uppercase">Demo</span>
       </GameWindow>

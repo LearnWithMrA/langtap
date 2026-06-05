@@ -585,7 +585,7 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 ## Sprint 14 - Trial Mode Redesign
 
 **Goal:** Replace the complex guest trial system (anonymous Supabase auth, 30m server-enforced distance cap, guest usage table/RPCs, guest-to-account import flow) with a purely client-side curated demo experience. "Try it out" becomes a fixed taster showing a mature-account preview. No anonymous auth, no distance cap, no server tracking. Skip onboarding for trial. Clicking "Try it out" again resets the demo. Simplifies the codebase significantly by removing all guest complexity.
-**Status:** Pending
+**Status:** Active
 
 **Why:** The old demo system was useful for owner testing but creates complexity (anonymous auth, server-side caps, import flow, edge cases). Now that accounts exist, the owner tests via their account. The trial should be simple: show visitors what the app looks and feels like on a mature account, then ask them to sign up. Full account users get free daily usage (existing server-side daily cap).
 
@@ -593,8 +593,8 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Design curated demo prompt set | **Small** | **To Do** | ~20-30 fixed prompts showing breadth: hiragana seion, dakuon, and combination; katakana basics; kotoba readings and kanji mode. Deterministic sequence (not random). Store in `data/demo/demo-prompts.ts`. Docs: update `docs/CONTENT.md` (demo data files), update `docs/GAME_DESIGN.md` (demo prompt selection). |
-| Build demo mastery fixtures | **Small** | **To Do** | Pre-built mastery and word-mastery scores for a "mature account" preview. Varied heat levels (1/3/5), partial unlocks, some characters mastered. For dojo: some stages partially unlocked, some fully mastered. Store in `data/demo/demo-mastery.ts` and `data/demo/demo-word-mastery.ts`. Reuse existing `samples/` fixture data as reference. Docs: update `docs/GAME_DESIGN.md` (demo fixtures). |
+| Design curated demo prompt set | **Small** | **Done** | 18 kana prompts (seion chars, seion words, katakana, dakuon, combination, sokuon, long vowel, capstone) + 8 kotoba prompts (common N5). Deterministic sequence. `data/demo/demo-prompts.ts`. Session 109. |
+| Build demo mastery fixtures | **Small** | **Done** | Kana: all hiragana seion + katakana groups 1-3 + dakuon group 1, varied heat bands. Kotoba: N5 levels 1-3 + partial 4, real JMDict IDs. `data/demo/demo-mastery.ts`. Session 109. |
 
 ### Phase B: Demo Practice Flow
 
@@ -602,12 +602,12 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Build demo route and state management | **Small** | **To Do** | Dedicated `/demo` route (or route param on practice routes). Demo state context/provider tracks: current prompt index, game type (kana/kotoba), demo completion status. Resets all state when "Try it out" is clicked again. No onboarding redirect for demo users. No anonymous auth call. Docs: update `docs/ARCHITECTURE.md` (route structure, demo route), update `docs/AUTH.md` (demo mode replaces guest mode). |
-| Build `useDemoKanaPracticeSession` hook | **Medium** | **To Do** | Adapter for kana demo prompts. Reads from the kana subset of the demo prompt set sequentially (not mastery-weighted). Returns the same interface as `usePracticeSession` so `GameWindow` works unchanged. No mastery/counter store writes. No server calls. Tracks progress through demo set locally (in-memory only). Docs: update `docs/GAME_DESIGN.md` (demo session hooks). |
-| Build `useDemoKotobaPracticeSession` hook | **Medium** | **To Do** | Adapter for kotoba demo prompts (readings and kanji mode). Reads from the kotoba subset of the demo prompt set sequentially. Returns the same interface as `useKotobaPracticeSession` so `KotobaGameWindow` works unchanged. No word mastery store writes. No server calls. In-memory only. Docs: update `docs/GAME_DESIGN.md` (demo session hooks). |
-| Build demo welcome dialogue | **Small** | **To Do** | Short welcome messages (2-3 max): "Welcome to the taster! This is a mini version of LangTap. The full game teaches you and introduces new content bit by bit. For now, just click away and explore. If you don't know the answer, just guess and the game will guide you. Explore different input modes, kotoba mode, the home page and more. Or sign up to jump right in!" Docs: update `docs/FRONTEND.md` (dialogue component, demo dialogue scripts). |
-| Wire "Try it out" to demo mode | **Medium** | **To Do** | Landing page "Try it now" button routes to demo practice. Practice client detects demo mode and uses the demo session hooks instead of real session hooks. Kana demo uses `useDemoKanaPracticeSession`, kotoba demo uses `useDemoKotobaPracticeSession`. If someone clicks "Try it out" again after a previous visit, it resets the demo from the start. Docs: update `docs/FRONTEND.md` (landing page, demo flow), update `docs/AUTH.md` (demo routing, no onboarding). |
-| Build demo completion screen | **Small** | **To Do** | After all demo prompts are completed, show a card: "That's the taster! Sign up to keep practising and track your progress." with a sign-up CTA button. Docs: update `docs/FRONTEND.md` (demo completion screen). |
+| Build demo route and state management | **Small** | **Done** | `/demo/kana` and `/demo/kotoba` routes under `(scene)` layout. `stores/demo.store.ts` (in-memory Zustand, not persisted). `/demo` redirects to `/demo/kana`. No middleware changes needed. Session 109. |
+| Build `useDemoKanaPracticeSession` hook | **Medium** | **Done** | Returns `UsePracticeSessionReturn` interface, reads `DEMO_KANA_PROMPTS` sequentially, no store writes, advances via demo store. `hooks/useDemoKanaPracticeSession.ts`. Session 109. |
+| Build `useDemoKotobaPracticeSession` hook | **Medium** | **Done** | Returns `UseKotobaPracticeReturn` interface, reads `DEMO_KOTOBA_PROMPTS` sequentially, no store writes, advances via demo store. `hooks/useDemoKotobaPracticeSession.ts`. Session 109. |
+| Build demo welcome dialogue | **Small** | **Done** | 4 welcome messages embedded in `demo-practice-client.tsx`. Blue theme for kana, green theme for kotoba. Session 109. |
+| Wire "Try it out" to demo mode | **Medium** | **Done** | Landing page button changed from href to onClick with loading state + data preload (matches onboarding step 3 pattern). Resets demo store on repeat clicks. `dismissLabel` prop added to `DialogueOverlay` for "Redo tutorial" on proceed button when demo was completed (localStorage flag). Session 109. |
+| Build demo completion screen | **Small** | **Done** | Sign-up CTA card with link to try other mode. Sets `langtap-demo-completed` localStorage flag. In `demo-practice-client.tsx`. Session 109. |
 
 ### Phase C: Demo Dojo
 

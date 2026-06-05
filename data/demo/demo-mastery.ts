@@ -130,9 +130,7 @@ export const DEMO_KANA_LEARNING_SCORES: Readonly<MasteryScoreMap> = Object.fromE
 // ── Kana manual unlock IDs ───────────────────
 // All characters with demo mastery scores are considered manually unlocked.
 
-export const DEMO_KANA_MANUAL_UNLOCK_IDS: readonly string[] = Object.keys(
-  DEMO_KANA_MASTERY_SCORES,
-)
+export const DEMO_KANA_MANUAL_UNLOCK_IDS: readonly string[] = Object.keys(DEMO_KANA_MASTERY_SCORES)
 
 // ── Kotoba (word) mastery scores ─────────────
 // First 3 N5 levels (36 words) with varied mastery. Level 4 partially
@@ -191,6 +189,4 @@ export const DEMO_WORD_MASTERY_SCORES: Readonly<MasteryScoreMap> = {
 // ── Kotoba manual unlock IDs ─────────────────
 // Words in the first 3 levels + partial level 4 are unlocked.
 
-export const DEMO_WORD_MANUAL_UNLOCK_IDS: readonly string[] = Object.keys(
-  DEMO_WORD_MASTERY_SCORES,
-)
+export const DEMO_WORD_MANUAL_UNLOCK_IDS: readonly string[] = Object.keys(DEMO_WORD_MASTERY_SCORES)

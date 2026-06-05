@@ -150,16 +150,37 @@ export const DEMO_KANA_PROMPTS: readonly PracticePrompt[] = [
 
 export const DEMO_ALLOWED_IDS: readonly string[] = [
   // Hiragana seion
-  'h-a', 'h-ka', 'h-sa', 'h-ha', 'h-na', 'h-so', 'h-ra',
-  'h-o', 'h-u', 'h-ne', 'h-ko', 'h-wa', 'h-n', 'h-shi',
+  'h-a',
+  'h-ka',
+  'h-sa',
+  'h-ha',
+  'h-na',
+  'h-so',
+  'h-ra',
+  'h-o',
+  'h-u',
+  'h-ne',
+  'h-ko',
+  'h-wa',
+  'h-n',
+  'h-shi',
   // Hiragana dakuon
-  'h-de', 'h-gi', 'h-ga',
+  'h-de',
+  'h-gi',
+  'h-ga',
   // Hiragana combination
-  'h-cha', 'h-sha',
+  'h-cha',
+  'h-sha',
   // Hiragana special
   'h-sokuon',
   // Katakana seion
-  'k-ka', 'k-te', 'k-re', 'k-me', 'k-ra', 'k-ko', 'k-hi',
+  'k-ka',
+  'k-te',
+  'k-re',
+  'k-me',
+  'k-ra',
+  'k-ko',
+  'k-hi',
   // Katakana dakuon
   'k-bi',
   // Katakana special

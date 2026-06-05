@@ -23,9 +23,7 @@ export function useDemoKanaPracticeSession(): UsePracticeSessionReturn {
 
   const prompt = isComplete ? null : (DEMO_KANA_PROMPTS[index] ?? null)
 
-  const practiceIds = new Set(
-    DEMO_KANA_PROMPTS.flatMap((p) => p.characters.map((c) => c.id)),
-  )
+  const practiceIds = new Set(DEMO_KANA_PROMPTS.flatMap((p) => p.characters.map((c) => c.id)))
 
   const handleWordComplete = useCallback((): void => {
     // No-op: demo does not write to mastery or counter stores
