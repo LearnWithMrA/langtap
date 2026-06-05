@@ -42,7 +42,7 @@ export default defineConfig({
 
     // ── Test discovery ────────────────────────────────────────
     include: ['**/__tests__/**/*.test.{ts,tsx}', '**/*.test.{ts,tsx}'],
-    exclude: ['node_modules', '.next'],
+    exclude: ['node_modules', '.next', 'archive'],
 
     // ── Coverage ──────────────────────────────────────────────
     coverage: {

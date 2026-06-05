@@ -30,6 +30,48 @@ Format per entry:
 
 ---
 
+## 2026-06-05 - Session 106
+
+**Sprint:** Sprint 12 - Reset Progress Upgrade
+**Task completed:** All 4 Sprint 12 tasks
+**Status:** Done
+
+### Changes made
+- `supabase/migrations/20260605120000_create_factory_reset_rpc.sql`: New `factory_reset()` RPC. Security definer, profile row lock, anonymous rejection. Deletes 10 tables (mastery, manual_unlocks, word_mastery, word_manual_unlocks, word_counters, practice_sessions, leaderboard_score_events, leaderboard_scores, leaderboard_sessions, leaderboard). Increments both epochs. Resets tap_reminder_count. Preserves daily_cap_events and profile settings.
+- `services/factory-reset.service.ts`: New service wrapping the factory_reset RPC. Returns both new epoch values. Try/catch for robustness.
+- `hooks/useResetActions.ts`: New hook encapsulating all reset business logic (per-domain and factory). Owns service calls, store updates, and localStorage cleanup. Extracted from the component to fix Codex Finding 7 (component boundary drift).
+- `components/profile/reset-progress.tsx`: Added "Full Reset" button with typed "RESET" confirmation dialog. Focus trap, Escape key, scroll lock, focus restore. Pure UI: all business logic lives in `useResetActions`.
+- `hooks/useDialogueSeen.ts`: Added `clearAllDialoguesSeen()` standalone export for factory reset.
+- `vitest.config.ts`: Added `archive` to test exclude list (archived sokuon test was being picked up).
+- `docs/BACKEND.md`: Added Sections 4.7 (factory-reset service) and 4.8 (factory_reset RPC documentation). Documented cleared/preserved scope including onboarding unlock preservation rationale.
+- `docs/SECURITY.md`: Updated Section 3.3 to document factory_reset as the only multi-table DELETE RPC.
+- `docs/FRONTEND.md`: Documented factory reset dialog pattern, localStorage scope, and onboarding preservation.
+- `CLAUDE.md`: Added "Share findings in chat" rule to Codex review checkpoints (Section 13).
+- `AGENTS.md`: Added "Share findings in chat" rule to Review Protocol section.
+- `LangTap_Sprints.md`: Sprint 12 marked Complete. All 4 tasks Done.
+
+### Tests
+- `services/__tests__/factory-reset.service.test.ts`: 5 tests (RPC call, response parsing, error handling). Pass.
+- `hooks/__tests__/useResetActions.test.ts`: 8 tests (resetKana, resetKotoba, resetAll: success, failure, exception, localStorage, preservation). Pass.
+- `hooks/__tests__/useDialogueSeen.test.ts`: 2 tests (clearAll function). Pass.
+- `components/profile/__tests__/reset-progress.test.tsx`: 16 tests (typed confirmation, case sensitivity, atomicity, epoch updates, localStorage clearing, preservation, per-domain resets). Pass.
+- All 1068 tests pass, 0 failures, 0 skipped.
+
+### Next task
+Sprint 13 - Streak Calendar
+
+### Notes
+- Codex code review completed (1 pass, 7 findings: 6 fixed, 1 dismissed). Finding 1 (onboarding unlocks re-merge) dismissed by owner: factory reset intentionally returns to post-onboarding state, not pre-onboarding. Finding 7 (component boundary drift) fixed by extracting `useResetActions` hook.
+- Codex plan review was blocked by usage limit at start of session. Code review ran after limit reset.
+- Added "Share Codex findings in chat" as a new process rule to both CLAUDE.md and AGENTS.md.
+- Test count grew from 1037 to 1068 (+31 new tests).
+- `archive/` folder was missing from vitest exclude list, causing archived sokuon test to show as skipped. Fixed.
+
+### Tech debt spotted
+- `components/profile/profile-client.tsx` still imports services/stores directly for the delete account flow (pre-existing pattern). The reset-progress component was fixed this session by extracting `useResetActions`. The delete flow could follow the same pattern when next touched.
+
+---
+
 ## 2026-06-05 - Session 105
 
 **Sprint:** Sprint 11 - Bug Fixes and Polish

@@ -48,6 +48,14 @@ function getServerSnapshot(): string {
   return '[]'
 }
 
+// ── Standalone clear (for factory reset) ─────
+
+export function clearAllDialoguesSeen(): void {
+  if (typeof window === 'undefined') return
+  window.localStorage.removeItem(STORAGE_KEY)
+  emitLocalChange()
+}
+
 // ── Hook ──────────────────────────────────────
 
 export function useDialogueSeen(trigger: DialogueTrigger): {

@@ -169,10 +169,15 @@ create policy "Public read"
 ### 3.3 No DELETE policies
 
 LangTap does not expose DELETE operations to the client for any table.
-Data is never deleted via the client API. Deletion is a server-side-only
-operation performed manually by the owner or via a server action with the
-service role key. This reduces the attack surface for accidental or malicious
-data loss.
+Data is never deleted via the client API. Deletion is performed only by
+`security definer` RPCs (e.g. `factory_reset`, which deletes all progress
+rows for the calling user) or manually by the owner with the service role
+key. This reduces the attack surface for accidental or malicious data loss.
+
+The `factory_reset` RPC is the only RPC that performs DELETE operations
+across multiple tables. It requires `is_permanent_user()` and serializes
+via a profile row lock. See docs/BACKEND.md Section 4.8 for the full
+scope of what it clears and preserves.
 
 ### 3.4 RLS verification query
 

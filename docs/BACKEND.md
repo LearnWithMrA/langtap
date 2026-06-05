@@ -550,6 +550,45 @@ loadWordManualUnlocks(userId: string): Promise<ServiceResult<string[]>>
 syncWordManualUnlocks(userId: string, wordIds: string[]): Promise<ServiceResult<void>>
 ```
 
+### 4.7 services/factory-reset.service.ts
+
+```ts
+factoryReset(): Promise<ServiceResult<FactoryResetResult>>
+```
+
+`factoryReset` calls the `factory_reset` RPC (see Section 4.8). Returns both
+new epoch values on success. Non-optimistic: the caller updates local state
+only after RPC confirms.
+
+### 4.8 factory_reset RPC
+
+Atomic factory reset that clears all user progress in a single transaction.
+Returns to an identical-to-new-account state. Uses a profile row lock
+(`SELECT ... FOR UPDATE`) as the serialization point against concurrent
+checkpoint syncs and other reset RPCs.
+
+**Cleared:** `mastery`, `manual_unlocks`, `word_mastery`, `word_manual_unlocks`,
+`word_counters`, `practice_sessions`, `leaderboard_score_events`,
+`leaderboard_scores`, `leaderboard_sessions`, `leaderboard` (legacy).
+Also resets `profiles.tap_reminder_count` to 0.
+
+**Preserved:** `daily_cap_events` (user stays capped for the day), all profile
+settings (username, JLPT levels, input_mode, distance_unit, leaderboard_visibility,
+notifications_enabled, font preferences, user_tz). Onboarding-selected character
+unlocks (stored client-side in the onboarding store) are also preserved: factory
+reset returns to post-onboarding state, not pre-onboarding. On next hydration the
+store-hydrator merges onboarding unlocks back into the unlock store as expected.
+
+**Epoch ownership:** the factory RPC increments both `mastery_reset_epoch` and
+`word_mastery_reset_epoch` by 1 in a single UPDATE. It does NOT call the
+existing `reset_all_mastery` or `reset_all_word_mastery` RPCs. This avoids
+double-increment and ensures atomicity.
+
+Returns: `{ new_mastery_epoch: integer, new_word_mastery_epoch: integer }`.
+
+Security: `security definer`, rejects anonymous users via `is_permanent_user()`.
+Granted to `authenticated` role only.
+
 ---
 
 ## 5. Database Triggers

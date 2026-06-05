@@ -164,6 +164,13 @@ Claude can call Codex directly without you needing to copy-paste anything.
    best practices.
 5. Codex is specific and actionable. References file paths, line numbers, exact code.
 
+### Share findings in chat
+
+After every Codex review (plan or code), Claude must share the full list of
+findings with the owner in chat before acting on them. The owner needs to see
+what Codex found, assess severity, and decide which findings to accept, dismiss,
+or defer. Claude must never silently fix Codex findings without showing them first.
+
 ### Fix-and-resubmit loop
 
 After a code review (stage 6), Claude fixes any issues Codex raised. Claude then

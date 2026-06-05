@@ -471,6 +471,11 @@ implementer. Claude implements. Codex reviews. The owner decides.
 Small tasks skip the plan review loop (stages 2-4) but always get a code
 review after implementation. No code ships without at least one Codex review.
 
+**Share findings in chat:** After every Codex review, Claude must share the
+full list of findings with the owner in chat before acting on them. The owner
+needs to see what Codex found and decide which findings to accept, dismiss,
+or defer. Never silently fix Codex findings without showing them first.
+
 **Fix-and-resubmit loop:** After a code review, Claude fixes any issues
 Codex raised, then presents the fixes to the owner and waits. The owner
 decides whether to send fixes back to Codex for a follow-up review. Claude

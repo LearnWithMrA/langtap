@@ -426,9 +426,22 @@ Locked state: `bg-heat-0 opacity-50`.
 
 **Modal**
 
-Two-step confirmation modals for destructive actions (unlock, reset).
+Two-step confirmation modals for destructive actions (unlock, per-domain reset).
 First step: explain what will happen. Second step: final confirm.
 Never show both steps at once.
+
+**Factory Reset Dialog**
+
+The Full Reset option in `components/profile/reset-progress.tsx` uses a typed
+confirmation dialog (same pattern as delete account in `profile-client.tsx`).
+User types `RESET` (case-sensitive) to enable the confirm button. On success,
+all local progress state is cleared: mastery store, word mastery store, counter
+store, unlock store (re-locked), dialogue/tutorial seen flags, dojo help card
+tips, frozen prompt, and practice counters. Settings and onboarding state
+(including onboarding-selected character unlocks) are preserved: factory reset
+returns to post-onboarding state, not pre-onboarding. On next hydration the
+store-hydrator merges onboarding unlocks back into the unlock store. The dialog
+includes focus trap, Escape key handling, and scroll lock.
 
 ### 6.2 Game Components (`components/game/`)
 

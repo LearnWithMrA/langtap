@@ -84,8 +84,7 @@ export function GameHomeClient(): ReactNode {
   const kanaLeaderboard: LeaderboardGlance = useMemo(() => {
     if (!kanaBoard.board) return { rank: null, username: '', score: 0 }
     const user =
-      kanaBoard.board.entries.find((e) => e.isCurrentUser) ??
-      kanaBoard.board.currentUserPinned
+      kanaBoard.board.entries.find((e) => e.isCurrentUser) ?? kanaBoard.board.currentUserPinned
     if (!user) return { rank: null, username: '', score: 0 }
     return { rank: user.rank, username: user.username, score: user.score }
   }, [kanaBoard.board])
@@ -93,8 +92,7 @@ export function GameHomeClient(): ReactNode {
   const kotobaLeaderboard: LeaderboardGlance = useMemo(() => {
     if (!kotobaBoard.board) return { rank: null, username: '', score: 0 }
     const user =
-      kotobaBoard.board.entries.find((e) => e.isCurrentUser) ??
-      kotobaBoard.board.currentUserPinned
+      kotobaBoard.board.entries.find((e) => e.isCurrentUser) ?? kotobaBoard.board.currentUserPinned
     if (!user) return { rank: null, username: '', score: 0 }
     return { rank: user.rank, username: user.username, score: user.score }
   }, [kotobaBoard.board])
