@@ -54,7 +54,7 @@ type Props = {
   session?: UseKotobaPracticeReturn
   cardClassName?: string
   children?: ReactNode
-  onCharacterCorrect?: () => void
+  onCharacterCorrect?: (characterCount: number) => void
   onLeaderboardStart?: (promptId: string, wordId: string) => void
   onLeaderboardFinalize?: (
     promptId: string,
@@ -316,7 +316,7 @@ export function KotobaGameWindow({
         const newCompleted = completedCount + 1
         setCompletedCount(newCompleted)
         if ((wrongAttemptsMap[currentCharIndex] ?? 0) === 0) {
-          onCharacterCorrect?.()
+          onCharacterCorrect?.(1)
         }
         if (newCompleted === charCount) {
           handleReadingDone()
@@ -407,7 +407,7 @@ export function KotobaGameWindow({
             const nextBp = kanaBreakpoints[idx]
             firstAttemptsRef.current[idx] = compare.substring(prevBp.length, nextBp.length)
           }
-          if ((wrongAttemptsMap[idx] ?? 0) === 0) onCharacterCorrect?.()
+          if ((wrongAttemptsMap[idx] ?? 0) === 0) onCharacterCorrect?.(1)
         }
       }
       setCompletedCount(newCompleted)
@@ -442,7 +442,7 @@ export function KotobaGameWindow({
 
       if (kanji === currentWord.kanji) {
         setKanjiFeedback('correct')
-        onCharacterCorrect?.()
+        onCharacterCorrect?.(1)
         schedule(handleWordComplete, FEEDBACK_FLASH_MS)
       } else {
         setKanjiWrongCount((prev) => prev + 1)

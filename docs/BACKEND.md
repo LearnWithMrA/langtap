@@ -44,6 +44,7 @@ Every table created in this project follows this rule without exception.
 | `unlock_state` | Which characters each user has unlocked |
 | `word_manual_unlocks` | Which words each user has manually unlocked (Kotoba mode) |
 | `practice_sessions` | Daily practice activity for streak mechanic and heatmap calendar |
+| `practice_activity_events` | Per-batch events for idempotency (same pattern as leaderboard_score_events) |
 
 All tables are in the `public` schema. All have RLS enabled.
 
@@ -317,8 +318,9 @@ alter table public.practice_sessions enable row level security;
 alter table public.practice_sessions force row level security;
 ```
 
-RLS policies: same pattern as `mastery`. User reads and writes only
-their own rows.
+RLS policies: SELECT only. Users read their own rows. No INSERT or
+UPDATE policies. All writes go through the `record_practice_activity`
+RPC (see Section 4.9). Direct client writes are blocked.
 
 **Timezone contract:** the canonical streak date is the user-local
 calendar date, not UTC. `event_at_utc` stores the raw timestamp,
@@ -390,6 +392,35 @@ alter table public.word_manual_unlocks force row level security;
 RLS policies: user reads and inserts only their own rows. No UPDATE policy
 (write-once semantics). No DELETE policy.
 
+### 2.12 practice_activity_events
+
+Per-batch events for idempotency and audit. One row per practice batch
+flush. Prevents double-counting on network retries. Same pattern as
+`leaderboard_score_events` (Section 2.11).
+
+```sql
+create table public.practice_activity_events (
+  event_id         uuid primary key,
+  user_id          uuid not null references auth.users(id) on delete cascade,
+  characters_count integer not null check (characters_count > 0),
+  local_date       date not null,
+  created_at       timestamptz not null default now()
+);
+
+create index practice_activity_events_user_idx
+  on public.practice_activity_events (user_id, created_at desc);
+
+alter table public.practice_activity_events enable row level security;
+alter table public.practice_activity_events force row level security;
+```
+
+RLS: enabled + forced. No policies. All access through the
+`record_practice_activity` RPC (Section 4.9).
+
+Purpose: the RPC checks for an existing `event_id` before applying a
+batch. If the event already exists, the RPC returns silently (idempotent).
+This prevents double-counting on network retries.
+
 ---
 
 ## 3. Data Flow
@@ -446,6 +477,19 @@ const rows = changedIds.map(id => ({
 await supabase.from('mastery').upsert(rows, { onConflict: 'user_id,character_id' })
 masteryStore.clearChangedFlag()
 ```
+
+### 3.2b Practice Session Recording
+
+Practice activity is recorded via the `record_practice_activity` RPC for
+the streak mechanic and heatmap calendar. The write path uses batching:
+the client collects completions in memory and flushes a batch on every
+10 completions, every 30 seconds, on tab hide, or on route navigation.
+Each batch generates a UUID for idempotency via `practice_activity_events`.
+Guests do not record practice activity.
+
+The batching hook (`hooks/usePracticeActivityTracker.ts`) fires per
+character correct in `practice-client.tsx`. The service
+(`services/practice-session.service.ts`) wraps the RPC call.
 
 ### 3.3 Guest Users
 
@@ -568,8 +612,9 @@ Returns to an identical-to-new-account state. Uses a profile row lock
 checkpoint syncs and other reset RPCs.
 
 **Cleared:** `mastery`, `manual_unlocks`, `word_mastery`, `word_manual_unlocks`,
-`word_counters`, `practice_sessions`, `leaderboard_score_events`,
-`leaderboard_scores`, `leaderboard_sessions`, `leaderboard` (legacy).
+`word_counters`, `practice_sessions`, `practice_activity_events`,
+`leaderboard_score_events`, `leaderboard_scores`, `leaderboard_sessions`,
+`leaderboard` (legacy).
 Also resets `profiles.tap_reminder_count` to 0.
 
 **Preserved:** `daily_cap_events` (user stays capped for the day), all profile
@@ -588,6 +633,40 @@ Returns: `{ new_mastery_epoch: integer, new_word_mastery_epoch: integer }`.
 
 Security: `security definer`, rejects anonymous users via `is_permanent_user()`.
 Granted to `authenticated` role only.
+
+### 4.9 record_practice_activity RPC
+
+Records practice activity for the streak mechanic and heatmap calendar.
+Called per batch flush from the practice hooks (not per completion).
+
+```ts
+recordPracticeActivity(input: {
+  completionId: string
+  charactersCount: number
+}): Promise<ServiceResult<PracticeActivityResult>>
+```
+
+**Parameters:**
+- `p_completion_id` (uuid): client-generated batch ID for idempotency
+- `p_characters_count` (integer, 1-1000): total characters in the batch
+
+**Behaviour:**
+1. Rejects unauthenticated and anonymous users
+2. Validates `p_characters_count` (1-1000)
+3. Idempotency: if `p_completion_id` already exists in
+   `practice_activity_events`, returns current state without modification
+4. Reads `user_tz` from `profiles` server-side (client does not pass tz)
+5. Validates timezone against `pg_timezone_names`, falls back to UTC
+6. Derives `local_date = (now() AT TIME ZONE user_tz)::date`
+7. Inserts into `practice_activity_events`
+8. Upserts `practice_sessions`: increments `characters_practiced`
+
+**Returns:** `{ local_date, characters_practiced, inserted }`.
+
+Security: `security definer`, `set search_path = public, pg_temp`.
+Rejects anonymous users via `is_permanent_user()`. Granted to
+`authenticated` role only. This is the only write path to
+`practice_sessions` (direct INSERT/UPDATE policies removed).
 
 ---
 

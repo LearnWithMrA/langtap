@@ -29,7 +29,8 @@ import { useOnboardingStore } from '@/stores/onboarding.store'
 import { KANA_CHARACTERS } from '@/data/kana/characters'
 import { MASTERY_THRESHOLD } from '@/engine/mastery'
 import { useLeaderboard } from '@/hooks/useLeaderboard'
-import type { StageProgress, LeaderboardGlance, HeatmapDay } from '@/types/dashboard.types'
+import { useStreak } from '@/hooks/useStreak'
+import type { StageProgress, LeaderboardGlance } from '@/types/dashboard.types'
 import type { Stage } from '@/types/kana.types'
 import type { InputMode } from '@/types/user.types'
 
@@ -59,8 +60,6 @@ function deriveKanaStages(
   })
 }
 
-const EMPTY_HEATMAP: readonly HeatmapDay[] = []
-
 // ── Main component ────────────────────────────
 
 export function GameHomeClient(): ReactNode {
@@ -68,6 +67,7 @@ export function GameHomeClient(): ReactNode {
   const unlockedIds = useUnlockStore((s) => s.unlockedIds)
   const inputMode = useSettingsStore((s) => s.inputMode)
   const setInputMode = useSettingsStore((s) => s.setInputMode)
+  const { heatmap, streakCount, isLoading: streakLoading } = useStreak()
 
   useEffect(() => {
     const manual = new Set(useOnboardingStore.getState().selectedCharacterIds)
@@ -112,7 +112,18 @@ export function GameHomeClient(): ReactNode {
     <main className="overflow-y-auto min-h-svh px-3 sm:px-4 mt-[72px] mb-8">
       <div className="max-w-5xl mx-auto lg:ml-auto lg:mr-4 flex flex-col md:flex-row gap-4">
         <div className="w-full max-w-[320px] mx-auto md:mx-0 md:max-w-none md:w-[260px] shrink-0">
-          <StreakCalendar heatmap={EMPTY_HEATMAP} streakCount={0} />
+          {streakLoading ? (
+            <div className="bg-white/60 backdrop-blur-md rounded-2xl shadow-lg px-3 py-4 animate-pulse">
+              <div className="h-4 w-24 bg-warm-200 rounded mx-auto mb-3" />
+              <div className="grid grid-cols-7 gap-1.5">
+                {Array.from({ length: 35 }, (_, i) => (
+                  <div key={i} className="w-6 h-6 rounded-full bg-warm-200" />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <StreakCalendar heatmap={heatmap} streakCount={streakCount} />
+          )}
         </div>
         <div className="flex-1 flex flex-col lg:flex-row gap-4">
           <div className="lg:flex-1">

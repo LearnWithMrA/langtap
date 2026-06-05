@@ -49,7 +49,7 @@ type LeaderboardAttempt = { charIndex: number; submitted: string }
 type GameWindowProps = {
   mode: InputMode
   session: UsePracticeSessionReturn
-  onCharacterCorrect?: () => void
+  onCharacterCorrect?: (characterCount: number) => void
   onMnemonicShown?: () => void
   onLeaderboardStart?: (promptId: string, wordId: string) => void
   onLeaderboardFinalize?: (promptId: string, attempts: LeaderboardAttempt[]) => void
@@ -301,7 +301,7 @@ export function GameWindow({
 
     const results = buildResults()
     handleWordComplete(results)
-    onCharacterCorrect?.()
+    onCharacterCorrect?.(characters.length)
 
     if (!isCharacterDrill && onLeaderboardFinalize) {
       const attempts = firstAttemptsRef.current.map((submitted, i) => ({

@@ -107,7 +107,12 @@ large tables.
 ### 3.1 Standard permanent-user-owns-row pattern
 
 Used by: `mastery`, `word_mastery`, `word_counters`, `manual_unlocks`,
-`word_manual_unlocks`, `practice_sessions`, `profiles` (update).
+`word_manual_unlocks`, `profiles` (update).
+
+Note: `practice_sessions` previously used this pattern but was locked
+down in Sprint 13. Direct INSERT/UPDATE policies removed. All writes
+go through the `record_practice_activity` RPC (security definer).
+SELECT policy remains (users read their own rows).
 
 SELECT policies allow any authenticated user (including anonymous) to read
 their own rows. INSERT and UPDATE policies require both ownership AND
@@ -173,6 +178,10 @@ Data is never deleted via the client API. Deletion is performed only by
 `security definer` RPCs (e.g. `factory_reset`, which deletes all progress
 rows for the calling user) or manually by the owner with the service role
 key. This reduces the attack surface for accidental or malicious data loss.
+
+Tables with no client policies (RPC-only access): `leaderboard_scores`,
+`leaderboard_score_events`, `practice_activity_events`,
+`daily_cap_events`. `practice_sessions` has SELECT only (writes via RPC).
 
 The `factory_reset` RPC is the only RPC that performs DELETE operations
 across multiple tables. It requires `is_permanent_user()` and serializes

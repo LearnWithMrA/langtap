@@ -30,6 +30,45 @@ Format per entry:
 
 ---
 
+## 2026-06-05 - Session 107
+
+**Sprint:** Sprint 13 - Streak Calendar
+**Task completed:** All 5 Sprint 13 tasks
+**Status:** Done
+
+### Changes made
+- `supabase/migrations/20260605120001_create_practice_activity_events.sql`: New `practice_activity_events` table (idempotency, same pattern as leaderboard_score_events). `record_practice_activity` RPC: security definer, reads `user_tz` from profiles server-side, derives `local_date`, atomic `INSERT ON CONFLICT DO NOTHING` for idempotency, upserts `practice_sessions` incrementing `characters_practiced`. RLS lockdown: dropped all INSERT/UPDATE policies on `practice_sessions` (both Sprint 3 originals and Sprint 10 permanent-user variants). All writes through RPC only.
+- `supabase/migrations/20260605120002_factory_reset_add_practice_events.sql`: Updated `factory_reset` RPC to also DELETE from `practice_activity_events` on reset.
+- `services/practice-session.service.ts`: New service wrapping the `record_practice_activity` RPC. Returns `ServiceResult<PracticeActivityResult>`.
+- `services/streak.service.ts`: New service loading practice summary (date + count pairs) from `practice_sessions` for streak and heatmap computation.
+- `hooks/usePracticeActivityTracker.ts`: New batching hook. Collects completions in memory, flushes to RPC on: every 10 completions, every 30s, visibilitychange hidden, or route unmount. Restores pending count on RPC failure (no data loss). Guests no-op.
+- `hooks/useStreak.ts`: New hook loading practice summary on mount for signed-in users. Derives streak state and heatmap via `engine/streak.ts` pure functions. Uses `profile.userTz` via `Intl.DateTimeFormat` for timezone-consistent "today" (matches the server RPC's derivation). Returns `{ heatmap, streakCount, isLoading }`.
+- `components/layout/game-home-client.tsx`: Replaced `EMPTY_HEATMAP` and `streakCount={0}` with `useStreak()` hook. Added loading skeleton for calendar while data loads.
+- `components/layout/practice-client.tsx`: Wired `usePracticeActivityTracker` into `handleCharacterCorrect`. Character count forwarded from game windows.
+- `components/game/game-window.tsx`: `onCharacterCorrect` now passes `characters.length` (actual character count per prompt, not always 1).
+- `components/game/kotoba-game-window.tsx`: `onCharacterCorrect` passes explicit `1` per character (already fires per-character).
+- `docs/BACKEND.md`: Added Sections 2.12 (practice_activity_events table), 3.2b (batching write path), 4.9 (RPC docs). Updated Section 2.7 (RLS lockdown note). Updated Section 4.8 (factory_reset cleared scope).
+- `docs/SECURITY.md`: Updated Section 3.1 (practice_sessions removed from standard pattern). Added RPC-only table list to Section 3.3.
+- `LangTap_Sprints.md`: Sprint 13 marked Complete. All 5 tasks Done.
+
+### Tests
+- `services/__tests__/practice-session.service.test.ts`: 5 tests (RPC call, parsing, idempotency, error, exception). Pass.
+- `services/__tests__/streak.service.test.ts`: 5 tests (query, parsing, empty, error, exception). Pass.
+- `hooks/__tests__/usePracticeActivityTracker.test.ts`: 9 tests (threshold, batch, timer, guest, unmount, no-pending, failure restore, exception restore). Pass.
+- `hooks/__tests__/useStreak.test.ts`: 7 tests (guest, unauth, load, streak derivation, empty, charactersPracticed, error). Pass.
+- All 1094 tests pass, 0 failures, 0 skipped.
+
+### Next task
+Sprint 14 - Email Deliverability
+
+### Notes
+- Codex code review completed (1 pass, 8 findings: all 8 fixed). Finding 1 (CRITICAL): RLS lockdown was incomplete; Sprint 10 permanent-user policies not dropped. Fixed. Finding 2: factory_reset missing practice_activity_events DELETE. Fixed with new migration. Finding 3: failed flushes lost data. Fixed with try/catch/finally and count restoration. Finding 4: pending completions stuck during in-flight flush. Fixed with timer-based re-schedule. Finding 5: trackCompletion(1) undercounted multi-character words. Fixed by passing characters.length from game windows. Finding 6: timezone mismatch between browser and server. Fixed by reading profile.userTz and using Intl.DateTimeFormat. Finding 7: check-then-insert race in RPC. Fixed with INSERT ON CONFLICT DO NOTHING. Finding 8: streakLoading unused. Fixed with loading skeleton.
+- Codex consistency issue: docs say "client never computes streak state" but useStreak derives streak client-side from server-provided dates using pure engine functions. This is the approved pattern per the sprint task description. Spec wording could be tightened in a future doc pass.
+- Test count grew from 1068 to 1094 (+26 new tests).
+- The practice_sessions table (created Sprint 3) is now fully wired: write path through RPC, read path through streak service, displayed on dashboard.
+
+---
+
 ## 2026-06-05 - Session 106
 
 **Sprint:** Sprint 12 - Reset Progress Upgrade
