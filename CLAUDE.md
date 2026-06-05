@@ -500,20 +500,57 @@ Until the owner says "session end":
 
 On "session end" (or equivalent), in order:
 
-1. Run `npm run check` in full. If it fails in files the session touched,
-   fix them before writing the changelog. If it fails in unrelated files,
-   flag the failures to the owner and stop rather than auto-fixing.
-2. Update `LangTap_Sprints.md` for the task the owner has approved (status
-   and notes column).
-3. Update all relevant sub-documents (`docs/`) to reflect any design,
-   layout, interaction, or architectural changes made during the session.
-   Compare what the spec says against what was actually built. Fix any
-   discrepancies: renamed labels, changed defaults, new components,
-   removed features, reordered layouts, changed styling. The docs must
-   match the code, not the plan from the start of the session.
-4. Write the session entry to the top of `CHANGELOG.md` (after the format
-   preamble, before the previous session). Use the format below.
-5. Provide the commit-and-push block for the owner to run:
+**Step 1: Quality gate (must pass before anything else)**
+
+Run each check sequentially (never in parallel, to avoid flaky failures):
+
+1a. `npx prettier --check .` - fix any formatting issues.
+1b. `npx eslint .` (or lint changed files if full lint is slow) - fix any lint errors.
+1c. `npx tsc --noEmit` - fix any type errors.
+1d. `npx vitest run` - all tests must pass. Fix failures in session-touched files.
+    If failures appear in unrelated files, flag them to the owner and stop.
+
+**Step 2: Test coverage check**
+
+Review every new file, function, hook, service, or component added during
+the session. Each must have a corresponding test. If a test is missing,
+write it now before closing the session. Tests are not optional debt;
+they ship with the code.
+
+For existing files that were modified, check whether the existing tests
+still cover the changed behaviour. If a test is stale or no longer
+relevant, update it. If the file had no tests, write tests for the
+behaviour you touched (not the entire file, just what you changed).
+
+**Step 3: Codebase health scan**
+
+While working through the session, note anything that needs attention:
+- Stale files, unused imports, dead code encountered during the session
+- Files approaching the 300-line review threshold or exceeding 500 lines
+- Duplicated logic that could be extracted into a shared helper
+- Components doing too much (fetching + state + rendering in one file)
+- Outdated doc references, stale fixture data, or orphaned test mocks
+
+Fix small issues in place (under 5 minutes). For larger issues, add a
+note to the CHANGELOG entry under a "Tech debt spotted" heading so it
+can be picked up in a future sprint. Do not ignore what you find.
+
+**Step 4: Update project files**
+
+4a. Update `LangTap_Sprints.md` for the tasks completed (status and notes).
+4b. Update all relevant sub-documents (`docs/`) to reflect any design,
+    layout, interaction, or architectural changes made during the session.
+    Compare what the spec says against what was actually built. Fix any
+    discrepancies: renamed labels, changed defaults, new components,
+    removed features, reordered layouts, changed styling. The docs must
+    match the code, not the plan from the start of the session.
+
+**Step 5: Write the CHANGELOG entry**
+
+Write the session entry to the top of `CHANGELOG.md` (after the format
+preamble, before the previous session). Use the format below.
+
+**Step 6: Provide the commit block**
 
    ```
    git add .
@@ -525,8 +562,11 @@ On "session end" (or equivalent), in order:
    The session number makes it easier to find commits in git history.
    The owner runs these commands manually; the AI does not execute git
    on its own initiative.
-6. State clearly what the next task is (the owner will confirm at the
-   start of the next session).
+
+**Step 7: Handoff**
+
+State clearly what the next task is. Generate the session handoff message
+(see template below). Offer it: "Want the handoff message for the next chat?"
 
 ### CHANGELOG.md entry format
 
@@ -555,6 +595,49 @@ The AI writes this entry directly to `CHANGELOG.md` only after the owner
 confirms the session is closing (see "At the end of every session" above).
 New entries go at the top, immediately below the format preamble and above
 the previous session's entry.
+
+### Session handoff message
+
+At the end of every session (after the commit block), generate a handoff message
+the owner can paste into a fresh chat to start the next session. This replaces
+"start session" as the opening prompt. The handoff must be self-contained: the
+next chat has zero context from this one.
+
+**Template:**
+
+```
+Session [N+1]: Sprint [X] - [Sprint Name]
+
+Previous session: [N]. Sprint [prev] is [complete/active]. [key metric: test count, etc.]
+
+Pre-flight:
+1. Read CLAUDE.md
+2. Read CHANGELOG.md Session [N] entry
+3. Read LangTap_Sprints.md for Sprint [X] status
+4. Read docs: [list relevant sub-documents from Section 4 table]
+
+Sprint [X] tasks ([count] tasks, all [sizes]):
+- Task 1: [name] ([size]) - [one-line summary of what to do]
+- Task 2: ...
+
+Key context for this sprint:
+- [Architectural constraint, dependency, or decision the next AI needs to know]
+- [Any owner action pending from last session]
+- [Files/systems this sprint touches]
+
+Codex review gates: [which tasks need Codex review per Section 13 stage gates]
+
+Session end protocol:
+1. Run checks sequentially: prettier, eslint, tsc, vitest. Fix all failures.
+2. Verify every new file/function has tests. Write missing tests before closing.
+3. Note stale code, large files, or tech debt encountered. Fix small issues, log large ones.
+4. Send to Codex for code review. Fix findings.
+5. Update sprint board, docs, CHANGELOG. Hand over commit block + next handoff.
+```
+
+Fill in all brackets with real values. Keep it under 50 lines. The owner may
+edit it before pasting. Offer it at session end: "Want the handoff message
+for the next chat?"
 
 ---
 
