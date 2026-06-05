@@ -30,6 +30,26 @@ Format per entry:
 
 ---
 
+## 2026-06-05 - Session 108
+
+**Sprint:** Sprint board maintenance
+**Task completed:** Sprint reorder
+**Status:** Done
+
+### Changes made
+- `LangTap_Sprints.md`: Reordered Sprints 14-20. Email Deliverability moved from Sprint 14 to Sprint 18 (before Stripe). Trial Mode Redesign renumbered 14, Bug Reporting 15, Analytics 16, Security and Pre-Launch QA 17. Final three: 18 Email, 19 Payments (Stripe), 20 Marketing. Internal cross-references updated. Version history entry v1.8 added.
+
+### Tests
+- No code changes. No tests affected.
+
+### Next task
+Sprint 14 - Trial Mode Redesign
+
+### Notes
+- Sprint numbers referenced in version history v1.7 notes use the pre-reorder scheme.
+
+---
+
 ## 2026-06-05 - Session 107
 
 **Sprint:** Sprint 13 - Streak Calendar

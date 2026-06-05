@@ -582,27 +582,7 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 
 ---
 
-## Sprint 14 - Email Deliverability
-
-**Goal:** Authentication and transactional emails land in inboxes, not spam. Email templates match LangTap's visual identity. Notification opt-in prompt built so the drip sequence has eligible users. Onboarding drip sequence encourages activation.
-**Status:** Pending
-
-**Provider choice:** Brevo (formerly Sendinblue, est. 2012) is the primary choice (300 emails/day free tier, established service). Resend (est. 2023, 100/day free, official Supabase partner with best integration docs) is the fallback if Brevo's shared IP pool causes deliverability issues.
-
-**Consent dependency:** The `notifications_enabled` column on `profiles` defaults to `false` (see `docs/BACKEND.md`). Without a user-facing opt-in prompt, the drip sequence has zero eligible users. The opt-in prompt (deferred from Sprint 3 per `docs/AUTH.md`) must be built in this sprint before the drip sequence.
-
-**Email confirmation note:** Email confirmation is currently disabled in Supabase Auth (see `docs/AUTH.md`). The "sign-up confirmation" template below is the Supabase-default verification email. If email confirmation is enabled in this sprint, the template applies. If it stays disabled, only password reset and email change templates are needed.
-
-| Task | Size | Status | Notes |
-|---|---|---|---|
-| Set up email provider with domain authentication | **Medium** | **To Do** | Create provider account (Brevo or Resend). Add domain DNS records: SPF (TXT, `v=spf1 include:<provider> ~all`), DKIM (TXT, provider-generated key), DMARC (TXT, `v=DMARC1; p=quarantine; rua=mailto:dmarc@langtap.com`). Configure SMTP credentials in Supabase dashboard (Auth > SMTP Settings). Test with mail-tester.com targeting score 9/10 or higher. Docs: update `docs/DEVOPS.md` (provider choice, DNS records, SMTP config). |
-| Customise email templates | **Small** | **To Do** | Design password reset and email change templates via the provider's template system. If email confirmation is enabled, also design the sign-up confirmation template. Match LangTap's visual identity (sage greens, clean typography). Plain language. Docs: update `docs/DEVOPS.md` (template setup). |
-| Build notification opt-in prompt | **Medium** | **To Do** | Contextual prompt shown after the user's first practice session completes (deferred from Sprint 3 onboarding step 3, per `docs/AUTH.md`). Soft modal or banner: "Want practice reminders and tips? We'll email you occasionally." Yes/No. Sets `notifications_enabled = true` on the user's profile via `updateProfile()`. Dismissing defaults to `false` (no emails). Only shown once per account (track via profile column or localStorage). Must exist before the drip sequence has any eligible users. Docs: update `docs/AUTH.md` (notification prompt location), update `docs/BACKEND.md` (notifications_enabled usage), update `docs/FRONTEND.md` (opt-in prompt component). |
-| Build onboarding email sequence | **Medium** | **To Do** | Three-email drip sequence. Day 0: welcome ("You're in! Here's how to start practising"). Day 2: activation nudge ("Have you tried [kana/kotoba] practice yet? Here's a quick tip"). Day 7: social proof ("Other learners at your JLPT level are practising X minutes a day"). Trigger Day 0 when `notifications_enabled` changes to `true` (not on sign-up, since the user has not opted in yet at sign-up time). Use a Supabase database webhook or trigger on `profiles` update where `notifications_enabled` transitions from false to true. Days 2 and 7 via provider's drip/sequence feature or scheduled edge function, counting from the Day 0 trigger. All emails include an unsubscribe link (GDPR). Only sent to users where `notifications_enabled = true`. Skip users who have not opted in. Docs: update `docs/DEVOPS.md` (drip sequence, triggers, edge functions), update `docs/BACKEND.md` (profiles trigger for notifications). |
-
----
-
-## Sprint 15 - Trial Mode Redesign
+## Sprint 14 - Trial Mode Redesign
 
 **Goal:** Replace the complex guest trial system (anonymous Supabase auth, 30m server-enforced distance cap, guest usage table/RPCs, guest-to-account import flow) with a purely client-side curated demo experience. "Try it out" becomes a fixed taster showing a mature-account preview. No anonymous auth, no distance cap, no server tracking. Skip onboarding for trial. Clicking "Try it out" again resets the demo. Simplifies the codebase significantly by removing all guest complexity.
 **Status:** Pending
@@ -658,12 +638,12 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 
 ---
 
-## Sprint 16 - Bug Reporting
+## Sprint 15 - Bug Reporting
 
 **Goal:** Users can report bugs and request features directly from the app. Reports stored in Supabase with image upload support. Owner notified when new reports arrive. Abuse controls in place from day one.
 **Status:** Pending
 
-**Security note:** This sprint opens a write/upload surface. Abuse controls (MIME validation, size limits, description length cap, rate limiting) must ship with the initial implementation, not deferred to Sprint 18. The storage bucket must be private (signed URLs for owner access only). All Supabase calls go through a service layer per architecture rules.
+**Security note:** This sprint opens a write/upload surface. Abuse controls (MIME validation, size limits, description length cap, rate limiting) must ship with the initial implementation, not deferred to Sprint 17. The storage bucket must be private (signed URLs for owner access only). All Supabase calls go through a service layer per architecture rules.
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
@@ -676,7 +656,7 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 
 ---
 
-## Sprint 17 - Analytics
+## Sprint 16 - Analytics
 
 **Goal:** Measure who visits, how many sign up, and how they use the app. Start with Vercel Analytics free tier. Track key funnel events.
 **Status:** Pending
@@ -688,12 +668,12 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 
 ---
 
-## Sprint 18 - Security and Pre-Launch QA
+## Sprint 17 - Security and Pre-Launch QA
 
 **Goal:** Mutating endpoints protected with CSRF/origin checks and rate limits. Accessibility and cross-browser verified. Legal pages updated for payments. Error boundaries in place. Full end-to-end test pass. Soft launch to testers.
 **Status:** Pending
 
-**Note:** If Sprint 15 (Trial Mode Redesign) ships before this sprint, the security scope is reduced: no guest usage RPCs to protect, no anonymous auth endpoints to rate-limit, no guest import RPC to validate.
+**Note:** If Sprint 14 (Trial Mode Redesign) ships before this sprint, the security scope is reduced: no guest usage RPCs to protect, no anonymous auth endpoints to rate-limit, no guest import RPC to validate.
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
@@ -712,8 +692,28 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 | Write security tests | **Small** | **To Do** | CSRF/origin rejection: requests with missing or wrong origin are rejected with 403. Rate limit: rapid requests return 429 after threshold. Covers all endpoints from the mutating surface inventory. Terms checkbox: sign-up button disabled without checkbox, enabled with checkbox. Docs: no doc update (tests only). |
 | Final end-to-end test pass | **Large** | **To Do** | Full user journey: sign up (terms checkbox, verify email lands in inbox, not spam), onboarding, Kana practice (all three modes), Kotoba practice (Readings + Kanji), Dojo (Kana + Kotoba), Profile, Settings, Leaderboard. Password reset email deliverability test. Rate limit verification (hit endpoint rapidly, confirm 429). CSRF rejection verification. Docs: no doc update (verification only). |
 | Decide OAuth launch state | **Small** | **To Do** | Sprint 10 built Google and Apple sign-in code, but provider configuration in Supabase is still To Do (Future Backlog). The sign-up and log-in UI currently has disabled OAuth buttons (`sign-up-card.tsx:215`, `log-in-card.tsx:255`). Decision: either configure providers in Supabase dashboard and enable the buttons before launch, or hide the disabled buttons and update docs to reflect OAuth is deferred. If enabling: pull the two backlog tasks (Configure Google OAuth, Configure Apple Sign-In) into this sprint. If deferring: hide buttons and add a note to `docs/AUTH.md`. Docs: update `docs/AUTH.md` (OAuth status), update `docs/FRONTEND.md` (sign-up/log-in card). |
-| Privacy and legal page sweep | **Medium** | **To Do** | Superseded by the four comprehensive legal page tasks above. This task now covers: (1) verify all legal pages accurately reflect the app state after Sprints 14-17 changes (email drip, analytics, demo mode, bug reports), (2) update "Last updated" dates, (3) cross-check `docs/legal/*.md` source documents against built pages for consistency, (4) verify all internal links between legal pages work, (5) verify footer links point to the correct legal pages. Docs: no doc update (legal pages are the docs). |
-| Soft launch on Vercel | **Small** | **To Do** | Share URL with a small group of testers. Monitor for errors. Confirm email deliverability with real inboxes (Gmail, Outlook, iCloud). Bug reporting button (Sprint 16) should be live before this. Docs: update `docs/DEVOPS.md` (launch checklist, monitoring). |
+| Privacy and legal page sweep | **Medium** | **To Do** | Superseded by the four comprehensive legal page tasks above. This task now covers: (1) verify all legal pages accurately reflect the app state after Sprints 14-18 changes (demo mode, bug reports, analytics, security, email drip), (2) update "Last updated" dates, (3) cross-check `docs/legal/*.md` source documents against built pages for consistency, (4) verify all internal links between legal pages work, (5) verify footer links point to the correct legal pages. Docs: no doc update (legal pages are the docs). |
+| Soft launch on Vercel | **Small** | **To Do** | Share URL with a small group of testers. Monitor for errors. Confirm email deliverability with real inboxes (Gmail, Outlook, iCloud). Bug reporting button (Sprint 15) should be live before this. Docs: update `docs/DEVOPS.md` (launch checklist, monitoring). |
+
+---
+
+## Sprint 18 - Email Deliverability
+
+**Goal:** Authentication and transactional emails land in inboxes, not spam. Email templates match LangTap's visual identity. Notification opt-in prompt built so the drip sequence has eligible users. Onboarding drip sequence encourages activation.
+**Status:** Pending
+
+**Provider choice:** Brevo (formerly Sendinblue, est. 2012) is the primary choice (300 emails/day free tier, established service). Resend (est. 2023, 100/day free, official Supabase partner with best integration docs) is the fallback if Brevo's shared IP pool causes deliverability issues.
+
+**Consent dependency:** The `notifications_enabled` column on `profiles` defaults to `false` (see `docs/BACKEND.md`). Without a user-facing opt-in prompt, the drip sequence has zero eligible users. The opt-in prompt (deferred from Sprint 3 per `docs/AUTH.md`) must be built in this sprint before the drip sequence.
+
+**Email confirmation note:** Email confirmation is currently disabled in Supabase Auth (see `docs/AUTH.md`). The "sign-up confirmation" template below is the Supabase-default verification email. If email confirmation is enabled in this sprint, the template applies. If it stays disabled, only password reset and email change templates are needed.
+
+| Task | Size | Status | Notes |
+|---|---|---|---|
+| Set up email provider with domain authentication | **Medium** | **To Do** | Create provider account (Brevo or Resend). Add domain DNS records: SPF (TXT, `v=spf1 include:<provider> ~all`), DKIM (TXT, provider-generated key), DMARC (TXT, `v=DMARC1; p=quarantine; rua=mailto:dmarc@langtap.com`). Configure SMTP credentials in Supabase dashboard (Auth > SMTP Settings). Test with mail-tester.com targeting score 9/10 or higher. Docs: update `docs/DEVOPS.md` (provider choice, DNS records, SMTP config). |
+| Customise email templates | **Small** | **To Do** | Design password reset and email change templates via the provider's template system. If email confirmation is enabled, also design the sign-up confirmation template. Match LangTap's visual identity (sage greens, clean typography). Plain language. Docs: update `docs/DEVOPS.md` (template setup). |
+| Build notification opt-in prompt | **Medium** | **To Do** | Contextual prompt shown after the user's first practice session completes (deferred from Sprint 3 onboarding step 3, per `docs/AUTH.md`). Soft modal or banner: "Want practice reminders and tips? We'll email you occasionally." Yes/No. Sets `notifications_enabled = true` on the user's profile via `updateProfile()`. Dismissing defaults to `false` (no emails). Only shown once per account (track via profile column or localStorage). Must exist before the drip sequence has any eligible users. Docs: update `docs/AUTH.md` (notification prompt location), update `docs/BACKEND.md` (notifications_enabled usage), update `docs/FRONTEND.md` (opt-in prompt component). |
+| Build onboarding email sequence | **Medium** | **To Do** | Three-email drip sequence. Day 0: welcome ("You're in! Here's how to start practising"). Day 2: activation nudge ("Have you tried [kana/kotoba] practice yet? Here's a quick tip"). Day 7: social proof ("Other learners at your JLPT level are practising X minutes a day"). Trigger Day 0 when `notifications_enabled` changes to `true` (not on sign-up, since the user has not opted in yet at sign-up time). Use a Supabase database webhook or trigger on `profiles` update where `notifications_enabled` transitions from false to true. Days 2 and 7 via provider's drip/sequence feature or scheduled edge function, counting from the Day 0 trigger. All emails include an unsubscribe link (GDPR). Only sent to users where `notifications_enabled = true`. Skip users who have not opted in. Docs: update `docs/DEVOPS.md` (drip sequence, triggers, edge functions), update `docs/BACKEND.md` (profiles trigger for notifications). |
 
 ---
 
@@ -778,4 +778,5 @@ Ideas and improvements not tied to a sprint. Pulled in when the time is right.
 | 1.4 | May 2026 | Sprints 9-12 reshuffled for launch-first strategy. Sprint 9: Leaderboard + Audio (game-centric). Sprint 10: Accounts, Auth, Membership (guest conversion, OAuth, daily cap). Sprint 11: Security, Email, Polish, Pre-Launch. Sprint 12: Payments (Stripe, post-launch). Google/Apple Sign-In moved from backlog to Sprint 10. Font size linked to mastery, JIS kana keyboard, animation asset upgrade, and mnemonic expansion removed from backlog. Stripe webhook handler and integration tests added to Sprint 12. |
 | 1.5 | May 2026 | Guardrail tasks added to Sprints 9-11. Sprint 9: leaderboard schema redesigned for game_type/input_mode/period with server-only RPC writes, leaderboard privacy (profiles.leaderboard_visibility), audio tasks split (licence confirmation, script creation, manifest build, lazy-load enforcement). Sprint 10: safe guest progress import with validation/sanitization/clamping, profile wiring expanded (fixture removal, distance unit, email/password modals, profile repair), dedicated guest import tests. Sprint 11: CSRF/origin checks and rate limiting for all mutating endpoints, security tests, stale sprint reference cleanup. |
 | 1.6 | May 2026 | Major restructure from playtesting notes. Sprint 10 marked complete. Old Sprint 11 (Security, Email, Polish) split into 10 focused sprints (11-20) ordered by priority. Sprint 11: Bug Fixes (mobile keyboard, audio, mnemonic). Sprint 12: Reset Progress (full factory reset). Sprint 13: Streak Calendar (wire to Supabase). Sprint 14: Email Deliverability (Brevo/Resend). Sprint 15: Trial Mode Redesign (replace guest system with curated demo). Sprint 16: Bug Reporting (in-app feedback). Sprint 17: Analytics (Vercel). Sprint 18: Security and Pre-Launch QA (CSRF, rate limiting, accessibility, soft launch). Sprint 19: Payments (Stripe, renumbered from old Sprint 12). Sprint 20: Marketing (local strategy and content). Privacy, terms, credits completed in Sessions 100-101 noted in Sprint 11 header. |
+| 1.8 | June 2026 | Sprint reorder. Email Deliverability moved from Sprint 14 to Sprint 18 (before Stripe). Trial Mode Redesign renumbered 14, Bug Reporting 15, Analytics 16, Security and Pre-Launch QA 17. Last three sprints are now: 18 Email, 19 Payments (Stripe), 20 Marketing. Sprint numbers in v1.7 notes refer to the pre-reorder scheme. |
 | 1.7 | May 2026 | Codex Plan Review (three rounds) of v1.6 sprint restructure. **Round 1 (plan review):** 8 findings addressed. Sprint 12 expanded to 4 tasks with daily cap preservation. Sprint 13 updated to server-derived dates. Sprint 14 opt-in prompt added. Sprint 15 demo split into kana/kotoba adapters. Sprint 16 abuse controls from day one. Sprint 17 service renamed. Sprint 18 inventory + Vercel KV. Sprint 19 daily cap from backlog. **Round 2 (sign-off):** 7 findings. Sprint 13 RPC reads user_tz server-side, events table for idempotency, RLS locked. Sprint 14 Day 0 triggers on opt-in. Sprint 15 file removal reworded to disconnect + flag. Sprint 16 server-side rate gate. Sprint 17 analytics via hook not store. Sprint 19 doc task expanded. **Round 3 (comprehensive project review):** 10 findings + 5 consistency issues. Sprint 1 Vercel status fixed to Done. Sprint 9 status fixed to Complete. Sprint 11: stale route cleanup, special character ID normalization, home leaderboard glance wiring added. Sprint 12: explicit reset contract with epoch ownership (factory RPC performs DELETEs directly, no double-increment), profile settings preserved list, settings store preserved. Sprint 13: explicit batching contract (flush every 10 completions / 30s / pagehide / route change). Sprint 15 doc cleanup task expanded to Large, absorbs doc drift fixes (BACKEND.md missing tables, LangTap_Planning.md Kotoba phase, theme/colors.ts source of truth). Sprint 16: route handler owns all writes (no direct client-to-Supabase inserts), service/hook task merged and upsized. Sprint 18: mutation inventory upsized to Medium with three-way classification (route-handler / SQL-RPC / Supabase Auth), OAuth launch decision task added, privacy/legal sweep task added. Sprint 19: membership schema + Stripe customer mapping task added before cap enforcement, webhook task moved before enforcement, task ordering fixed. **Owner additions across all rounds:** T&C checkbox in Sprint 18, "Docs:" references on every task. |
