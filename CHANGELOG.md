@@ -30,6 +30,47 @@ Format per entry:
 
 ---
 
+## 2026-06-06 - Session 113
+
+**Sprint:** Off-sprint
+**Task completed:** Full guest demo experience, mobile keyboard fix, iOS audio fix, lo-fi volume slider, pricing model
+**Status:** Done
+
+### Changes made
+- `middleware.ts`: Authenticated users redirected from landing page to /home, from /demo/* to real equivalents (e.g. /demo/kana to /practice/kana). Auth pages redirect to /home instead of /practice.
+- `components/layout/app-top-bar.tsx`: Guest nav links point to /demo/dojo/* instead of /dojo/*. Prefetch routes split into guest vs authed arrays. Active state detection includes demo dojo paths.
+- `components/layout/game-home-client.tsx`: Guests see demo fixture data (MID dashboard fixture for streak calendar, kana/kotoba progress bars, empty leaderboard). Mode panel practice CTAs link to /demo/* for guests.
+- `components/layout/demo-practice-client.tsx`: Demo game windows use blue card (kana) and green card (kotoba) matching trial styling. Separate 3-message kotoba demo welcome. "Demo" label text colours match card theme.
+- `components/dashboard/mode-panel.tsx`: Added routeOverride prop for guest practice CTA routing.
+- `components/game/type-input.tsx`: Added keepKeyboardOpen prop. Uses readOnly instead of disabled to prevent mobile keyboard closing between prompts.
+- `components/game/swipe-input.tsx`: Same keepKeyboardOpen pattern as type-input.
+- `components/game/game-window.tsx`: Wired keepKeyboardOpen to TypeInput and SwipeInput.
+- `components/game/kotoba-game-window.tsx`: Wired keepKeyboardOpen to TypeInput and SwipeInput.
+- `hooks/useWordAudio.ts`: Added navigator.audioSession.type = 'playback' (iOS 16.4+) with try/catch, bypasses silent switch for Web Audio API.
+- `hooks/useKeySound.ts`: Same audioSession configuration for key click sounds.
+- `components/audio/audio-player.tsx`: Added vertical volume slider button (tap to open, pointer drag to adjust, click-outside to close). Volume persisted to localStorage.
+- `hooks/useLofiPlayer.ts`: Added volume state, setVolume function, localStorage persistence for volume preference.
+- `components/performance/session-prefetch.tsx`: Auth-aware prefetch routes (guest vs authed), gated on auth loading completion.
+- `app/(onboarding)/onboarding/step-3/page.tsx`: onboardingComplete redirect changed from /practice/kana to /home.
+- `docs/AUTH.md`: Updated all stale redirect targets from /practice to /home. Fixed middleware sample (removed /leaderboard from auth-only). Updated onboarding and password reset references.
+- `LangTap_Planning.md`: Pricing model documented (Monthly $2.99, Annual $19.99, Lifetime TBD, multi-language future pricing).
+- `LangTap_Sprints.md`: Sprint 19 pricing task marked Done.
+
+### Tests
+- All 1122 tests pass (no new tests added, existing coverage holds)
+
+### Next task
+Sprint 16 - Analytics (Vercel Analytics + custom event tracking)
+
+### Notes
+- Two Codex review cycles completed. Findings addressed: SessionPrefetch auth-aware, audioSession try/catch, AUTH.md doc drift (7 references fixed), onboarding redirect alignment, leaderboard auth-only removed from sample.
+- Middleware cookie preservation on redirects is a pre-existing pattern, not introduced by this diff. Noted for Sprint 17.
+- Demo heatmap now uses existing MID dashboard fixture (relative-to-today dates via buildHeatmap). UTC date drift is minor and acceptable.
+- Mobile keyboard fix uses readOnly + onChange gating instead of disabled, per research showing iOS Safari and Android Chrome require continuous focus to keep the keyboard open.
+- iOS audio fix uses the W3C Audio Session API (navigator.audioSession.type = 'playback'), supported in Safari 16.4+ (all current iOS versions). Falls back gracefully on non-Safari browsers.
+
+---
+
 ## 2026-06-06 - Session 112
 
 **Sprint:** Sprint 15 - Bug Reporting

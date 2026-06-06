@@ -641,7 +641,7 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 ## Sprint 15 - Bug Reporting
 
 **Goal:** Users can report bugs and request features directly from the app. Reports stored in Supabase with image upload support. Owner notified when new reports arrive. Abuse controls in place from day one.
-**Status:** Complete
+**Status:** Active (Task 5 pending: owner configures Supabase webhook in dashboard)
 
 **Security note:** This sprint opens a write/upload surface. Abuse controls (MIME validation, size limits, description length cap, rate limiting) must ship with the initial implementation, not deferred to Sprint 17. The storage bucket must be private (signed URLs for owner access only). All Supabase calls go through a service layer per architecture rules.
 
@@ -728,7 +728,7 @@ Cross-phase dependencies: D2 before D3. E1 before E2, E3, and E4. D3 before E4. 
 
 | Task | Size | Status | Notes |
 |---|---|---|---|
-| Define pricing model | **Small** | **To Do** | Define the membership product before creating anything in Stripe: pricing tier(s), billing frequency (monthly/annual/both), free tier limits vs paid benefits. Docs: update `LangTap_Planning.md` (new "Pricing" section). This decision gates all other tasks in this sprint. |
+| Define pricing model | **Small** | **Done** | Monthly $2.99, Annual $19.99, Lifetime TBD. Free tier: 100m/day cap. Future multi-language: $3/month single, $5/month multi. Documented in `LangTap_Planning.md` Section 5.15. |
 | Update planning and project docs for payment activation | **Small** | **To Do** | Update the Phase 1 scope in `LangTap_Planning.md` to reflect that payments go live post-launch. Remove "infrastructure only" language for Stripe. Document the pricing model from the task above. Docs: update `LangTap_Planning.md` (Phase 1 scope, Stripe status), update `CLAUDE.md` (tech stack table, Stripe row), update `AGENTS.md` (project context, Stripe mention), check `docs/UX_DESIGN.md` (membership/pricing references). |
 | Build membership schema and Stripe customer mapping | **Medium** | **To Do** | Migration: add `membership_tier` (text, default 'free'), `membership_expires_at` (timestamptz, nullable), and `stripe_customer_id` (text, nullable, unique) columns to `profiles`. The cap enforcement and webhook tasks depend on these columns existing. Add RLS: `stripe_customer_id` is server-only (not readable/writable by client). Create a `services/membership.service.ts` with `getMembershipStatus(userId)` and `isActiveMember(userId)`. Docs: update `docs/BACKEND.md` (profiles schema, membership columns), update `docs/SECURITY.md` (membership column RLS). |
 | Set up Stripe account with hosted Checkout Sessions | **Medium** | **To Do** | Create Stripe account. Create membership product(s) per the pricing model. Use Stripe-hosted Checkout Sessions (prebuilt page) instead of custom payment UI. This handles PCI compliance, webhook signature verification, and payment flow out of the box. Wire a checkout session creation endpoint at `app/api/stripe/checkout/route.ts` that calls `stripe.checkout.sessions.create()` server-side and returns the session URL. Client redirects to Stripe's hosted page. Success/cancel URLs point back to the app. Docs: update `docs/BACKEND.md` (Stripe endpoints), update `docs/SECURITY.md` (Stripe key handling), update `docs/DEVOPS.md` (Stripe environment variables). |

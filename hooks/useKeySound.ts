@@ -24,6 +24,20 @@ const bufferCache = new Map<string, AudioBuffer>()
 const loadingPromises = new Map<string, Promise<AudioBuffer | null>>()
 let alternateIndex = 0
 const ALTERNATE_SOUNDS = ['e', 'o']
+let keySoundAudioSessionConfigured = false
+
+function configureKeySoundAudioSession(): void {
+  if (keySoundAudioSessionConfigured) return
+  keySoundAudioSessionConfigured = true
+  try {
+    const nav = navigator as { audioSession?: { type: string } }
+    if (nav.audioSession) {
+      nav.audioSession.type = 'playback'
+    }
+  } catch {
+    // Partial implementations may reject the assignment
+  }
+}
 
 async function loadSound(id: string): Promise<AudioBuffer | null> {
   const cached = bufferCache.get(id)
@@ -38,6 +52,7 @@ async function loadSound(id: string): Promise<AudioBuffer | null> {
   const promise = (async (): Promise<AudioBuffer | null> => {
     try {
       if (!sharedContext) {
+        configureKeySoundAudioSession()
         sharedContext = new AudioContext()
       }
       const response = await fetch(url)

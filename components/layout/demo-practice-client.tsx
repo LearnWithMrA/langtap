@@ -39,6 +39,9 @@ const LazyKotobaGameWindow = dynamic(
 
 const DEMO_ALLOWED_SET = new Set(DEMO_ALLOWED_IDS)
 
+const DEMO_KANA_CARD = 'bg-[#dce8f5] shadow-[0_6px_0_0_#a8bed8]'
+const DEMO_KOTOBA_CARD = 'bg-[#ddf0e8] shadow-[0_6px_0_0_#a0d0b8]'
+
 // ── Types ────────────────────────────────────
 
 type InputMode = 'type' | 'tap' | 'swipe'
@@ -52,11 +55,17 @@ const MODE_LABELS: Record<InputMode, string> = {
   swipe: 'Swipe',
 }
 
-const DEMO_WELCOME_MESSAGES: string[] = [
+const DEMO_KANA_WELCOME: string[] = [
   'Welcome to the taster! This is a mini version of LangTap.',
   'The full game teaches you and introduces new content bit by bit.',
   "For now, just click away and explore. If you don't know the answer, just guess and the game will guide you.",
   'Explore different input modes, kotoba mode, the home page and more. Or sign up to jump right in!',
+]
+
+const DEMO_KOTOBA_WELCOME: string[] = [
+  'Welcome to Kotoba mode! Here you practise Japanese words.',
+  "You'll see a word and need to type or tap the correct reading.",
+  "Don't worry if you get it wrong. The game shows you the answer so you can learn as you go.",
 ]
 
 // ── Mode dropdown ────────────────────────────
@@ -194,10 +203,11 @@ export function DemoPracticeClient({ gameType = 'kana' }: { gameType?: GameType 
   }
 
   if (showWelcome) {
+    const welcomeMessages = gameType === 'kana' ? DEMO_KANA_WELCOME : DEMO_KOTOBA_WELCOME
     return (
       <DemoPracticeScene>
         <DialogueOverlay
-          messages={DEMO_WELCOME_MESSAGES}
+          messages={welcomeMessages}
           mascotPose="neutral"
           theme={gameType === 'kana' ? 'blue' : 'green'}
           onDismiss={handleWelcomeDismiss}
@@ -209,9 +219,16 @@ export function DemoPracticeClient({ gameType = 'kana' }: { gameType?: GameType 
   if (gameType === 'kotoba') {
     return (
       <DemoPracticeScene>
-        <LazyKotobaGameWindow mode={mode} kotobaInput={kotobaInput} session={kotobaSession}>
+        <LazyKotobaGameWindow
+          mode={mode}
+          kotobaInput={kotobaInput}
+          session={kotobaSession}
+          cardClassName={DEMO_KOTOBA_CARD}
+        >
           <ModeDropdown mode={mode} onModeChange={setMode} gameType="kotoba" />
-          <span className="text-xs font-semibold text-sage-500 tracking-wider uppercase">Demo</span>
+          <span className="text-xs font-semibold text-[#3a6a50] tracking-wider uppercase">
+            Demo
+          </span>
         </LazyKotobaGameWindow>
       </DemoPracticeScene>
     )
@@ -219,9 +236,14 @@ export function DemoPracticeClient({ gameType = 'kana' }: { gameType?: GameType 
 
   return (
     <DemoPracticeScene>
-      <GameWindow mode={mode} session={kanaSession} allowedCharIds={DEMO_ALLOWED_SET}>
+      <GameWindow
+        mode={mode}
+        session={kanaSession}
+        allowedCharIds={DEMO_ALLOWED_SET}
+        cardClassName={DEMO_KANA_CARD}
+      >
         <ModeDropdown mode={mode} onModeChange={setMode} gameType="kana" />
-        <span className="text-xs font-semibold text-sage-500 tracking-wider uppercase">Demo</span>
+        <span className="text-xs font-semibold text-[#4a6a8a] tracking-wider uppercase">Demo</span>
       </GameWindow>
     </DemoPracticeScene>
   )

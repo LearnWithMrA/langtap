@@ -25,6 +25,7 @@ type ModePanelProps = {
   inputMode: string
   onModeChange?: (mode: 'tap' | 'type' | 'swipe') => void
   locked?: boolean
+  routeOverride?: string
 }
 
 // ── Theme config ──────────────────────────────
@@ -77,9 +78,11 @@ export function ModePanel({
   inputMode,
   onModeChange,
   locked = false,
+  routeOverride,
 }: ModePanelProps): ReactNode {
   const { playSound } = useKeySound()
   const theme = THEMES[variant]
+  const practiceRoute = routeOverride ?? theme.route
   const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
@@ -209,7 +212,7 @@ export function ModePanel({
             </span>
           ) : (
             <Link
-              href={theme.route}
+              href={practiceRoute}
               onClick={(): void => playSound('key-click')}
               aria-label={`Start practising ${theme.label.toLowerCase()}`}
               className={`flex-1 text-white text-sm font-bold py-3 ${theme.button} !shadow-none ${theme.buttonHover} active:brightness-90 transition-all duration-75 min-h-[48px] text-center flex items-center justify-center`}

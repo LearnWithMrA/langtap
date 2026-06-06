@@ -113,7 +113,7 @@ const SCROLL_THRESHOLD = 16
 
 // -- Component ----------------------------------------------
 
-const PREFETCH_ROUTES = [
+const PREFETCH_ROUTES_AUTHED = [
   '/home',
   '/dojo/kana',
   '/dojo/kotoba',
@@ -121,6 +121,15 @@ const PREFETCH_ROUTES = [
   '/practice/kotoba',
   '/leaderboard',
   '/profile',
+]
+
+const PREFETCH_ROUTES_GUEST = [
+  '/home',
+  '/demo/dojo/kana',
+  '/demo/dojo/kotoba',
+  '/demo/kana',
+  '/demo/kotoba',
+  '/leaderboard',
 ]
 
 export function AppTopBar(): ReactNode {
@@ -155,9 +164,13 @@ export function AppTopBar(): ReactNode {
   }, [menuOpen])
 
   const isHome = pathname === '/home'
-  const isKanaDojo = pathname.startsWith('/dojo/kana')
-  const isKotobaDojo = pathname.startsWith('/dojo/kotoba')
+  const isKanaDojo = pathname.startsWith('/dojo/kana') || pathname.startsWith('/demo/dojo/kana')
+  const isKotobaDojo =
+    pathname.startsWith('/dojo/kotoba') || pathname.startsWith('/demo/dojo/kotoba')
   const isLeaderboard = pathname === '/leaderboard'
+
+  const kanaDojo = isGuest ? '/demo/dojo/kana' : '/dojo/kana'
+  const kotobaDojo = isGuest ? '/demo/dojo/kotoba' : '/dojo/kotoba'
 
   const logoColour = easterEggActive ? 'text-sage-500 scale-105' : 'text-warm-800'
 
@@ -204,7 +217,7 @@ export function AppTopBar(): ReactNode {
                 const opening = !menuOpen
                 setMenuOpen(opening)
                 if (opening) {
-                  for (const route of PREFETCH_ROUTES) {
+                  for (const route of isGuest ? PREFETCH_ROUTES_GUEST : PREFETCH_ROUTES_AUTHED) {
                     router.prefetch(route)
                   }
                 }
@@ -268,7 +281,7 @@ export function AppTopBar(): ReactNode {
             <IconHome />
           </Link>
           <Link
-            href="/dojo/kana"
+            href={kanaDojo}
             data-testid="nav-dojo-kana"
             className={[
               ICON_LINK,
@@ -279,7 +292,7 @@ export function AppTopBar(): ReactNode {
             <span className="text-xl">あ</span>
           </Link>
           <Link
-            href="/dojo/kotoba"
+            href={kotobaDojo}
             data-testid="nav-dojo-kotoba"
             className={[
               ICON_LINK,
@@ -360,7 +373,7 @@ export function AppTopBar(): ReactNode {
               Home
             </Link>
             <Link
-              href="/dojo/kana"
+              href={kanaDojo}
               className={[
                 'text-base transition-all duration-150 min-h-11 leading-[2.75rem] px-3 rounded-lg hover:bg-white/10',
                 isKanaDojo
@@ -371,7 +384,7 @@ export function AppTopBar(): ReactNode {
               Kana Dojo
             </Link>
             <Link
-              href="/dojo/kotoba"
+              href={kotobaDojo}
               className={[
                 'text-base transition-all duration-150 min-h-11 leading-[2.75rem] px-3 rounded-lg hover:bg-white/10',
                 isKotobaDojo
@@ -453,7 +466,7 @@ export function AppTopBar(): ReactNode {
             Home
           </Link>
           <Link
-            href="/dojo/kana"
+            href={kanaDojo}
             onClick={(): void => setMenuOpen(false)}
             className={[
               'text-2xl font-medium transition-colors duration-150',
@@ -463,7 +476,7 @@ export function AppTopBar(): ReactNode {
             Kana Dojo
           </Link>
           <Link
-            href="/dojo/kotoba"
+            href={kotobaDojo}
             onClick={(): void => setMenuOpen(false)}
             className={[
               'text-2xl font-medium transition-colors duration-150',

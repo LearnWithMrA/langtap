@@ -15,12 +15,13 @@ import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { useGameplayActive } from '@/hooks/useGameplayActive'
+import { useAuth } from '@/hooks/useAuth'
 
 // ── Constants ─────────────────────────────────
 
 const SESSION_KEY = 'langtap-prefetch-done'
 
-const CORE_ROUTES = [
+const CORE_ROUTES_AUTHED = [
   '/home',
   '/practice/kana',
   '/practice/kotoba',
@@ -30,17 +31,28 @@ const CORE_ROUTES = [
   '/profile',
 ]
 
+const CORE_ROUTES_GUEST = [
+  '/home',
+  '/demo/kana',
+  '/demo/kotoba',
+  '/demo/dojo/kana',
+  '/demo/dojo/kotoba',
+  '/leaderboard',
+]
+
 // ── Component ─────────────────────────────────
 
 export function SessionPrefetch(): ReactNode {
   const router = useRouter()
   const isGameplayActive = useGameplayActive()
+  const { isGuest, isLoading: authLoading } = useAuth()
   const doneRef = useRef(false)
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (doneRef.current) return
+    if (authLoading) return
     if (sessionStorage.getItem(SESSION_KEY)) {
       doneRef.current = true
       return
@@ -51,6 +63,8 @@ export function SessionPrefetch(): ReactNode {
       connection?: { saveData?: boolean; effectiveType?: string }
     }
     if (nav.connection?.saveData || nav.connection?.effectiveType === '2g') return
+
+    const routes = isGuest ? CORE_ROUTES_GUEST : CORE_ROUTES_AUTHED
 
     const schedule =
       typeof requestIdleCallback === 'function'
@@ -63,10 +77,10 @@ export function SessionPrefetch(): ReactNode {
         : (id: number): void => clearTimeout(id)
 
     const id = schedule(() => {
-      for (let i = 0; i < CORE_ROUTES.length; i++) {
+      for (let i = 0; i < routes.length; i++) {
         const timer = setTimeout(() => {
-          router.prefetch(CORE_ROUTES[i])
-          if (i === CORE_ROUTES.length - 1) {
+          router.prefetch(routes[i])
+          if (i === routes.length - 1) {
             sessionStorage.setItem(SESSION_KEY, '1')
             doneRef.current = true
           }
@@ -82,7 +96,7 @@ export function SessionPrefetch(): ReactNode {
       }
       timersRef.current = []
     }
-  }, [router, isGameplayActive])
+  }, [router, isGameplayActive, isGuest, authLoading])
 
   return null
 }

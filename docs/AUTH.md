@@ -133,7 +133,7 @@ export async function middleware(request: NextRequest) {
   // Source of truth for route access rules: Section 4 of this document.
   // Do not add /practice, /settings here - guests can access those.
   // /dojo is auth-only (redirects to /sign-up). Demo dojo at /demo/dojo/*.
-  const AUTHED_ONLY_ROUTES = ['/leaderboard', '/profile', '/dojo']
+  const AUTHED_ONLY_ROUTES = ['/profile', '/dojo']
   const isAuthedOnly = AUTHED_ONLY_ROUTES.some((r) => pathname.startsWith(r))
 
   if (!user && isAuthedOnly) {
@@ -142,13 +142,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Auth pages: redirect already-authenticated users to practice.
+  // Auth pages: redirect already-authenticated users to home.
   const AUTH_PAGES = ['/sign-up', '/log-in']
   const isAuthPage = AUTH_PAGES.some((r) => pathname.startsWith(r))
 
   if (user && isAuthPage) {
     const url = request.nextUrl.clone()
-    url.pathname = '/practice'
+    url.pathname = '/home'
     return NextResponse.redirect(url)
   }
 
@@ -176,9 +176,9 @@ serves sensitive data. Never rely on middleware alone to protect data.
 
 | Route group | Access rule |
 |---|---|
-| `/` (landing page) | Public. No auth required. |
-| `/(auth)/sign-up` | Public. Redirect to practice if already logged in. |
-| `/(auth)/log-in` | Public. Redirect to practice if already logged in. |
+| `/` (landing page) | Public. Authenticated users redirect to /home. |
+| `/(auth)/sign-up` | Public. Redirect to /home if already logged in. |
+| `/(auth)/log-in` | Public. Redirect to /home if already logged in. |
 | `/(onboarding)/*` | Public. Onboarding state stored in localStorage. |
 | `/(main)/practice` | Public. Unauthenticated users use localStorage only. |
 | `/(main)/dojo` | Authenticated only. Redirects to /sign-up. Demo dojo at /demo/dojo/*. |
@@ -228,7 +228,7 @@ after sign-up. Enable in a later sprint if required.
 3. On submit, call `auth.service.ts signIn()`.
 4. On success:
    - If the user has no profile (edge case), create one and redirect to onboarding.
-   - If the user has completed onboarding, redirect to `/practice`.
+   - If the user has completed onboarding, redirect to `/home`.
    - If the user has not completed onboarding, redirect to the first incomplete step.
 5. On error, show a mapped error message. Never show raw Supabase errors.
 
@@ -338,7 +338,7 @@ pattern. Full visual and interaction spec: UX_DESIGN.md Section 5.
 - Default: Type pre-selected.
 - Selection saves `input_mode` to the profile.
 - "Start practising" button completes onboarding and navigates to
-  `/practice`.
+  `/home`.
 - After this step, `onboarding_complete` is set to `true`.
 
 ### Deferred: Notification Prompt (Sprint 11)
@@ -371,7 +371,7 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/practice'
+  const next = searchParams.get('next') ?? '/home'
 
   if (code) {
     const supabase = await createServerSupabaseClient()

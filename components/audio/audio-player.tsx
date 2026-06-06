@@ -9,6 +9,7 @@
 
 'use client'
 
+import { useState, useRef, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { useLofiPlayer } from '@/hooks/useLofiPlayer'
 import { useKeySound } from '@/hooks/useKeySound'
@@ -50,11 +51,84 @@ function IconNext(): ReactNode {
   )
 }
 
+function IconVolume(): ReactNode {
+  return (
+    <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" stroke="none">
+      <path d="M3 9 L7 9 L12 5 L12 19 L7 15 L3 15 Z" />
+      <path
+        d="M15 8.5 Q17 10 17 12 Q17 14 15 15.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+// ── Volume slider ───────────────────────────
+
+function VolumeSlider({
+  volume,
+  onVolumeChange,
+}: {
+  volume: number
+  onVolumeChange: (v: number) => void
+}): ReactNode {
+  const trackRef = useRef<HTMLDivElement>(null)
+
+  const updateFromPointer = (clientY: number): void => {
+    const track = trackRef.current
+    if (!track) return
+    const rect = track.getBoundingClientRect()
+    const ratio = 1 - (clientY - rect.top) / rect.height
+    onVolumeChange(Math.max(0, Math.min(1, ratio)))
+  }
+
+  const handlePointerDown = (e: React.PointerEvent): void => {
+    e.preventDefault()
+    updateFromPointer(e.clientY)
+    const el = e.currentTarget as HTMLElement
+    el.setPointerCapture(e.pointerId)
+  }
+
+  const handlePointerMove = (e: React.PointerEvent): void => {
+    if (e.buttons === 0) return
+    updateFromPointer(e.clientY)
+  }
+
+  const fillPercent = Math.round(volume * 100)
+
+  return (
+    <div
+      ref={trackRef}
+      className="w-6 h-24 flex items-end justify-center cursor-pointer touch-none"
+      role="slider"
+      aria-label="Lo-fi volume"
+      aria-valuenow={fillPercent}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      tabIndex={0}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+    >
+      <div className="w-1.5 h-full rounded-full bg-warm-300/50 relative overflow-hidden">
+        <div
+          className="absolute bottom-0 left-0 right-0 bg-sage-500 rounded-full transition-[height] duration-75"
+          style={{ height: `${fillPercent}%` }}
+        />
+      </div>
+    </div>
+  )
+}
+
 // ── Component ────────────────────────────────
 
 export function AudioPlayer(): ReactNode {
-  const { isPlaying, toggle, skip, previous } = useLofiPlayer()
+  const { isPlaying, volume, toggle, skip, previous, setVolume } = useLofiPlayer()
   const { playSound } = useKeySound()
+  const [volumeOpen, setVolumeOpen] = useState(false)
+  const volumeRef = useRef<HTMLDivElement>(null)
 
   const handleToggle = (): void => {
     playSound('ui-audio-toggle')
@@ -70,6 +144,22 @@ export function AudioPlayer(): ReactNode {
     playSound('ui-dropdown')
     skip()
   }
+
+  const handleVolumeToggle = (): void => {
+    playSound('ui-dropdown')
+    setVolumeOpen((prev) => !prev)
+  }
+
+  useEffect(() => {
+    if (!volumeOpen) return
+    const handleClick = (e: MouseEvent): void => {
+      if (volumeRef.current && !volumeRef.current.contains(e.target as Node)) {
+        setVolumeOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return (): void => document.removeEventListener('mousedown', handleClick)
+  }, [volumeOpen])
 
   const controlButton =
     'h-7 w-7 flex items-center justify-center rounded-full bg-white/50 text-warm-800 hover:text-sage-400 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-sage-300 cursor-pointer'
@@ -96,14 +186,32 @@ export function AudioPlayer(): ReactNode {
         {isPlaying ? <IconPause /> : <IconPlay />}
       </button>
       {isPlaying && (
-        <button
-          type="button"
-          onClick={handleSkip}
-          className={controlButton}
-          aria-label="Next track"
-        >
-          <IconNext />
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={handleSkip}
+            className={controlButton}
+            aria-label="Next track"
+          >
+            <IconNext />
+          </button>
+          <div ref={volumeRef} className="relative">
+            <button
+              type="button"
+              onClick={handleVolumeToggle}
+              className={controlButton}
+              aria-label="Volume"
+              aria-expanded={volumeOpen}
+            >
+              <IconVolume />
+            </button>
+            {volumeOpen && (
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-white/80 backdrop-blur-sm rounded-lg px-1.5 py-2 shadow-lg">
+                <VolumeSlider volume={volume} onVolumeChange={setVolume} />
+              </div>
+            )}
+          </div>
+        </>
       )}
     </div>
   )

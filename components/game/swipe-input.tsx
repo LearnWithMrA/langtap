@@ -28,6 +28,7 @@ type SwipeInputProps = {
   feedbackState: FeedbackState
   disabled: boolean
   showKatakana?: boolean
+  keepKeyboardOpen?: boolean
 }
 
 // -- Helpers ------------------------------------------------
@@ -53,10 +54,13 @@ export function SwipeInput({
   feedbackState,
   disabled,
   showKatakana = false,
+  keepKeyboardOpen = false,
 }: SwipeInputProps): ReactNode {
   const displayValue = showKatakana ? toKatakana(value) : value
   const inputRef = useRef<HTMLInputElement>(null)
   const { playSound } = useKeySound()
+
+  const useReadOnly = keepKeyboardOpen && disabled
 
   useEffect((): void => {
     if (!disabled && inputRef.current) {
@@ -91,7 +95,8 @@ export function SwipeInput({
           type="text"
           value={value}
           onChange={handleChange}
-          disabled={disabled}
+          disabled={useReadOnly ? false : disabled}
+          readOnly={useReadOnly}
           placeholder=""
           autoComplete="off"
           autoCorrect="off"
@@ -115,7 +120,8 @@ export function SwipeInput({
       type="text"
       value={value}
       onChange={handleChange}
-      disabled={disabled}
+      disabled={useReadOnly ? false : disabled}
+      readOnly={useReadOnly}
       placeholder="Swipe here..."
       autoComplete="off"
       autoCorrect="off"

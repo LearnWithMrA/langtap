@@ -26,6 +26,7 @@ type TypeInputProps = {
   disabled: boolean
   showKatakana?: boolean
   preventKanjiSuggestions?: boolean
+  keepKeyboardOpen?: boolean
 }
 
 // -- Helpers ------------------------------------------------
@@ -52,12 +53,17 @@ export function TypeInput({
   disabled,
   showKatakana = false,
   preventKanjiSuggestions = true,
+  keepKeyboardOpen = false,
 }: TypeInputProps): ReactNode {
   // Display value: convert hiragana to katakana if showKatakana is on.
   // Strip zero-width spaces for display, then convert.
   const displayValue = showKatakana ? toKatakana(value.replace(/\u200B/g, '')) : value
   const inputRef = useRef<HTMLInputElement>(null)
   const { playSound } = useKeySound()
+
+  // When keepKeyboardOpen is true, use readOnly instead of disabled to
+  // prevent the mobile keyboard from closing between prompts.
+  const useReadOnly = keepKeyboardOpen && disabled
 
   useEffect((): void => {
     if (!disabled && inputRef.current) {
@@ -113,7 +119,8 @@ export function TypeInput({
           type="text"
           value={value}
           onChange={handleChange}
-          disabled={disabled}
+          disabled={useReadOnly ? false : disabled}
+          readOnly={useReadOnly}
           placeholder=""
           autoComplete="off"
           autoCorrect="off"
@@ -138,7 +145,8 @@ export function TypeInput({
       data-testid="practice-input"
       value={value}
       onChange={handleChange}
-      disabled={disabled}
+      disabled={useReadOnly ? false : disabled}
+      readOnly={useReadOnly}
       placeholder="Type here..."
       autoComplete="off"
       autoCorrect="off"

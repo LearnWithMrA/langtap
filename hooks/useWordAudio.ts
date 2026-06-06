@@ -23,9 +23,28 @@ let ctx: AudioContext | null = null
 const bufferCache = new Map<string, AudioBuffer>()
 const pendingFetches = new Map<string, Promise<AudioBuffer | null>>()
 let gestureUnlocked = false
+let audioSessionConfigured = false
+
+function configureAudioSession(): void {
+  if (audioSessionConfigured) return
+  audioSessionConfigured = true
+  // iOS 16.4+: set audio session to 'playback' so Web Audio API
+  // plays through the media channel, bypassing the silent switch.
+  try {
+    const nav = navigator as { audioSession?: { type: string } }
+    if (nav.audioSession) {
+      nav.audioSession.type = 'playback'
+    }
+  } catch {
+    // Partial implementations may reject the assignment
+  }
+}
 
 function getContext(): AudioContext {
-  if (!ctx) ctx = new AudioContext()
+  if (!ctx) {
+    configureAudioSession()
+    ctx = new AudioContext()
+  }
   return ctx
 }
 

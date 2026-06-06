@@ -16,6 +16,8 @@ import { LOFI_TRACKS, type LofiTrack } from '@/data/audio/lofi-tracks'
 // ── Helpers ──────────────────────────────────
 
 const STORAGE_KEY = 'langtap-lofi-playing'
+const VOLUME_KEY = 'langtap-lofi-volume'
+const DEFAULT_VOLUME = 0.3
 
 function readPreference(): boolean {
   if (typeof window === 'undefined') return false
@@ -24,6 +26,19 @@ function readPreference(): boolean {
 
 function writePreference(playing: boolean): void {
   localStorage.setItem(STORAGE_KEY, String(playing))
+}
+
+function readVolume(): number {
+  if (typeof window === 'undefined') return DEFAULT_VOLUME
+  const stored = localStorage.getItem(VOLUME_KEY)
+  if (!stored) return DEFAULT_VOLUME
+  const parsed = parseFloat(stored)
+  if (Number.isNaN(parsed) || parsed < 0 || parsed > 1) return DEFAULT_VOLUME
+  return parsed
+}
+
+function writeVolume(vol: number): void {
+  localStorage.setItem(VOLUME_KEY, String(vol))
 }
 
 function shuffleArray<T>(arr: readonly T[]): T[] {
@@ -40,12 +55,15 @@ function shuffleArray<T>(arr: readonly T[]): T[] {
 export function useLofiPlayer(): {
   isPlaying: boolean
   currentTrack: LofiTrack | null
+  volume: number
   toggle: () => void
   skip: () => void
   previous: () => void
+  setVolume: (vol: number) => void
 } {
   const [isPlaying, setIsPlaying] = useState(false)
   const [trackIndex, setTrackIndex] = useState(0)
+  const [volume, setVolumeState] = useState(DEFAULT_VOLUME)
   const queueRef = useRef<LofiTrack[]>(shuffleArray(LOFI_TRACKS))
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const initializedRef = useRef(false)
@@ -63,6 +81,15 @@ export function useLofiPlayer(): {
     })
   }, [])
 
+  const setVolume = useCallback((vol: number): void => {
+    const clamped = Math.max(0, Math.min(1, vol))
+    setVolumeState(clamped)
+    writeVolume(clamped)
+    if (audioRef.current) {
+      audioRef.current.volume = clamped
+    }
+  }, [])
+
   const playTrack = useCallback(
     (index: number): void => {
       const track = queueRef.current[index]
@@ -70,7 +97,7 @@ export function useLofiPlayer(): {
 
       if (!audioRef.current) {
         const audio = new Audio()
-        audio.volume = 0.3
+        audio.volume = readVolume()
         audio.addEventListener('ended', () => advanceToNext())
         audioRef.current = audio
       }
@@ -91,6 +118,7 @@ export function useLofiPlayer(): {
   useEffect(() => {
     if (initializedRef.current) return
     initializedRef.current = true
+    setVolumeState(readVolume())
     if (readPreference()) {
       const handler = (): void => {
         setIsPlaying(true)
@@ -123,5 +151,5 @@ export function useLofiPlayer(): {
     })
   }, [isPlaying])
 
-  return { isPlaying, currentTrack, toggle, skip, previous }
+  return { isPlaying, currentTrack, volume, toggle, skip, previous, setVolume }
 }

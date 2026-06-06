@@ -307,12 +307,27 @@ ever activates paid membership.
 Action required: Curate a short playlist (3-5 tracks) before the audio sprint.
 Toggle: on by default. Can be turned off in Profile and Settings.
 
-### 5.15 Payments (Infrastructure Only in Phase 1)
+### 5.15 Payments
 
-- Stripe integration to be wired in but not activated during Phase 1
-- Membership model planned: details to be defined in Phase 2
-- All Phase 1 features are free and open to all users
-- No paywalls or locked content in Phase 1
+- Stripe integration wired in Phase 1, activated post-launch (Sprint 19)
+- All Phase 1 features are free with a daily distance cap (100m/day)
+- Paid membership removes the daily cap
+
+**Pricing model:**
+
+| Plan | Price | Notes |
+|---|---|---|
+| Free | $0 | 100m daily distance cap |
+| Monthly | $2.99/month | Unlimited daily practice |
+| Annual | $19.99/year | Unlimited daily practice |
+| Lifetime | TBD | Unlimited, one-time payment |
+
+**Future multi-language pricing (when additional languages launch):**
+
+| Plan | Single language | Multiple languages |
+|---|---|---|
+| Monthly | $3.00/month | $5.00/month |
+| Annual | TBD | TBD |
 
 ---
 

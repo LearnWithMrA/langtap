@@ -567,6 +567,7 @@ export function GameWindow({
             feedbackState={feedbackState}
             disabled={wordDone}
             showKatakana={!isKanaToRomaji && isKatakana}
+            keepKeyboardOpen
           />
           <p className="text-sm text-warm-400 text-center mt-2">
             This mode is for a computer keyboard
@@ -582,6 +583,7 @@ export function GameWindow({
             feedbackState={feedbackState}
             disabled={wordDone}
             showKatakana={!isKanaToRomaji && isKatakana}
+            keepKeyboardOpen
           />
           <p className="text-sm text-warm-400 text-center mt-2">
             This mode is for the mobile keyboard

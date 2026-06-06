@@ -678,6 +678,7 @@ export function KotobaGameWindow({
             disabled={wordDone}
             showKatakana={false}
             preventKanjiSuggestions={!isKanjiMode}
+            keepKeyboardOpen
           />
           <p className="text-xs text-warm-400 text-center mt-1.5">
             {isKanjiMode && hasKanji
@@ -695,6 +696,7 @@ export function KotobaGameWindow({
             feedbackState={feedbackState}
             disabled={wordDone}
             showKatakana={false}
+            keepKeyboardOpen
           />
           <p className="text-xs text-warm-400 text-center mt-1.5">
             {isKanjiMode && hasKanji

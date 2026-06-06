@@ -8,8 +8,10 @@
 //
 //          Route protection summary (AUTH.md Section 4):
 //            Auth-only:        /dojo, /profile
+//            Guest-only:       /demo/* (authed users redirect to real routes)
 //            Guest or authed:  /practice, /library, /settings, /leaderboard
-//            Public:           /, /sign-up, /log-in, /credits, /auth/*
+//            Public:           /sign-up, /log-in, /credits, /auth/*
+//            Landing:          / (authed users redirect to /home)
 //
 //          IMPORTANT: middleware is not a security boundary. It can be
 //          bypassed. All sensitive data is protected by RLS at the
@@ -32,8 +34,16 @@ import { NextResponse, type NextRequest } from 'next/server'
 // All other routes are open to guests.
 const GUEST_TO_SIGNUP_ROUTES = ['/profile', '/dojo']
 
-// Auth pages. Authenticated users are redirected to /practice.
+// Auth pages. Authenticated users are redirected to /home.
 const AUTH_PAGES = ['/sign-up', '/log-in']
+
+// Demo routes map to their authenticated equivalents.
+const DEMO_TO_AUTH_REDIRECTS: Record<string, string> = {
+  '/demo/kana': '/practice/kana',
+  '/demo/kotoba': '/practice/kotoba',
+  '/demo/dojo/kana': '/dojo/kana',
+  '/demo/dojo/kotoba': '/dojo/kotoba',
+}
 
 // ── Middleware ────────────────────────────────
 
@@ -87,7 +97,28 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   const isAuthPage = AUTH_PAGES.some((route) => pathname.startsWith(route))
   if (isPermanentUser && isAuthPage) {
     const url = request.nextUrl.clone()
-    url.pathname = '/practice'
+    url.pathname = '/home'
+    return NextResponse.redirect(url)
+  }
+
+  // Redirect authenticated users from landing page to home.
+  if (isPermanentUser && pathname === '/') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/home'
+    return NextResponse.redirect(url)
+  }
+
+  // Redirect authenticated users from demo routes to real equivalents.
+  if (isPermanentUser && pathname.startsWith('/demo')) {
+    const redirect = DEMO_TO_AUTH_REDIRECTS[pathname]
+    if (redirect) {
+      const url = request.nextUrl.clone()
+      url.pathname = redirect
+      return NextResponse.redirect(url)
+    }
+    // Catch-all for any other /demo/* routes
+    const url = request.nextUrl.clone()
+    url.pathname = '/home'
     return NextResponse.redirect(url)
   }
 
