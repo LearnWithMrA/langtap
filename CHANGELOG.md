@@ -30,6 +30,56 @@ Format per entry:
 
 ---
 
+## 2026-06-06 - Session 112
+
+**Sprint:** Sprint 15 - Bug Reporting
+**Task completed:** Create bug_reports table, route handler, service, hook, button, modal, layout mount, tests (Tasks 1-4, 6)
+**Status:** Done (Sprint 15 near-complete, Task 5 notification is owner action)
+
+### Changes made
+- `supabase/migrations/20260606120000_create_bug_reports.sql`: New migration. bug_reports table with CHECK constraints. RLS enabled, zero client-facing policies (all writes via service role). Private bug-reports storage bucket with file_size_limit (5MB) and allowed_mime_types (png/jpeg/webp).
+- `types/bug-report.types.ts`: New file. BugReportType, BugReport, BugReportInput, BugReportAppState, BugReportSubmitStatus types.
+- `app/api/bug-report/route.ts`: New route handler. CSRF origin check, auth with is_anonymous rejection, 60s server-side rate gate, description length / MIME / size validation, length caps on user_agent (500) and app_state fields (200/20), service role upload and insert.
+- `services/bug-report.service.ts`: New client service. Calls route handler via fetch with FormData. Network error handling (try/catch around fetch).
+- `hooks/useBugReport.ts`: New hook. Submit state machine (idle/submitting/success/error), 30s client-side cooldown, try/catch for unexpected exceptions.
+- `components/layout/bug-report-button.tsx`: New component. Fixed bottom-4 left-4 z-20, bg-white/40 backdrop-blur-sm (matches lo-fi player), question mark icon, 44x44pt touch target, auth-gated (returns null for unauthenticated).
+- `components/layout/bug-report-modal.tsx`: New component. Type dropdown, description textarea (2000 char counter), file upload (client-side MIME/size validation), focus trap + Escape + scroll lock + focus restore, success/error views, refocus on content swap.
+- `app/(main)/layout.tsx`: BugReportButton mounted. Renders on all main app pages.
+- `docs/BACKEND.md`: bug_reports added to table overview. New Section 2.13 with full schema.
+- `docs/SECURITY.md`: Service role usage updated (Stripe + delete-account + bug-report). New Section 3.3.1 documenting route-handler-only write pattern.
+- `docs/FRONTEND.md`: New Section 11 documenting bug report button and modal.
+- `docs/ARCHITECTURE.md`: bug-report route handler added to folder structure.
+- `LangTap_Sprints.md`: Sprint 14 marked Complete. Sprint 15 tasks updated.
+
+### Tests
+- `services/__tests__/bug-report.service.test.ts`: 8 tests (Pass). Form data, success, errors, rate limit, network failure.
+- `hooks/__tests__/useBugReport.test.ts`: 7 tests (Pass). State transitions, cooldown, reset.
+- `components/layout/__tests__/bug-report-button.test.tsx`: 5 tests (Pass). Auth gating, modal open, ARIA, touch target.
+- All 1122 tests pass (1102 -> 1122, +20 new).
+
+### Next task
+Sprint 16 - Analytics (Vercel Analytics + custom event tracking)
+
+### Notes
+- Codex reviewed x2. Round 1: 7 findings (3 High, 3 Medium, 1 Low). All addressed. Round 2: 2 remaining findings. Both fixed.
+- H1 fix: Removed client INSERT and storage upload policies. Table has RLS with zero policies, completely inaccessible to anon key.
+- H2 fix: Anonymous user rejection uses `user.is_anonymous` (matching auth.service.ts pattern), not `app_metadata.provider`.
+- H3 accepted: Rate gate race window documented for Sprint 17 distributed rate limiting.
+- M4 fix: file_size_limit and allowed_mime_types set on bucket insert.
+- M5 fix: Network error handling in service (try/catch around fetch) and hook (try/catch around submitBugReport).
+- M6 fix: Focus trap with Tab wrapping, initial focus, refocus on success content swap, focus restore on close.
+- M7 fix: Server-side length caps on user_agent (500), app_state.page (200), app_state.input_mode (20).
+- Task 5 (notification webhook) is a Supabase dashboard configuration, not code. Owner action.
+- Dojo tests are flaky under full-suite load (timeout in CI-like conditions). Pass when run in isolation. Pre-existing.
+
+### Tech debt spotted
+- `kana-dojo-client.tsx` remains at ~575 lines (over 500-line ceiling). Flagged in Session 110.
+- `types/user.types.ts` still has vestigial `isAnonymous`, `guestImportedAt`, `guestImportSkippedAt`, `legacyImportedAt`, `legacyImportSkippedAt`. Pending owner file/column deletion from Session 111.
+- Rate gate race window on `/api/bug-report` (check-then-insert). Documented for Sprint 17 fix.
+- Dojo tests flaky under full-suite load (timeout). Passes in isolation.
+
+---
+
 ## 2026-06-06 - Session 111
 
 **Sprint:** Sprint 14 - Trial Mode Redesign

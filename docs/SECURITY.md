@@ -67,7 +67,8 @@ LangTap uses two Supabase keys. Their rules are absolute.
 - Must never appear in any file that runs in the browser.
 - Must never be prefixed with `NEXT_PUBLIC_`.
 - Used only in: server-side route handlers and server actions.
-- In LangTap Phase 1, it is used only by the Stripe webhook handler.
+- In LangTap Phase 1, it is used by the Stripe webhook handler,
+  the delete-account route handler, and the bug-report route handler.
 - If this key is ever committed to the repository, rotate it immediately.
 
 ### 2.3 Environment Variable File Rules
@@ -181,7 +182,18 @@ key. This reduces the attack surface for accidental or malicious data loss.
 
 Tables with no client policies (RPC-only access): `leaderboard_scores`,
 `leaderboard_score_events`, `practice_activity_events`,
-`daily_cap_events`. `practice_sessions` has SELECT only (writes via RPC).
+`daily_cap_events`, `bug_reports`. `practice_sessions` has SELECT only
+(writes via RPC).
+
+### 3.3.1 Bug reports: route-handler-only writes
+
+`bug_reports` has RLS enabled with zero client-facing policies. All
+writes go through `/api/bug-report` using the service role key. This
+prevents clients from bypassing the server-side rate gate (60s per
+user) and validation (MIME, size, description length). The private
+`bug-reports` storage bucket also has no client upload policies;
+uploads go through the route handler via service role. Bucket-level
+constraints: 5MB file size limit, PNG/JPEG/WebP MIME types only.
 
 The `factory_reset` RPC is the only RPC that performs DELETE operations
 across multiple tables. It requires `is_permanent_user()` and serializes

@@ -9,7 +9,8 @@
 //          per browser session after a short delay.
 // Depends on: components/layout/app-top-bar.tsx,
 //             components/settings/settings-dialog.tsx,
-//             components/performance/session-prefetch.tsx
+//             components/performance/session-prefetch.tsx,
+//             components/layout/bug-report-button.tsx
 // ─────────────────────────────────────────────
 
 import type { ReactNode } from 'react'
@@ -23,6 +24,7 @@ import { AuthModalProvider } from '@/components/layout/auth-modal-provider'
 import { ScrollRestoration } from '@/components/performance/scroll-restoration'
 import { SyncManager } from '@/components/performance/sync-manager'
 import { UsernameRepairModal } from '@/components/ui/username-repair-modal'
+import { BugReportButton } from '@/components/layout/bug-report-button'
 
 export default function MainLayout({ children }: { children: ReactNode }): ReactNode {
   return (
@@ -37,6 +39,7 @@ export default function MainLayout({ children }: { children: ReactNode }): React
       <PracticeDataPreloader />
       <ScrollRestoration />
       <SessionPrefetch />
+      <BugReportButton />
     </SyncManager>
   )
 }

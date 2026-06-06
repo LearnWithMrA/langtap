@@ -155,6 +155,8 @@ langtap/
 |  |  |- layout.tsx             # Main layout (AppTopBar, SettingsDialog, SessionPrefetch)
 |  |
 |  |- api/                      # Next.js route handlers (server-side only)
+|  |  |- bug-report/
+|  |  |  |- route.ts            # Bug report submission (auth, rate gate, upload, insert)
 |  |  |- stripe/
 |  |  |  |- webhook/
 |  |  |  |  |- route.ts         # Stripe webhook handler

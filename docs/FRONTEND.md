@@ -766,7 +766,26 @@ Explain why there is nothing to show and offer a next action.
 
 ---
 
-## 11. Demo Mode (Sprint 14)
+## 11. Bug Report (Sprint 15)
+
+**Bug report button** (`components/layout/bug-report-button.tsx`):
+- Position: `fixed bottom-4 left-4 z-20` (opposite the lo-fi player at bottom-right)
+- Styling: `bg-white/40 backdrop-blur-sm rounded-lg` (matches lo-fi player)
+- Icon: question mark circle, 44x44pt touch target
+- Visibility: authenticated users only (returns null for guests/demo)
+- Mounted in: `app/(main)/layout.tsx`
+
+**Bug report modal** (`components/layout/bug-report-modal.tsx`):
+- Form fields: type dropdown (Bug/Feature Request/Other), description
+  textarea (2000 char limit with counter), optional screenshot upload
+  (PNG/JPEG/WebP, 5MB max, client-side validation as UX guard)
+- Accessibility: focus trap, Escape to close, scroll lock, focus restore
+- States: form view, submitting (loading spinner), success confirmation, error
+- Client-side cooldown: submit disabled for 30s after successful submission
+- All submissions go through `/api/bug-report` route handler (not direct
+  Supabase)
+
+## 11B. Demo Mode (Sprint 14)
 
 The guest banner was removed in Sprint 14. Visitors now use curated demo routes
 instead. See `docs/AUTH.md` Section 8 for the full demo mode specification and

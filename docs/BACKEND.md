@@ -50,6 +50,7 @@ Every table created in this project follows this rule without exception.
 | `practice_activity_events` | Per-batch events for idempotency (same pattern as leaderboard_score_events) |
 | `daily_cap_events` | Per-prompt distance events for daily distance cap |
 | `app_config` | Feature flags and app-wide configuration |
+| `bug_reports` | User-submitted bug reports and feature requests (route-handler-only writes) |
 | `guest_usage` | (Deprecated) Guest trial distance tracking. Flagged for removal. |
 
 All tables are in the `public` schema. All have RLS enabled.
@@ -426,6 +427,30 @@ RLS: enabled + forced. No policies. All access through the
 Purpose: the RPC checks for an existing `event_id` before applying a
 batch. If the event already exists, the RPC returns silently (idempotent).
 This prevents double-counting on network retries.
+
+### 2.13 bug_reports
+
+User-submitted bug reports and feature requests. All writes go through
+the `/api/bug-report` route handler using the service role key. The table
+has RLS enabled with no client-facing policies, making it completely
+inaccessible to the anon key.
+
+```sql
+create table public.bug_reports (
+  id               uuid primary key default gen_random_uuid(),
+  user_id          uuid not null references auth.users(id) on delete cascade,
+  type             text not null check (type in ('bug', 'feature', 'other')),
+  description      text not null check (char_length(description) <= 2000),
+  screenshot_path  text,
+  app_state        jsonb,
+  user_agent       text,
+  created_at       timestamptz not null default now()
+);
+```
+
+Screenshots stored in private `bug-reports` storage bucket (5MB limit,
+PNG/JPEG/WebP only). No client storage policies. Server-side rate gate:
+one report per user per 60 seconds.
 
 ---
 
