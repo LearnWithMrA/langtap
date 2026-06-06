@@ -46,9 +46,9 @@ Format per entry:
 - `components/game/swipe-input.tsx`: Same keepKeyboardOpen pattern as type-input.
 - `components/game/game-window.tsx`: Wired keepKeyboardOpen to TypeInput and SwipeInput.
 - `components/game/kotoba-game-window.tsx`: Wired keepKeyboardOpen to TypeInput and SwipeInput.
-- `hooks/useWordAudio.ts`: Added navigator.audioSession.type = 'playback' (iOS 16.4+) with try/catch, bypasses silent switch for Web Audio API.
+- `hooks/useWordAudio.ts`: Added navigator.audioSession.type = 'playback' (iOS 16.4+) with try/catch. Added silent looping HTML audio element fallback on first user gesture to force iOS "playback" audio session (works on all iOS versions). Bypasses silent switch for Web Audio API.
 - `hooks/useKeySound.ts`: Same audioSession configuration for key click sounds.
-- `components/audio/audio-player.tsx`: Added vertical volume slider button (tap to open, pointer drag to adjust, click-outside to close). Volume persisted to localStorage.
+- `components/audio/audio-player.tsx`: Added vertical volume slider button (tap to open, pointer drag to adjust, click-outside to close). Volume persisted to localStorage. Fixed touch drag using draggingRef instead of e.buttons (which is always 0 on touch devices).
 - `hooks/useLofiPlayer.ts`: Added volume state, setVolume function, localStorage persistence for volume preference.
 - `components/performance/session-prefetch.tsx`: Auth-aware prefetch routes (guest vs authed), gated on auth loading completion.
 - `app/(onboarding)/onboarding/step-3/page.tsx`: onboardingComplete redirect changed from /practice/kana to /home.
@@ -67,7 +67,7 @@ Sprint 16 - Analytics (Vercel Analytics + custom event tracking)
 - Middleware cookie preservation on redirects is a pre-existing pattern, not introduced by this diff. Noted for Sprint 17.
 - Demo heatmap now uses existing MID dashboard fixture (relative-to-today dates via buildHeatmap). UTC date drift is minor and acceptable.
 - Mobile keyboard fix uses readOnly + onChange gating instead of disabled, per research showing iOS Safari and Android Chrome require continuous focus to keep the keyboard open.
-- iOS audio fix uses the W3C Audio Session API (navigator.audioSession.type = 'playback'), supported in Safari 16.4+ (all current iOS versions). Falls back gracefully on non-Safari browsers.
+- iOS audio fix uses two layers: (1) W3C Audio Session API (navigator.audioSession.type = 'playback', Safari 16.4+), and (2) silent HTML audio element fallback for older iOS. Android is unaffected by silent mode (media and ringer are separate channels).
 
 ---
 

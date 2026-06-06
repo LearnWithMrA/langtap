@@ -24,6 +24,7 @@ const bufferCache = new Map<string, AudioBuffer>()
 const pendingFetches = new Map<string, Promise<AudioBuffer | null>>()
 let gestureUnlocked = false
 let audioSessionConfigured = false
+let silentAudioElement: HTMLAudioElement | null = null
 
 function configureAudioSession(): void {
   if (audioSessionConfigured) return
@@ -40,6 +41,28 @@ function configureAudioSession(): void {
   }
 }
 
+// Play a silent looping HTML audio element to force iOS into
+// the "playback" audio session, which overrides the silent switch.
+// This is the proven fallback for devices where navigator.audioSession
+// is unavailable (pre iOS 16.4).
+const SILENT_MP3 =
+  'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYoRBqSAAAAAAAAAAAAAAAAAAAA//tQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tQZB4P8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ=='
+
+function startSilentAudio(): void {
+  if (silentAudioElement) return
+  if (typeof document === 'undefined') return
+  try {
+    const audio = new Audio()
+    audio.src = SILENT_MP3
+    audio.loop = true
+    audio.volume = 0
+    void audio.play()
+    silentAudioElement = audio
+  } catch {
+    // Ignore failures
+  }
+}
+
 function getContext(): AudioContext {
   if (!ctx) {
     configureAudioSession()
@@ -50,6 +73,7 @@ function getContext(): AudioContext {
 
 function unlockAudioContext(): void {
   gestureUnlocked = true
+  startSilentAudio()
   const audioCtx = getContext()
   if (audioCtx.state === 'suspended') {
     void audioCtx.resume()

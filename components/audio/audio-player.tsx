@@ -76,6 +76,7 @@ function VolumeSlider({
   onVolumeChange: (v: number) => void
 }): ReactNode {
   const trackRef = useRef<HTMLDivElement>(null)
+  const draggingRef = useRef(false)
 
   const updateFromPointer = (clientY: number): void => {
     const track = trackRef.current
@@ -87,14 +88,19 @@ function VolumeSlider({
 
   const handlePointerDown = (e: React.PointerEvent): void => {
     e.preventDefault()
+    draggingRef.current = true
     updateFromPointer(e.clientY)
     const el = e.currentTarget as HTMLElement
     el.setPointerCapture(e.pointerId)
   }
 
   const handlePointerMove = (e: React.PointerEvent): void => {
-    if (e.buttons === 0) return
+    if (!draggingRef.current) return
     updateFromPointer(e.clientY)
+  }
+
+  const handlePointerUp = (): void => {
+    draggingRef.current = false
   }
 
   const fillPercent = Math.round(volume * 100)
@@ -111,6 +117,8 @@ function VolumeSlider({
       tabIndex={0}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
     >
       <div className="w-1.5 h-full rounded-full bg-warm-300/50 relative overflow-hidden">
         <div
