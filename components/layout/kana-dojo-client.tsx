@@ -58,6 +58,7 @@ import { DIALOGUE_SCRIPTS } from '@/data/tutorial/dialogue-scripts'
 import { MASTERY_THRESHOLD } from '@/engine/mastery'
 import { useMasteryStore } from '@/stores/mastery.store'
 import { useOnboardingStore } from '@/stores/onboarding.store'
+import { useSyncContext } from '@/components/performance/sync-manager'
 import {
   DEMO_KANA_MASTERY_SCORES,
   DEMO_KANA_LEARNING_SCORES,
@@ -135,6 +136,7 @@ function KanaDojoReadyShell({ demo }: { demo?: boolean }): ReactNode {
   const [bulkScope, setBulkScope] = useState<BulkUnlockScope | null>(null)
   const [bulkResetScope, setBulkResetScope] = useState<BulkResetScope | null>(null)
 
+  const { flushDirty } = useSyncContext()
   const { dismissed: helpDismissed, currentTip, advance: dismissHelp } = useKanaTips()
 
   const lockedIds = useMemo(() => buildLockedSet(mastery), [mastery])
@@ -295,10 +297,12 @@ function KanaDojoReadyShell({ demo }: { demo?: boolean }): ReactNode {
         if (!current.includes(characterId)) {
           useOnboardingStore.getState().toggleCharacter(characterId)
         }
+        useMasteryStore.getState().markUnlockDirty(characterId)
+        void flushDirty()
       }
       setPendingIndividual(null)
     },
-    [demo],
+    [demo, flushDirty],
   )
 
   const handleBulkUnlockConfirm = useCallback(
@@ -321,10 +325,14 @@ function KanaDojoReadyShell({ demo }: { demo?: boolean }): ReactNode {
         if (merged.size !== current.size) {
           useOnboardingStore.getState().setSelectedBulk(Array.from(merged))
         }
+        for (const id of characterIds) {
+          useMasteryStore.getState().markUnlockDirty(id)
+        }
+        void flushDirty()
       }
       setBulkScope(null)
     },
-    [demo],
+    [demo, flushDirty],
   )
 
   const handleResetCharacter = useCallback(
@@ -334,13 +342,15 @@ function KanaDojoReadyShell({ demo }: { demo?: boolean }): ReactNode {
         setDemoUnlocks((prev) => (prev.includes(characterId) ? prev : [...prev, characterId]))
       } else {
         useMasteryStore.getState().reset(characterId)
+        useMasteryStore.getState().markScoreDirty(characterId)
         const current = useOnboardingStore.getState().selectedCharacterIds
         if (!current.includes(characterId)) {
           useOnboardingStore.getState().toggleCharacter(characterId)
         }
+        void flushDirty()
       }
     },
-    [demo],
+    [demo, flushDirty],
   )
 
   const handleMarkCharacterMastered = useCallback(
@@ -352,9 +362,11 @@ function KanaDojoReadyShell({ demo }: { demo?: boolean }): ReactNode {
         }))
       } else {
         useMasteryStore.getState().bulkLoad({ [characterId]: MASTERY_THRESHOLD + 5 })
+        useMasteryStore.getState().markScoreDirty(characterId)
+        void flushDirty()
       }
     },
-    [demo],
+    [demo, flushDirty],
   )
 
   const handleUnlockScript = useCallback(
@@ -400,8 +412,10 @@ function KanaDojoReadyShell({ demo }: { demo?: boolean }): ReactNode {
           return Array.from(set)
         })
       } else {
+        const store = useMasteryStore.getState()
         for (const id of characterIds) {
-          useMasteryStore.getState().reset(id)
+          store.reset(id)
+          store.markScoreDirty(id)
         }
         const current = new Set(useOnboardingStore.getState().selectedCharacterIds)
         const merged = new Set(current)
@@ -409,10 +423,11 @@ function KanaDojoReadyShell({ demo }: { demo?: boolean }): ReactNode {
         if (merged.size !== current.size) {
           useOnboardingStore.getState().setSelectedBulk(Array.from(merged))
         }
+        void flushDirty()
       }
       setBulkResetScope(null)
     },
-    [demo],
+    [demo, flushDirty],
   )
 
   const handleBulkMarkMastered = useCallback(
@@ -424,15 +439,20 @@ function KanaDojoReadyShell({ demo }: { demo?: boolean }): ReactNode {
           return next
         })
       } else {
+        const store = useMasteryStore.getState()
         const scoreMap: Record<string, number> = {}
         for (const id of characterIds) {
           scoreMap[id] = MASTERY_THRESHOLD + 5
         }
-        useMasteryStore.getState().bulkLoad(scoreMap)
+        store.bulkLoad(scoreMap)
+        for (const id of characterIds) {
+          store.markScoreDirty(id)
+        }
+        void flushDirty()
       }
       setBulkResetScope(null)
     },
-    [demo],
+    [demo, flushDirty],
   )
 
   const handleResetScript = useCallback((script: Script): void => {

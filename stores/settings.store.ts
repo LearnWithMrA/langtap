@@ -9,7 +9,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { InputMode, InputDirection, KotobaInput, AutoAdvance } from '@/types/settings.types'
-import { createScopedStorage, registerScopedStore } from '@/stores/scoped-storage'
+import { createScopedStorage, registerScopedStore, getStorageUserId } from '@/stores/scoped-storage'
+import { updateProfile } from '@/services/profile.service'
 
 // ── Types ─────────────────────────────────────
 
@@ -36,6 +37,24 @@ type SettingsActions = {
   setWordAudio: (enabled: boolean) => void
   setKeyClicks: (enabled: boolean) => void
   setAutoAdvance: (mode: AutoAdvance) => void
+  hydrateFromProfile: (profile: {
+    inputMode: InputMode
+    inputDirection: string
+    kotobaInput: string
+    hintsEnabled: boolean
+    furiganaEnabled: boolean
+    wordAudioEnabled: boolean
+    keyClicksEnabled: boolean
+    autoAdvance: string
+  }) => void
+}
+
+// ── Server sync helper ───────────────────────
+
+function syncToServer(updates: Record<string, unknown>): void {
+  const userId = getStorageUserId()
+  if (!userId) return
+  void updateProfile(userId, updates)
 }
 
 // ── Store ─────────────────────────────────────
@@ -63,34 +82,55 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
 
       setInputMode: (mode: InputMode): void => {
         set({ inputMode: mode })
+        syncToServer({ input_mode: mode })
       },
 
       setInputDirection: (direction: InputDirection): void => {
         set({ inputDirection: direction })
+        syncToServer({ input_direction: direction })
       },
 
       setKotobaInput: (input: KotobaInput): void => {
         set({ kotobaInput: input })
+        syncToServer({ kotoba_input: input })
       },
 
       setHints: (enabled: boolean): void => {
         set({ hints: enabled })
+        syncToServer({ hints_enabled: enabled })
       },
 
       setFurigana: (enabled: boolean): void => {
         set({ furigana: enabled })
+        syncToServer({ furigana_enabled: enabled })
       },
 
       setWordAudio: (enabled: boolean): void => {
         set({ wordAudio: enabled })
+        syncToServer({ word_audio_enabled: enabled })
       },
 
       setKeyClicks: (enabled: boolean): void => {
         set({ keyClicks: enabled })
+        syncToServer({ key_clicks_enabled: enabled })
       },
 
       setAutoAdvance: (mode: AutoAdvance): void => {
         set({ autoAdvance: mode })
+        syncToServer({ auto_advance: mode })
+      },
+
+      hydrateFromProfile: (profile): void => {
+        set({
+          inputMode: profile.inputMode,
+          inputDirection: profile.inputDirection as InputDirection,
+          kotobaInput: profile.kotobaInput as KotobaInput,
+          hints: profile.hintsEnabled,
+          furigana: profile.furiganaEnabled,
+          wordAudio: profile.wordAudioEnabled,
+          keyClicks: profile.keyClicksEnabled,
+          autoAdvance: profile.autoAdvance as AutoAdvance,
+        })
       },
     }),
     {

@@ -51,6 +51,7 @@ import { getUnlockedKotobaWordIds, JLPT_RANK } from '@/engine/kotoba-progression
 import { useWordMasteryStore } from '@/stores/word-mastery.store'
 import { useUserStore } from '@/stores/user.store'
 import { useOnboardingStore } from '@/stores/onboarding.store'
+import { useSyncContext } from '@/components/performance/sync-manager'
 import { DEMO_WORD_MASTERY_SCORES, DEMO_WORD_MANUAL_UNLOCK_IDS } from '@/data/demo/demo-mastery'
 import type { MasteryScoreMap } from '@/types/game.types'
 import { getN5DojoData, loadKotobaDojoData } from '@/data/words/kotoba-dojo-data'
@@ -86,6 +87,7 @@ function ReadyShell({ demo }: { demo?: boolean }): ReactNode {
 
   const scores = demo ? demoScores : storeScores
   const manuallyUnlockedWords = demo ? demoUnlocks : storeUnlocks
+  const { flushDirty } = useSyncContext()
   const { currentTip: kotobaTip, advance: advanceTip } = useKotobaTips()
 
   const profileLevel = useUserStore((s) => s.profile?.jlptLevel)
@@ -188,9 +190,11 @@ function ReadyShell({ demo }: { demo?: boolean }): ReactNode {
         setDemoUnlocks((prev) => (prev.includes(wordId) ? prev : [...prev, wordId]))
       } else {
         useWordMasteryStore.getState().reset(wordId)
+        useWordMasteryStore.getState().markScoreDirty(wordId)
+        void flushDirty()
       }
     },
-    [demo],
+    [demo, flushDirty],
   )
 
   const handleMarkMastered = useCallback(
@@ -202,9 +206,10 @@ function ReadyShell({ demo }: { demo?: boolean }): ReactNode {
         }))
       } else {
         useWordMasteryStore.getState().setScore(wordId, KOTOBA_MASTERY_THRESHOLD + 5)
+        void flushDirty()
       }
     },
-    [demo],
+    [demo, flushDirty],
   )
 
   const handleIndividualUnlock = useCallback(
@@ -213,10 +218,12 @@ function ReadyShell({ demo }: { demo?: boolean }): ReactNode {
         setDemoUnlocks((prev) => (prev.includes(wordId) ? prev : [...prev, wordId]))
       } else {
         useWordMasteryStore.getState().addManualUnlock(wordId)
+        useWordMasteryStore.getState().markUnlockDirty(wordId)
+        void flushDirty()
       }
       setPendingUnlockWord(null)
     },
-    [demo],
+    [demo, flushDirty],
   )
 
   const handleBulkUnlockConfirm = useCallback(
@@ -228,11 +235,16 @@ function ReadyShell({ demo }: { demo?: boolean }): ReactNode {
           return Array.from(set)
         })
       } else {
-        useWordMasteryStore.getState().addManualUnlocks(wordIds)
+        const store = useWordMasteryStore.getState()
+        store.addManualUnlocks(wordIds)
+        for (const id of wordIds) {
+          store.markUnlockDirty(id)
+        }
+        void flushDirty()
       }
       setBulkScope(null)
     },
-    [demo],
+    [demo, flushDirty],
   )
 
   const handleUnlockGroup = useCallback(
@@ -269,11 +281,13 @@ function ReadyShell({ demo }: { demo?: boolean }): ReactNode {
         const store = useWordMasteryStore.getState()
         for (const id of wordIds) {
           store.reset(id)
+          store.markScoreDirty(id)
         }
+        void flushDirty()
       }
       setBulkResetScope(null)
     },
-    [demo],
+    [demo, flushDirty],
   )
 
   const handleBulkMarkMastered = useCallback(
@@ -289,10 +303,11 @@ function ReadyShell({ demo }: { demo?: boolean }): ReactNode {
         for (const id of wordIds) {
           store.setScore(id, KOTOBA_MASTERY_THRESHOLD + 5)
         }
+        void flushDirty()
       }
       setBulkResetScope(null)
     },
-    [demo],
+    [demo, flushDirty],
   )
 
   const handleResetLevel = useCallback((): void => {

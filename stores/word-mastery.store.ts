@@ -46,6 +46,7 @@ type WordMasteryActions = {
   addManualUnlock: (wordId: string) => void
   addManualUnlocks: (wordIds: readonly string[]) => void
   setHasHydrated: (hydrated: boolean) => void
+  markScoreDirty: (wordId: string) => void
   markUnlockDirty: (wordId: string) => void
   getDirtyScoreSnapshot: () => Array<{ word_id: string; score: number }>
   getDirtyUnlockIds: () => string[]
@@ -175,6 +176,14 @@ export const useWordMasteryStore = create<WordMasteryState & WordMasteryActions>
 
       setHasHydrated: (hydrated: boolean): void => {
         set({ hasHydrated: hydrated })
+      },
+
+      markScoreDirty: (wordId: string): void => {
+        set((state) => {
+          const newDirty = new Map(state.dirtyVersions)
+          newDirty.set(wordId, (newDirty.get(wordId) ?? 0) + 1)
+          return { dirtyVersions: newDirty }
+        })
       },
 
       markUnlockDirty: (wordId: string): void => {

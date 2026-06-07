@@ -63,6 +63,36 @@ describe('Kana integration', () => {
       })
       expect(error).toBeNull()
     })
+
+    it('checkpoint_mastery round-trip: scores persist on reload', async () => {
+      if (skipIfNotRunning(ctx)) return
+      const { data: snapshot } = await ctx.userClient!.rpc('load_mastery_snapshot')
+      const epoch = ((snapshot as Record<string, unknown>)?.['epoch'] as number) ?? 0
+
+      await ctx.userClient!.rpc('checkpoint_mastery', {
+        p_epoch: epoch,
+        p_rows: [{ id: 'h-a', score: 42, learning_score: 5 }],
+      })
+
+      const { data: reloaded } = await ctx.userClient!.rpc('load_mastery_snapshot')
+      const scores = (reloaded as Record<string, unknown>)?.['scores'] as Record<string, unknown>[]
+      const found = scores?.find((s) => s['character_id'] === 'h-a')
+      expect(found).toBeTruthy()
+      expect(found?.['score']).toBe(42)
+    })
+
+    it('checkpoint_manual_unlocks round-trip: unlocks persist on reload', async () => {
+      if (skipIfNotRunning(ctx)) return
+      await ctx.userClient!.rpc('checkpoint_manual_unlocks', {
+        p_epoch: 1,
+        p_ids: ['h-e', 'h-o'],
+      })
+
+      const { data: reloaded } = await ctx.userClient!.rpc('load_mastery_snapshot')
+      const unlockIds = (reloaded as Record<string, unknown>)?.['unlock_ids'] as string[]
+      expect(unlockIds).toContain('h-e')
+      expect(unlockIds).toContain('h-o')
+    })
   })
 
   describe('reset', () => {

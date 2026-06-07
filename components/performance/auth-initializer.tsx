@@ -19,6 +19,7 @@ import { createBrowserSupabaseClient } from '@/services/supabase-browser'
 import { getUser } from '@/services/auth.service'
 import { loadProfile } from '@/services/profile.service'
 import { useUserStore } from '@/stores/user.store'
+import { useSettingsStore } from '@/stores/settings.store'
 import { useDailyCapStore } from '@/stores/daily-cap.store'
 import { setStorageUserId, resetStoresForAuthChange } from '@/stores/scoped-storage'
 
@@ -52,6 +53,7 @@ export function AuthInitializer(): ReactNode {
 
         if (profileResult.ok) {
           useUserStore.getState().setProfile(profileResult.data)
+          useSettingsStore.getState().hydrateFromProfile(profileResult.data)
         } else {
           useUserStore.getState().setProfileLoaded(true)
         }
@@ -90,6 +92,7 @@ export function AuthInitializer(): ReactNode {
           if (!mounted || activeUserId !== userId) return
           if (result.ok) {
             useUserStore.getState().setProfile(result.data)
+            useSettingsStore.getState().hydrateFromProfile(result.data)
           } else {
             useUserStore.getState().setProfileLoaded(true)
           }

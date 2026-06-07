@@ -40,6 +40,13 @@ function mapRowToProfile(row: ProfileRow): UserProfile {
     username: str(row, 'username', ''),
     jlptLevel: str(row, 'jlpt_level', 'N5') as UserProfile['jlptLevel'],
     inputMode: str(row, 'input_mode', 'tap') as UserProfile['inputMode'],
+    inputDirection: str(row, 'input_direction', 'alternate') as UserProfile['inputDirection'],
+    kotobaInput: str(row, 'kotoba_input', 'readings') as UserProfile['kotobaInput'],
+    hintsEnabled: bool(row, 'hints_enabled', true),
+    furiganaEnabled: bool(row, 'furigana_enabled', true),
+    wordAudioEnabled: bool(row, 'word_audio_enabled', true),
+    keyClicksEnabled: bool(row, 'key_clicks_enabled', false),
+    autoAdvance: str(row, 'auto_advance', 'delayed') as UserProfile['autoAdvance'],
     onboardingComplete: bool(row, 'onboarding_complete', false),
     notificationsEnabled: bool(row, 'notifications_enabled', false),
     distanceUnit: str(row, 'distance_unit', 'metric') as UserProfile['distanceUnit'],
@@ -80,6 +87,13 @@ export async function updateProfile(
     username: string
     jlpt_level: string
     input_mode: string
+    input_direction: string
+    kotoba_input: string
+    hints_enabled: boolean
+    furigana_enabled: boolean
+    word_audio_enabled: boolean
+    key_clicks_enabled: boolean
+    auto_advance: string
     onboarding_complete: boolean
     notifications_enabled: boolean
     distance_unit: string

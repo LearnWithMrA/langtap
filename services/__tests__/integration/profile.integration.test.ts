@@ -103,4 +103,38 @@ describe('Profile integration', () => {
       .eq('id', ctx.testUserId!)
     expect(error !== null || true).toBe(true)
   })
+
+  it('settings round-trip: updateProfile persists settings to server', async () => {
+    if (skipIfNotRunning(ctx)) return
+
+    const { error: updateErr } = await ctx
+      .userClient!.from('profiles')
+      .update({
+        input_mode: 'swipe',
+        input_direction: 'romaji-to-kana',
+        kotoba_input: 'kanji',
+        hints_enabled: false,
+        furigana_enabled: false,
+        word_audio_enabled: false,
+        key_clicks_enabled: true,
+        auto_advance: 'instant',
+      })
+      .eq('id', ctx.testUserId!)
+    expect(updateErr).toBeNull()
+
+    const { data: profile, error: loadErr } = await ctx
+      .userClient!.from('profiles')
+      .select('*')
+      .eq('id', ctx.testUserId!)
+      .single()
+    expect(loadErr).toBeNull()
+    expect(profile.input_mode).toBe('swipe')
+    expect(profile.input_direction).toBe('romaji-to-kana')
+    expect(profile.kotoba_input).toBe('kanji')
+    expect(profile.hints_enabled).toBe(false)
+    expect(profile.furigana_enabled).toBe(false)
+    expect(profile.word_audio_enabled).toBe(false)
+    expect(profile.key_clicks_enabled).toBe(true)
+    expect(profile.auto_advance).toBe('instant')
+  })
 })

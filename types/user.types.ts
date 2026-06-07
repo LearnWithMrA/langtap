@@ -35,6 +35,13 @@ export type UserProfile = {
   username: string
   jlptLevel: JlptLevel
   inputMode: InputMode
+  inputDirection: 'kana-to-romaji' | 'romaji-to-kana' | 'alternate'
+  kotobaInput: 'readings' | 'kanji'
+  hintsEnabled: boolean
+  furiganaEnabled: boolean
+  wordAudioEnabled: boolean
+  keyClicksEnabled: boolean
+  autoAdvance: 'instant' | 'delayed'
   onboardingComplete: boolean
   notificationsEnabled: boolean
   distanceUnit: 'metric' | 'imperial'

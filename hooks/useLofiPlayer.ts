@@ -66,6 +66,8 @@ export function useLofiPlayer(): {
   const [volume, setVolumeState] = useState(DEFAULT_VOLUME)
   const queueRef = useRef<LofiTrack[]>(shuffleArray(LOFI_TRACKS))
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const gainRef = useRef<GainNode | null>(null)
+  const ctxRef = useRef<AudioContext | null>(null)
   const initializedRef = useRef(false)
 
   const currentTrack = isPlaying ? (queueRef.current[trackIndex] ?? null) : null
@@ -85,8 +87,8 @@ export function useLofiPlayer(): {
     const clamped = Math.max(0, Math.min(1, vol))
     setVolumeState(clamped)
     writeVolume(clamped)
-    if (audioRef.current) {
-      audioRef.current.volume = clamped
+    if (gainRef.current) {
+      gainRef.current.gain.value = clamped
     }
   }, [])
 
@@ -97,9 +99,26 @@ export function useLofiPlayer(): {
 
       if (!audioRef.current) {
         const audio = new Audio()
-        audio.volume = readVolume()
+        audio.crossOrigin = 'anonymous'
         audio.addEventListener('ended', () => advanceToNext())
         audioRef.current = audio
+
+        try {
+          const ctx = new AudioContext()
+          const source = ctx.createMediaElementSource(audio)
+          const gain = ctx.createGain()
+          gain.gain.value = readVolume()
+          source.connect(gain)
+          gain.connect(ctx.destination)
+          ctxRef.current = ctx
+          gainRef.current = gain
+        } catch {
+          audio.volume = readVolume()
+        }
+      }
+
+      if (ctxRef.current?.state === 'suspended') {
+        void ctxRef.current.resume()
       }
 
       const audio = audioRef.current

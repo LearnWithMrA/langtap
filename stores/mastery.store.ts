@@ -37,6 +37,7 @@ type MasteryActions = {
   getLearningScore: (characterId: string) => number
   hasEncountered: (characterId: string) => boolean
   setHasHydrated: (hydrated: boolean) => void
+  markScoreDirty: (characterId: string) => void
   markUnlockDirty: (characterId: string) => void
   getDirtyScoreSnapshot: () => Array<{
     character_id: string
@@ -160,6 +161,14 @@ export const useMasteryStore = create<MasteryState & MasteryActions>()(
 
       setHasHydrated: (hydrated: boolean): void => {
         set({ hasHydrated: hydrated })
+      },
+
+      markScoreDirty: (characterId: string): void => {
+        set((state) => {
+          const newDirty = new Map(state.dirtyVersions)
+          newDirty.set(characterId, (newDirty.get(characterId) ?? 0) + 1)
+          return { dirtyVersions: newDirty }
+        })
       },
 
       markUnlockDirty: (characterId: string): void => {

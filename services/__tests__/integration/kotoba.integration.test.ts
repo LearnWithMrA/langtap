@@ -63,6 +63,35 @@ describe('Kotoba integration', () => {
       })
       expect(error).toBeNull()
     })
+
+    it('checkpoint_word_mastery round-trip: scores persist on reload', async () => {
+      if (skipIfNotRunning(ctx)) return
+      const { data: snapshot } = await ctx.userClient!.rpc('load_word_mastery_snapshot')
+      const epoch = ((snapshot as Record<string, unknown>)?.['epoch'] as number) ?? 0
+
+      await ctx.userClient!.rpc('checkpoint_word_mastery', {
+        p_epoch: epoch,
+        p_rows: [{ id: 'n5-iu-001', score: 25 }],
+      })
+
+      const { data: reloaded } = await ctx.userClient!.rpc('load_word_mastery_snapshot')
+      const scores = (reloaded as Record<string, unknown>)?.['scores'] as Record<string, unknown>[]
+      const found = scores?.find((s) => s['word_id'] === 'n5-iu-001')
+      expect(found).toBeTruthy()
+      expect(found?.['score']).toBe(25)
+    })
+
+    it('checkpoint_word_manual_unlocks round-trip: unlocks persist on reload', async () => {
+      if (skipIfNotRunning(ctx)) return
+      await ctx.userClient!.rpc('checkpoint_word_manual_unlocks', {
+        p_epoch: 1,
+        p_ids: ['n5-iu-003'],
+      })
+
+      const { data: reloaded } = await ctx.userClient!.rpc('load_word_mastery_snapshot')
+      const unlockIds = (reloaded as Record<string, unknown>)?.['unlock_ids'] as string[]
+      expect(unlockIds).toContain('n5-iu-003')
+    })
   })
 
   describe('reset', () => {

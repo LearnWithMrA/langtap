@@ -150,6 +150,10 @@ export function GameHomeClient(): ReactNode {
   const { hasSeen: hasSeenDemoHome, markSeen: markDemoHomeSeen } = useDialogueSeen('demo-home')
   const showDemoHomeDialogue = isGuest && !hasSeenDemoHome
 
+  const { hasSeen: hasSeenFlamePrompt, markSeen: markFlamePromptSeen } =
+    useDialogueSeen('home-flame-prompt')
+  const showFlamePrompt = !isGuest && !hasSeenFlamePrompt
+
   return (
     <main className="overflow-y-auto min-h-svh px-3 sm:px-4 mt-[72px] mb-8">
       {showDemoHomeDialogue && (
@@ -161,6 +165,19 @@ export function GameHomeClient(): ReactNode {
               mascotPose={DIALOGUE_SCRIPTS['demo-home'].mascotPose}
               theme="blue"
               onDismiss={markDemoHomeSeen}
+            />
+          </div>
+        </div>
+      )}
+      {showFlamePrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-warm-800/40" />
+          <div className="relative w-full max-w-lg">
+            <DialogueOverlay
+              messages={DIALOGUE_SCRIPTS['home-flame-prompt'].messages}
+              mascotPose={DIALOGUE_SCRIPTS['home-flame-prompt'].mascotPose}
+              theme="blue"
+              onDismiss={markFlamePromptSeen}
             />
           </div>
         </div>
@@ -179,10 +196,6 @@ export function GameHomeClient(): ReactNode {
           ) : (
             <StreakCalendar heatmap={displayHeatmap} streakCount={displayStreakCount} />
           )}
-          <p className="text-xs text-warm-500 text-center mt-2 px-2">
-            Practice at least 10m to light today&apos;s flame. Don&apos;t worry if you miss a day,
-            we&apos;ll save you!
-          </p>
         </div>
         <div className="flex-1 flex flex-col lg:flex-row gap-4">
           <div className="lg:flex-1">

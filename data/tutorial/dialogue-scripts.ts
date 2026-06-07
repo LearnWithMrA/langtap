@@ -28,6 +28,7 @@ export type DialogueScriptTrigger =
   | 'demo-kana-dojo'
   | 'demo-kotoba-dojo'
   | 'demo-home'
+  | 'home-flame-prompt'
 
 export type DialogueTrigger =
   | DialogueScriptTrigger
@@ -167,6 +168,13 @@ export const DIALOGUE_SCRIPTS: Record<DialogueScriptTrigger, DialogueScript> = {
     mascotPose: 'neutral',
     messages: [
       'This is your dashboard. Your streak calendar, distance stats, and leaderboard position will all show here once you create an account.',
+    ],
+  },
+
+  'home-flame-prompt': {
+    mascotPose: 'encouraging',
+    messages: [
+      "Practice at least 10m to light today's flame on the calendar. Don't worry if you miss a day, we'll save you!",
     ],
   },
 }
