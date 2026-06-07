@@ -2,11 +2,12 @@
 // ─────────────────────────────────────────────
 // File: components/profile/__tests__/reset-progress.test.tsx
 // Purpose: Tests for the ResetProgress component. Covers:
-//          - Per-domain resets (Kana/Kotoba) still work
+//          - Per-domain resets (Kana/Kotoba) with typed RESET confirmation
 //          - Factory reset typed confirmation (RESET required, case-sensitive)
-//          - Factory reset clears all stores and localStorage on success
-//          - Factory reset does not clear state on RPC failure (atomicity)
+//          - All resets clear stores and localStorage on success
+//          - Resets do not clear state on RPC failure (atomicity)
 //          - Epoch values update from RPC response
+//          - Onboarding unlocks preserved (post-onboarding state)
 //          - Dialog open/close behaviour
 // Depends on: components/profile/reset-progress.tsx
 // ─────────────────────────────────────────────
@@ -23,6 +24,7 @@ const mockWordMasteryResetAll = vi.fn()
 const mockWordMasterySetEpoch = vi.fn()
 const mockCounterResetAll = vi.fn()
 const mockUnlockRecompute = vi.fn()
+const MOCK_ONBOARDING_IDS = ['h-a', 'h-i', 'h-u']
 
 vi.mock('@/stores/mastery.store', () => ({
   useMasteryStore: Object.assign(
@@ -70,6 +72,17 @@ vi.mock('@/stores/unlock.store', () => ({
   ),
 }))
 
+vi.mock('@/stores/onboarding.store', () => ({
+  useOnboardingStore: Object.assign(
+    vi.fn(() => ({})),
+    {
+      getState: vi.fn(() => ({
+        selectedCharacterIds: MOCK_ONBOARDING_IDS,
+      })),
+    },
+  ),
+}))
+
 // ── Service mocks ────────────────────────────
 
 const mockResetAllMastery = vi.fn()
@@ -94,9 +107,11 @@ vi.mock('@/hooks/useSyncCheckpoint', () => ({
 }))
 
 const mockClearAllDialoguesSeen = vi.fn()
+const mockClearDialoguesByPrefix = vi.fn()
 
 vi.mock('@/hooks/useDialogueSeen', () => ({
   clearAllDialoguesSeen: (...args: unknown[]): unknown => mockClearAllDialoguesSeen(...args),
+  clearDialoguesByPrefix: (...args: unknown[]): unknown => mockClearDialoguesByPrefix(...args),
 }))
 
 // ── Import under test (after mocks) ─────────
@@ -107,6 +122,17 @@ import { ResetProgress } from '@/components/profile/reset-progress'
 
 function renderComponent(): ReturnType<typeof render> {
   return render(<ResetProgress />)
+}
+
+async function openAndConfirm(
+  user: ReturnType<typeof userEvent.setup>,
+  buttonLabel: string,
+  confirmLabel: string,
+): Promise<void> {
+  fireEvent.click(screen.getByText(buttonLabel))
+  const input = screen.getByPlaceholderText('RESET')
+  await user.type(input, 'RESET')
+  fireEvent.click(screen.getByText(confirmLabel))
 }
 
 // ── Tests ────────────────────────────────────
@@ -127,39 +153,64 @@ describe('ResetProgress', () => {
     })
   })
 
-  describe('per-domain resets still work', () => {
-    it('opens kana reset modal and clears kana stores on success', async () => {
+  describe('per-domain reset: typed confirmation', () => {
+    it('kana reset requires typed RESET to confirm', async () => {
       mockResetAllMastery.mockResolvedValue({ ok: true, data: { newEpoch: 4 } })
       renderComponent()
 
       fireEvent.click(screen.getByText('Reset Kana'))
+      expect(screen.getByText('Reset kana progress?')).toBeDefined()
 
-      await waitFor(() => {
-        expect(screen.getByText('Reset kana progress?')).toBeDefined()
-      })
+      const confirmBtn = screen.getByText('Reset kana')
+      expect(confirmBtn.hasAttribute('disabled')).toBe(true)
 
-      fireEvent.click(screen.getByText('Reset'))
+      const user = userEvent.setup()
+      const input = screen.getByPlaceholderText('RESET')
+      await user.type(input, 'RESET')
+
+      expect(confirmBtn.hasAttribute('disabled')).toBe(false)
+    })
+
+    it('kotoba reset requires typed RESET to confirm', async () => {
+      mockResetAllWordMastery.mockResolvedValue({ ok: true, data: { newEpoch: 7 } })
+      renderComponent()
+
+      fireEvent.click(screen.getByText('Reset Kotoba'))
+      expect(screen.getByText('Reset word progress?')).toBeDefined()
+
+      const confirmBtn = screen.getByText('Reset kotoba')
+      expect(confirmBtn.hasAttribute('disabled')).toBe(true)
+
+      const user = userEvent.setup()
+      const input = screen.getByPlaceholderText('RESET')
+      await user.type(input, 'RESET')
+
+      expect(confirmBtn.hasAttribute('disabled')).toBe(false)
+    })
+
+    it('kana reset clears kana stores and preserves onboarding unlocks', async () => {
+      mockResetAllMastery.mockResolvedValue({ ok: true, data: { newEpoch: 4 } })
+      const user = userEvent.setup()
+      renderComponent()
+
+      await openAndConfirm(user, 'Reset Kana', 'Reset kana')
 
       await waitFor(() => {
         expect(mockFlushDirty).toHaveBeenCalled()
         expect(mockResetAllMastery).toHaveBeenCalled()
         expect(mockMasteryResetAll).toHaveBeenCalled()
         expect(mockMasterySetEpoch).toHaveBeenCalledWith(4)
-        expect(mockUnlockRecompute).toHaveBeenCalledWith({}, new Set())
+        expect(mockCounterResetAll).toHaveBeenCalled()
+        expect(mockUnlockRecompute).toHaveBeenCalledWith({}, new Set(MOCK_ONBOARDING_IDS))
       })
     })
 
-    it('opens kotoba reset modal and clears word stores on success', async () => {
+    it('kotoba reset clears word stores on success', async () => {
       mockResetAllWordMastery.mockResolvedValue({ ok: true, data: { newEpoch: 7 } })
+      const user = userEvent.setup()
       renderComponent()
 
-      fireEvent.click(screen.getByText('Reset Kotoba'))
-
-      await waitFor(() => {
-        expect(screen.getByText('Reset word progress?')).toBeDefined()
-      })
-
-      fireEvent.click(screen.getByText('Reset'))
+      await openAndConfirm(user, 'Reset Kotoba', 'Reset kotoba')
 
       await waitFor(() => {
         expect(mockFlushDirty).toHaveBeenCalled()
@@ -255,10 +306,7 @@ describe('ResetProgress', () => {
       const user = userEvent.setup()
       renderComponent()
 
-      fireEvent.click(screen.getByText('Full Reset'))
-      const input = screen.getByPlaceholderText('RESET')
-      await user.type(input, 'RESET')
-      fireEvent.click(screen.getByText('Reset everything'))
+      await openAndConfirm(user, 'Full Reset', 'Reset everything')
 
       await waitFor(() => {
         expect(mockFlushDirty).toHaveBeenCalled()
@@ -271,7 +319,7 @@ describe('ResetProgress', () => {
         expect(mockWordMasteryResetAll).toHaveBeenCalled()
         expect(mockWordMasterySetEpoch).toHaveBeenCalledWith(5)
         expect(mockCounterResetAll).toHaveBeenCalled()
-        expect(mockUnlockRecompute).toHaveBeenCalledWith({}, new Set())
+        expect(mockUnlockRecompute).toHaveBeenCalledWith({}, new Set(MOCK_ONBOARDING_IDS))
         expect(mockClearAllDialoguesSeen).toHaveBeenCalled()
       })
 
@@ -290,10 +338,7 @@ describe('ResetProgress', () => {
       const user = userEvent.setup()
       renderComponent()
 
-      fireEvent.click(screen.getByText('Full Reset'))
-      const input = screen.getByPlaceholderText('RESET')
-      await user.type(input, 'RESET')
-      fireEvent.click(screen.getByText('Reset everything'))
+      await openAndConfirm(user, 'Full Reset', 'Reset everything')
 
       await waitFor(() => {
         expect(mockMasterySetEpoch).toHaveBeenCalledWith(10)
@@ -314,10 +359,7 @@ describe('ResetProgress', () => {
       const user = userEvent.setup()
       renderComponent()
 
-      fireEvent.click(screen.getByText('Full Reset'))
-      const input = screen.getByPlaceholderText('RESET')
-      await user.type(input, 'RESET')
-      fireEvent.click(screen.getByText('Reset everything'))
+      await openAndConfirm(user, 'Full Reset', 'Reset everything')
 
       await waitFor(() => {
         expect(mockFactoryReset).toHaveBeenCalled()
@@ -342,10 +384,7 @@ describe('ResetProgress', () => {
       const user = userEvent.setup()
       renderComponent()
 
-      fireEvent.click(screen.getByText('Full Reset'))
-      const input = screen.getByPlaceholderText('RESET')
-      await user.type(input, 'RESET')
-      fireEvent.click(screen.getByText('Reset everything'))
+      await openAndConfirm(user, 'Full Reset', 'Reset everything')
 
       await waitFor(() => {
         expect(screen.getByText('Failed to reset all progress.')).toBeDefined()
@@ -358,10 +397,7 @@ describe('ResetProgress', () => {
       const user = userEvent.setup()
       renderComponent()
 
-      fireEvent.click(screen.getByText('Full Reset'))
-      const input = screen.getByPlaceholderText('RESET')
-      await user.type(input, 'RESET')
-      fireEvent.click(screen.getByText('Reset everything'))
+      await openAndConfirm(user, 'Full Reset', 'Reset everything')
 
       await waitFor(() => {
         expect(screen.getByText(/Full reset failed/)).toBeDefined()
@@ -379,10 +415,7 @@ describe('ResetProgress', () => {
       const user = userEvent.setup()
       renderComponent()
 
-      fireEvent.click(screen.getByText('Full Reset'))
-      const input = screen.getByPlaceholderText('RESET')
-      await user.type(input, 'RESET')
-      fireEvent.click(screen.getByText('Reset everything'))
+      await openAndConfirm(user, 'Full Reset', 'Reset everything')
 
       await waitFor(() => {
         expect(mockFactoryReset).toHaveBeenCalled()
@@ -402,10 +435,7 @@ describe('ResetProgress', () => {
       const user = userEvent.setup()
       renderComponent()
 
-      fireEvent.click(screen.getByText('Full Reset'))
-      const input = screen.getByPlaceholderText('RESET')
-      await user.type(input, 'RESET')
-      fireEvent.click(screen.getByText('Reset everything'))
+      await openAndConfirm(user, 'Full Reset', 'Reset everything')
 
       await waitFor(() => {
         expect(mockFactoryReset).toHaveBeenCalled()

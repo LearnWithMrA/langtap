@@ -16,6 +16,7 @@ import { factoryReset } from '@/services/factory-reset.service'
 import { useMasteryStore } from '@/stores/mastery.store'
 import { useWordMasteryStore } from '@/stores/word-mastery.store'
 import { useUnlockStore } from '@/stores/unlock.store'
+import { useOnboardingStore } from '@/stores/onboarding.store'
 import { useCounterStore } from '@/stores/counter.store'
 import { useSyncCheckpoint } from '@/hooks/useSyncCheckpoint'
 import { clearAllDialoguesSeen, clearDialoguesByPrefix } from '@/hooks/useDialogueSeen'
@@ -63,8 +64,9 @@ export function useResetActions(): {
 
       useMasteryStore.getState().resetAll()
       useMasteryStore.getState().setEpoch(result.data.newEpoch)
-      useUnlockStore.getState().recompute({}, new Set())
       useCounterStore.getState().resetAll()
+      const onboardingIds = useOnboardingStore.getState().selectedCharacterIds
+      useUnlockStore.getState().recompute({}, new Set(onboardingIds))
       clearDialoguesByPrefix(['kana-', 'sokuon-', 'longvowel-', 'long-vowel-', 'dual-mnemonic-'])
       if (typeof window !== 'undefined') {
         window.localStorage.removeItem(DOJO_KANA_TIP_KEY)
@@ -109,9 +111,8 @@ export function useResetActions(): {
       useWordMasteryStore.getState().resetAll()
       useWordMasteryStore.getState().setEpoch(result.data.newWordMasteryEpoch)
       useCounterStore.getState().resetAll()
-      // Onboarding unlocks (preserved in onboarding store) merge back
-      // on next hydration: post-onboarding state, not pre-onboarding.
-      useUnlockStore.getState().recompute({}, new Set())
+      const onboardingIds = useOnboardingStore.getState().selectedCharacterIds
+      useUnlockStore.getState().recompute({}, new Set(onboardingIds))
       clearLocalProgressState()
       return { ok: true }
     } catch (err) {

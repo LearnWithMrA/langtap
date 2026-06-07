@@ -33,11 +33,14 @@ Format per entry:
 ## 2026-06-07 - Session 116
 
 **Sprint:** Off-sprint
-**Task completed:** Unlock state lost on refresh (bug fix), comprehensive server round-trip integration tests, integration test fixes
+**Task completed:** Unlock state lost on refresh (bug fix), per-domain reset upgrade (typed confirmation + post-onboarding state), comprehensive server round-trip integration tests, integration test fixes
 **Status:** Done
 
 ### Changes made
 - `components/performance/store-hydrator.tsx`: Fixed kana unlock state lost on refresh. After bootstrapping the unlock store from server data, server manual unlock IDs are now synced back to the onboarding store so the kana dojo (which reads from onboarding store, not unlock store) picks them up. Kotoba was not affected (it reads directly from word mastery store which is populated from server data).
+- `components/profile/reset-progress.tsx`: Upgraded per-domain resets (Reset Kana / Reset Kotoba) from simple confirm modal to typed "RESET" confirmation dialog, matching the Full Reset pattern. All three resets now use the same dialog component with target-specific copy. Removed Modal import (no longer needed).
+- `hooks/useResetActions.ts`: Both per-domain and factory resets now preserve onboarding unlocks immediately (pass onboarding selectedCharacterIds to unlock recompute instead of empty Set). Previously, unlocks showed as fully locked until next hydration.
+- `components/profile/__tests__/reset-progress.test.tsx`: Updated all tests for typed confirmation UI and onboarding unlock preservation. Added onboarding store mock. 18 tests.
 - `components/game/practice-banner.tsx`: (From interrupted session) Added 'home' variant with fire emoji icon and warm orange button for the practice prompt banner.
 - `components/layout/game-home-client.tsx`: (From interrupted session) Replaced full-screen DialogueOverlay with inline PracticeBanner for the "Practice at least 10m" home flame prompt.
 - New: `services/__tests__/integration/hydration-roundtrip.integration.test.ts` (13 tests): Full hydration round-trip tests. Kana: learning_score round-trip, mastery+learning combined, manual unlock round-trip, getUnlockedCharacterIds derivation, greatest-merge, cross-device simulation. Reset: reset_all_mastery clears scores/unlocks, checkpoint-after-reset uses new epoch. Factory reset: clears all progress, preserves settings. Kotoba: word mastery round-trip, word manual unlock round-trip, greatest-merge, cross-device.
@@ -49,7 +52,7 @@ Format per entry:
 - `docs/BACKEND.md`: Added onboarding store sync step to session flow diagram.
 
 ### Tests
-- All 1204 tests pass (94 files, 26 new tests vs session start)
+- All 1206 tests pass (94 files, 28 new tests vs session start)
 - All 79 integration tests verified against live local Supabase Docker
 - Test count: 68 -> 79 integration tests
 
