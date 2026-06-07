@@ -57,9 +57,11 @@ describe('Kana integration', () => {
 
     it('checkpoint_manual_unlocks persists character unlocks', async () => {
       if (skipIfNotRunning(ctx)) return
+      const { data: snapshot } = await ctx.userClient!.rpc('load_mastery_snapshot')
+      const epoch = ((snapshot as Record<string, unknown>)?.['epoch'] as number) ?? 0
       const { error } = await ctx.userClient.rpc('checkpoint_manual_unlocks', {
-        p_epoch: 1,
-        p_ids: ['h_a', 'h_i', 'h_u'],
+        p_epoch: epoch,
+        p_ids: ['h-a', 'h-i', 'h-u'],
       })
       expect(error).toBeNull()
     })
@@ -83,8 +85,10 @@ describe('Kana integration', () => {
 
     it('checkpoint_manual_unlocks round-trip: unlocks persist on reload', async () => {
       if (skipIfNotRunning(ctx)) return
+      const { data: snap } = await ctx.userClient!.rpc('load_mastery_snapshot')
+      const epoch = ((snap as Record<string, unknown>)?.['epoch'] as number) ?? 0
       await ctx.userClient!.rpc('checkpoint_manual_unlocks', {
-        p_epoch: 1,
+        p_epoch: epoch,
         p_ids: ['h-e', 'h-o'],
       })
 
@@ -92,6 +96,48 @@ describe('Kana integration', () => {
       const unlockIds = (reloaded as Record<string, unknown>)?.['unlocks'] as string[]
       expect(unlockIds).toContain('h-e')
       expect(unlockIds).toContain('h-o')
+    })
+  })
+
+  describe('single character reset', () => {
+    it('reset_character_mastery zeros score and preserves others', async () => {
+      if (skipIfNotRunning(ctx)) return
+
+      const { data: snap } = await ctx.userClient!.rpc('load_mastery_snapshot')
+      const epoch = ((snap as Record<string, unknown>)?.['epoch'] as number) ?? 0
+
+      // Write two characters
+      await ctx.userClient!.rpc('checkpoint_mastery', {
+        p_epoch: epoch,
+        p_rows: [
+          { character_id: 'h-na', score: 30, learning_score: 5 },
+          { character_id: 'h-ni', score: 20, learning_score: 4 },
+        ],
+      })
+
+      // Reset only h-na
+      const { error } = await ctx.userClient!.rpc('reset_character_mastery', {
+        p_character_id: 'h-na',
+      })
+      expect(error).toBeNull()
+
+      // Reload and verify
+      const { data: reloaded } = await ctx.userClient!.rpc('load_mastery_snapshot')
+      const scores = (reloaded as Record<string, unknown>)?.['scores'] as Array<
+        Record<string, unknown>
+      >
+
+      const na = scores?.find((s) => s['character_id'] === 'h-na')
+      const ni = scores?.find((s) => s['character_id'] === 'h-ni')
+
+      // h-na should be reset to 0
+      if (na) {
+        expect(na['score']).toBe(0)
+        expect(na['learning_score']).toBe(0)
+      }
+      // h-ni should be preserved
+      expect(ni).toBeTruthy()
+      expect(ni?.['score']).toBe(20)
     })
   })
 

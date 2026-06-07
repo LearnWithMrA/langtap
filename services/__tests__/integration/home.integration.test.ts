@@ -43,6 +43,32 @@ describe('Home integration', () => {
       expect(typeof (data as Record<string, unknown>)['total_today']).toBe('number')
     })
 
+    it('increment_daily_distance round-trip: events persist in database', async () => {
+      if (skipIfNotRunning(ctx)) return
+      const id1 = crypto.randomUUID()
+      const id2 = crypto.randomUUID()
+
+      await ctx.userClient.rpc('increment_daily_distance', {
+        p_metres: 10,
+        p_completion_id: id1,
+      })
+      await ctx.userClient.rpc('increment_daily_distance', {
+        p_metres: 7,
+        p_completion_id: id2,
+      })
+
+      // Verify events persisted via admin client (RLS blocks client reads)
+      const { data, error } = await ctx
+        .adminClient!.from('daily_cap_events')
+        .select('completion_id, metres')
+        .eq('user_id', ctx.testUserId!)
+      expect(error).toBeNull()
+      expect(data).toBeTruthy()
+      const ids = data!.map((r: Record<string, unknown>) => r.completion_id)
+      expect(ids).toContain(id1)
+      expect(ids).toContain(id2)
+    })
+
     it('increment_daily_distance deduplicates same completion_id', async () => {
       if (skipIfNotRunning(ctx)) return
       const completionId = crypto.randomUUID()

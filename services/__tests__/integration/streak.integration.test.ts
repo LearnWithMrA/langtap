@@ -63,16 +63,42 @@ describe('Streak integration', () => {
     })
   })
 
-  describe('practice session reads', () => {
-    it('user can read own practice activity events', async () => {
+  describe('practice session persistence', () => {
+    it('practice_sessions row persists with correct data after record', async () => {
       if (skipIfNotRunning(ctx)) return
-      const { data, error } = await ctx.userClient
-        .from('practice_activity_events')
+
+      // Record activity
+      const { data: result } = await ctx.userClient!.rpc('record_practice_activity', {
+        p_completion_id: crypto.randomUUID(),
+        p_characters_count: 25,
+      })
+      const localDate = (result as Record<string, unknown>)['local_date'] as string
+
+      // Read practice_sessions directly (simulating refresh/reload)
+      const { data: sessions, error } = await ctx
+        .userClient!.from('practice_sessions')
+        .select('local_date, characters_practiced')
+        .eq('user_id', ctx.testUserId!)
+        .eq('local_date', localDate)
+      expect(error).toBeNull()
+      expect(sessions).toBeTruthy()
+      expect(sessions!.length).toBeGreaterThanOrEqual(1)
+      const session = sessions![0] as Record<string, unknown>
+      expect((session['characters_practiced'] as number) ?? 0).toBeGreaterThanOrEqual(25)
+    })
+
+    it('practice_activity_events are accessible via admin', async () => {
+      if (skipIfNotRunning(ctx)) return
+      // practice_activity_events has no client SELECT policy (RPC-only access),
+      // so we verify via the admin client
+      const { data, error } = await ctx
+        .adminClient!.from('practice_activity_events')
         .select('*')
         .eq('user_id', ctx.testUserId!)
         .limit(5)
       expect(error).toBeNull()
       expect(data).toBeTruthy()
+      expect(data!.length).toBeGreaterThan(0)
     })
   })
 })

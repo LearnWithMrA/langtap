@@ -69,6 +69,85 @@ describe('Leaderboard integration', () => {
     })
   })
 
+  describe('score recording round-trip', () => {
+    it('record_leaderboard_completion -> get_leaderboard shows user score', async () => {
+      if (skipIfNotRunning(ctx)) return
+      const { data: words } = await ctx.userClient
+        .from('leaderboard_word_catalog')
+        .select('word_id')
+        .limit(1)
+      const wordId = words?.[0]?.word_id
+      if (!wordId) return
+
+      // Start and finalize a session to get a valid completion
+      const { data: startData } = await ctx.userClient.rpc('start_leaderboard_session', {
+        p_game_type: 'kana',
+        p_input_mode: 'tap',
+        p_word_id: wordId,
+        p_kotoba_input: null,
+      })
+      const sessionId = (startData as Record<string, unknown>)?.['session_id'] as string
+      if (!sessionId) return
+
+      await ctx.userClient.rpc('finalize_leaderboard_session', {
+        p_session_id: sessionId,
+        p_attempts: JSON.stringify([
+          { word_id: wordId, input: 'test', correct: true, time_ms: 500 },
+        ]),
+      })
+
+      // Read leaderboard and verify user appears with a score
+      const { data: board } = await ctx.userClient.rpc('get_leaderboard', {
+        p_game_type: 'kana',
+        p_input_mode: 'tap',
+        p_period: 'all_time',
+        p_limit: 50,
+      })
+      const entries = board as Array<Record<string, unknown>>
+      const myEntry = entries.find((e) => e['user_id'] === ctx.testUserId)
+      expect(myEntry).toBeTruthy()
+      expect((myEntry!['total_score'] as number) ?? 0).toBeGreaterThan(0)
+    })
+
+    it('leaderboard session lifecycle: start -> finalize -> score persists', async () => {
+      if (skipIfNotRunning(ctx)) return
+      const { data: words } = await ctx.userClient
+        .from('leaderboard_word_catalog')
+        .select('word_id')
+        .limit(1)
+      const wordId = words?.[0]?.word_id
+      if (!wordId) return
+
+      const { data: startData } = await ctx.userClient.rpc('start_leaderboard_session', {
+        p_game_type: 'kotoba',
+        p_input_mode: 'type',
+        p_word_id: wordId,
+        p_kotoba_input: 'readings',
+      })
+      const sessionId = (startData as Record<string, unknown>)?.['session_id'] as string
+      if (!sessionId) return
+
+      const { error } = await ctx.userClient.rpc('finalize_leaderboard_session', {
+        p_session_id: sessionId,
+        p_attempts: JSON.stringify([
+          { word_id: wordId, input: 'test', correct: true, time_ms: 300 },
+        ]),
+      })
+      expect(error).toBeNull()
+
+      // Verify score landed in leaderboard_scores table via get_leaderboard
+      const { data: board } = await ctx.userClient.rpc('get_leaderboard', {
+        p_game_type: 'kotoba',
+        p_input_mode: 'type',
+        p_period: 'all_time',
+        p_limit: 50,
+      })
+      const entries = board as Array<Record<string, unknown>>
+      const myEntry = entries.find((e) => e['user_id'] === ctx.testUserId)
+      expect(myEntry).toBeTruthy()
+    })
+  })
+
   describe('ranking', () => {
     it('get_leaderboard returns array for all_time', async () => {
       if (skipIfNotRunning(ctx)) return

@@ -33,29 +33,35 @@ Format per entry:
 ## 2026-06-07 - Session 116
 
 **Sprint:** Off-sprint
-**Task completed:** Unlock state lost on refresh (bug fix), hydration round-trip tests, integration test field name fixes
+**Task completed:** Unlock state lost on refresh (bug fix), comprehensive server round-trip integration tests, integration test fixes
 **Status:** Done
 
 ### Changes made
 - `components/performance/store-hydrator.tsx`: Fixed kana unlock state lost on refresh. After bootstrapping the unlock store from server data, server manual unlock IDs are now synced back to the onboarding store so the kana dojo (which reads from onboarding store, not unlock store) picks them up. Kotoba was not affected (it reads directly from word mastery store which is populated from server data).
 - `components/game/practice-banner.tsx`: (From interrupted session) Added 'home' variant with fire emoji icon and warm orange button for the practice prompt banner.
 - `components/layout/game-home-client.tsx`: (From interrupted session) Replaced full-screen DialogueOverlay with inline PracticeBanner for the "Practice at least 10m" home flame prompt.
-- New: `services/__tests__/integration/hydration-roundtrip.integration.test.ts` (12 tests): Full hydration round-trip tests for kana and kotoba. Covers: learning_score round-trip, mastery score + learning_score combined, manual unlock round-trip, getUnlockedCharacterIds derivation from snapshot data, greatest-merge preservation, cross-device simulation (manual unlock persists without localStorage). Also covers kotoba: word mastery round-trip, word manual unlock round-trip, greatest-merge, cross-device.
-- `services/__tests__/integration/kana.integration.test.ts`: Fixed wrong JSON field names: `id` -> `character_id` in checkpoint payloads, `unlock_ids` -> `unlocks` in snapshot reads. These matched the JS property name not the SQL column name, so checkpoints silently persisted nothing.
-- `services/__tests__/integration/kotoba.integration.test.ts`: Same field name fix: `id` -> `word_id` in checkpoint payloads, `unlock_ids` -> `unlocks` in snapshot reads.
+- New: `services/__tests__/integration/hydration-roundtrip.integration.test.ts` (13 tests): Full hydration round-trip tests. Kana: learning_score round-trip, mastery+learning combined, manual unlock round-trip, getUnlockedCharacterIds derivation, greatest-merge, cross-device simulation. Reset: reset_all_mastery clears scores/unlocks, checkpoint-after-reset uses new epoch. Factory reset: clears all progress, preserves settings. Kotoba: word mastery round-trip, word manual unlock round-trip, greatest-merge, cross-device.
+- `services/__tests__/integration/kana.integration.test.ts`: Fixed JSON field names (`id` -> `character_id`, `unlock_ids` -> `unlocks`), hardcoded epochs -> dynamic from snapshot. Added single character reset round-trip test (reset_character_mastery zeros score, preserves others).
+- `services/__tests__/integration/kotoba.integration.test.ts`: Fixed JSON field names (`id` -> `word_id`, `unlock_ids` -> `unlocks`), hardcoded epochs/IDs -> dynamic from catalog/snapshot. Added single word reset round-trip, reset_all_word_mastery verify scores zeroed.
+- `services/__tests__/integration/leaderboard.integration.test.ts`: Added leaderboard score recording round-trip (record completion -> get_leaderboard -> verify user appears with score). Added session lifecycle round-trip (start -> finalize -> verify score persists in get_leaderboard).
+- `services/__tests__/integration/streak.integration.test.ts`: Added practice_sessions row persistence verification after record_practice_activity. Fixed practice_activity_events read to use admin client (table has no client SELECT policy).
+- `services/__tests__/integration/home.integration.test.ts`: Added daily cap events persistence round-trip (increment -> verify events in database via admin). Fixed factory reset test.
+- `docs/BACKEND.md`: Added onboarding store sync step to session flow diagram.
 
 ### Tests
-- All 1193 tests pass (94 files, 15 new tests from hydration round-trip file)
-- Integration tests validated structurally (Supabase Docker not running during this session)
+- All 1204 tests pass (94 files, 26 new tests vs session start)
+- All 79 integration tests verified against live local Supabase Docker
+- Test count: 68 -> 79 integration tests
 
 ### Next task
 Sprint 16: Analytics (Vercel Analytics + custom event tracking)
 
 ### Notes
 - Root cause of unlock-state-lost-on-refresh: the kana dojo reads manual unlocks from `onboarding.store.selectedCharacterIds` (localStorage-backed), while the store-hydrator loaded server manual unlock IDs into the unlock store but never synced them back to the onboarding store. On cross-device login or localStorage clear, manual unlocks were lost despite existing on the server. Kotoba was not affected because it reads from `wordMasteryStore.manuallyUnlockedWords` which IS populated from server data during hydration.
-- To run the new integration tests against real Supabase, run `supabase db reset` then `npx vitest run services/__tests__/integration/`.
-- The existing kana and kotoba integration tests had wrong JSON field names (`id` instead of `character_id`/`word_id`, `unlock_ids` instead of `unlocks`). These tests appeared to pass because Supabase Docker was likely not running (tests skip via `skipIfNotRunning`). With the field fixes, they will now actually validate data when Supabase is running.
-- The `practice-banner.tsx` and `game-home-client.tsx` changes are from the interrupted previous session. No tests existed for `game-home-client.tsx`.
+- Multiple pre-existing integration tests had wrong JSON field names (`id` instead of `character_id`/`word_id`, `unlock_ids` instead of `unlocks`) and hardcoded epoch values that caused silent skips or stale-epoch rejections. All fixed and verified against live Supabase.
+- Reset RPCs (`reset_all_mastery`, `reset_all_word_mastery`) zero scores in-place rather than deleting rows. Tests adjusted to verify zeroed scores rather than empty arrays.
+- `practice_activity_events` and `daily_cap_events` tables have no client SELECT policy (RPC-only access). Persistence verification tests use the admin client.
+- The `practice-banner.tsx` and `game-home-client.tsx` changes are from the interrupted previous session.
 
 ---
 

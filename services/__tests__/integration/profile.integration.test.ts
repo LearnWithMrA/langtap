@@ -64,6 +64,17 @@ describe('Profile integration', () => {
     expect((data as Record<string, unknown>)['ok']).toBe(true)
   })
 
+  it('change_username round-trip: username persists on reload', async () => {
+    if (skipIfNotRunning(ctx)) return
+    const { data: profile, error } = await ctx.userClient
+      .from('profiles')
+      .select('username')
+      .eq('id', ctx.testUserId!)
+      .single()
+    expect(error).toBeNull()
+    expect(profile.username).toBe('test_user_valid')
+  })
+
   it('change_username enforces cooldown on second change', async () => {
     if (skipIfNotRunning(ctx)) return
     const { data, error } = await ctx.userClient.rpc('change_username', {
