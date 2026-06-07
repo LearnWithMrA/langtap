@@ -86,9 +86,11 @@ vi.mock('@/hooks/useSyncCheckpoint', () => ({
 }))
 
 const mockClearAllDialoguesSeen = vi.fn()
+const mockClearDialoguesByPrefix = vi.fn()
 
 vi.mock('@/hooks/useDialogueSeen', () => ({
   clearAllDialoguesSeen: (...args: unknown[]): unknown => mockClearAllDialoguesSeen(...args),
+  clearDialoguesByPrefix: (...args: unknown[]): unknown => mockClearDialoguesByPrefix(...args),
 }))
 
 // ── Import under test ────────────────────────
@@ -119,6 +121,8 @@ describe('useResetActions', () => {
       expect(mockMasteryResetAll).toHaveBeenCalled()
       expect(mockMasterySetEpoch).toHaveBeenCalledWith(4)
       expect(mockUnlockRecompute).toHaveBeenCalledWith({}, new Set())
+      expect(mockCounterResetAll).toHaveBeenCalled()
+      expect(mockClearDialoguesByPrefix).toHaveBeenCalled()
     })
 
     it('does not update stores on service failure', async () => {
@@ -151,6 +155,7 @@ describe('useResetActions', () => {
       expect(mockResetAllWordMastery).toHaveBeenCalled()
       expect(mockWordMasteryResetAll).toHaveBeenCalled()
       expect(mockWordMasterySetEpoch).toHaveBeenCalledWith(7)
+      expect(mockClearDialoguesByPrefix).toHaveBeenCalled()
     })
 
     it('does not update stores on service failure', async () => {
@@ -230,7 +235,7 @@ describe('useResetActions', () => {
 
       expect(res!.ok).toBe(false)
       if (!res!.ok) {
-        expect(res!.error).toBe('Something went wrong. Please try again.')
+        expect(res!.error).toContain('Full reset failed')
       }
       expect(mockMasteryResetAll).not.toHaveBeenCalled()
     })

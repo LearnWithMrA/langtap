@@ -52,7 +52,7 @@ describe('factory-reset.service', () => {
 
     expect(result.ok).toBe(false)
     if (!result.ok) {
-      expect(result.error).toBe('Failed to reset all progress.')
+      expect(result.error).toContain('Full reset failed')
     }
   })
 
@@ -64,7 +64,7 @@ describe('factory-reset.service', () => {
 
     expect(result.ok).toBe(false)
     if (!result.ok) {
-      expect(result.error).toBe('Invalid factory reset response.')
+      expect(result.error).toContain('Full reset failed')
     }
   })
 
@@ -79,7 +79,7 @@ describe('factory-reset.service', () => {
 
     expect(result.ok).toBe(false)
     if (!result.ok) {
-      expect(result.error).toBe('Invalid factory reset response.')
+      expect(result.error).toContain('Full reset failed')
     }
   })
 
@@ -94,7 +94,7 @@ describe('factory-reset.service', () => {
 
     expect(result.ok).toBe(false)
     if (!result.ok) {
-      expect(result.error).toBe('Invalid factory reset response.')
+      expect(result.error).toContain('Full reset failed')
     }
   })
 })

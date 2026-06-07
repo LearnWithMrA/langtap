@@ -30,10 +30,10 @@ export async function resetAllMastery(): Promise<ServiceResult<ResetResult>> {
   const supabase = createBrowserSupabaseClient()
   const { data, error } = await supabase.rpc('reset_all_mastery')
 
-  if (error) return { ok: false, error: 'Failed to reset kana progress.' }
+  if (error) return { ok: false, error: `Kana reset failed (${error.code}): ${error.message}` }
 
   const result = parseResetResponse(data)
-  if (!result) return { ok: false, error: 'Invalid reset response.' }
+  if (!result) return { ok: false, error: 'Kana reset failed: invalid response from server.' }
 
   return { ok: true, data: result }
 }
@@ -42,10 +42,10 @@ export async function resetAllWordMastery(): Promise<ServiceResult<ResetResult>>
   const supabase = createBrowserSupabaseClient()
   const { data, error } = await supabase.rpc('reset_all_word_mastery')
 
-  if (error) return { ok: false, error: 'Failed to reset word progress.' }
+  if (error) return { ok: false, error: `Word reset failed (${error.code}): ${error.message}` }
 
   const result = parseResetResponse(data)
-  if (!result) return { ok: false, error: 'Invalid reset response.' }
+  if (!result) return { ok: false, error: 'Word reset failed: invalid response from server.' }
 
   return { ok: true, data: result }
 }

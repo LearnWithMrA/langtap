@@ -56,6 +56,14 @@ export function clearAllDialoguesSeen(): void {
   emitLocalChange()
 }
 
+export function clearDialoguesByPrefix(prefixes: readonly string[]): void {
+  if (typeof window === 'undefined') return
+  const current = getSeenSet()
+  const filtered = [...current].filter((key) => !prefixes.some((prefix) => key.startsWith(prefix)))
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered))
+  emitLocalChange()
+}
+
 // ── Hook ──────────────────────────────────────
 
 export function useDialogueSeen(trigger: DialogueTrigger): {

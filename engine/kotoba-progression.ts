@@ -1,9 +1,10 @@
 // ------------------------------------------------------------
 // File: engine/kotoba-progression.ts
 // Purpose: Kotoba word progression logic. Words unlock in steps
-//          of 6, flowing continuously through all levels.
-//          First 6 words always unlocked. Master all 6 (score 3+)
-//          to unlock the next 6. Pure functions only.
+//          of 6, flowing continuously through all levels. Step 0
+//          unlocks only for JLPT levels at or below the user's
+//          selection. Master all 6 (score 3+) to unlock the next
+//          6. Pure functions only.
 // Depends on: engine/constants.ts, types/word.types.ts
 // ------------------------------------------------------------
 
@@ -12,7 +13,7 @@ import type { WordMasteryScoreMap } from '@/types/word.types'
 
 // ── JLPT ordering ──────────────────────────
 
-const JLPT_RANK: Record<string, number> = { N5: 0, N4: 1, N3: 2, N2: 3, N1: 4 }
+export const JLPT_RANK: Record<string, number> = { N5: 0, N4: 1, N3: 2, N2: 3, N1: 4 }
 
 // ── Constants ───────────────────────────────
 
@@ -49,10 +50,11 @@ export function isKotobaStepUnlocked(
   allWordIds: readonly string[],
   wordScores: WordMasteryScoreMap,
   manuallyUnlockedWordIds: Set<string>,
+  step0Unlocked: boolean = true,
 ): boolean {
   const totalSteps = getStepCount(allWordIds)
   if (stepIndex < 0 || stepIndex >= totalSteps) return false
-  if (stepIndex === 0) return true
+  if (stepIndex === 0) return step0Unlocked
 
   const stepWords = getStepWordIds(allWordIds, stepIndex)
   if (stepWords.every((id) => manuallyUnlockedWordIds.has(id))) return true
@@ -66,11 +68,12 @@ export function getActiveKotobaStepIndex(
   allWordIds: readonly string[],
   wordScores: WordMasteryScoreMap,
   manuallyUnlockedWordIds: Set<string>,
+  step0Unlocked: boolean = true,
 ): number | null {
   const totalSteps = getStepCount(allWordIds)
   for (let i = 0; i < totalSteps; i++) {
     if (
-      isKotobaStepUnlocked(i, allWordIds, wordScores, manuallyUnlockedWordIds) &&
+      isKotobaStepUnlocked(i, allWordIds, wordScores, manuallyUnlockedWordIds, step0Unlocked) &&
       !isKotobaStepComplete(i, allWordIds, wordScores)
     ) {
       return i
@@ -85,11 +88,12 @@ export function getUnlockedKotobaWordIds(
   allWordIds: readonly string[],
   wordScores: WordMasteryScoreMap,
   manuallyUnlockedWordIds: Set<string>,
+  step0Unlocked: boolean = true,
 ): Set<string> {
   const result = new Set<string>()
   const totalSteps = getStepCount(allWordIds)
   for (let i = 0; i < totalSteps; i++) {
-    if (isKotobaStepUnlocked(i, allWordIds, wordScores, manuallyUnlockedWordIds)) {
+    if (isKotobaStepUnlocked(i, allWordIds, wordScores, manuallyUnlockedWordIds, step0Unlocked)) {
       for (const id of getStepWordIds(allWordIds, i)) {
         result.add(id)
       }

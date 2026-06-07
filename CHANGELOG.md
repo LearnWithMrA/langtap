@@ -30,6 +30,55 @@ Format per entry:
 
 ---
 
+## 2026-06-07 - Session 114
+
+**Sprint:** Off-sprint
+**Task completed:** 9 bug fixes, PracticeErrorShell, Supabase integration test suite
+**Status:** Done
+
+### Changes made
+- `components/performance/auth-initializer.tsx`: Fixed race condition where onAuthStateChange (TOKEN_REFRESHED) reset isServerHydrated for the same user, permanently blocking the practice screen. Same-user auth events now skip the full reset.
+- `components/performance/store-hydrator.tsx`: Added try/catch around loadServerData to ensure isServerHydrated is set even on error. Added dedup ref reset when isServerHydrated is externally cleared.
+- `components/layout/practice-client.tsx`: Added PracticeErrorShell with error codes (AUTH_LOADING, DAILY_CAP, PROFILE_LOAD, SERVER_HYDRATION) shown after 8s stuck. Trial banner gated to guests only (was showing "sign up" to authenticated users).
+- `components/layout/bug-report-button.tsx`: Resized from w-11/h-11 (44px) to w-7/h-7 (28px) in translucent pill container, matching lo-fi player height.
+- `components/layout/bug-report-modal.tsx`: Focus dialog panel itself instead of first form element, preventing select dropdown from auto-opening on mobile.
+- `services/factory-reset.service.ts`: Error messages now include Supabase error code and message.
+- `services/reset.service.ts`: Error messages now include Supabase error code and message for kana and word resets.
+- `hooks/useResetActions.ts`: resetKana and resetKotoba now do full category resets (scores, unlocks, counters, dialogue state, dojo tips, trial state, frozen prompts).
+- `hooks/useDialogueSeen.ts`: Added clearDialoguesByPrefix() for selective dialogue reset per category.
+- `components/profile/reset-progress.tsx`: Removed autoFocus from factory reset input (prevents iOS auto-zoom).
+- `components/profile/profile-client.tsx`: Removed autoFocus from delete account input.
+- `components/profile/account-settings.tsx`: Removed autoFocus from username input. Removed distance unit toggle (km/miles) entirely.
+- `engine/kotoba-progression.ts`: Added step0Unlocked parameter. Step 0 only auto-unlocks for JLPT levels at or below user's selection. Exported JLPT_RANK.
+- `components/layout/kotoba-dojo-client.tsx`: Computes step0Unlocked from user's profile/onboarding JLPT level vs active tab level.
+- `CLAUDE.md`: Added Section 5D (Supabase Integration Tests mandate).
+- `docs/BACKEND.md`: Added integration test mandate note.
+- `hooks/__tests__/useStreak.test.ts`: Fixed date-sensitive streak test to use relative dates.
+- New: `services/__tests__/integration/setup.ts` (shared test user setup)
+- New: `services/__tests__/integration/home.integration.test.ts` (6 tests: daily cap, leaderboard, practice sessions, factory reset)
+- New: `services/__tests__/integration/kana.integration.test.ts` (8 tests: mastery sync, reset, RLS, catalog)
+- New: `services/__tests__/integration/kotoba.integration.test.ts` (6 tests: word mastery sync, reset, RLS, catalog)
+- New: `services/__tests__/integration/profile.integration.test.ts` (6 tests: trigger, reads, username, RLS)
+- New: `services/__tests__/integration/leaderboard.integration.test.ts` (5 tests: session lifecycle, ranking)
+- New: `services/__tests__/integration/streak.integration.test.ts` (4 tests: activity recording, dedup, accumulation)
+- New: `services/__tests__/integration/bug-report.integration.test.ts` (4 tests: RLS for auth/admin/anon/read)
+- New: `services/__tests__/integration/edge-cases.integration.test.ts` (12 tests: epoch stale-write, cross-user RLS, username validation, account deletion cascade, anonymous restrictions)
+
+### Tests
+- All 1175 tests pass (55 new integration tests, 92 total test files)
+- Integration tests require Docker (local Supabase) and `supabase db reset` before running
+
+### Next task
+Sprint 16 - Analytics (Vercel Analytics + custom event tracking)
+
+### Notes
+- Auth race condition was the root cause of game window not loading: onAuthStateChange fires TOKEN_REFRESHED for the same user, which reset isServerHydrated. The store-hydrator's dedup guard prevented re-loading, leaving the practice client permanently blocked.
+- Integration tests found that the change_username RPC returns JSON responses (not PostgreSQL errors) for validation failures. Tests were updated to check data.ok instead of error.
+- Streak test was date-sensitive (hardcoded June 3-5, broke on June 7). Fixed with relative dates.
+- JLPT word unlock was pre-existing by design (Step 0 always unlocked), not a regression. Fixed to respect user's JLPT selection.
+
+---
+
 ## 2026-06-06 - Session 113
 
 **Sprint:** Off-sprint

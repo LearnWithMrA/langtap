@@ -10,6 +10,12 @@ Related: docs/AUTH.md, docs/SECURITY.md, docs/ARCHITECTURE.md
 Read this document before working in `services/`, writing SQL migrations,
 or touching any Supabase configuration.
 
+**Integration test mandate:** Any change to RPCs, RLS policies, tables, or
+migrations must include a corresponding integration test in
+`services/__tests__/integration/`. Run `supabase db reset` then
+`npx vitest run services/__tests__/integration/` to verify. See CLAUDE.md
+Section 5D for full rules.
+
 ---
 
 ## 1. Core Principle

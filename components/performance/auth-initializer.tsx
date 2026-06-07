@@ -70,6 +70,10 @@ export function AuthInitializer(): ReactNode {
 
       if (session?.user && !session.user.is_anonymous) {
         const userId = session.user.id
+
+        // Same user (token refresh): skip full reset to avoid breaking hydration
+        if (userId === activeUserId) return
+
         activeUserId = userId
         setStorageUserId(userId)
         resetStoresForAuthChange()

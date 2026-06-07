@@ -44,8 +44,10 @@ import {
 import { buildLockedWordSet, lockedIdsInGroup } from '@/components/dojo/kotoba-dojo-helpers'
 import { HelpCard, useKotobaTips } from '@/components/dojo/help-card'
 import { KOTOBA_MASTERY_THRESHOLD } from '@/engine/constants'
-import { getUnlockedKotobaWordIds } from '@/engine/kotoba-progression'
+import { getUnlockedKotobaWordIds, JLPT_RANK } from '@/engine/kotoba-progression'
 import { useWordMasteryStore } from '@/stores/word-mastery.store'
+import { useUserStore } from '@/stores/user.store'
+import { useOnboardingStore } from '@/stores/onboarding.store'
 import { DEMO_WORD_MASTERY_SCORES, DEMO_WORD_MANUAL_UNLOCK_IDS } from '@/data/demo/demo-mastery'
 import type { MasteryScoreMap } from '@/types/game.types'
 import { getN5DojoData, loadKotobaDojoData } from '@/data/words/kotoba-dojo-data'
@@ -83,6 +85,10 @@ function ReadyShell({ demo }: { demo?: boolean }): ReactNode {
   const manuallyUnlockedWords = demo ? demoUnlocks : storeUnlocks
   const { currentTip: kotobaTip, advance: advanceTip } = useKotobaTips()
 
+  const profileLevel = useUserStore((s) => s.profile?.jlptLevel)
+  const onboardingLevel = useOnboardingStore((s) => s.jlptLevel)
+  const userJlptLevel = (profileLevel ?? onboardingLevel ?? 'N5').toUpperCase()
+
   const n5Data = useMemo(() => getN5DojoData(), [])
   const [levelDataCache, setLevelDataCache] = useState<
     Readonly<Record<string, KotobaDojoLevelData>>
@@ -110,9 +116,12 @@ function ReadyShell({ demo }: { demo?: boolean }): ReactNode {
 
   const manualUnlockSet = useMemo(() => new Set(manuallyUnlockedWords), [manuallyUnlockedWords])
 
+  const step0Unlocked =
+    (JLPT_RANK[activeLevel.toUpperCase()] ?? 0) <= (JLPT_RANK[userJlptLevel] ?? 0)
+
   const progressionUnlockedIds = useMemo(
-    () => getUnlockedKotobaWordIds(allWordIds, scores, manualUnlockSet),
-    [allWordIds, scores, manualUnlockSet],
+    () => getUnlockedKotobaWordIds(allWordIds, scores, manualUnlockSet, step0Unlocked),
+    [allWordIds, scores, manualUnlockSet, step0Unlocked],
   )
 
   const lockedWordIds = useMemo(

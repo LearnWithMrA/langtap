@@ -62,8 +62,16 @@ export function StoreHydrator(): ReactNode {
   const isLoading = useUserStore((s) => s.isLoading)
   const lastUserIdRef = useRef<string | null>(null)
   const user = useUserStore((s) => s.user)
+  const isServerHydrated = useUserStore((s) => s.isServerHydrated)
 
   useSettingsSync()
+
+  // Clear dedup ref when server hydration is externally reset (user change)
+  useEffect(() => {
+    if (!isServerHydrated && lastUserIdRef.current !== null) {
+      lastUserIdRef.current = null
+    }
+  }, [isServerHydrated])
 
   // Step 1: Trigger localStorage rehydration for skipHydration stores
   useEffect(() => {
@@ -102,10 +110,18 @@ export function StoreHydrator(): ReactNode {
     lastUserIdRef.current = currentUserId
 
     async function loadServerData(): Promise<void> {
-      const [masteryResult, wordResult] = await Promise.all([
-        loadMasterySnapshot(),
-        loadWordMasterySnapshot(),
-      ])
+      let masteryResult: Awaited<ReturnType<typeof loadMasterySnapshot>>
+      let wordResult: Awaited<ReturnType<typeof loadWordMasterySnapshot>>
+
+      try {
+        ;[masteryResult, wordResult] = await Promise.all([
+          loadMasterySnapshot(),
+          loadWordMasterySnapshot(),
+        ])
+      } catch {
+        useUserStore.getState().setServerHydrated(true)
+        return
+      }
 
       // Kana mastery: epoch-aware merge
       if (masteryResult.ok) {

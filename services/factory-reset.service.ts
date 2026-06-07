@@ -38,13 +38,14 @@ export async function factoryReset(): Promise<ServiceResult<FactoryResetResult>>
     const supabase = createBrowserSupabaseClient()
     const { data, error } = await supabase.rpc('factory_reset')
 
-    if (error) return { ok: false, error: 'Failed to reset all progress.' }
+    if (error) return { ok: false, error: `Full reset failed (${error.code}): ${error.message}` }
 
     const result = parseFactoryResetResponse(data)
-    if (!result) return { ok: false, error: 'Invalid factory reset response.' }
+    if (!result) return { ok: false, error: 'Full reset failed: invalid response from server.' }
 
     return { ok: true, data: result }
-  } catch {
-    return { ok: false, error: 'Failed to reset all progress.' }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return { ok: false, error: `Full reset failed: ${message}` }
   }
 }

@@ -120,11 +120,10 @@ export function BugReportModal({ isOpen, onClose }: BugReportModalProps): ReactN
     }
   }, [isOpen])
 
-  // Focus first focusable element on open and after content swap (success view)
+  // Focus dialog panel on open to trap focus without triggering mobile pickers
   useEffect(() => {
     if (!isOpen) return
-    const firstFocusable = panelRef.current?.querySelector<HTMLElement>(FOCUSABLE_SELECTORS)
-    firstFocusable?.focus()
+    panelRef.current?.focus()
   }, [isOpen, status])
 
   useEffect(() => {
@@ -219,8 +218,9 @@ export function BugReportModal({ isOpen, onClose }: BugReportModalProps): ReactN
         role="dialog"
         aria-modal="true"
         aria-labelledby="bug-report-title"
+        tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        className="relative bg-surface-raised border border-border rounded-2xl p-6 w-full max-w-md shadow-lg"
+        className="relative bg-surface-raised border border-border rounded-2xl p-6 w-full max-w-md shadow-lg outline-none"
       >
         {showSuccess ? (
           <>

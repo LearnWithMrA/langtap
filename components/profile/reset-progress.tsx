@@ -242,7 +242,6 @@ export function ResetProgress(): ReactNode {
                 className="w-full border border-border rounded-lg px-3 py-2 text-sm text-warm-800 bg-surface-raised focus:outline-none focus:ring-2 focus:ring-red-300"
                 autoComplete="off"
                 spellCheck={false}
-                autoFocus
               />
               {factoryError !== null && <p className="text-xs text-red-600">{factoryError}</p>}
             </div>

@@ -364,7 +364,7 @@ describe('ResetProgress', () => {
       fireEvent.click(screen.getByText('Reset everything'))
 
       await waitFor(() => {
-        expect(screen.getByText('Something went wrong. Please try again.')).toBeDefined()
+        expect(screen.getByText(/Full reset failed/)).toBeDefined()
       })
     })
 

@@ -283,9 +283,13 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
 
   // ── Post-trial / post-kotoba banners ────────
   const showTrialBanner =
-    gameType === 'kana' && hasSeenTrial && !hasSeenTrialBanner && !activeDialogue
+    gameType === 'kana' && isGuest && hasSeenTrial && !hasSeenTrialBanner && !activeDialogue
   const showKotobaBanner =
-    gameType === 'kotoba' && hasSeenKotobaTrial && !hasSeenKotobaBanner && !activeDialogue
+    gameType === 'kotoba' &&
+    isGuest &&
+    hasSeenKotobaTrial &&
+    !hasSeenKotobaBanner &&
+    !activeDialogue
 
   // ── Daily distance cap tracking ─────────────
   const { increment: incrementDailyCap } = useDailyCap()
@@ -566,6 +570,35 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
   )
 }
 
+// -- Practice error shell ──────────────────────
+
+const STUCK_TIMEOUT_MS = 8000
+
+function PracticeErrorShell({ stuckGate }: { stuckGate: string }): ReactNode {
+  return (
+    <PracticeScene>
+      <div
+        role="alert"
+        className="bg-[#faf5e4] shadow-[0_6px_0_0_#d4c9b0] rounded-2xl w-full max-w-md mx-auto p-6"
+      >
+        <p className="text-base font-medium text-warm-800 mb-2">
+          Something went wrong loading the game.
+        </p>
+        <p className="text-sm text-warm-500 mb-4">
+          Error code: <span className="font-mono font-bold">{stuckGate}</span>
+        </p>
+        <button
+          type="button"
+          onClick={(): void => window.location.reload()}
+          className="bg-sage-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-sage-600 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-500"
+        >
+          Retry
+        </button>
+      </div>
+    </PracticeScene>
+  )
+}
+
 // -- Exported wrapper (cap gate before hooks) ──
 
 export function PracticeClient({ gameType = 'kana' }: { gameType?: GameType }): ReactNode {
@@ -573,9 +606,30 @@ export function PracticeClient({ gameType = 'kana' }: { gameType?: GameType }): 
   const { isLoading: dailyCapLoading, isCapped: isDailyCapped } = useDailyCap()
   const isProfileLoaded = useUserStore((s) => s.isProfileLoaded)
   const isServerHydrated = useUserStore((s) => s.isServerHydrated)
+  const [stuckGate, setStuckGate] = useState<string | null>(null)
 
   useStuckLoadingWarning({ authLoading, dailyCapLoading }, 'PracticeClient')
 
+  const isBlocked =
+    authLoading || (isAuthenticated && (dailyCapLoading || !isProfileLoaded || !isServerHydrated))
+
+  useEffect(() => {
+    if (!isBlocked) {
+      setStuckGate(null)
+      return
+    }
+
+    const timer = setTimeout(() => {
+      if (authLoading) setStuckGate('AUTH_LOADING')
+      else if (dailyCapLoading) setStuckGate('DAILY_CAP')
+      else if (!isProfileLoaded) setStuckGate('PROFILE_LOAD')
+      else if (!isServerHydrated) setStuckGate('SERVER_HYDRATION')
+    }, STUCK_TIMEOUT_MS)
+
+    return (): void => clearTimeout(timer)
+  }, [isBlocked, authLoading, dailyCapLoading, isProfileLoaded, isServerHydrated])
+
+  if (stuckGate) return <PracticeErrorShell stuckGate={stuckGate} />
   if (authLoading) return <PracticeScene>{null}</PracticeScene>
   if (isAuthenticated && dailyCapLoading) return <PracticeScene>{null}</PracticeScene>
   if (isAuthenticated && !isProfileLoaded) return <PracticeScene>{null}</PracticeScene>

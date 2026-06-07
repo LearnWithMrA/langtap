@@ -189,6 +189,27 @@ the code, not after it. Full testing rules in `docs/ARCHITECTURE.md` Section 13.
 - **Legacy code gets tests before changes.** Before modifying an untested file,
   write tests for its current behaviour first. Then make the change.
 
+## 5D. Supabase Integration Tests
+
+Any code that touches the server (RPCs, RLS policies, table operations, migrations,
+route handlers that call Supabase) must have a corresponding integration test in
+`services/__tests__/integration/`. These tests run against the local Supabase Docker
+instance and verify that the real database behaves correctly.
+
+- **Run `supabase db reset` before running integration tests** to ensure all
+  migrations are applied.
+- **Split by domain:** home, kana, kotoba, profile, leaderboard, bug-report,
+  streak, edge-cases. One file per domain.
+- **Shared setup:** `services/__tests__/integration/setup.ts` provides test user
+  creation, authenticated/anonymous clients, and teardown.
+- **When to write integration tests:** Any new RPC, any new table, any change to
+  RLS policies, any new migration, any route handler that calls Supabase.
+- **What to test:** Happy path, RLS violations (anonymous, cross-user), epoch
+  consistency, deduplication, cascade on delete, error responses.
+- **Integration tests are not optional.** Mocked unit tests verify service-layer
+  logic. Integration tests verify that the database, RPCs, and RLS actually work.
+  Both are required for server-side code.
+
 ---
 
 ## 6. Code Quality Rules

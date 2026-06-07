@@ -18,7 +18,7 @@ import { useWordMasteryStore } from '@/stores/word-mastery.store'
 import { useUnlockStore } from '@/stores/unlock.store'
 import { useCounterStore } from '@/stores/counter.store'
 import { useSyncCheckpoint } from '@/hooks/useSyncCheckpoint'
-import { clearAllDialoguesSeen } from '@/hooks/useDialogueSeen'
+import { clearAllDialoguesSeen, clearDialoguesByPrefix } from '@/hooks/useDialogueSeen'
 
 // ── Types ─────────────────────────────────────
 
@@ -61,9 +61,17 @@ export function useResetActions(): {
       useMasteryStore.getState().resetAll()
       useMasteryStore.getState().setEpoch(result.data.newEpoch)
       useUnlockStore.getState().recompute({}, new Set())
+      useCounterStore.getState().resetAll()
+      clearDialoguesByPrefix(['kana-', 'sokuon-', 'longvowel-', 'long-vowel-', 'dual-mnemonic-'])
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem(DOJO_KANA_TIP_KEY)
+        window.localStorage.removeItem(FROZEN_PROMPT_KEY)
+        window.localStorage.removeItem(PRACTICE_COUNTERS_KEY)
+      }
       return { ok: true }
-    } catch {
-      return { ok: false, error: 'Something went wrong. Please try again.' }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error'
+      return { ok: false, error: `Kana reset failed: ${message}` }
     }
   }, [flushDirty])
 
@@ -75,9 +83,14 @@ export function useResetActions(): {
 
       useWordMasteryStore.getState().resetAll()
       useWordMasteryStore.getState().setEpoch(result.data.newEpoch)
+      clearDialoguesByPrefix(['kotoba-'])
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem(DOJO_KOTOBA_TIP_KEY)
+      }
       return { ok: true }
-    } catch {
-      return { ok: false, error: 'Something went wrong. Please try again.' }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error'
+      return { ok: false, error: `Kotoba reset failed: ${message}` }
     }
   }, [flushDirty])
 
@@ -97,8 +110,9 @@ export function useResetActions(): {
       useUnlockStore.getState().recompute({}, new Set())
       clearLocalProgressState()
       return { ok: true }
-    } catch {
-      return { ok: false, error: 'Something went wrong. Please try again.' }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error'
+      return { ok: false, error: `Full reset failed: ${message}` }
     }
   }, [flushDirty])
 

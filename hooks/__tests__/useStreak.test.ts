@@ -104,12 +104,18 @@ describe('useStreak', () => {
   })
 
   it('derives streak count from practice data', async () => {
+    const today = new Date()
+    const d1 = new Date(today)
+    d1.setDate(today.getDate() - 2)
+    const d2 = new Date(today)
+    d2.setDate(today.getDate() - 1)
+    const fmt = (d: Date): string => d.toISOString().slice(0, 10)
     mockLoadPracticeSummary.mockResolvedValue({
       ok: true,
       data: [
-        { date: '2026-06-03', count: 5 },
-        { date: '2026-06-04', count: 10 },
-        { date: '2026-06-05', count: 8 },
+        { date: fmt(d1), count: 5 },
+        { date: fmt(d2), count: 10 },
+        { date: fmt(today), count: 8 },
       ],
     })
 
