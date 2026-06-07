@@ -40,7 +40,7 @@ import type { JlptLevel } from '@/types/user.types'
 
 // ── Constants ─────────────────────────────────
 
-const MAX_WRONG_ATTEMPTS = 3
+const MAX_WRONG_ATTEMPTS = 1
 
 // ── Types ─────────────────────────────────────
 
@@ -150,7 +150,7 @@ export function KotobaGameWindow({
   const currentChar = currentWord?.characters[currentCharIndex] ?? null
 
   const TAP_GRID_SIZE = 10
-  const tapGrid = useMemo(() => {
+  const rawTapGrid = useMemo(() => {
     if (!currentWord) return []
     const pool = isKatakanaPrompt(currentWord) ? KOTOBA_KATAKANA_TAP : KOTOBA_HIRAGANA_TAP
     const needed = currentWord.characters.map((c) => c.kana)
@@ -169,6 +169,11 @@ export function KotobaGameWindow({
 
     return [...requiredChars, ...fillers].sort(() => Math.random() - 0.5)
   }, [currentWord])
+
+  const [tapGrid, setTapGrid] = useState(rawTapGrid)
+  useEffect(() => {
+    if (!wordDone) setTapGrid(rawTapGrid)
+  }, [rawTapGrid, wordDone])
 
   const kanjiOptions = useMemo((): string[] => {
     if (!isKanjiMode || !hasKanji || !currentWord?.kanji) return []

@@ -70,6 +70,8 @@ export function TileDetailPopover({
       }}
       currentStep={step}
       isDanger={step === 1}
+      confirmVariant="sky"
+      secondaryVariant="sky-secondary"
       secondaryAction={
         step === 0
           ? {

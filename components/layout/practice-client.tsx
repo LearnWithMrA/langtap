@@ -181,7 +181,7 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
   const mode = useSettingsStore((s) => s.inputMode) as InputMode
   const setMode = useSettingsStore((s) => s.setInputMode)
   const kotobaInput = useSettingsStore((s) => s.kotobaInput)
-  const { counters, incrementCorrect } = usePracticeCounters()
+  const { counters, incrementCorrect } = usePracticeCounters(gameType)
   const profileLevel = useUserStore((s) => s.profile?.jlptLevel)
   const onboardingLevel = useOnboardingStore((s) => s.jlptLevel)
   const resolvedLevel = profileLevel ?? onboardingLevel ?? 'N5'

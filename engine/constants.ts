@@ -81,3 +81,6 @@ export const FREE_DAILY_DISTANCE_CAP = 100
 
 /** Number of consecutive practice days required before a streak starts */
 export const STREAK_START_THRESHOLD = 3
+
+/** Minimum distance (metres) in a day to earn a flame on the calendar */
+export const FLAME_DISTANCE_THRESHOLD = 10

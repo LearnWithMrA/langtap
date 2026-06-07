@@ -45,7 +45,6 @@ export function KotobaBulkUnlockPrompt({
       isOpen={true}
       onClose={onClose}
       onConfirm={(): void => onConfirm(scope.wordIds)}
-      isDanger={true}
       steps={[
         {
           title: `Unlock ${count} word${plural} in ${scope.label}?`,

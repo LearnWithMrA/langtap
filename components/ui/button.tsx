@@ -14,7 +14,7 @@ import type { ReactNode } from 'react'
 
 // -- Types -------------------------------------------------------
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'sky' | 'sky-secondary'
 type ButtonSize = 'sm' | 'md' | 'lg'
 
 type ButtonProps = {
@@ -34,8 +34,11 @@ type ButtonProps = {
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary: 'bg-sage-500 text-white hover:bg-sage-600 focus:ring-sage-300',
   secondary: 'bg-sage-100 text-sage-600 hover:bg-sage-200 focus:ring-sage-300',
-  ghost: 'bg-transparent text-text-secondary hover:bg-warm-100 focus:ring-warm-200',
-  danger: 'bg-blush-100 text-blush-300 hover:bg-blush-300 hover:text-white focus:ring-blush-300',
+  ghost:
+    'bg-transparent text-text-secondary border border-border hover:bg-warm-100 focus:ring-warm-200',
+  danger: 'bg-red-600/80 text-white hover:bg-red-700 focus:ring-red-300',
+  sky: 'bg-sky-500 text-white hover:bg-sky-600 focus:ring-sky-300',
+  'sky-secondary': 'bg-sky-100 text-sky-700 hover:bg-sky-200 focus:ring-sky-300',
 }
 
 const SIZE_CLASSES: Record<ButtonSize, string> = {

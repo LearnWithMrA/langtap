@@ -8,11 +8,17 @@
 
 import { useCallback, useSyncExternalStore } from 'react'
 import type { DialogueTrigger } from '@/data/tutorial/dialogue-scripts'
+import { getStorageUserId } from '@/stores/scoped-storage'
 
 // ── Storage plumbing ──────────────────────────
 
-const STORAGE_KEY = 'langtap-dialogues-seen'
+const BASE_KEY = 'langtap-dialogues-seen'
 const listeners = new Set<() => void>()
+
+function currentKey(): string {
+  const userId = getStorageUserId()
+  return userId ? `${BASE_KEY}-${userId}` : BASE_KEY
+}
 
 function emitLocalChange(): void {
   listeners.forEach((fn) => fn())
@@ -29,7 +35,7 @@ function subscribe(onChange: () => void): () => void {
 
 function getSeenSet(): Set<string> {
   if (typeof window === 'undefined') return new Set()
-  const raw = window.localStorage.getItem(STORAGE_KEY)
+  const raw = window.localStorage.getItem(currentKey())
   if (!raw) return new Set()
   try {
     const parsed: unknown = JSON.parse(raw)
@@ -41,7 +47,7 @@ function getSeenSet(): Set<string> {
 }
 
 function getSnapshot(): string {
-  return window.localStorage.getItem(STORAGE_KEY) ?? '[]'
+  return window.localStorage.getItem(currentKey()) ?? '[]'
 }
 
 function getServerSnapshot(): string {
@@ -52,7 +58,7 @@ function getServerSnapshot(): string {
 
 export function clearAllDialoguesSeen(): void {
   if (typeof window === 'undefined') return
-  window.localStorage.removeItem(STORAGE_KEY)
+  window.localStorage.removeItem(currentKey())
   emitLocalChange()
 }
 
@@ -60,7 +66,7 @@ export function clearDialoguesByPrefix(prefixes: readonly string[]): void {
   if (typeof window === 'undefined') return
   const current = getSeenSet()
   const filtered = [...current].filter((key) => !prefixes.some((prefix) => key.startsWith(prefix)))
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered))
+  window.localStorage.setItem(currentKey(), JSON.stringify(filtered))
   emitLocalChange()
 }
 
@@ -77,7 +83,7 @@ export function useDialogueSeen(trigger: DialogueTrigger): {
   const markSeen = useCallback((): void => {
     const current = getSeenSet()
     current.add(trigger)
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify([...current]))
+    window.localStorage.setItem(currentKey(), JSON.stringify([...current]))
     emitLocalChange()
   }, [trigger])
 

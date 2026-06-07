@@ -35,7 +35,7 @@ describe('Button', () => {
   it('renders danger variant', () => {
     const { container } = render(<Button variant="danger">Delete</Button>)
     const btn = container.firstChild as HTMLElement
-    expect(btn.className).toContain('bg-blush-100')
+    expect(btn.className).toContain('bg-red-600/80')
   })
 
   // -- Sizes -----------------------------------------------------

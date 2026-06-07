@@ -80,7 +80,7 @@ describe('BugReportButton', () => {
     render(<BugReportButton />)
 
     const button = screen.getByRole('button', { name: 'Report a bug' })
-    expect(button.className).toContain('w-7')
-    expect(button.className).toContain('h-7')
+    expect(button.className).toContain('w-8')
+    expect(button.className).toContain('h-8')
   })
 })

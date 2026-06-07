@@ -27,6 +27,9 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import Link from 'next/link'
+import { DialogueOverlay } from '@/components/game/dialogue-overlay'
+import { useDialogueSeen } from '@/hooks/useDialogueSeen'
+import { DIALOGUE_SCRIPTS } from '@/data/tutorial/dialogue-scripts'
 import { KotobaLevelTabs } from '@/components/dojo/kotoba-level-tabs'
 import { KotobaLevelGroupRow } from '@/components/dojo/kotoba-level-group'
 import { KotobaWordPopover } from '@/components/dojo/kotoba-word-popover'
@@ -305,11 +308,28 @@ function ReadyShell({ demo }: { demo?: boolean }): ReactNode {
 
   const selectedScore = selectedWord ? (scores[selectedWord.id] ?? 0) : 0
 
+  const { hasSeen: hasSeenDemoDialogue, markSeen: markDemoDialogueSeen } =
+    useDialogueSeen('demo-kotoba-dojo')
+  const showDemoDialogue = demo === true && !hasSeenDemoDialogue
+
   return (
     <div
       className="min-h-svh text-warm-800"
       style={{ backgroundColor: 'var(--color-kotoba-dojo-bg)' }}
     >
+      {showDemoDialogue && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-warm-800/40" />
+          <div className="relative w-full max-w-lg">
+            <DialogueOverlay
+              messages={DIALOGUE_SCRIPTS['demo-kotoba-dojo'].messages}
+              mascotPose={DIALOGUE_SCRIPTS['demo-kotoba-dojo'].mascotPose}
+              theme="green"
+              onDismiss={markDemoDialogueSeen}
+            />
+          </div>
+        </div>
+      )}
       <div className="pt-20 pb-16 px-5">
         <main className="mx-auto max-w-[988px]">
           <div className="flex items-center gap-3 mb-5">

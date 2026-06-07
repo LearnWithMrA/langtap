@@ -23,6 +23,7 @@ import { preloadAllWordBanks, getAllWordBanksSync } from '@/data/words/word-bank
 import { useMasteryStore } from '@/stores/mastery.store'
 import { useCounterStore } from '@/stores/counter.store'
 import { useSessionStore } from '@/stores/session.store'
+import { useSyncContext } from '@/components/performance/sync-manager'
 import { useUnlockStore } from '@/stores/unlock.store'
 import { useOnboardingStore } from '@/stores/onboarding.store'
 import type { WordBankEntry } from '@/types/word.types'
@@ -193,6 +194,8 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
   const increment = useMasteryStore((s) => s.increment)
   const incrementLearning = useMasteryStore((s) => s.incrementLearning)
 
+  const { flushDirty } = useSyncContext()
+
   const counters = useCounterStore((s) => s.counters)
   const incrementCounter = useCounterStore((s) => s.increment)
   const bulkLoadCounters = useCounterStore((s) => s.bulkLoad)
@@ -336,8 +339,18 @@ export function usePracticeSession(preferredLevel: JlptLevel = 'N5'): UsePractic
       if (currentPrompt?.kind === 'word') {
         incrementCounter(currentPrompt.word.id)
       }
+
+      void flushDirty()
     },
-    [increment, incrementLearning, recordCorrect, recordWrong, incrementCounter, currentPrompt],
+    [
+      increment,
+      incrementLearning,
+      recordCorrect,
+      recordWrong,
+      incrementCounter,
+      currentPrompt,
+      flushDirty,
+    ],
   )
 
   const advanceToNext = useCallback((): void => {

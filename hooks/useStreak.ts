@@ -13,6 +13,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { loadPracticeSummary } from '@/services/streak.service'
 import type { PracticeDaySummary } from '@/services/streak.service'
 import { deriveStreakState, getCalendarDays } from '@/engine/streak'
+import { BASE_DISTANCE_INCREMENT, FLAME_DISTANCE_THRESHOLD } from '@/engine/constants'
 import type { HeatmapDay } from '@/types/dashboard.types'
 import { useAuth } from '@/hooks/useAuth'
 import { useUserStore } from '@/stores/user.store'
@@ -70,14 +71,19 @@ function buildHeatmap(summary: PracticeDaySummary[], today: string): readonly He
   const streakState = deriveStreakState(practiceDates, today)
 
   return calendarDays.map((cd) => {
+    const count = countMap.get(cd.localDate) ?? 0
+    const meetsThreshold = count * BASE_DISTANCE_INCREMENT >= FLAME_DISTANCE_THRESHOLD
+
     let streakFlame: 'red' | 'blue' | null = null
-    if (streakState.streakDays.has(cd.localDate)) {
-      streakFlame = cd.practiced ? 'red' : 'blue'
+    if (meetsThreshold) {
+      streakFlame = 'red'
+    } else if (streakState.streakDays.has(cd.localDate) && !cd.practiced) {
+      streakFlame = 'blue'
     }
 
     return {
       date: cd.localDate,
-      charactersPracticed: countMap.get(cd.localDate) ?? 0,
+      charactersPracticed: count,
       streakFlame,
     }
   })

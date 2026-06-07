@@ -235,7 +235,7 @@ describe('Modal', () => {
       />,
     )
     const confirmBtn = screen.getByRole('button', { name: 'Unlock' })
-    expect(confirmBtn.className).toContain('bg-blush-100')
+    expect(confirmBtn.className).toContain('bg-red-600/80')
   })
 
   it('does not apply danger variant on step 1 of a two-step flow', () => {

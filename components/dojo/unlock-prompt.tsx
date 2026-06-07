@@ -38,6 +38,7 @@ export function UnlockPrompt({
       isOpen={true}
       onClose={onClose}
       onConfirm={(): void => onConfirm(character.id)}
+      confirmVariant="sky"
       steps={[
         {
           title: `Unlock ${character.kana}?`,

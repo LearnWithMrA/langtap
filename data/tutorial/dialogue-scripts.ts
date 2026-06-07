@@ -25,6 +25,9 @@ export type DialogueScriptTrigger =
   | 'kotoba-first-type'
   | 'kotoba-first-swipe'
   | 'unlock-milestone'
+  | 'demo-kana-dojo'
+  | 'demo-kotoba-dojo'
+  | 'demo-home'
 
 export type DialogueTrigger =
   | DialogueScriptTrigger
@@ -141,6 +144,29 @@ export const DIALOGUE_SCRIPTS: Record<DialogueScriptTrigger, DialogueScript> = {
     mascotPose: 'encouraging',
     messages: [
       "New characters unlocked! Your character pool is growing. Keep going and you'll start seeing them in words soon.",
+    ],
+  },
+
+  'demo-kana-dojo': {
+    mascotPose: 'neutral',
+    messages: [
+      'Welcome to the Kana Dojo! This is where you track your progress across all hiragana and katakana characters.',
+      'Colours show your mastery level. Play around here, nothing will be saved.',
+    ],
+  },
+
+  'demo-kotoba-dojo': {
+    mascotPose: 'neutral',
+    messages: [
+      'This is the Kotoba Dojo. Words are grouped by JLPT level and unlock as you practise.',
+      'Explore freely, this is just a preview.',
+    ],
+  },
+
+  'demo-home': {
+    mascotPose: 'neutral',
+    messages: [
+      'This is your dashboard. Your streak calendar, distance stats, and leaderboard position will all show here once you create an account.',
     ],
   },
 }

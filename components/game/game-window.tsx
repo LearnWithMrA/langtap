@@ -192,10 +192,15 @@ export function GameWindow({
   const startRef = useRef(onLeaderboardStart)
   startRef.current = onLeaderboardStart
 
-  const tapGrid = useMemo(
+  const rawTapGrid = useMemo(
     () => (characters.length > 0 ? buildTapGrid(characters, isKatakana, allowedCharIds) : []),
     [characters, isKatakana, allowedCharIds],
   )
+
+  const [tapGrid, setTapGrid] = useState(rawTapGrid)
+  useEffect(() => {
+    if (!wordDone) setTapGrid(rawTapGrid)
+  }, [rawTapGrid, wordDone])
 
   // Cumulative breakpoints
   const romajiBreakpoints = useMemo((): string[] => {

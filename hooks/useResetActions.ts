@@ -19,6 +19,7 @@ import { useUnlockStore } from '@/stores/unlock.store'
 import { useCounterStore } from '@/stores/counter.store'
 import { useSyncCheckpoint } from '@/hooks/useSyncCheckpoint'
 import { clearAllDialoguesSeen, clearDialoguesByPrefix } from '@/hooks/useDialogueSeen'
+import { clearPracticeCounters } from '@/hooks/usePracticeCounters'
 
 // ── Types ─────────────────────────────────────
 
@@ -29,7 +30,7 @@ type ResetResult = { ok: true } | { ok: false; error: string }
 const DOJO_KANA_TIP_KEY = 'dojo.kana.tipIndex'
 const DOJO_KOTOBA_TIP_KEY = 'dojo.kotoba.tipIndex'
 const FROZEN_PROMPT_KEY = 'langtap-frozen-prompt'
-const PRACTICE_COUNTERS_KEY = 'langtap:practice-counters'
+const LEGACY_COUNTERS_KEY = 'langtap:practice-counters'
 
 // ── Helpers ───────────────────────────────────
 
@@ -39,7 +40,9 @@ function clearLocalProgressState(): void {
     window.localStorage.removeItem(DOJO_KANA_TIP_KEY)
     window.localStorage.removeItem(DOJO_KOTOBA_TIP_KEY)
     window.localStorage.removeItem(FROZEN_PROMPT_KEY)
-    window.localStorage.removeItem(PRACTICE_COUNTERS_KEY)
+    window.localStorage.removeItem(LEGACY_COUNTERS_KEY)
+    clearPracticeCounters('kana')
+    clearPracticeCounters('kotoba')
   }
 }
 
@@ -66,7 +69,7 @@ export function useResetActions(): {
       if (typeof window !== 'undefined') {
         window.localStorage.removeItem(DOJO_KANA_TIP_KEY)
         window.localStorage.removeItem(FROZEN_PROMPT_KEY)
-        window.localStorage.removeItem(PRACTICE_COUNTERS_KEY)
+        clearPracticeCounters('kana')
       }
       return { ok: true }
     } catch (err) {
@@ -86,6 +89,7 @@ export function useResetActions(): {
       clearDialoguesByPrefix(['kotoba-'])
       if (typeof window !== 'undefined') {
         window.localStorage.removeItem(DOJO_KOTOBA_TIP_KEY)
+        clearPracticeCounters('kotoba')
       }
       return { ok: true }
     } catch (err) {

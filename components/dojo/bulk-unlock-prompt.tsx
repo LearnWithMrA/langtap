@@ -41,7 +41,7 @@ export function BulkUnlockPrompt({ scope, onConfirm, onClose }: BulkUnlockPrompt
       isOpen={true}
       onClose={onClose}
       onConfirm={(): void => onConfirm(scope.characterIds)}
-      isDanger={true}
+      confirmVariant="sky"
       steps={[
         {
           title: `Unlock ${count} character${plural} in ${scope.label}?`,

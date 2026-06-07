@@ -24,6 +24,7 @@ import {
 import type { KotobaLevel } from '@/data/words/kotoba-levels'
 import { useWordMasteryStore } from '@/stores/word-mastery.store'
 import { useCounterStore } from '@/stores/counter.store'
+import { useSyncContext } from '@/components/performance/sync-manager'
 import type { KotobaPrompt, KotobaPromptCharacter } from '@/types/kotoba.types'
 import type { WordBankEntry, WordCounterMap } from '@/types/word.types'
 import type { JlptLevel } from '@/types/user.types'
@@ -152,6 +153,7 @@ export function useKotobaPracticeSession(jlptLevel: JlptLevel = 'N5'): UseKotoba
   const manualUnlocks = useWordMasteryStore((s) => s.manuallyUnlockedWords)
   const hasHydrated = useWordMasteryStore((s) => s.hasHydrated)
   const incrementMastery = useWordMasteryStore((s) => s.increment)
+  const { flushDirty } = useSyncContext()
 
   const counters = useCounterStore((s) => s.counters)
   const bulkLoadCounters = useCounterStore((s) => s.bulkLoad)
@@ -204,8 +206,9 @@ export function useKotobaPracticeSession(jlptLevel: JlptLevel = 'N5'): UseKotoba
         }
       }
       incrementCounter(currentPrompt.id)
+      void flushDirty()
     },
-    [currentPrompt, incrementMastery, incrementCounter],
+    [currentPrompt, incrementMastery, incrementCounter, flushDirty],
   )
 
   const advanceToNext = useCallback((): void => {

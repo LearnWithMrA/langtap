@@ -32,6 +32,8 @@ export type ModalSecondaryAction = {
   onClick: () => void
 }
 
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'sky' | 'sky-secondary'
+
 type ModalProps = {
   isOpen: boolean
   onClose: () => void
@@ -42,6 +44,8 @@ type ModalProps = {
   isDanger?: boolean
   secondaryAction?: ModalSecondaryAction
   confirmClassName?: string
+  confirmVariant?: ButtonVariant
+  secondaryVariant?: ButtonVariant
 }
 
 // -- Constants ---------------------------------------------------
@@ -142,6 +146,8 @@ export function Modal({
   isDanger = false,
   secondaryAction,
   confirmClassName,
+  confirmVariant,
+  secondaryVariant,
 }: ModalProps): ReactNode {
   const panelRef = useRef<HTMLDivElement>(null)
   const [isConfirming, setIsConfirming] = useState(false)
@@ -203,7 +209,7 @@ export function Modal({
           {secondaryAction && (
             <Button
               className="flex-1"
-              variant="secondary"
+              variant={secondaryVariant ?? 'secondary'}
               size="sm"
               onClick={secondaryAction.onClick}
             >
@@ -212,7 +218,7 @@ export function Modal({
           )}
           <Button
             className={`flex-1 ${confirmClassName ?? ''}`}
-            variant={isDanger && isFinalStep ? 'danger' : 'primary'}
+            variant={isDanger && isFinalStep ? 'danger' : (confirmVariant ?? 'primary')}
             size="sm"
             onClick={handleConfirm}
             disabled={isConfirming}

@@ -33,6 +33,9 @@ import { MASTERY_THRESHOLD } from '@/engine/mastery'
 import { useLeaderboard } from '@/hooks/useLeaderboard'
 import { useStreak } from '@/hooks/useStreak'
 import { useAuth } from '@/hooks/useAuth'
+import { useDialogueSeen } from '@/hooks/useDialogueSeen'
+import { DIALOGUE_SCRIPTS } from '@/data/tutorial/dialogue-scripts'
+import { DialogueOverlay } from '@/components/game/dialogue-overlay'
 import { DEMO_KANA_MASTERY_SCORES } from '@/data/demo/demo-mastery'
 import { getDashboardFixture } from '@/fixtures/samples/dashboard-fixtures'
 import type { StageProgress, LeaderboardGlance } from '@/types/dashboard.types'
@@ -144,8 +147,24 @@ export function GameHomeClient(): ReactNode {
   const kanaRoute = isGuest ? '/demo/kana' : undefined
   const kotobaRoute = isGuest ? '/demo/kotoba' : undefined
 
+  const { hasSeen: hasSeenDemoHome, markSeen: markDemoHomeSeen } = useDialogueSeen('demo-home')
+  const showDemoHomeDialogue = isGuest && !hasSeenDemoHome
+
   return (
     <main className="overflow-y-auto min-h-svh px-3 sm:px-4 mt-[72px] mb-8">
+      {showDemoHomeDialogue && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-warm-800/40" />
+          <div className="relative w-full max-w-lg">
+            <DialogueOverlay
+              messages={DIALOGUE_SCRIPTS['demo-home'].messages}
+              mascotPose={DIALOGUE_SCRIPTS['demo-home'].mascotPose}
+              theme="blue"
+              onDismiss={markDemoHomeSeen}
+            />
+          </div>
+        </div>
+      )}
       <div className="max-w-5xl mx-auto lg:ml-auto lg:mr-4 flex flex-col md:flex-row gap-4">
         <div className="w-full max-w-[320px] mx-auto md:mx-0 md:max-w-none md:w-[260px] shrink-0">
           {!isGuest && streakLoading ? (
@@ -160,6 +179,10 @@ export function GameHomeClient(): ReactNode {
           ) : (
             <StreakCalendar heatmap={displayHeatmap} streakCount={displayStreakCount} />
           )}
+          <p className="text-xs text-warm-500 text-center mt-2 px-2">
+            Practice at least 10m to light today&apos;s flame. Don&apos;t worry if you miss a day,
+            we&apos;ll save you!
+          </p>
         </div>
         <div className="flex-1 flex flex-col lg:flex-row gap-4">
           <div className="lg:flex-1">

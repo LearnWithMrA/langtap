@@ -30,6 +30,54 @@ Format per entry:
 
 ---
 
+## 2026-06-07 - Session 115
+
+**Sprint:** Off-sprint
+**Task completed:** 10 bug fixes and polish items (continued from Session 114)
+**Status:** Done
+
+### Changes made
+- `engine/constants.ts`: Added FLAME_DISTANCE_THRESHOLD (10m) constant for streak calendar flame threshold.
+- `hooks/useStreak.ts`: Flames now show on any day with 10m+ practice (red flame), not just streak days. Blue flames remain for streak grace days.
+- `components/layout/game-home-client.tsx`: Added motivational prompt below streak calendar. Added demo-home dialogue overlay for guests.
+- `components/game/kotoba-game-window.tsx`: Changed MAX_WRONG_ATTEMPTS from 3 to 1 so kotoba hints appear after a single mistake.
+- `hooks/usePracticeCounters.ts`: Scoped localStorage key by game type (langtap:practice-counters:kana / :kotoba). Added clearPracticeCounters export.
+- `components/layout/practice-client.tsx`: Pass gameType to usePracticeCounters so kana and kotoba have independent counters.
+- `hooks/useResetActions.ts`: Updated kana/kotoba/factory reset to clear game-type-scoped counter keys.
+- `components/ui/button.tsx`: Added sky and sky-secondary variants for kana-themed buttons. Changed danger variant from off-pink (bg-blush-100) to proper red (bg-red-600/80). Added border to ghost variant.
+- `components/ui/modal.tsx`: Added confirmVariant and secondaryVariant props so dojo modals can override button colors per theme.
+- `components/dojo/unlock-prompt.tsx`: Uses sky confirm variant for blue-themed kana dojo.
+- `components/dojo/bulk-unlock-prompt.tsx`: Removed isDanger, uses sky confirm variant.
+- `components/dojo/kotoba-bulk-unlock-prompt.tsx`: Removed isDanger so unlock button uses primary (sage-green) instead of off-pink danger.
+- `components/dojo/tile-detail-popover.tsx`: Uses sky and sky-secondary variants for blue-themed kana dojo buttons.
+- `components/game/game-window.tsx`: Tap grid now freezes during word-complete feedback state, only updating after the new word loads.
+- `components/game/kotoba-game-window.tsx`: Same tap grid stability fix for kotoba.
+- `components/game/distance-counter.tsx`: Uses formatLeaderboardScore for consistent display format with leaderboard.
+- `data/tutorial/dialogue-scripts.ts`: Added demo-kana-dojo, demo-kotoba-dojo, and demo-home dialogue scripts.
+- `components/layout/kana-dojo-client.tsx`: Shows demo-kana-dojo dialogue overlay when demo=true.
+- `components/layout/kotoba-dojo-client.tsx`: Shows demo-kotoba-dojo dialogue overlay when demo=true.
+- `hooks/useDialogueSeen.ts`: Storage key now scoped with userId via getStorageUserId. Different users on the same browser no longer share dialogue-seen state.
+- `components/ui/sign-up-card.tsx`: Added T&C checkbox that must be checked before sign-up. Links to /terms.
+- New: `hooks/__tests__/syncTiming.test.ts` (3 tests): Verifies flushDirty is called after every word completion in both kana and kotoba practice hooks.
+- `components/ui/__tests__/button.test.tsx`: Updated danger variant expectation from bg-blush-100 to bg-red-600/80.
+- `components/ui/__tests__/modal.test.tsx`: Updated danger variant expectation from bg-blush-100 to bg-red-600/80.
+
+### Tests
+- All 1178 tests pass (3 new sync timing tests, 94 total test files)
+- No new Supabase integration tests needed (all changes are client-side)
+
+### Next task
+Sprint 16: Analytics (Vercel Analytics + custom event tracking)
+
+### Notes
+- No new migrations created. No supabase db push needed.
+- Streak flame threshold of 10m = 1 correct character (BASE_DISTANCE_INCREMENT is 10). This is intentionally easy to trigger for testing.
+- Ghost button variant now has a visible border globally. All cancel/no buttons across the app gain a subtle border.
+- Demo tutorial dialogues use the same useDialogueSeen hook, stored in localStorage. For guests (no userId), they use the unscoped key.
+- Tap grid stability fix uses a useState + useEffect pattern: the rendered grid state only updates when wordDone is false, preventing visual shuffling during the correct feedback animation.
+
+---
+
 ## 2026-06-07 - Session 114
 
 **Sprint:** Off-sprint

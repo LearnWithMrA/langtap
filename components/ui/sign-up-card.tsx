@@ -67,6 +67,7 @@ export function SignUpCard({ onClose, onSwitchToLogIn }: SignUpCardProps): React
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
 
   const strength = getPasswordStrength(password)
 
@@ -157,6 +158,27 @@ export function SignUpCard({ onClose, onSwitchToLogIn }: SignUpCardProps): React
             Your username will be visible on the leaderboard. Do not use your real name.
           </p>
 
+          <label className="flex items-start gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={acceptedTerms}
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-border text-sky-500 focus:ring-sky-300 accent-sky-500"
+              aria-label="Accept terms and conditions"
+            />
+            <span className="text-xs text-text-muted">
+              I agree to the{' '}
+              <a
+                href="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#4a7faa] font-medium hover:underline"
+              >
+                Terms and Conditions
+              </a>
+            </span>
+          </label>
+
           {error && (
             <p role="alert" className="text-sm text-feedback-wrong text-center">
               {error}
@@ -165,7 +187,7 @@ export function SignUpCard({ onClose, onSwitchToLogIn }: SignUpCardProps): React
 
           <KeyButton
             onClick={handleSignUp}
-            disabled={loading}
+            disabled={loading || !acceptedTerms}
             className="w-full justify-center px-4 py-2.5 sm:py-3.5 text-base sm:text-lg font-medium mt-1 bg-[#4a7faa] text-white shadow-[0_4px_0_0_#3a6488]"
             aria-label="Sign up"
           >
