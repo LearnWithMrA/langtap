@@ -30,6 +30,35 @@ Format per entry:
 
 ---
 
+## 2026-06-07 - Session 116
+
+**Sprint:** Off-sprint
+**Task completed:** Unlock state lost on refresh (bug fix), hydration round-trip tests, integration test field name fixes
+**Status:** Done
+
+### Changes made
+- `components/performance/store-hydrator.tsx`: Fixed kana unlock state lost on refresh. After bootstrapping the unlock store from server data, server manual unlock IDs are now synced back to the onboarding store so the kana dojo (which reads from onboarding store, not unlock store) picks them up. Kotoba was not affected (it reads directly from word mastery store which is populated from server data).
+- `components/game/practice-banner.tsx`: (From interrupted session) Added 'home' variant with fire emoji icon and warm orange button for the practice prompt banner.
+- `components/layout/game-home-client.tsx`: (From interrupted session) Replaced full-screen DialogueOverlay with inline PracticeBanner for the "Practice at least 10m" home flame prompt.
+- New: `services/__tests__/integration/hydration-roundtrip.integration.test.ts` (12 tests): Full hydration round-trip tests for kana and kotoba. Covers: learning_score round-trip, mastery score + learning_score combined, manual unlock round-trip, getUnlockedCharacterIds derivation from snapshot data, greatest-merge preservation, cross-device simulation (manual unlock persists without localStorage). Also covers kotoba: word mastery round-trip, word manual unlock round-trip, greatest-merge, cross-device.
+- `services/__tests__/integration/kana.integration.test.ts`: Fixed wrong JSON field names: `id` -> `character_id` in checkpoint payloads, `unlock_ids` -> `unlocks` in snapshot reads. These matched the JS property name not the SQL column name, so checkpoints silently persisted nothing.
+- `services/__tests__/integration/kotoba.integration.test.ts`: Same field name fix: `id` -> `word_id` in checkpoint payloads, `unlock_ids` -> `unlocks` in snapshot reads.
+
+### Tests
+- All 1193 tests pass (94 files, 15 new tests from hydration round-trip file)
+- Integration tests validated structurally (Supabase Docker not running during this session)
+
+### Next task
+Sprint 16: Analytics (Vercel Analytics + custom event tracking)
+
+### Notes
+- Root cause of unlock-state-lost-on-refresh: the kana dojo reads manual unlocks from `onboarding.store.selectedCharacterIds` (localStorage-backed), while the store-hydrator loaded server manual unlock IDs into the unlock store but never synced them back to the onboarding store. On cross-device login or localStorage clear, manual unlocks were lost despite existing on the server. Kotoba was not affected because it reads from `wordMasteryStore.manuallyUnlockedWords` which IS populated from server data during hydration.
+- To run the new integration tests against real Supabase, run `supabase db reset` then `npx vitest run services/__tests__/integration/`.
+- The existing kana and kotoba integration tests had wrong JSON field names (`id` instead of `character_id`/`word_id`, `unlock_ids` instead of `unlocks`). These tests appeared to pass because Supabase Docker was likely not running (tests skip via `skipIfNotRunning`). With the field fixes, they will now actually validate data when Supabase is running.
+- The `practice-banner.tsx` and `game-home-client.tsx` changes are from the interrupted previous session. No tests existed for `game-home-client.tsx`.
+
+---
+
 ## 2026-06-07 - Session 115
 
 **Sprint:** Off-sprint

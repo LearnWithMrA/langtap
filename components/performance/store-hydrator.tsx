@@ -171,6 +171,16 @@ export function StoreHydrator(): ReactNode {
             .getState()
             .bootstrap(useMasteryStore.getState().learningScores, mergedUnlocks)
         }
+
+        // Sync server unlock IDs to onboarding store so the kana dojo
+        // picks them up (it reads from onboarding, not unlock store)
+        if (server.unlockIds.length > 0) {
+          const currentOnboarding = useOnboardingStore.getState().selectedCharacterIds
+          const synced = unionIds(currentOnboarding, server.unlockIds)
+          if (synced.length > currentOnboarding.length) {
+            useOnboardingStore.getState().setSelectedBulk(synced)
+          }
+        }
       }
 
       // Word mastery: epoch-aware merge

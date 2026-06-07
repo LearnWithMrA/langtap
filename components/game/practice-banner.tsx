@@ -12,7 +12,7 @@ import type { ReactNode } from 'react'
 
 // ── Types ─────────────────────────────────────
 
-type BannerVariant = 'kana' | 'kotoba'
+type BannerVariant = 'kana' | 'kotoba' | 'home'
 
 type PracticeBannerProps = {
   variant?: BannerVariant
@@ -38,6 +38,12 @@ const VARIANT_STYLES: Record<
     icon: '言',
     btnBg: 'bg-sage-500',
     btnShadow: 'shadow-[0_3px_0_0_#456e3d]',
+  },
+  home: {
+    iconBg: 'bg-[#fde8d0]',
+    icon: '🔥',
+    btnBg: 'bg-[#d4874e]',
+    btnShadow: 'shadow-[0_3px_0_0_#a86838]',
   },
 }
 

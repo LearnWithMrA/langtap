@@ -474,6 +474,7 @@ App starts
   -> Load word manual unlocks from Supabase (services/word-mastery.service.ts)
   -> Hydrate Zustand stores with loaded data
   -> Compute unlock state from mastery + manual_unlocks
+  -> Sync server manual unlock IDs back to onboarding store (kana dojo reads from here)
   -> Compute word unlock state from word mastery + word_manual_unlocks
   -> Begin practice session
 

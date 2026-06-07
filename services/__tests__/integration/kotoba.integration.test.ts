@@ -41,7 +41,7 @@ describe('Kotoba integration', () => {
       const epoch = ((snapshot as Record<string, unknown>)?.['epoch'] as number) ?? 0
       const { error } = await ctx.userClient.rpc('checkpoint_word_mastery', {
         p_epoch: epoch,
-        p_rows: [{ id: wordId, score: 5 }],
+        p_rows: [{ word_id: wordId, score: 5 }],
       })
       expect(error).toBeNull()
     })
@@ -71,7 +71,7 @@ describe('Kotoba integration', () => {
 
       await ctx.userClient!.rpc('checkpoint_word_mastery', {
         p_epoch: epoch,
-        p_rows: [{ id: 'n5-iu-001', score: 25 }],
+        p_rows: [{ word_id: 'n5-iu-001', score: 25 }],
       })
 
       const { data: reloaded } = await ctx.userClient!.rpc('load_word_mastery_snapshot')
@@ -89,7 +89,7 @@ describe('Kotoba integration', () => {
       })
 
       const { data: reloaded } = await ctx.userClient!.rpc('load_word_mastery_snapshot')
-      const unlockIds = (reloaded as Record<string, unknown>)?.['unlock_ids'] as string[]
+      const unlockIds = (reloaded as Record<string, unknown>)?.['unlocks'] as string[]
       expect(unlockIds).toContain('n5-iu-003')
     })
   })

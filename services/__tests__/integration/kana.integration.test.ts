@@ -40,7 +40,7 @@ describe('Kana integration', () => {
 
       const { error } = await ctx.userClient.rpc('checkpoint_mastery', {
         p_epoch: epoch,
-        p_rows: ids.map((id: string) => ({ id, score: 5, learning_score: 5 })),
+        p_rows: ids.map((id: string) => ({ character_id: id, score: 5, learning_score: 5 })),
       })
       expect(error).toBeNull()
     })
@@ -71,7 +71,7 @@ describe('Kana integration', () => {
 
       await ctx.userClient!.rpc('checkpoint_mastery', {
         p_epoch: epoch,
-        p_rows: [{ id: 'h-a', score: 42, learning_score: 5 }],
+        p_rows: [{ character_id: 'h-a', score: 42, learning_score: 5 }],
       })
 
       const { data: reloaded } = await ctx.userClient!.rpc('load_mastery_snapshot')
@@ -89,7 +89,7 @@ describe('Kana integration', () => {
       })
 
       const { data: reloaded } = await ctx.userClient!.rpc('load_mastery_snapshot')
-      const unlockIds = (reloaded as Record<string, unknown>)?.['unlock_ids'] as string[]
+      const unlockIds = (reloaded as Record<string, unknown>)?.['unlocks'] as string[]
       expect(unlockIds).toContain('h-e')
       expect(unlockIds).toContain('h-o')
     })

@@ -36,6 +36,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useDialogueSeen } from '@/hooks/useDialogueSeen'
 import { DIALOGUE_SCRIPTS } from '@/data/tutorial/dialogue-scripts'
 import { DialogueOverlay } from '@/components/game/dialogue-overlay'
+import { PracticeBanner } from '@/components/game/practice-banner'
 import { DEMO_KANA_MASTERY_SCORES } from '@/data/demo/demo-mastery'
 import { getDashboardFixture } from '@/fixtures/samples/dashboard-fixtures'
 import type { StageProgress, LeaderboardGlance } from '@/types/dashboard.types'
@@ -169,20 +170,14 @@ export function GameHomeClient(): ReactNode {
           </div>
         </div>
       )}
-      {showFlamePrompt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-warm-800/40" />
-          <div className="relative w-full max-w-lg">
-            <DialogueOverlay
-              messages={DIALOGUE_SCRIPTS['home-flame-prompt'].messages}
-              mascotPose={DIALOGUE_SCRIPTS['home-flame-prompt'].mascotPose}
-              theme="blue"
-              onDismiss={markFlamePromptSeen}
-            />
-          </div>
-        </div>
-      )}
       <div className="max-w-5xl mx-auto lg:ml-auto lg:mr-4 flex flex-col md:flex-row gap-4">
+        {showFlamePrompt && (
+          <div className="w-full mb-1">
+            <PracticeBanner variant="home" buttonLabel="Got it" onAction={markFlamePromptSeen}>
+              {DIALOGUE_SCRIPTS['home-flame-prompt'].messages[0]}
+            </PracticeBanner>
+          </div>
+        )}
         <div className="w-full max-w-[320px] mx-auto md:mx-0 md:max-w-none md:w-[260px] shrink-0">
           {!isGuest && streakLoading ? (
             <div className="bg-white/60 backdrop-blur-md rounded-2xl shadow-lg px-3 py-4 animate-pulse">
