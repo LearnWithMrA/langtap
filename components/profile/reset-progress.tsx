@@ -198,7 +198,7 @@ export function ResetProgress(): ReactNode {
                 onChange={(e): void => setInputValue(e.target.value)}
                 placeholder={CONFIRM_PHRASE}
                 aria-label="Type RESET to confirm"
-                className="w-full border border-border rounded-lg px-3 py-2 text-sm text-warm-800 bg-surface-raised focus:outline-none focus:ring-2 focus:ring-red-300"
+                className="w-full border border-border rounded-lg px-3 py-2 text-base sm:text-sm text-warm-800 bg-surface-raised focus:outline-none focus:ring-2 focus:ring-red-300"
                 autoComplete="off"
                 spellCheck={false}
               />

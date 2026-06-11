@@ -30,6 +30,33 @@ Format per entry:
 
 ---
 
+## 2026-06-11 - Session 118
+
+**Sprint:** Off-sprint (polish following the Session 117 leadership review)
+**Task completed:** Tutorial dialogue rewrite (v2), obsolete localStorage sweep, mobile input zoom fix, voucher backlog task
+**Status:** Done
+
+### Changes made
+- `data/tutorial/dialogue-scripts.ts`: All dialogue scripts rewritten roughly half as long. Kana intro 11 messages to 7, mode intros 4 to 3, post-trial 4 to 2, kotoba intros 6 to 4. Principles: one idea per message, the trial round teaches mechanics better than text. Owner-edited wording incorporated (kotoba opener, adaptive-loop phrasing). "Sets of 6" changed to "small sets" so copy survives level-size changes. Factual fix: flame prompt no longer implies the streak grace is once-ever (it is per-gap reusable).
+- `docs/TUTORIAL_DIALOGUE.md`: Rewritten to v2.0 in sync with the scripts; editing principles documented; new rule that the doc and the TypeScript file must change together. Old version preserved at `archive/TUTORIAL_DIALOGUE_v1.md` (recovered from git history).
+- `stores/scoped-storage.ts`: New one-time obsolete-key sweep (`sweepObsoleteStorage`, `STORAGE_SCHEMA_VERSION = 1`). Removes localStorage keys from retired features (guest trial markers, guest distance, pending-import flags, pre-Sprint-10 unscoped store keys) on app load. Deletes only listed keys, never unknown ones; runs once per version. Process documented in code and ARCHITECTURE.md: retire a feature, list its keys, bump the version.
+- `components/performance/auth-initializer.tsx`: Calls the sweep once on mount.
+- `components/layout/bug-report-modal.tsx`, `components/profile/profile-client.tsx`, `components/profile/account-settings.tsx`, `components/profile/reset-progress.tsx`, `components/layout/demo-practice-client.tsx`: Fixed iOS Safari auto-zoom on input focus. All dialog text controls (10 inputs/selects/textareas) were 14px (`text-sm`); now `text-base sm:text-sm` (16px on mobile, unchanged on desktop). iOS zooms any focused control under 16px. The shared `Input` component and game inputs were already 16px.
+- `LangTap_Sprints.md`: Voucher code redemption added to Future Backlog (Medium, full spec, build alongside Sprint 19/20).
+- New: `stores/__tests__/scoped-storage-sweep.test.ts` (6 tests).
+
+### Tests
+- 1,181 unit tests pass (95 files). 96 integration tests pass against local Supabase Docker. prettier, eslint, tsc all clean.
+
+### Next task
+Owner actions from Session 117 (in order): `supabase db push`, assign lifetime membership, enable Vercel Analytics, bug-report webhook. Then Sprint 18 (Email Deliverability) when ready.
+
+### Notes
+- No new migrations this session. The two Session 117 migrations still need `supabase db push` before deploying.
+- The user-facing dialogue is worth one read-through in the browser with fresh dialogue state to check typewriter pacing.
+
+---
+
 ## 2026-06-11 - Session 117
 
 **Sprint:** Senior leadership review + Sprint 16 (Analytics) + Sprint 17 (Security and Pre-Launch QA, buildable tasks) + Sprint 19 membership schema (pulled forward)

@@ -320,7 +320,11 @@ langtap/
 |  |- gameplay.store.ts         # Whether practice gameplay is currently active
 |  |- guest-distance.store.ts   # DEPRECATED (Sprint 14) - flagged for owner deletion
 |  |- guest-usage.store.ts      # DEPRECATED (Sprint 14) - flagged for owner deletion
-|  |- scoped-storage.ts         # User-scoped localStorage adapter for persist (helper, not a store)
+|  |- scoped-storage.ts         # User-scoped localStorage adapter for persist (helper, not a store).
+|                                 Also owns the one-time obsolete-key sweep: when retiring a feature
+|                                 that persisted data, add its keys to OBSOLETE_KEYS or
+|                                 OBSOLETE_KEY_PREFIXES and bump STORAGE_SCHEMA_VERSION. Users'
+|                                 browsers then clean up automatically on next app load.
 |
 |- services/                    # All external API calls (Supabase, Stripe)
 |  |- supabase.ts               # Re-exports the browser Supabase client (back-compat)

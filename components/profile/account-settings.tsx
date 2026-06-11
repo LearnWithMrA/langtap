@@ -118,7 +118,7 @@ export function AccountSettings({
               value={editValue}
               onChange={(e): void => setEditValue(e.target.value)}
               maxLength={20}
-              className="w-full border border-border rounded-lg px-3 py-2 text-sm text-warm-800 bg-surface-raised focus:outline-none focus:ring-2 focus:ring-profile-accent/50"
+              className="w-full border border-border rounded-lg px-3 py-2 text-base sm:text-sm text-warm-800 bg-surface-raised focus:outline-none focus:ring-2 focus:ring-profile-accent/50"
             />
             {usernameError !== null && <p className="text-xs text-red-600 mt-1">{usernameError}</p>}
             <div className="flex items-center justify-between mt-1">

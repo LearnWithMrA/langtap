@@ -21,12 +21,19 @@ import { loadProfile } from '@/services/profile.service'
 import { useUserStore } from '@/stores/user.store'
 import { useSettingsStore } from '@/stores/settings.store'
 import { useDailyCapStore } from '@/stores/daily-cap.store'
-import { setStorageUserId, resetStoresForAuthChange } from '@/stores/scoped-storage'
+import {
+  setStorageUserId,
+  resetStoresForAuthChange,
+  sweepObsoleteStorage,
+} from '@/stores/scoped-storage'
 
 // ── Main export ─────────────────────────────────
 
 export function AuthInitializer(): ReactNode {
   useEffect(() => {
+    // One-time housekeeping: remove localStorage keys from retired features.
+    sweepObsoleteStorage()
+
     let mounted = true
     let activeUserId: string | null = null
 

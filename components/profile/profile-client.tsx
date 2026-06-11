@@ -243,7 +243,7 @@ export function ProfileClient(): ReactNode {
                     value={newEmail}
                     onChange={(e): void => setNewEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full border border-border rounded-lg px-3 py-2 text-sm text-warm-800 bg-surface-raised focus:outline-none focus:ring-2 focus:ring-profile-accent/50"
+                    className="w-full border border-border rounded-lg px-3 py-2 text-base sm:text-sm text-warm-800 bg-surface-raised focus:outline-none focus:ring-2 focus:ring-profile-accent/50"
                   />
                 </div>
                 {modalError !== null && <p className="text-xs text-red-600">{modalError}</p>}
@@ -280,7 +280,7 @@ export function ProfileClient(): ReactNode {
                     type="password"
                     value={newPassword}
                     onChange={(e): void => setNewPassword(e.target.value)}
-                    className="w-full border border-border rounded-lg px-3 py-2 text-sm text-warm-800 bg-surface-raised focus:outline-none focus:ring-2 focus:ring-profile-accent/50"
+                    className="w-full border border-border rounded-lg px-3 py-2 text-base sm:text-sm text-warm-800 bg-surface-raised focus:outline-none focus:ring-2 focus:ring-profile-accent/50"
                   />
                 </div>
                 <div>
@@ -292,7 +292,7 @@ export function ProfileClient(): ReactNode {
                     type="password"
                     value={confirmPassword}
                     onChange={(e): void => setConfirmPassword(e.target.value)}
-                    className="w-full border border-border rounded-lg px-3 py-2 text-sm text-warm-800 bg-surface-raised focus:outline-none focus:ring-2 focus:ring-profile-accent/50"
+                    className="w-full border border-border rounded-lg px-3 py-2 text-base sm:text-sm text-warm-800 bg-surface-raised focus:outline-none focus:ring-2 focus:ring-profile-accent/50"
                   />
                 </div>
                 {modalError !== null && <p className="text-xs text-red-600">{modalError}</p>}
@@ -378,7 +378,7 @@ export function ProfileClient(): ReactNode {
                 value={deleteInput}
                 onChange={(e): void => setDeleteInput(e.target.value)}
                 placeholder={deleteConfirmPhrase}
-                className="w-full border border-border rounded-lg px-3 py-2 text-sm text-warm-800 bg-surface-raised focus:outline-none focus:ring-2 focus:ring-red-300"
+                className="w-full border border-border rounded-lg px-3 py-2 text-base sm:text-sm text-warm-800 bg-surface-raised focus:outline-none focus:ring-2 focus:ring-red-300"
                 autoComplete="off"
                 spellCheck={false}
               />
@@ -394,7 +394,7 @@ export function ProfileClient(): ReactNode {
                     type="password"
                     value={deletePassword}
                     onChange={(e): void => setDeletePassword(e.target.value)}
-                    className="w-full border border-border rounded-lg px-3 py-2 text-sm text-warm-800 bg-surface-raised focus:outline-none focus:ring-2 focus:ring-red-300"
+                    className="w-full border border-border rounded-lg px-3 py-2 text-base sm:text-sm text-warm-800 bg-surface-raised focus:outline-none focus:ring-2 focus:ring-red-300"
                   />
                 </div>
               )}

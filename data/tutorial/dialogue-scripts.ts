@@ -52,114 +52,98 @@ export const DIALOGUE_SCRIPTS: Record<DialogueScriptTrigger, DialogueScript> = {
   'kana-first-play': {
     mascotPose: 'neutral',
     messages: [
-      'Welcome to LangTap, an app built to help you master typing and using a keyboard in a new language.',
-      "Japanese has two phonetic alphabets: hiragana and katakana. Same sounds, different characters. You'll learn both.",
-      "We'll start with hiragana, then introduce the katakana version of each group, so you learn them side by side.",
-      "Characters are unlocked in consonant groups. You'll start with just a five.",
-      'Get it right on the first try to earn distance (mastery points). The more you master a character, the less you see it.',
-      'Characters you struggle with show up more often. The game adapts to your learning.',
-      "You need to get the correct answer before you can move on. If you're stuck, we'll show you the answer after three attempts.",
-      "You won't earn points for a corrected answer, but you're still learning.",
-      "Once enough characters are unlocked, they'll start appearing in real Japanese words.",
-      "The English meaning appears after each word. Tap anywhere to continue, or wait and it'll advance for you.",
-      'The course progresses for you. All you need to do is play and be gently persistent.',
+      'Welcome to LangTap! This game builds one skill: typing Japanese without thinking.',
+      "Japanese has two phonetic alphabets, hiragana and katakana. Same sounds, different shapes. You'll learn them side by side.",
+      'We start with hiragana, adding the katakana versions group by group as you go.',
+      'Answer on the first try to earn distance points. Tricky characters come back more often and easy ones fade away, just until you need them again.',
+      'Wrong answers cost nothing. After three tries we show the answer and move on.',
+      "Once you've learned enough characters, they start appearing in real Japanese words.",
+      "That's everything. The game handles the rest, just keep pedalling.",
     ],
   },
 
   'kana-mode-tap': {
     mascotPose: 'neutral',
     messages: [
-      'Tap the matching character on the grid to answer. Simple as that!',
-      "Let's do a trial. We'll show you three hiragana characters and then one word they appear in, so you can give this a try. After that, you start for real.",
-      "Try Swipe if you want to master using your mobile phone's keyboard, or Type for a computer keyboard. Or just stay here if you prefer an easier mode.",
+      "Tap mode: tap the matching character on the grid. That's it.",
+      "Let's warm up with a quick trial round, then you start for real.",
+      'Prefer your phone keyboard? Try Swipe. On a computer? Try Type. Switch any time from the mode icon.',
     ],
   },
 
   'kana-mode-swipe': {
     mascotPose: 'neutral',
     messages: [
-      "Swipe mode uses your phone's Japanese swipe keyboard. You'll need to add a Japanese keyboard in your phone settings first.",
-      'The keyboard only shows hiragana. To answer in katakana, just swipe the hiragana equivalent and the keyboard will suggest the katakana.',
-      "Let's do a trial. We'll show you a few kana characters and then some words they appear in, so you can give this a try. After that, you start for real.",
-      "You can also try Tap for an easier on-screen grid, or Type if you're on a computer keyboard. Switch any time from the mode selector.",
+      "Swipe mode uses your phone's Japanese keyboard. Add one in your phone settings if you haven't yet.",
+      'The keyboard shows hiragana only. For katakana, swipe the hiragana and pick the katakana suggestion.',
+      "Let's warm up with a quick trial round, then you start for real.",
     ],
   },
 
   'kana-mode-type': {
     mascotPose: 'neutral',
     messages: [
-      'Type mode uses your physical keyboard. Type the romaji (English letters) for each hiragana or katakana character.',
-      "For example, あ is 'a', き is 'ki', し is 'shi'. For katakana, type the same romaji and it will match automatically.",
-      "Let's do a trial. We'll show you a few kana characters and then some words they appear in, so you can give this a try. After that, you start for real.",
-      'You can also try Tap for an easier on-screen grid, or Swipe to practise with your mobile keyboard. Switch any time from the mode selector.',
+      "Type mode: type the romaji for each character. あ is 'a', き is 'ki', し is 'shi'.",
+      'Katakana works the same way: same romaji, matched automatically.',
+      "Let's warm up with a quick trial round, then you start for real.",
     ],
   },
 
   'kana-post-trial': {
     mascotPose: 'thinking',
     messages: [
-      'Before you dive in, here are a few things you can change in Settings.',
-      'By default, prompts alternate between showing you kana and romaji. If you prefer one direction only, you can change this in Settings.',
-      'You can also turn off hearing the word spoken, change the pacing, turn hints off, or turn on click sounds to mimic a keyboard.',
-      "In your Profile, you'll be able to change the theme and font style (coming soon).",
+      'Nice! One last thing: the gear icon opens Settings.',
+      'There you can fix the prompt direction, change the pacing, and toggle hints, audio, and key clicks.',
     ],
   },
 
   'kotoba-first-tap': {
     mascotPose: 'neutral',
     messages: [
-      'Welcome to Kotoba. Here you practise real Japanese words.',
-      'You can answer in kana by tapping the correct reading on the grid.',
-      'Or you can select the correct kanji word from the options we show you.',
-      "Kanji answers earn 4x the mastery points, so you'll progress faster if you recognise the kanji.",
-      'Words are unlocked in sets of 6. Once you answer enough correctly, the next set will unlock automatically.',
-      "Let's try a few words so you can see how it works.",
+      'Welcome to Kotoba: where you learn how to type Japanese words.',
+      'Answer in kana on the grid, or pick the matching kanji from the options.',
+      'Kanji answers earn 4x the distance. Words unlock in small sets as you master them.',
+      "Let's try a few.",
     ],
   },
 
   'kotoba-first-type': {
     mascotPose: 'neutral',
     messages: [
-      'Welcome to Kotoba. Here you practise real Japanese words.',
-      'You can answer in kana by typing the reading with your keyboard.',
-      'Or you can type the reading and select the kanji from the auto-suggestions on your Japanese keyboard.',
-      "Kanji answers earn 4x the mastery points, so you'll progress faster if you recognise the kanji.",
-      'Words are unlocked in sets of 6. Once you answer enough correctly, the next set will unlock automatically.',
-      "Let's try a few words so you can see how it works.",
+      'Welcome to Kotoba: where you learn how to type Japanese words.',
+      "Type the reading in kana, or answer in kanji using your Japanese keyboard's suggestions.",
+      'Kanji answers earn 4x the distance. Words unlock in small sets as you master them.',
+      "Let's try a few.",
     ],
   },
 
   'kotoba-first-swipe': {
     mascotPose: 'neutral',
     messages: [
-      'Welcome to Kotoba. Here you practise real Japanese words.',
-      'You can answer in kana by swiping the reading on your keyboard.',
-      'Or you can swipe the reading and select the kanji from the auto-suggestions on your Japanese keyboard.',
-      "Kanji answers earn 4x the mastery points, so you'll progress faster if you recognise the kanji.",
-      'Words are unlocked in sets of 6. Once you answer enough correctly, the next set will unlock automatically.',
-      "Let's try a few words so you can see how it works.",
+      'Welcome to Kotoba: where you learn how to type Japanese words.',
+      "Swipe the reading in kana, or answer in kanji using your keyboard's suggestions.",
+      'Kanji answers earn 4x the distance. Words unlock in small sets as you master them.',
+      "Let's try a few.",
     ],
   },
 
   'unlock-milestone': {
     mascotPose: 'encouraging',
-    messages: [
-      "New characters unlocked! Your character pool is growing. Keep going and you'll start seeing them in words soon.",
-    ],
+    messages: ["New characters unlocked! Keep going and they'll start showing up in words."],
   },
 
   'demo-kana-dojo': {
     mascotPose: 'neutral',
     messages: [
-      'Welcome to the Kana Dojo! This is where you track your progress across all hiragana and katakana characters.',
-      'Colours show your mastery level. Play around here, nothing will be saved.',
+      'This is the Kana Dojo: your progress map for every character. Warmer colours mean stronger mastery.',
+      'Poke around freely, nothing is saved in the demo.',
     ],
   },
 
   'demo-kotoba-dojo': {
     mascotPose: 'neutral',
     messages: [
-      'This is the Kotoba Dojo. Words are grouped by JLPT level and unlock as you practise.',
+      'The Kotoba Dojo tracks words by JLPT level. They unlock as you practise.',
       'Explore freely, this is just a preview.',
     ],
   },
@@ -167,14 +151,14 @@ export const DIALOGUE_SCRIPTS: Record<DialogueScriptTrigger, DialogueScript> = {
   'demo-home': {
     mascotPose: 'neutral',
     messages: [
-      'This is your dashboard. Your streak calendar, distance stats, and leaderboard position will all show here once you create an account.',
+      'This is your dashboard. Your streak calendar, stats, and leaderboard spot will live here once you have an account.',
     ],
   },
 
   'home-flame-prompt': {
     mascotPose: 'encouraging',
     messages: [
-      "Practice at least 10m to light today's flame on the calendar. Don't worry if you miss a day, we'll save you!",
+      "Practise at least 10m today to light a flame on your calendar. Miss a day? We'll save your streak!",
     ],
   },
 }

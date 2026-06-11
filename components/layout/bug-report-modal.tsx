@@ -251,7 +251,7 @@ export function BugReportModal({ isOpen, onClose }: BugReportModalProps): ReactN
                   id="bug-report-type"
                   value={type}
                   onChange={(e) => setType(e.target.value as BugReportType)}
-                  className="w-full rounded-lg border border-border bg-surface-raised px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-sage-300"
+                  className="w-full rounded-lg border border-border bg-surface-raised px-3 py-2 text-base sm:text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-sage-300"
                 >
                   {TYPE_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -275,7 +275,7 @@ export function BugReportModal({ isOpen, onClose }: BugReportModalProps): ReactN
                   onChange={(e) => setDescription(e.target.value.slice(0, MAX_DESCRIPTION_LENGTH))}
                   placeholder={STRINGS.descriptionPlaceholder}
                   rows={4}
-                  className="w-full rounded-lg border border-border bg-surface-raised px-3 py-2 text-sm text-text-primary placeholder:text-text-muted resize-none focus:outline-none focus:ring-2 focus:ring-sage-300"
+                  className="w-full rounded-lg border border-border bg-surface-raised px-3 py-2 text-base sm:text-sm text-text-primary placeholder:text-text-muted resize-none focus:outline-none focus:ring-2 focus:ring-sage-300"
                 />
                 <p className="text-xs text-text-muted mt-1 text-right">
                   {description.length}/{MAX_DESCRIPTION_LENGTH}

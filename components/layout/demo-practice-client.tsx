@@ -85,7 +85,7 @@ function ModeDropdown({
       <select
         value={mode}
         onChange={(e): void => onModeChange(e.target.value as InputMode)}
-        className="appearance-none bg-transparent text-warm-600 text-sm font-medium pr-5 cursor-pointer focus:outline-none"
+        className="appearance-none bg-transparent text-warm-600 text-base sm:text-sm font-medium pr-5 cursor-pointer focus:outline-none"
         aria-label={`${gameType === 'kana' ? 'Kana' : 'Kotoba'} input mode`}
       >
         {ALL_MODES.map((m) => (

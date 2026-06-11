@@ -1,12 +1,18 @@
 # Tutorial Dialogue Scripts
 
-Version 1.0 | May 2026
+Version 2.0 | June 2026
 
-These are the dialogue scripts for Sprint 7B's tutorial and guidance system.
+These are the dialogue scripts for the tutorial and guidance system.
 Each section is a trigger point with its messages. Messages are delivered via
 the Pokemon-style typewriter overlay with the mascot character.
 
-Edit the wording here. The implementation will read from this document.
+v2.0 (Session 118): all scripts rewritten to be roughly half their original
+length. Principles: one idea per message, the trial round teaches mechanics
+better than text, never explain what the next screen will demonstrate anyway.
+
+Edit the wording here AND in `data/tutorial/dialogue-scripts.ts` together.
+The implementation reads from the TypeScript file; this document is the
+editorial source. The two must stay in sync.
 
 ---
 
@@ -14,17 +20,13 @@ Edit the wording here. The implementation will read from this document.
 
 Trigger: Player lands on the kana practice screen for the first time.
 
-- "Welcome to LangTap, an app built to help you master typing and using a keyboard in a new language."
-- "Japanese has two phonetic alphabets: hiragana and katakana. Same sounds, different characters. You'll learn both."
-- "We'll start with hiragana, then introduce the katakana version of each group, so you learn them side by side."
-- "Characters are unlocked in consonant groups. You'll start with just a five."
-- "Get it right on the first try to earn distnace (mastery points). The more you master a character, the less you see it."
-- "Characters you struggle with show up more often. The game adapts to your learning."
-- "You need to get the correct answer before you can move on. If you're stuck, we'll show you the answer after three attempts."
-- "You won't earn points for a corrected answer, but you're still learning."
-- "Once enough characters are unlocked, they'll start appearing in real Japanese words, which builds your reading skill."
-- "The English meaning appears after each word. Tap anywhere to continue, or wait and it'll advance for you."
-- "The course progresses for you. All you need to do is play and be gently persistent."
+- "Welcome to LangTap! This game builds one skill: typing Japanese without thinking."
+- "Japanese has two phonetic alphabets, hiragana and katakana. Same sounds, different shapes. You'll learn them side by side."
+- "We start with hiragana, adding the katakana versions group by group as you go."
+- "Answer on the first try to earn distance points. Tricky characters come back more often and easy ones fade away, just until you need them again."
+- "Wrong answers cost nothing. After three tries we show the answer and move on."
+- "Once you've learned enough characters, they start appearing in real Japanese words."
+- "That's everything. The game handles the rest, just keep pedalling."
 
 ## 1A. Mode Introduction (second dialogue, immediately after section 1)
 
@@ -33,32 +35,28 @@ Content varies by the player's selected input mode.
 
 ### Tap Mode
 
-- "Tap the matching character on the grid to answer. Simple as that!"
-- "Let's do a trial. We'll show you three hiragana characters and then one word they appear in, so you can give this a try. After that, you start for real."
+- "Tap mode: tap the matching character on the grid. That's it."
+- "Let's warm up with a quick trial round, then you start for real."
+- "Prefer your phone keyboard? Try Swipe. On a computer? Try Type. Switch any time from the mode icon."
 
 ### Swipe Mode
 
-- "Swipe mode uses the Japanese swipe keyboard."
-- "Turn off auto-suggestion in your keyboard settings."
-- "The keyboard only shows hiragana. To answer in katakana, just type the hiragana equivalent."
-- "For example, if the screen shows カ (katakana ka), swipe か (hiragana ka) and the keyboard will suggest the katakana."
-- "Let's do a trial. We'll show you three hiragana characters and then one word they appear in, so you can give this a try. After that, you start for real."
+- "Swipe mode uses your phone's Japanese keyboard. Add one in your phone settings if you haven't yet."
+- "The keyboard shows hiragana only. For katakana, swipe the hiragana and pick the katakana suggestion."
+- "Let's warm up with a quick trial round, then you start for real."
 
 ### Type Mode
 
-- "Type mode uses your physical keyboard."
-- "Type the romaji (English letters) for each character. For example, あ is 'a', き is 'ki', し is 'shi'."
-- "Some characters use Hepburn spelling: し is 'shi' (not 'si'), ち is 'chi' (not 'ti'), つ is 'tsu' (not 'tu')."
-- "Let's do a trial. We'll show you three hiragana characters and then one word they appear in, so you can give this a try. After that, you start for real."
+- "Type mode: type the romaji for each character. あ is 'a', き is 'ki', し is 'shi'."
+- "Katakana works the same way: same romaji, matched automatically."
+- "Let's warm up with a quick trial round, then you start for real."
 
-## 1B. After First Kana Practice (second dialogue, after trial round completes)
+## 1B. After First Kana Practice (after the trial round completes)
 
 Trigger: Plays after the tutorial trial round finishes.
 
-- "Before you dive in, here are a few things you can change in Settings."
-- "You can change how prompts are shown in Settings: alternate between kana and romaji, or stick to kana only."
-- "You can also turn off auto-speaking the word, change the pacing, turn hints off, or turn on click sounds to mimic a keyboard."
-- "In your Profile, you'll be able to change the theme and font style (coming soon)."
+- "Nice! One last thing: the gear icon opens Settings."
+- "There you can fix the prompt direction, change the pacing, and toggle hints, audio, and key clicks."
 
 ---
 
@@ -66,39 +64,30 @@ Trigger: Plays after the tutorial trial round finishes.
 
 Trigger: Player lands on the kotoba practice screen for the first time.
 Note: No need to repeat general game mechanics since onboarding sends players to kana first.
+The first message and last two messages are shared; only the second message varies by mode.
 
-### Tap Mode
+Shared opener:
 
-- "Welcome to Kotoba. Here you practise real Japanese words."
-- "You can answer in kana by tapping the correct reading on the grid."
-- "Or you can select the correct kanji word from the options we show you."
-- "Kanji answers earn 4x the mastery points, so you'll progress faster if you recognise the kanji."
+- "Welcome to Kotoba: where you learn how to type Japanese words."
 
-### Type Mode
+Mode-specific second message:
 
-- "Welcome to Kotoba. Here you practise real Japanese words."
-- "You can answer in kana by typing the reading with your keyboard."
-- "Or you can type the reading and select the kanji from the auto-suggestions on your Japanese keyboard."
-- "Kanji answers earn 4x the mastery points, so you'll progress faster if you recognise the kanji."
+- Tap: "Answer in kana on the grid, or pick the matching kanji from the options."
+- Type: "Type the reading in kana, or answer in kanji using your Japanese keyboard's suggestions."
+- Swipe: "Swipe the reading in kana, or answer in kanji using your keyboard's suggestions."
 
-### Swipe Mode
+Shared closing:
 
-- "Welcome to Kotoba. Here you practise real Japanese words."
-- "You can answer in kana by swiping the reading on your keyboard."
-- "Or you can swipe the reading and select the kanji from the auto-suggestions on your Japanese keyboard."
-- "Kanji answers earn 4x the mastery points, so you'll progress faster if you recognise the kanji."
-
-### General (all modes, continues after the mode-specific messages above)
-
-- "Words are unlocked in sets of 6."
-- "Once you answer enough correctly, the next set will unlock automatically."
+- "Kanji answers earn 4x the distance. Words unlock in small sets as you master them."
+- "Let's try a few."
 
 ---
 
 ## 3. First Time in Kana Dojo
 
 Trigger: Player opens the Kana Dojo for the first time.
-Format: Banner tips (shown gradually, not all at once).
+Format: Banner tips (shown gradually, not all at once). Implemented in the
+dojo help-card system, not the dialogue overlay.
 
 - "Already know a character? Tap to unlock it, then tap again to mark it as mastered, so it won't appear as often."
 - "Forgotten one? Tap to reset it and it'll start showing up again."
@@ -119,7 +108,35 @@ Format: Banner tips (shown gradually, not all at once).
 
 Trigger: Player unlocks enough characters that words become available for the first time.
 
-- "New characters unlocked! Your character pool is growing. Keep going and you'll start seeing them in words soon."
+- "New characters unlocked! Keep going and they'll start showing up in words."
+
+---
+
+## 6. Demo Mode
+
+Trigger: Guest visits the demo dojo or home screens.
+
+### Demo Kana Dojo
+
+- "This is the Kana Dojo: your progress map for every character. Warmer colours mean stronger mastery."
+- "Poke around freely, nothing is saved in the demo."
+
+### Demo Kotoba Dojo
+
+- "The Kotoba Dojo tracks words by JLPT level. They unlock as you practise."
+- "Explore freely, this is just a preview."
+
+### Demo Home
+
+- "This is your dashboard. Your streak calendar, stats, and leaderboard spot will live here once you have an account."
+
+---
+
+## 7. Home Flame Prompt
+
+Trigger: Signed-in user on the home screen before lighting today's flame.
+
+- "Practise at least 10m today to light a flame on your calendar. Miss a day? We'll save your streak!"
 
 ---
 
@@ -133,5 +150,7 @@ Trigger: Player unlocks enough characters that words become available for the fi
 - Kana first play flow: 1 (intro) then 1A (mode) then trial round then 1B (settings) then real practice
 - Kotoba first play has one dialogue screen: section 2
 - If the player switches mode later, the new mode's 1A dialogue plays once at that point
-- The trial round (3 characters + 1 word) runs immediately after the 1A dialogue dismisses
+- The trial round runs immediately after the 1A dialogue dismisses
 - Section 1B plays after the trial round completes, before real practice begins
+- Word-set sizes are deliberately described as "small sets" in dialogue so the
+  copy stays true if level sizes change in the data
