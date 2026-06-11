@@ -72,6 +72,22 @@ variables in `app/globals.css` using the `@theme` directive.
   --color-blush-100: #faeef0;
   --color-blush-300: #f0a8b4;
 
+  /* Sky-blue action palette (Dojo unlock buttons). Each tier uses a base
+     fill plus a one-step-darker bottom border for the 3D key effect:
+       small (stage):   bg-sky-400 + border-sky-500
+       medium (script): bg-sky-500 + border-sky-600
+       large (page):    bg-sky-600 + border-sky-700 */
+  --color-sky-400: #7ab0da;
+  --color-sky-500: #5b96cb;
+  --color-sky-600: #4b81b3;
+  --color-sky-700: #3570a0;
+
+  /* Page backgrounds. Kana Dojo sits on a pale sky-blue wash, Kotoba
+     Dojo on a pale sage-green wash, onboarding on a pale lavender wash. */
+  --color-dojo-bg:        #e2eff6;
+  --color-kotoba-dojo-bg: #e6f0d9;
+  --color-onboarding-bg:  #ede6f0;
+
   /* Feedback colours */
   --color-feedback-wrong:   #f59e60;  /* orange - wrong answer highlight */
   --color-feedback-correct: #7da873;  /* sage-400 - correct answer confirm */
@@ -84,6 +100,13 @@ variables in `app/globals.css` using the `@theme` directive.
   --color-heat-3:  #dfca5e;  /* score 10-19 - yellow */
   --color-heat-4:  #a9d178;  /* score 20-39 - light green */
   --color-heat-5:  #7eb560;  /* score 40+ - solid green */
+  --color-heat-gold: #ffc72c;      /* mastered override (bright classic gold) */
+  --color-heat-gold-fill: #fffaec; /* mastered tile background fill */
+
+  /* Leaderboard medal colours (podium ranks 1-3) */
+  --color-medal-gold:   #d4a853;
+  --color-medal-silver: #a8a8b0;
+  --color-medal-bronze: #cd7f32;
 
   /* Profile page theme (sunny yellow) */
   --color-profile-bg:          #f5edd4;
@@ -112,6 +135,11 @@ variables in `app/globals.css` using the `@theme` directive.
 - Correct answer confirm: `text-feedback-correct`.
 - Mnemonic hint text: `text-feedback-mnemonic` (dark orange, WCAG 4.5:1 against cream).
 - Borders: `border-border`.
+- Dojo unlock buttons: `bg-sky-400/500/600` with a one-step-darker border.
+- Dojo page backgrounds: `bg-dojo-bg` (Kana), `bg-kotoba-dojo-bg` (Kotoba).
+- Onboarding background: `bg-onboarding-bg`.
+- Mastered tiles: `bg-heat-gold` accents on a `bg-heat-gold-fill` tile.
+- Leaderboard podium medals: `medal-gold`, `medal-silver`, `medal-bronze`.
 
 ### 2.3 Scene Theme Tokens
 
@@ -121,6 +149,13 @@ CSS custom properties applied to the root scene container. All scene layers
 
 Themes are defined inline in `app/globals.css` and applied as a class on the
 scene root element: `theme-day`, `theme-sunrise`, `theme-sunset`, `theme-night`.
+
+The blocks below show the core properties only. The real theme blocks in
+`app/globals.css` define a fuller set per theme (hill layers, path, grass,
+shrub, tree trunk/far/near shades, pebble). A small set of static scene
+tokens also lives in `@theme` (`sky-mid`, `sky-horizon`, `grass-bright`,
+`navy-deep`) for the landing and game screens. `app/globals.css` is the
+source of truth.
 
 ```css
 /* app/globals.css - scene theme definitions */
@@ -193,14 +228,13 @@ themselves.
 
 LangTap uses two fonts:
 
-**UI font:** Noto Sans JP (or Zen Maru Gothic as an alternative).
-Used for all body text, labels, and UI copy.
-Noto Sans JP has excellent Japanese character coverage, is free via Google Fonts,
-and has a calm, readable character at all sizes.
-
-Zen Maru Gothic was used by kanadojo.com and has a rounder, friendlier quality.
-Confirm licence before using. Both are acceptable. Decision to be made during
-the Sprint 2 design system task.
+**UI font: Zen Maru Gothic (decided).** Used for all body text, labels, and
+UI copy. Zen Maru Gothic (SIL Open Font Licence) has a rounder, friendlier
+quality and full Japanese coverage. It is self-hosted as a subset of three
+woff2 files (`public/fonts/zen-maru-400.woff2`, `-500`, `-700`) loaded via
+`next/font/local` (`localFont`) in `app/layout.tsx` and exposed as the
+`--font-zen-maru` CSS variable, which `--font-family-sans` in
+`app/globals.css` consumes. No Google Fonts request is made at runtime.
 
 **Character display font:** Same as UI font but rendered at a larger scale.
 The kana characters being practised use the same font but at display sizes.
@@ -550,9 +584,95 @@ Both dojo clients (`KanaDojoClient`, `KotobaDojoClient`) accept an optional
   real practice routes.
 - Help card tips still render (not suppressed in demo mode).
 
-Demo dojo routes: `/demo/dojo/kana` and `/demo/dojo/kotoba`. These render the
-same dojo clients with `demo` passed. Real `/dojo/*` routes require auth;
-unauthenticated users are redirected to `/sign-up`.
+Demo routes: demo practice lives at `/demo/kana` and `/demo/kotoba` inside
+the `(main)/(scene)` route group (so it shares the persistent landscape
+scene), with a `/demo` redirect page as the entry point. Demo dojo routes
+are `/demo/dojo/kana` and `/demo/dojo/kotoba` (inside `(main)` but outside
+`(scene)`). These render the same dojo clients with `demo` passed. Real
+`/dojo/*` routes require auth; unauthenticated users are redirected to
+`/sign-up`.
+
+### 6.5 Component Inventory
+
+One line per component, grouped by folder. Components covered in detail
+above are not repeated. See file headers for full purpose statements.
+
+**`components/ui/`**
+- `auth-modal.tsx`: modal wrapper hosting the log-in and sign-up cards
+- `log-in-card.tsx`: log-in form (email/password + OAuth buttons)
+- `sign-up-card.tsx`: sign-up form with two consent checkboxes: agreement to
+  the Terms of Service and Privacy Policy, and a 13+ age confirmation. Both
+  must be ticked before submission.
+- `pricing-card.tsx`: plan/pricing display card
+- `key-button.tsx`: 3D keyboard-key style button (base fill + darker bottom border)
+- `logo-full.tsx`: full LangTap wordmark logo
+- `logo-lt.tsx`: compact LT mark for narrow viewports
+- `landing-cta.tsx`: landing page call-to-action buttons
+- `badge.tsx`, `toast.tsx`: status badge and toast notification primitives
+- `username-repair-modal.tsx`: prompts default-OAuth-username users to pick a real one
+- `import-prompt-modal.tsx`, `pending-import-banner.tsx`: DEPRECATED (Sprint 14),
+  inert, flagged for owner deletion
+
+**`components/game/`** (in addition to 6.2)
+- `game-window.tsx`: kana practice orchestrator (prompt, input, feedback)
+- `kotoba-game-window.tsx`: kotoba practice orchestrator
+- `kanji-selector.tsx`: kanji multiple-choice grid for kotoba kanji mode
+- `dialogue-overlay.tsx`: mascot dialogue card with typewriter animation
+- `practice-banner.tsx`: banner above the game window (post-trial, post-kotoba)
+- `trial-cap-banner.tsx`: trial cap notice banner
+- `distance-counter.tsx`: running distance display
+- `mode-button.tsx`, `mode-switcher.tsx`: input mode toggle controls
+- `tap-grids.ts`: tap grid layout data for TapInput
+
+**`components/dojo/`** (in addition to 6.3)
+- `character-grid.tsx`: kana tile grid per stage
+- `kana-dojo-helpers.ts`, `kotoba-dojo-helpers.ts`: derivation helpers for the dojo clients
+- `kana-dojo-shells.tsx`, `kotoba-dojo-shells.tsx`: loading/error shells for the dojos
+- `kotoba-unit-grid.tsx`: kotoba unit card grid
+
+**`components/layout/`** (in addition to 5.1-5.3)
+- `app-top-bar.tsx`, `top-bar.tsx`, `bottom-nav.tsx`, `page-shell.tsx`: app chrome
+- `landing-client.tsx`, `landing-nav.tsx`, `landing-footer.tsx`, `landing-scene.tsx`: landing page
+- `landscape-background.tsx`, `landscape-layers.tsx`, `landscape-background-v1.tsx`,
+  `LandscapeBackgroundV2.tsx`: parallax scene layers
+- `practice-client.tsx`, `demo-practice-client.tsx`: practice page orchestrators
+- `game-home-client.tsx`: home dashboard orchestrator
+- `kana-dojo-client.tsx`, `kotoba-dojo-client.tsx`: dojo page orchestrators
+- `auth-modal-provider.tsx`: mounts the auth modal app-wide
+- `bug-report-button.tsx`, `bug-report-modal.tsx`: bug reporting (Section 11)
+- `error-screen.tsx`: calm recoverable error screen rendered by `app/error.tsx`
+- `legal-page-shell.tsx`: shared shell for the legal pages (Section 11C)
+- `guest-banner.tsx`: DEPRECATED (Sprint 14), inert, flagged for owner deletion
+
+**`components/performance/`**
+- `store-hydrator.tsx`: centralised Zustand store hydration at layout level
+- `session-prefetch.tsx`: prefetches core routes once per browser session
+- `auth-initializer.tsx`: initialises auth state and profile load on mount
+- `practice-data-preloader.tsx`: pre-warms word bank and kotoba level data
+- `sync-manager.tsx`: mounts checkpoint sync and pagehide beacon sync
+- `page-transition.tsx`: page transition wrapper
+- `scroll-restoration.tsx`: scroll position restoration on navigation
+
+**`components/dashboard/`** (in addition to the list in ARCHITECTURE.md)
+- `heatmap-calendar.tsx`, `streak-display.tsx`: streak heatmap and display widgets
+- `leaderboard-glance.tsx`: mini leaderboard panel on home
+- `practice-cta.tsx`, `stage-progress-bars.tsx`, `stats-grid.tsx`: home dashboard widgets
+
+**`components/leaderboard/`**
+- `leaderboard-client.tsx`: leaderboard page orchestrator
+- `leaderboard-podium.tsx`: top-3 podium with medal colours
+- `leaderboard-list.tsx`: ranked list below the podium
+
+**`components/onboarding/`**
+- `jlpt-picker.tsx`, `input-mode-picker.tsx`, `kana-chart-selector.tsx`,
+  `step-indicator.tsx`: onboarding step widgets
+
+**`components/profile/`**
+- `preferences-card.tsx`, `reset-progress.tsx`, `support-links.tsx`: profile cards
+  (plus the components listed in ARCHITECTURE.md)
+
+**`components/settings/`**
+- `settings-dialog.tsx`: settings overlay dialog
 
 ---
 
@@ -788,6 +908,23 @@ Explain why there is nothing to show and offer a next action.
 The guest banner was removed in Sprint 14. Visitors now use curated demo routes
 instead. See `docs/AUTH.md` Section 8 for the full demo mode specification and
 `docs/FRONTEND.md` Section 6.4 for demo dojo client props.
+
+## 11C. Legal Pages
+
+Four legal pages live at the app root: `/terms`, `/privacy`,
+`/acceptable-use`, and `/copyright`. All four use the shared
+`components/layout/legal-page-shell.tsx` (server component, no client
+state):
+
+- Sticky top bar with the LangTap logo linking to `/` (middleware sends
+  signed-in users on to `/home`).
+- Page title and last-updated date above the document.
+- The document renders inside an official contract-style panel with
+  `role="region"` that scrolls internally.
+- The landing footer (`components/layout/landing-footer.tsx`) renders below.
+
+The landing footer's legal column links all four legal pages plus
+`/credits` (attribution and licences).
 
 ---
 

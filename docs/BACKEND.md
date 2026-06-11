@@ -13,8 +13,12 @@ or touching any Supabase configuration.
 **Integration test mandate:** Any change to RPCs, RLS policies, tables, or
 migrations must include a corresponding integration test in
 `services/__tests__/integration/`. Run `supabase db reset` then
-`npx vitest run services/__tests__/integration/` to verify. See CLAUDE.md
-Section 5D for full rules.
+`npm run test:integration` to verify. The runner
+(`scripts/run-integration-tests.mjs`) reads the anon and service role keys
+from `supabase status` automatically and fails fast if local Supabase is not
+running. If the keys are absent, integration tests now report as SKIPPED in
+the vitest output instead of silently passing. See CLAUDE.md Section 5D for
+full rules.
 
 ---
 
@@ -40,7 +44,7 @@ Every table created in this project follows this rule without exception.
 
 | Table | Purpose |
 |---|---|
-| `profiles` | User preferences, Kotoba JLPT level, Kanji JLPT level, input mode, settings |
+| `profiles` | User preferences, JLPT level, input mode, settings, membership tier |
 | `mastery` | Per-character mastery scores per user |
 | `word_mastery` | Per-word mastery scores per user (Kotoba mode) |
 | `word_counters` | Per-word show counters per user |
@@ -69,10 +73,8 @@ Stores user preferences and settings. One row per user.
 create table public.profiles (
   id                    uuid primary key references auth.users(id) on delete cascade,
   username              text not null unique,
-  kotoba_jlpt_level     text not null default 'N5'
-                          check (kotoba_jlpt_level in ('N5','N4','N3','N2','N1')),
-  kanji_jlpt_level      text not null default 'N5'
-                          check (kanji_jlpt_level in ('N5','N4','N3','N2','N1')),
+  jlpt_level            text not null default 'N5'
+                          check (jlpt_level in ('N5','N4','N3','N2','N1')),
   input_mode            text not null default 'tap'
                           check (input_mode in ('tap','type','swipe')),
   notifications_enabled boolean not null default false,
@@ -89,6 +91,25 @@ create table public.profiles (
                           check (leaderboard_visibility in ('public','hidden')),
   mastery_reset_epoch   integer not null default 0,
   word_mastery_reset_epoch integer not null default 0,
+  user_tz               text not null default 'UTC',
+  guest_imported_at     timestamptz,  -- guest import bookkeeping (deprecated flow)
+  guest_import_skipped_at timestamptz,
+  legacy_imported_at    timestamptz,  -- legacy import bookkeeping (deprecated flow)
+  legacy_import_skipped_at timestamptz,
+  input_direction       text not null default 'alternate'
+                          check (input_direction in ('kana-to-romaji','romaji-to-kana','alternate')),
+  kotoba_input          text not null default 'readings'
+                          check (kotoba_input in ('readings','kanji')),
+  hints_enabled         boolean not null default true,
+  furigana_enabled      boolean not null default true,
+  word_audio_enabled    boolean not null default true,
+  key_clicks_enabled    boolean not null default false,
+  auto_advance          text not null default 'delayed'
+                          check (auto_advance in ('instant','delayed')),
+  membership_tier       text not null default 'free'
+                          check (membership_tier in ('free','monthly','annual','lifetime')),
+  membership_expires_at timestamptz,
+  stripe_customer_id    text unique,
   created_at            timestamptz not null default now(),
   updated_at            timestamptz not null default now()
 );
@@ -128,6 +149,20 @@ create policy "Permanent users update own profile"
 -- Profile is created on sign-up via trigger (see Section 5)
 -- No insert policy needed for client; handled server-side
 ```
+
+**Membership columns (added 2026-06-11, migration `20260611120001_membership_schema.sql`):**
+`membership_tier`, `membership_expires_at`, and `stripe_customer_id` are
+readable by the user on their own row (existing SELECT policy, needed for UI)
+but can never be changed by the client. The `guard_membership_change` trigger
+(see Section 5.3) blocks any client update to these three columns; server-side
+writers (future Stripe webhook, or the owner via SQL) set the
+`app.allow_membership_change` setting to `'1'` inside the same transaction to
+bypass the guard. A `security definer` helper `is_active_member(p_user_id uuid)`
+returns true for lifetime tier or an unexpired monthly/annual tier; execute is
+revoked from `public`, `anon`, and `authenticated` and granted to
+`service_role` only, so clients cannot probe other users' member status.
+`stripe_customer_id` is an opaque, non-secret identifier; write protection is
+what matters.
 
 ### 2.3 mastery
 
@@ -456,7 +491,12 @@ create table public.bug_reports (
 
 Screenshots stored in private `bug-reports` storage bucket (5MB limit,
 PNG/JPEG/WebP only). No client storage policies. Server-side rate gate:
-one report per user per 60 seconds.
+one report per user per 60 seconds, enforced atomically by the
+`submit_bug_report` RPC (see Section 4.10) since 2026-06-11. The route
+handler validates auth, MIME, size, and length caps, uploads the screenshot,
+then calls the RPC as the authoritative gate. If the RPC rejects the
+submission, the route deletes the already-uploaded screenshot so orphaned
+files do not accumulate in the bucket.
 
 ---
 
@@ -706,6 +746,33 @@ Rejects anonymous users via `is_permanent_user()`. Granted to
 `authenticated` role only. This is the only write path to
 `practice_sessions` (direct INSERT/UPDATE policies removed).
 
+### 4.10 submit_bug_report RPC
+
+Added 2026-06-11 (migration `20260611120000_security_hardening.sql`).
+Atomic bug report submission: rate gate plus insert in a single transaction.
+Called only by the `/api/bug-report` route handler (service role client)
+after the screenshot upload.
+
+**Parameters:** `p_user_id uuid`, `p_type text`, `p_description text`,
+`p_screenshot_path text`, `p_user_agent text`, `p_app_state jsonb`.
+
+**Behaviour:**
+1. Takes `pg_advisory_xact_lock(hashtext('bug_report:' || p_user_id))` to
+   serialize concurrent submissions per user, closing the check-then-insert
+   race the route handler alone could not prevent
+2. Defense in depth: re-validates type (`bug`/`feature`/`other`) and
+   description length (1-2000 chars) even though the route already checks
+3. Rejects if the user's last report is less than 60 seconds old, returning
+   `{ ok: false, error: 'rate_limited', retry_after: N }`
+4. Inserts the report and returns `{ ok: true, id: <uuid> }`
+
+Security: `security definer`. Execute is revoked from `public`, `anon`, and
+`authenticated` and granted to `service_role` only, because `p_user_id` is
+caller-supplied: the route handler passes the verified session user, and
+clients must never be able to call it with an arbitrary user id. On a
+rejected submission the route handler removes the orphan screenshot from
+the `bug-reports` bucket (best effort).
+
 ---
 
 ## 5. Database Triggers
@@ -767,6 +834,26 @@ Note: the existing `mastery` table (kana) has the same `updated_at` gap.
 A future migration can add the same trigger pattern to `mastery` for
 consistency.
 
+### 5.3 Profile Write-Guard Triggers
+
+Clients update their own `profiles` row for settings, so column-level
+protection uses BEFORE UPDATE triggers rather than RLS.
+
+**`guard_username_change`:** blocks direct client updates to `username` and
+`username_changed_at`; changes must go through the `change_username` RPC,
+which sets `app.allow_username_change = '1'` inside its transaction to
+bypass the guard. Fixed 2026-06-11 (migration
+`20260611120000_security_hardening.sql`): the original guard compared
+`current_setting(..., true) != '1'`, but `current_setting` returns NULL when
+the setting is unset, and `NULL != '1'` evaluates to NULL (falsy), so the
+exception never fired and a direct client UPDATE could bypass the 30-day
+cooldown. The fix wraps the call in `coalesce(..., '')`.
+
+**`guard_membership_change`:** same pattern (with the `coalesce` fix from
+day one). Blocks client updates to `membership_tier`,
+`membership_expires_at`, and `stripe_customer_id`. Server-side writers set
+`app.allow_membership_change = '1'` in the same transaction. See Section 2.2.
+
 ---
 
 ## 6. Leaderboard Score Calculation
@@ -791,27 +878,16 @@ This is called at session end before upserting to the leaderboard table.
 LangTap does not use Supabase real-time for the core game loop. Game state is
 local and synced at session boundaries.
 
-Real-time is used only for the leaderboard: new scores from other users are
-pushed to connected clients so the leaderboard reflects recent changes without
-requiring a manual refresh.
-
-```ts
-// Leaderboard real-time subscription (in hooks/useLeaderboard.ts)
-supabase
-  .channel('leaderboard-changes')
-  .on(
-    'postgres_changes',
-    { event: 'UPDATE', schema: 'public', table: 'leaderboard' },
-    (payload) => {
-      // Update the local leaderboard state with the new entry
-    }
-  )
-  .subscribe()
-```
+The leaderboard does not use real-time either. Current leaderboard reads go
+through the `get_leaderboard` RPC (`hooks/useLeaderboard.ts` fetches on demand),
+and `leaderboard_scores` has no client-facing policies, so a `postgres_changes`
+subscription on it would receive nothing. The legacy `leaderboard` table is
+unused. If real-time leaderboard updates are added in a future sprint, they
+must be driven by an RPC-compatible mechanism (e.g. broadcast), not by a
+direct table subscription.
 
 Realtime subscriptions respect RLS policies. Users only receive
-updates for rows they can access. The leaderboard SELECT policy allowing all users
-to read means all users receive real-time leaderboard updates.
+updates for rows they can access.
 
 ---
 

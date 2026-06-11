@@ -23,15 +23,9 @@ import {
   COOKIE_OPTIONS,
   CLEAR_COOKIE_OPTIONS,
 } from '@/services/reauth-cookie'
+import { sanitizeNext } from '@/services/redirect-sanitizer'
 
 // ── Helpers ───────────────────────────────────
-
-function sanitizeNext(raw: string | null): string {
-  const fallback = '/home'
-  if (!raw) return fallback
-  if (raw.startsWith('/') && !raw.startsWith('//')) return raw
-  return fallback
-}
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))

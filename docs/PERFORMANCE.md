@@ -13,6 +13,13 @@ completing any measurement or optimization task.
 
 ## 1. Production Bundle Baseline (A1)
 
+> **Historical baseline.** Sections 1-3 record the pre-optimization state
+> measured on 2026-05-05 and are kept for comparison. They do not describe
+> the current build. For current numbers see Section 7 (for example:
+> cyclist assets are now 1.9 MB of WebP, not 12 MB of PNG; practice first
+> load is 188 kB, not 552 kB; word banks are dynamic-import chunks, not
+> eagerly bundled into the practice route).
+
 Recorded: 2026-05-05, Session 88
 Build tool: `next build` (Next.js 15.5.14, production mode)
 Node environment: production
@@ -57,8 +64,11 @@ These chunks load on `/practice` regardless of the user's JLPT level.
 | 6043 | 7 kB | 3 kB | N4 kotoba levels (54 levels) |
 | **Subtotal** | **1,258 kB** | **295 kB** | **All JLPT word + level data** |
 
-N5 word bank and N5 kotoba levels are inlined in the practice page chunk
-(65 kB raw) and are not separately lazy-loadable.
+At baseline, the N5 word bank and N5 kotoba levels were inlined in the
+practice page chunk (65 kB raw) and not separately lazy-loadable. This is
+no longer true: all five word banks (N5 included) and all five kotoba level
+maps are now separate dynamic-import chunks behind
+`data/words/word-bank-loader.ts` (see Section 7.6 for the current model).
 
 ### 1.3 Framework and Shared Chunks
 
@@ -204,13 +214,13 @@ manual Chrome DevTools Performance traces on the production build.
 | Warm kana-to-kotoba mode switch | **Done** | Smooth, no issues. |
 | Warm practice-to-dojo | **Done** | Flash between pages (full remount). |
 | Back/forward between practice and dojo | **Done** | Same visible reset as home-to-practice. Fix: E5. |
-| Onboarding-to-practice | Pending | Needs fresh onboarding flow to test. |
-| Auth callback-to-practice | Pending | Needs auth flow to test. |
+| Onboarding-to-practice | Deferred | Measure before launch (Sprint 17 final E2E pass). Needs fresh onboarding flow to test. |
+| Auth callback-to-practice | Deferred | Measure before launch (Sprint 17 final E2E pass). Needs auth flow to test. |
 | Settings open/close during practice | **Done** | Smooth, no issues. |
-| Dojo kana/kotoba switch | Pending | Not tested this session. |
+| Dojo kana/kotoba switch | Deferred | Measure before launch (Sprint 17 final E2E pass). |
 | Input mode switching (tap/type/swipe) | **Done** | Smooth, no issues. |
-| Dropped frames during active typing | Pending | DevTools trace needed. |
-| Input latency during active typing | Pending | DevTools trace needed. |
+| Dropped frames during active typing | Deferred | Measure before launch (Sprint 17 final E2E pass). DevTools trace needed. |
+| Input latency during active typing | Deferred | Measure before launch (Sprint 17 final E2E pass). DevTools trace needed. |
 
 **Key finding:** The landscape/cyclist scene fully remounts on every route
 change between home and practice. This is the primary visual smoothness
@@ -240,9 +250,9 @@ These targets are refined after each optimization task lands.
 | Cyclist image transfer | 12 MB (14 PNGs) | Under 2 MB (WebP, deferred) | D1 | Deferred + Next.js optimization (done) |
 | Landing page total transfer | 20.7 MB | Under 2 MB | D1 + F1 |
 | Landing page Lighthouse score | 53 | 80+ | D1 + F1 |
-| Warm home-to-practice | Pending (manual) | Under 100ms to interactive | E5 |
+| Warm home-to-practice | Deferred - measure before launch (Sprint 17 final E2E pass) | Under 100ms to interactive | E5 |
 | Cold practice FCP | 1.8s | Under 1.5s | B1 + B2 |
-| FPS during active typing | Pending (manual) | Above 55 FPS | verification target |
+| FPS during active typing | Deferred - measure before launch (Sprint 17 final E2E pass) | Above 55 FPS | verification target |
 | CLS all routes | 0 | Stay at 0 | regression gate |
 
 ---
@@ -311,8 +321,14 @@ Route-specific budgets in `scripts/check-bundle-budget.ts`:
 
 ### 7.6 Data Loading Model (Final)
 
-- Word banks (content): ALL 5 JLPT levels preloaded eagerly on app mount (~290 kB gzip total)
-- Kotoba level maps (progression): only the player's selected JLPT level loaded on demand
+- Word banks (content): each JLPT level is a separate dynamic-import chunk
+  behind `data/words/word-bank-loader.ts` (module-level cache, dedup of
+  in-flight loads). `components/performance/practice-data-preloader.tsx`
+  calls `preloadAllWordBanks()` once on app mount, so ALL 5 levels are
+  pre-warmed eagerly (~290 kB gzip total) without being bundled into any
+  route's first-load JS.
+- Kotoba level maps (progression): only the player's selected JLPT level
+  loaded on demand, once the authoritative level is known
 - Kana practice: uses full combined word bank, soft-weighted toward preferred level
 - Kotoba practice: uses selected JLPT word bank + selected JLPT Kotoba map
 - For authenticated users: practice waits for profile before starting (no N5 guess)

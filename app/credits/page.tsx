@@ -8,6 +8,7 @@
 import type { ReactNode } from 'react'
 import type { Metadata } from 'next'
 import { LandingFooter } from '@/components/layout/landing-footer'
+import { LegalTopBar } from '@/components/layout/legal-page-shell'
 
 export const metadata: Metadata = {
   title: 'Credits - LangTap',
@@ -46,7 +47,8 @@ function CreditEntry({
 export default function CreditsPage(): ReactNode {
   return (
     <div className="min-h-svh bg-warm-50 flex flex-col">
-      <main className="max-w-2xl mx-auto px-4 sm:px-8 pt-20 pb-16 flex-1 w-full">
+      <LegalTopBar />
+      <main className="max-w-2xl mx-auto px-4 sm:px-8 pt-10 pb-16 flex-1 w-full">
         <h1 className="text-2xl font-bold text-warm-800 mb-2">Credits</h1>
         <p className="text-sm text-warm-600 mb-8">
           LangTap is built with open-source tools and freely licensed content. Thank you to the

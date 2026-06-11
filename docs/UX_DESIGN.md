@@ -878,7 +878,7 @@ Three bars showing kana mastery completion by stage.
 |---|---|---|
 | Seion | "Seion" | 92 (46 hiragana + 46 katakana) |
 | Dakuon | "Dakuon" | 50 (25 hiragana + 25 katakana) |
-| Yoon | "Yoon" | 66 (33 hiragana + 33 katakana) |
+| Combination | "Combination" | 66 (33 hiragana + 33 katakana) |
 
 **Per bar:**
 - Label left (`text-sm font-medium text-warm-700`), percentage right
@@ -994,7 +994,7 @@ Full layout stack at 320px (single column):
 [View month link]               ~20px
 [Seion progress bar]            ~28px
 [Dakuon progress bar]           ~28px
-[Yoon progress bar]             ~28px
+[Combination progress bar]      ~28px
 [Characters mastered line]      ~16px
 [Stats grid 2x2]               ~120px (2 rows x ~52px + gap)
 [Leaderboard glance]            ~56px
@@ -1393,7 +1393,7 @@ All characters are organised into the progression stages defined in
 GAME_DESIGN.md Section 4.3:
 - Stage 1: Seion (hiragana then katakana)
 - Stage 2: Dakuon
-- Stage 3: Yoon
+- Stage 3: Combination
 
 The chart flips orientation at a content-fit breakpoint (`min-[1028px]:`) -
 the width at which the full gojuon grid plus outer padding first fits on
@@ -1426,7 +1426,7 @@ as `n`.
 
 The shipped structure nests by script first, then by stage. The outer group
 is the script (Hiragana, Katakana); inside each open script are three stage
-sub-sections (Seion, Dakuon, Yoon). This matches the user's mental model of
+sub-sections (Seion, Dakuon, Combination). This matches the user's mental model of
 "which script am I working in" being the higher-level choice.
 
 **Script-level `GroupBar`:**
@@ -1442,9 +1442,9 @@ sub-sections (Seion, Dakuon, Yoon). This matches the user's mental model of
 
 **Stage-level `GroupBar`:** same shape as the script bar but one visual
 level down:
-- Heading (`text-lg`, `text-warm-700`): "Seion", "Dakuon", "Yoon"
+- Heading (`text-lg`, `text-warm-700`): "Seion", "Dakuon", "Combination"
 - Progress bar and percentage for the stage only
-- Tiered unlock button: medium blue (Seion) / light blue (Dakuon, Yoon), or
+- Tiered unlock button: medium blue (Seion) / light blue (Dakuon, Combination), or
   grey when the stage is fully unlocked
 - Heading indents visually (sub-bullet hierarchy) but the progress bar still
   starts at the same x-coordinate as the script bar above it. This is
@@ -1595,7 +1595,7 @@ Every `GroupBar` carries a single tiered action button that changes state
 based on whether any characters in that scope are still locked.
 
 - Any locked remaining: the button is a blue lock icon, colour-ranked by
-  level. Script bar uses dark blue, Seion uses medium blue, Dakuon and Yoon
+  level. Script bar uses dark blue, Seion uses medium blue, Dakuon and Combination
   use light blue. Tapping it opens `BulkUnlockPrompt`, a two-step modal:
   - Step 1: "Unlock all [n] characters in [Label]?" with Yes/No.
   - Step 2: "Are you sure? This can't be undone." with Yes/No.

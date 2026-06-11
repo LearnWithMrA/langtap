@@ -126,9 +126,11 @@ Because we use only strictly necessary cookies, we do not require consent under 
 
 Guest mode uses browser localStorage to store practice progress. This data never leaves your device. Clearing your browser data removes it permanently.
 
-### 7.3 No Third-Party Tracking
+### 7.3 Analytics and No Third-Party Tracking
 
-We do not embed third-party tracking scripts, social media widgets, analytics tools, or advertising pixels. No third party sets cookies through LangTap.
+We use Vercel Web Analytics and Vercel Speed Insights to understand aggregate usage (page views, visitor counts, performance metrics) and a small number of first-party product events (sign-up, first practice, demo completion, daily cap reached). These tools are cookieless: they do not set cookies, do not use device fingerprinting, and do not track you across other websites. Data is processed by Vercel (see Section 8) in aggregate form.
+
+Beyond this, we do not embed third-party tracking scripts, social media widgets, or advertising pixels. No third party sets cookies through LangTap.
 
 ---
 

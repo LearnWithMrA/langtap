@@ -612,7 +612,7 @@ when Stripe is activated. In Phase 1 the tiers are displayed but not enforced.
 
 | Tier | Price | Daily distance limit | Notes |
 |---|---|---|---|
-| Free | $0 / month | 50m per day | Default for all new accounts |
+| Free | $0 / month | 100m per day | Default for all new accounts (`FREE_DAILY_DISTANCE_CAP`) |
 | Regular | $3 / month | 300m per day | Stripe subscription, Phase 2 |
 | Unlimited | $5 / month | No limit | Stripe subscription, Phase 2 |
 

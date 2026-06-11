@@ -10,10 +10,11 @@ import {
   setupTestUser,
   teardownTestUser,
   skipIfNotRunning,
+  integrationDescribe,
   createAnonClient,
 } from './setup'
 
-describe('Kotoba integration', () => {
+integrationDescribe('Kotoba integration', () => {
   let ctx: TestContext
 
   beforeAll(async () => {
@@ -34,8 +35,7 @@ describe('Kotoba integration', () => {
         .limit(1)
       const wordId = words?.[0]?.word_id
       if (!wordId) {
-        console.warn('No words in leaderboard_word_catalog, skipping')
-        return
+        throw new Error('leaderboard_word_catalog is empty - run supabase db reset to seed it')
       }
       const { data: snapshot } = await ctx.userClient.rpc('load_word_mastery_snapshot')
       const epoch = ((snapshot as Record<string, unknown>)?.['epoch'] as number) ?? 0

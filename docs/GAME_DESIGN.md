@@ -329,7 +329,7 @@ is needed.
 - The full set of kana characters with their mastery scores
 - The set of currently unlocked characters
 - The full word bank across all JLPT levels, with word counters
-- The user's preferred JLPT level (from `kotoba_jlpt_level` on their profile) — used
+- The user's preferred JLPT level (from `jlpt_level` on their profile) — used
   as a starting preference for word selection in Kana Mode, not as a hard filter.
   This is the same field used in Kotoba Mode, keeping the profile simple and consistent.
 
@@ -424,6 +424,14 @@ swipes. When the user inputs an incorrect character at any position in the word:
    points. Reattempt is progression only, not scoring.
 7. Once the reattempt is resolved correctly, the word resumes from that position.
 8. The user is not forced to wait. They can input immediately.
+
+**Hint threshold per mode:** the answer hint appears after a different number
+of wrong attempts depending on the game mode. Kana shows the hint after 3
+wrong attempts on a character (`MAX_WRONG_ATTEMPTS = 3` in
+`components/game/game-window.tsx`). Kotoba shows it after 1 wrong attempt
+(`MAX_WRONG_ATTEMPTS = 1` in `components/game/kotoba-game-window.tsx`),
+because whole-word prompts are harder to recover from by trial and error.
+Both respect the hints toggle in Settings.
 
 ### 6.1 Mnemonic Display
 
@@ -729,6 +737,12 @@ unlock in steps of 6 via `engine/kotoba-progression.ts`. The practice
 hook `hooks/useKotobaPracticeSession.ts` bridges selection, progression,
 and the word mastery store.
 
+Step 0 of a level is not unconditionally unlocked (changed in Session
+114): `isKotobaStepUnlocked` takes a `step0Unlocked` parameter, and the
+dojo client only sets it true for JLPT levels at or below the user's
+selected level. Levels above the user's selection start fully locked
+and require manual unlocks.
+
 Kotoba Mode is available from the start. There is no kana mastery gate.
 Users can practise vocabulary immediately after onboarding. It has its
 own leaderboard, separate from the Kana boards.
@@ -850,7 +864,9 @@ export const KANA_WORD_ELIGIBLE_THRESHOLD = 5   // learning score before charact
 export const MIN_ELIGIBLE_WORDS_FOR_MIXING = 10 // eligible words before word prompts mix in
 export const WORD_PROMPT_RATIO = 0.6       // probability of word prompt when mixing is active
 export const GUEST_TRIAL_DISTANCE_CAP = 30 // deprecated (Sprint 14, demo mode replaces guest trial)
+export const FREE_DAILY_DISTANCE_CAP = 100 // max metres a free-tier user can practise per day
 export const STREAK_START_THRESHOLD = 3    // consecutive practice days to start a streak
+export const FLAME_DISTANCE_THRESHOLD = 10 // min metres in a day to earn a flame on the calendar
 
 // Deferred to the sprint that implements their consumers:
 // export const ANIMATION_WINDOW_SIZE = 10    // recent answers for animation speed

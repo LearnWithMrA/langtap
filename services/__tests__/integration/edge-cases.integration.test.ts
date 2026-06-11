@@ -12,6 +12,7 @@ import {
   setupTestUser,
   teardownTestUser,
   skipIfNotRunning,
+  integrationDescribe,
   createAdminClient,
   createAnonClient,
 } from './setup'
@@ -22,7 +23,7 @@ const LOCAL_ANON_KEY = process.env['SUPABASE_LOCAL_ANON_KEY'] ?? ''
 const USER_B_EMAIL = 'integration-userb@langtap.test'
 const USER_B_PASSWORD = 'test-password-456!'
 
-describe('Edge cases integration', () => {
+integrationDescribe('Edge cases integration', () => {
   let ctx: TestContext
   let userBId: string | null = null
   let userBClient: ReturnType<typeof createClient>

@@ -13,6 +13,7 @@
 import type { AuthError } from '@supabase/supabase-js'
 
 import { createBrowserSupabaseClient } from '@/services/supabase-browser'
+import { trackEvent, ANALYTICS_EVENTS } from '@/services/analytics.service'
 
 // ── Result types ──────────────────────────────
 
@@ -149,16 +150,16 @@ function sleep(ms: number): Promise<void> {
 // before this first attempt.
 async function updateUsernameWithRetry(
   supabase: ReturnType<typeof createBrowserSupabaseClient>,
-  userId: string,
   username: string,
   maxAttempts = PROFILE_UPDATE_MAX_ATTEMPTS,
 ): Promise<boolean> {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    const { data, error } = await supabase
-      .from('profiles')
-      .update({ username })
-      .eq('id', userId)
-      .select('id')
+    // claim_initial_username RPC: direct profiles UPDATEs on username are
+    // blocked by the guard trigger, so the first-time assignment goes
+    // through this dedicated RPC (validates, does not start the cooldown).
+    const { data, error } = await supabase.rpc('claim_initial_username', {
+      p_username: username,
+    })
 
     if (error) {
       if (isNonRetryable(error.code)) {
@@ -166,11 +167,13 @@ async function updateUsernameWithRetry(
         return false
       }
       // Network or 5xx - wait and retry
-    } else if (data !== null && data.length > 0) {
-      // Row found and updated.
-      return true
+    } else {
+      const result = data as { ok?: boolean; error_code?: string } | null
+      if (result?.ok) return true
+      // profile_missing means the handle_new_user trigger has not committed
+      // the row yet - retryable. Everything else is final.
+      if (result?.error_code !== 'profile_missing') return false
     }
-    // data.length === 0 means the trigger hasn't committed the row yet - retryable.
 
     if (attempt < maxAttempts) {
       await sleep(PROFILE_UPDATE_RETRY_DELAY_MS)
@@ -220,7 +223,9 @@ export async function signUp(
     return { ok: false, error: 'Something went wrong. Please try again.' }
   }
 
-  const profileWritten = await updateUsernameWithRetry(supabase, userId, normalizedUsername)
+  const profileWritten = await updateUsernameWithRetry(supabase, normalizedUsername)
+
+  trackEvent(ANALYTICS_EVENTS.SIGN_UP, { method: 'email' })
 
   return { ok: true, userId, profileWritten }
 }

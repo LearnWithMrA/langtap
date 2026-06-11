@@ -11,6 +11,7 @@
     "type-check": "tsc --noEmit",
     "test": "NODE_ENV=test vitest run",
     "test:watch": "NODE_ENV=test vitest",
+    "test:integration": "NODE_ENV=test node scripts/run-integration-tests.mjs",
     "lint": "eslint .",
     "check": "npm run format:check && npm run lint && npm run type-check && npm run test",
     "build:budget": "next build 2>&1 | npx tsx scripts/check-bundle-budget.ts",
@@ -24,6 +25,7 @@
   "dependencies": {
     "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.101.1",
+    "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "motion": "^12.38.0",
     "next": "15.5.14",

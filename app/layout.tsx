@@ -10,6 +10,7 @@ import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import localFont from 'next/font/local'
 import { SpeedInsights } from '@vercel/speed-insights/next'
+import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 const zenMaruGothic = localFont({
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: { children: ReactNode }): React
       <body suppressHydrationWarning>
         {children}
         <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   )

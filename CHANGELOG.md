@@ -30,6 +30,62 @@ Format per entry:
 
 ---
 
+## 2026-06-11 - Session 117
+
+**Sprint:** Senior leadership review + Sprint 16 (Analytics) + Sprint 17 (Security and Pre-Launch QA, buildable tasks) + Sprint 19 membership schema (pulled forward)
+**Task completed:** Full project review (security audit, doc accuracy audit, wiring sweep), security hardening, analytics, error boundaries, legal pages, membership schema, integration test integrity fix, sprint board rewritten with step-by-step owner instructions
+**Status:** Done
+
+### Changes made
+
+**Integration test integrity (most important fix)**
+- `services/__tests__/integration/setup.ts`: Integration tests previously PASSED SILENTLY when SUPABASE_LOCAL_* keys were missing (every test body early-returned). New `integrationDescribe` (describe.skipIf) makes them show as SKIPPED. All 10 integration files updated.
+- New: `scripts/run-integration-tests.mjs` + `npm run test:integration`: reads keys from `supabase status` automatically and fails fast if local Supabase is down. No more false greens.
+- `services/__tests__/integration/kotoba.integration.test.ts`: empty-catalog silent skip replaced with a loud throw.
+
+**Security hardening (migration `20260611120000_security_hardening.sql`)**
+- `guard_username_change` NULL-bypass FIXED: `current_setting(..., true)` returns NULL when unset and `NULL != '1'` is falsy, so the guard never fired - direct client UPDATEs could change usernames and bypass the 30-day cooldown. Found by a new integration test, fixed with coalesce.
+- New `claim_initial_username` RPC: sign-up's username assignment was a direct UPDATE that only worked because of that bug (Codex review caught the regression). The RPC validates format/uniqueness, only claims over the generated default, and does not start the rename cooldown. `services/auth.service.ts` updateUsernameWithRetry now calls it.
+- New `submit_bug_report` RPC (service-role only): atomic 60s rate gate + insert under a per-user advisory lock, closing the check-then-insert race. `app/api/bug-report/route.ts` calls it and removes orphaned screenshot uploads on rejection.
+- `app/api/auth/sign-out/route.ts`: origin + Sec-Fetch-Site CSRF check added (cross-site POST returns 403 before signing out). 4 tests.
+- `services/redirect-sanitizer.ts`: sanitizeNext extracted from the auth callback and hardened (backslashes, encoded slashes/dots, control chars, dot-dot segments, off-origin resolution). 8 tests.
+- `leaderboard_sessions`: deny-all design made explicit via table comment.
+
+**Membership schema (migration `20260611120001_membership_schema.sql`, Sprint 19 pulled forward)**
+- `membership_tier` / `membership_expires_at` / `stripe_customer_id` columns on profiles. `guard_membership_change` trigger blocks all client writes (clients cannot self-upgrade; verified by integration tests, including that even service role is blocked without the bypass).
+- `admin_set_membership(user_id, tier, expires_at, stripe_customer_id)` service-role-only RPC: the single legitimate write path (owner lifetime assignment now possible; Stripe webhook will use it later). `is_active_member(uuid)` service-role-only status function.
+- `services/membership.service.ts` (client-side status derivation mirroring the SQL), membership card shows the real tier, `UserProfile` type + profile.service mapping extended.
+
+**Sprint 16 - Analytics (complete)**
+- `@vercel/analytics` installed, `<Analytics />` mounted in root layout. `services/analytics.service.ts` with 4 budgeted events. `sign_up` in auth.service, `first_practice` via `hooks/useFirstPracticeEvent.ts`, `trial_complete` in demo completion card, `daily_cap_hit` via `hooks/useDailyCapAnalytics.ts` (observes the store from the hook layer per architecture rules). 12 tests.
+
+**Sprint 17 - buildable tasks (complete)**
+- Sign-up: Privacy Policy link added to terms checkbox text; new required "I confirm I am 13 years of age or older" checkbox. 4 tests.
+- Error boundaries: `app/error.tsx` (was inert, returned null) now renders new `components/layout/error-screen.tsx`; new `app/global-error.tsx` for root-layout failures. 5 tests.
+- Legal pages: full Terms (23 sections), Privacy (19 sections, all tables), Acceptable Use, and Copyright/DMCA pages built from `docs/legal/*.md` sources inside a new `LegalPageShell` (sticky top bar + scrollable official document panel). Credits page got the shared `LegalTopBar`. Footer links all five. Privacy policy updated to disclose Vercel Analytics (cookieless) - page and source doc. 8 tests.
+- SECURITY.md Section 10: full mutating-surface inventory with three-way classification.
+
+**Documentation accuracy pass (~60 fixes)**
+- BACKEND.md: profiles schema corrected (single `jlpt_level`, 15 missing columns added), stale realtime example fixed, new RPCs documented. AUTH.md: stale notes removed, consent checkboxes documented. SECURITY.md: 2026-06-11 fixes + inventory + deprecated guest surface notes. GAME_DESIGN.md: missing constants, kotoba hint threshold (1 vs 3), JLPT step-0 gating. CONTENT.md: free tier 50m corrected to 100m. UX_DESIGN.md: Yoon renamed to Combination. ARCHITECTURE.md: store/service/hook/route listings completed (was documenting 6/15 stores, 7/22 services, 8/30 hooks), error boundaries + middleware documented. FRONTEND.md: full colour token set, component inventory, legal pages section, font decision resolved. DEVOPS.md: scripts, vercel.json cache headers, integration test runner, analytics. PERFORMANCE.md: internal contradiction on word-bank loading resolved, historical baselines labelled.
+- `LangTap_Sprints.md` v1.9: Sprints 16 marked complete, 17 buildable tasks marked done; every remaining owner task rewritten as step-by-step instructions (bug-report webhook, Google OAuth, Apple Sign-In, Brevo email + DNS records, Vercel Analytics enable, lifetime self-assignment SQL, accessibility/cross-browser/E2E checklists, soft-launch order); Upstash distributed rate limiting split into a fully specified deferred task; owner-deletion list consolidated.
+
+### Tests
+- 1,175 unit tests pass (94 files). 96 integration tests pass against local Supabase Docker (10 files, includes new membership + RPC coverage). Integration tests now skip VISIBLY without keys instead of false-passing.
+- prettier, eslint, tsc, `next build` all clean.
+
+### Codex review
+- One consolidated review. 1 BLOCKER (sign-up username regression - fixed via claim_initial_username RPC), 1 MEDIUM (privacy policy did not disclose analytics - fixed), 2 LOW (bypass-path test coverage - fixed via admin_set_membership; sign-out fail-open without Origin/Sec-Fetch-Site headers - dismissed with rationale: legitimate header-less clients exist, SameSite=Lax is the backstop, logout CSRF is low-impact), 1 NIT (encoded dot segments - fixed).
+
+### Next task
+Owner actions in order: (1) `supabase db push` to apply the two new migrations to production, (2) assign lifetime membership (Sprint 19 instructions), (3) enable Vercel Analytics, (4) bug-report webhook (Sprint 15 Task 5). Then Sprint 18 (Email) when ready.
+
+### Notes
+- The two new migrations exist only locally until `supabase db push` is run. The app works without them but membership display defaults to Free and sign-up username assignment requires `claim_initial_username` - so PUSH BEFORE DEPLOYING this commit, or sign-ups will keep generated usernames.
+- Membership tiers were believed built but were not (no columns existed). Now schema-complete; Stripe checkout/webhook/cap-enforcement remain in Sprint 19.
+- Dead guest-system files flagged for owner deletion are listed in the sprint board Future Backlog section.
+
+---
+
 ## 2026-06-07 - Session 116
 
 **Sprint:** Off-sprint

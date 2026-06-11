@@ -124,24 +124,46 @@ langtap/
 |  |  |- layout.tsx             # Auth layout (minimal, no nav)
 |  |
 |  |- (onboarding)/             # Route group: onboarding steps
-|  |  |- step-1/                # JLPT self-assessment
-|  |  |  |- page.tsx
-|  |  |- step-2/                # Early character unlock
-|  |  |  |- page.tsx
-|  |  |- step-3/                # Notification preferences
-|  |  |  |- page.tsx
-|  |  |- step-4/                # Input mode selection
-|  |  |  |- page.tsx
+|  |  |- onboarding/
+|  |  |  |- step-1/             # JLPT self-assessment
+|  |  |  |  |- page.tsx
+|  |  |  |- step-2/             # Knowledge level gate (Hiragana/Katakana sliders)
+|  |  |  |  |- page.tsx
+|  |  |  |- step-2b/            # Kana chart selector (early character unlock)
+|  |  |  |  |- page.tsx
+|  |  |  |- step-3/             # Input mode selection
+|  |  |  |  |- page.tsx
 |  |  |- layout.tsx
 |  |
 |  |- (main)/                   # Route group: main app screens
-|  |  |- practice/
-|  |  |  |- page.tsx            # Core practice screen
+|  |  |- (scene)/               # Nested group: persistent landscape + cyclist scene
+|  |  |  |- home/
+|  |  |  |  |- page.tsx         # Game home dashboard
+|  |  |  |- practice/
+|  |  |  |  |- page.tsx         # Practice entry (redirect)
+|  |  |  |  |- kana/
+|  |  |  |  |  |- page.tsx      # Kana practice screen
+|  |  |  |  |- kotoba/
+|  |  |  |  |  |- page.tsx      # Kotoba practice screen
+|  |  |  |- demo/
+|  |  |  |  |- page.tsx         # Demo entry (redirect)
+|  |  |  |  |- kana/
+|  |  |  |  |  |- page.tsx      # Kana demo practice
+|  |  |  |  |- kotoba/
+|  |  |  |  |  |- page.tsx      # Kotoba demo practice
+|  |  |  |- layout.tsx          # Scene layout (landscape/cyclist mount once, no remount on nav)
 |  |  |- dojo/
+|  |  |  |- page.tsx            # Dojo entry (redirect)
 |  |  |  |- kana/
 |  |  |  |  |- page.tsx         # Kana character progress screen
 |  |  |  |- kotoba/
 |  |  |  |  |- page.tsx         # Kotoba vocabulary progress screen
+|  |  |- demo/
+|  |  |  |- dojo/
+|  |  |  |  |- kana/
+|  |  |  |  |  |- page.tsx      # Demo kana dojo (local state only)
+|  |  |  |  |- kotoba/
+|  |  |  |  |  |- page.tsx      # Demo kotoba dojo (local state only)
 |  |  |- library/
 |  |  |  |- page.tsx            # Word bank (Phase 2 - stub in Phase 1)
 |  |  |- leaderboard/
@@ -150,21 +172,43 @@ langtap/
 |  |  |  |- page.tsx
 |  |  |- settings/
 |  |  |  |- page.tsx
-|  |  |- credits/
-|  |  |  |- page.tsx            # Attribution and licences
 |  |  |- layout.tsx             # Main layout (AppTopBar, SettingsDialog, SessionPrefetch)
 |  |
 |  |- api/                      # Next.js route handlers (server-side only)
 |  |  |- bug-report/
 |  |  |  |- route.ts            # Bug report submission (auth, rate gate, upload, insert)
+|  |  |- sync/
+|  |  |  |- route.ts            # Beacon endpoint for pagehide sync (checkpoint RPCs server-side)
+|  |  |- auth/
+|  |  |  |- sign-out/
+|  |  |  |  |- route.ts         # Server-side sign-out (clears session cookies)
+|  |  |  |- delete-account/
+|  |  |  |  |- route.ts         # Account deletion
+|  |  |  |  |- requirements/
+|  |  |  |  |  |- route.ts      # Deletion re-auth requirements check
+|  |  |  |  |- reauth/[provider]/start/
+|  |  |  |  |  |- route.ts      # OAuth re-auth start for account deletion
 |  |  |- stripe/
 |  |  |  |- webhook/
-|  |  |  |  |- route.ts         # Stripe webhook handler
+|  |  |  |  |- route.ts         # Stripe webhook handler (Phase 1: stub)
 |  |
-|  |- layout.tsx                # Root layout (html, body, providers)
+|  |- auth/
+|  |  |- callback/
+|  |  |  |- route.ts            # Supabase OAuth/email callback (sanitised ?next= redirect)
+|  |
+|  |- terms/                    # Legal: Terms of Service
+|  |- privacy/                  # Legal: Privacy Policy
+|  |- acceptable-use/           # Legal: Acceptable Use Policy
+|  |- copyright/                # Legal: Copyright Policy
+|  |- credits/                  # Attribution and licences
+|  |
+|  |- layout.tsx                # Root layout (html, body, fonts, providers, analytics)
 |  |- page.tsx                  # Landing page
 |  |- not-found.tsx             # 404 page
-|  |- error.tsx                 # Global error boundary
+|  |- error.tsx                 # Root error boundary (renders components/layout/error-screen.tsx)
+|  |- global-error.tsx          # Last-resort boundary for root layout failures: provides its own
+|  |                            # html/body, inline-styled by documented exception (globals.css
+|  |                            # may not have loaded when it renders)
 |  |- loading.tsx               # Global loading state
 |
 |- components/                  # Reusable UI components
@@ -237,51 +281,103 @@ langtap/
 |- engine/                      # Pure game logic - no React, no Supabase
 |  |- constants.ts              # All named constants (single source of truth)
 |  |- selection.ts              # Character and word selection algorithm
+|  |- kotoba-selection.ts       # Weighted word selection and kanji distractors for Kotoba
+|  |- kotoba-progression.ts     # Kotoba word unlock progression (steps of 6 across levels)
 |  |- mastery.ts                # Mastery score logic and weighting
 |  |- unlock.ts                 # Unlock threshold and progression sequence
 |  |- counter.ts                # Word counter logic
 |  |- distance.ts               # Distance and speed bonus calculation
 |  |- scoring.ts                # Per-character first-attempt scoring
-|  |- sokuon.ts                 # Sokuon position detection and validation
+|  |- input.ts                  # Tri-state input evaluation (full/prefix/no match)
+|  |- streak.ts                 # Streak derivation, grace days, calendar rendering
 |  |- practice-eligibility.ts   # Three-set character eligibility system
 |  |- __tests__/
 |  |  |- selection.test.ts
+|  |  |- kana-selection.test.ts
+|  |  |- kotoba-selection.test.ts
+|  |  |- kotoba-progression.test.ts
+|  |  |- kotoba-scoring.test.ts
 |  |  |- mastery.test.ts
 |  |  |- unlock.test.ts
 |  |  |- counter.test.ts
 |  |  |- distance.test.ts
 |  |  |- scoring.test.ts
-|  |  |- romaji.test.ts
-|  |  |- sokuon.test.ts
+|  |  |- streak.test.ts
 |  |  |- practice-eligibility.test.ts
-|  |  |- kana-selection.test.ts
 |
 |- stores/                      # Zustand state stores (one per domain)
-|  |- mastery.store.ts          # Character mastery scores
-|  |- unlock.store.ts           # Unlock state per character
-|  |- counter.store.ts          # Word counter state
-|  |- session.store.ts          # Current session score and distance
-|  |- settings.store.ts         # User settings (mode, font, audio toggle)
-|  |- user.store.ts             # Authenticated user state
+|  |- mastery.store.ts          # Character mastery scores (persisted, checkpoint-synced)
+|  |- word-mastery.store.ts     # Word mastery scores and manual word unlocks
+|  |- unlock.store.ts           # Character unlock state (derived from mastery, not persisted)
+|  |- counter.store.ts          # Word counter state (session-scoped, in-memory)
+|  |- session.store.ts          # Current session score and distance (in-memory)
+|  |- settings.store.ts         # User settings and settings dialog state (persisted)
+|  |- user.store.ts             # Authenticated user and profile state
+|  |- onboarding.store.ts       # Onboarding flow state (persisted)
+|  |- auth-modal.store.ts       # Auth modal visibility (not persisted)
+|  |- daily-cap.store.ts        # Shared daily distance cap state
+|  |- demo.store.ts             # Demo taster prompt index and completion (in-memory)
+|  |- gameplay.store.ts         # Whether practice gameplay is currently active
+|  |- guest-distance.store.ts   # DEPRECATED (Sprint 14) - flagged for owner deletion
+|  |- guest-usage.store.ts      # DEPRECATED (Sprint 14) - flagged for owner deletion
+|  |- scoped-storage.ts         # User-scoped localStorage adapter for persist (helper, not a store)
 |
 |- services/                    # All external API calls (Supabase, Stripe)
-|  |- supabase.ts               # Supabase client (anon key only)
+|  |- supabase.ts               # Re-exports the browser Supabase client (back-compat)
+|  |- supabase-browser.ts       # Supabase browser client factory (anon key only)
+|  |- supabase-server.ts        # Supabase server client factory (route handlers, middleware)
 |  |- auth.service.ts           # Sign up, log in, sign out, session
 |  |- profile.service.ts        # Read and write user profile
-|  |- mastery.service.ts        # Sync mastery scores to Supabase
-|  |- leaderboard.service.ts    # Read and write leaderboard entries
-|  |- counter.service.ts        # Sync word counter state to Supabase
+|  |- membership.service.ts     # Membership status helpers (writes are server-side only)
+|  |- mastery.service.ts        # Kana mastery snapshot load + checkpoint sync RPCs
+|  |- word-mastery.service.ts   # Word mastery snapshot load + checkpoint sync RPCs
+|  |- unlock.service.ts         # Manual character unlock reads and writes
+|  |- counter.service.ts        # Best-effort word counter sync
+|  |- leaderboard.service.ts    # Server-derived leaderboard scoring and ranked reads
+|  |- practice-session.service.ts # record_practice_activity RPC (streak/heatmap batches)
+|  |- streak.service.ts         # Practice summary loads for streak derivation
+|  |- reset.service.ts          # Per-domain reset RPC wrappers (epoch-aware)
+|  |- factory-reset.service.ts  # factory_reset RPC wrapper
+|  |- bug-report.service.ts     # Bug report submission via /api/bug-report
+|  |- analytics.service.ts      # Vercel Analytics custom event wrapper (event names + budget)
+|  |- redirect-sanitizer.ts     # Sanitises ?next= redirect targets on the auth callback
+|  |- reauth-cookie.ts          # Signed HMAC cookies for the OAuth delete re-auth flow
 |  |- stripe.service.ts         # Stripe client-side helpers (Phase 1: stub)
+|  |- guest-import.service.ts   # DEPRECATED (Sprint 14) - flagged for owner deletion
+|  |- guest-usage.service.ts    # DEPRECATED (Sprint 14) - flagged for owner deletion
+|  |- import-snapshot.ts        # DEPRECATED (Sprint 14) - flagged for owner deletion
 |
 |- hooks/                       # Custom React hooks
-|  |- useAuth.ts                # Current user and auth state
-|  |- useMastery.ts             # Read mastery scores, trigger sync
+|  |- useAuth.ts                # Auth state selector (user, profile, guest/authed flags)
 |  |- useSession.ts             # Current session state and scoring
-|  |- useSettings.ts            # User preferences
+|  |- useSettings.ts            # Profile settings sync into the settings store
+|  |- useMastery.ts             # Read mastery scores, trigger sync
+|  |- usePracticeSession.ts     # Kana practice game loop orchestrator
+|  |- useKotobaPracticeSession.ts # Kotoba practice game loop orchestrator
+|  |- usePracticeCounters.ts    # Per-input-mode correct-character counters
+|  |- usePracticeActivityTracker.ts # Batches completions, flushes to streak RPC
+|  |- useSyncCheckpoint.ts      # Epoch-aware checkpoint sync for signed-in users
+|  |- useResetActions.ts        # Reset operations (per-domain and factory)
+|  |- useDailyCap.ts            # Daily distance cap load and increment
+|  |- useDailyCapAnalytics.ts   # Fires daily_cap_hit analytics event on cap transition
+|  |- useFirstPracticeEvent.ts  # Fires first_practice analytics event once per user
+|  |- useStreak.ts              # Streak state and calendar heatmap derivation
+|  |- useLeaderboard.ts         # Ranked leaderboard fetch with 60s TTL cache
+|  |- useBugReport.ts           # Bug report submit state and cooldown
+|  |- useUsernameRepair.ts      # Default OAuth username detection and repair prompt
 |  |- useAudio.ts               # Lo-fi audio playback control
+|  |- useLofiPlayer.ts          # Shuffled lo-fi background music player
+|  |- useKeySound.ts            # Web Audio keyboard sound effects
+|  |- useWordAudio.ts           # On-demand word and kana pronunciation playback
 |  |- useDialogueSeen.ts        # localStorage tracking for seen dialogues
 |  |- useTutorialTrial.ts       # Sandbox kana trial session
 |  |- useKotobaTrialSession.ts  # Sandbox kotoba trial session
+|  |- useDemoKanaPracticeSession.ts   # Sequential demo kana prompt adapter
+|  |- useDemoKotobaPracticeSession.ts # Sequential demo kotoba prompt adapter
+|  |- useGameplayActive.ts      # Whether gameplay is active (prefetch guard)
+|  |- useEasterEgg.ts           # "langtap" keystroke easter egg
+|  |- useStuckLoadingWarning.ts # Dev-only stuck loading gate watchdog
+|  |- useGuestUsage.ts          # DEPRECATED (Sprint 14) - flagged for owner deletion
 |
 |- data/                        # Static content (bundled, not fetched)
 |  |- kana/
@@ -342,6 +438,8 @@ langtap/
 |  |  |  |- mascot-encouraging.png
 |  |  |  |- mascot-thinking.png
 |
+|- middleware.ts                # Refreshes the Supabase auth token on every request and
+|                               # enforces route-level access control (see docs/AUTH.md Section 4)
 |- .env.local                   # Environment variables (never committed)
 |- .env.example                 # Template with variable names, no values
 |- CLAUDE.md                    # AI session rules

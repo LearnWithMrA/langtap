@@ -9,8 +9,14 @@
 // Depends on: setup.ts, engine/unlock.ts
 // ─────────────────────────────────────────────
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import { type TestContext, setupTestUser, teardownTestUser, skipIfNotRunning } from './setup'
+import { it, expect, beforeAll, afterAll } from 'vitest'
+import {
+  type TestContext,
+  setupTestUser,
+  teardownTestUser,
+  skipIfNotRunning,
+  integrationDescribe,
+} from './setup'
 import { getUnlockedCharacterIds } from '@/engine/unlock'
 
 // ── Helpers ──────────────────────────────────
@@ -46,7 +52,7 @@ function parseWordSnapshot(data: unknown): {
 
 // ── Kana hydration round-trip ────────────────
 
-describe('Kana hydration round-trip', () => {
+integrationDescribe('Kana hydration round-trip', () => {
   let ctx: TestContext
 
   beforeAll(async () => {
@@ -218,7 +224,7 @@ describe('Kana hydration round-trip', () => {
 
 // ── Kana reset round-trips ───────────────────
 
-describe('Kana reset round-trip', () => {
+integrationDescribe('Kana reset round-trip', () => {
   let ctx: TestContext
 
   beforeAll(async () => {
@@ -288,7 +294,7 @@ describe('Kana reset round-trip', () => {
 
 // ── Factory reset round-trip ─────────────────
 
-describe('Factory reset round-trip', () => {
+integrationDescribe('Factory reset round-trip', () => {
   let ctx: TestContext
 
   beforeAll(async () => {
@@ -382,7 +388,7 @@ describe('Factory reset round-trip', () => {
 
 // ── Kotoba hydration round-trip ──────────────
 
-describe('Kotoba hydration round-trip', () => {
+integrationDescribe('Kotoba hydration round-trip', () => {
   let ctx: TestContext
 
   beforeAll(async () => {

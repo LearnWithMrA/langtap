@@ -10,10 +10,11 @@ import {
   setupTestUser,
   teardownTestUser,
   skipIfNotRunning,
+  integrationDescribe,
   createAnonClient,
 } from './setup'
 
-describe('Bug report integration', () => {
+integrationDescribe('Bug report integration', () => {
   let ctx: TestContext
 
   beforeAll(async () => {
@@ -63,5 +64,68 @@ describe('Bug report integration', () => {
     if (skipIfNotRunning(ctx)) return
     const { data } = await ctx.userClient.from('bug_reports').select('id')
     expect(data).toEqual([])
+  })
+
+  describe('submit_bug_report RPC (atomic rate gate)', () => {
+    it('is not callable by an authenticated client (service role only)', async () => {
+      if (skipIfNotRunning(ctx)) return
+      const { error } = await ctx.userClient.rpc('submit_bug_report', {
+        p_user_id: ctx.testUserId,
+        p_type: 'bug',
+        p_description: 'Should be rejected',
+        p_screenshot_path: null,
+        p_user_agent: null,
+        p_app_state: null,
+      })
+      expect(error).toBeTruthy()
+    })
+
+    it('inserts via service role, then rate-limits an immediate second report', async () => {
+      if (skipIfNotRunning(ctx)) return
+      // Clear earlier test inserts so the first RPC call is not already
+      // inside the 60s window from the direct-insert test above.
+      await ctx.adminClient.from('bug_reports').delete().eq('user_id', ctx.testUserId)
+
+      const args = {
+        p_user_id: ctx.testUserId,
+        p_type: 'feature',
+        p_description: 'Atomic RPC integration test',
+        p_screenshot_path: null,
+        p_user_agent: 'vitest',
+        p_app_state: { page: '/practice/kana', input_mode: 'tap' },
+      }
+      const { data: first, error: firstError } = await ctx.adminClient.rpc(
+        'submit_bug_report',
+        args,
+      )
+      expect(firstError).toBeNull()
+      expect((first as { ok: boolean }).ok).toBe(true)
+
+      const { data: second, error: secondError } = await ctx.adminClient.rpc(
+        'submit_bug_report',
+        args,
+      )
+      expect(secondError).toBeNull()
+      const result = second as { ok: boolean; error: string; retry_after: number }
+      expect(result.ok).toBe(false)
+      expect(result.error).toBe('rate_limited')
+      expect(result.retry_after).toBeGreaterThan(0)
+    })
+
+    it('rejects an invalid report type', async () => {
+      if (skipIfNotRunning(ctx)) return
+      const { data, error } = await ctx.adminClient.rpc('submit_bug_report', {
+        p_user_id: ctx.testUserId,
+        p_type: 'spam',
+        p_description: 'Invalid type test',
+        p_screenshot_path: null,
+        p_user_agent: null,
+        p_app_state: null,
+      })
+      expect(error).toBeNull()
+      const result = data as { ok: boolean; error: string }
+      expect(result.ok).toBe(false)
+      expect(result.error).toBe('invalid_type')
+    })
   })
 })

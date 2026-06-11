@@ -56,6 +56,8 @@ function mapRowToProfile(row: ProfileRow): UserProfile {
       'public',
     ) as UserProfile['leaderboardVisibility'],
     userTz: str(row, 'user_tz', 'UTC'),
+    membershipTier: str(row, 'membership_tier', 'free') as UserProfile['membershipTier'],
+    membershipExpiresAt: strNull(row, 'membership_expires_at'),
     usernameChangedAt: strNull(row, 'username_changed_at'),
     guestImportedAt: strNull(row, 'guest_imported_at'),
     guestImportSkippedAt: strNull(row, 'guest_import_skipped_at'),

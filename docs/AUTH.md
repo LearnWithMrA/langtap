@@ -203,13 +203,19 @@ without an account. Dojo and Profile require a full account.
    - Username: 3-20 characters, alphanumeric and underscores only, no spaces.
    - Email: valid format.
    - Password: minimum 8 characters. Show a strength indicator. Encourage randomness.
-4. On submit, call `auth.service.ts signUp()`.
-5. Supabase creates the user in `auth.users`.
-6. The database trigger `on_auth_user_created` creates a row in `public.profiles`
+4. Two consent checkboxes sit on the email sign-up form
+   (`components/ui/sign-up-card.tsx`): agreement to the Terms of Service and
+   Privacy Policy (linked inline), and a confirmation that the user is 13
+   years of age or older. The submit button stays disabled until both are
+   checked. This is client-side only; OAuth providers handle their own
+   consent flows.
+5. On submit, call `auth.service.ts signUp()`.
+6. Supabase creates the user in `auth.users`.
+7. The database trigger `on_auth_user_created` creates a row in `public.profiles`
    with a default username.
-7. The `signUp` service then updates the profile with the chosen username.
-8. On success, redirect to `/onboarding/step-1`.
-9. On error, show a human-readable message. Never show the raw Supabase error.
+8. The `signUp` service then updates the profile with the chosen username.
+9. On success, redirect to `/onboarding/step-1`.
+10. On error, show a human-readable message. Never show the raw Supabase error.
 
 Common error messages to map:
 - `User already registered`: "An account with this email already exists."
@@ -232,8 +238,9 @@ after sign-up. Enable in a later sprint if required.
    - If the user has not completed onboarding, redirect to the first incomplete step.
 5. On error, show a mapped error message. Never show raw Supabase errors.
 
-Onboarding completion is tracked by a `onboarding_complete` boolean field on
-the `profiles` table (add to the schema in BACKEND.md on the next migration).
+Onboarding completion is tracked by the `onboarding_complete` boolean field on
+the `profiles` table (present since the initial migration, see BACKEND.md
+Section 2.2).
 
 ---
 
@@ -303,9 +310,8 @@ pattern. Full visual and interaction spec: UX_DESIGN.md Section 5.
 ### Step 1 - JLPT Self-Assessment (`/onboarding/step-1`)
 
 - Show N5 through N1 with a short description of each level.
-- User selects one level. This sets `kotoba_jlpt_level` on the profile.
-  The `kanji_jlpt_level` field is vestigial (kanji removed from scope per
-  Sprint Board v1.1) and is not set during onboarding.
+- User selects one level. This sets `jlpt_level` on the profile
+  (a single column; there are no separate kotoba/kanji level columns).
 - Default: N5 pre-selected.
 - Message shown: "Words below this level will be marked as mastered. To
   reset, change your level in Settings."

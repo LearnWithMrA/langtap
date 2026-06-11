@@ -68,6 +68,7 @@ export function SignUpCard({ onClose, onSwitchToLogIn }: SignUpCardProps): React
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [confirmedAge, setConfirmedAge] = useState(false)
 
   const strength = getPasswordStrength(password)
 
@@ -174,9 +175,29 @@ export function SignUpCard({ onClose, onSwitchToLogIn }: SignUpCardProps): React
                 rel="noopener noreferrer"
                 className="text-[#4a7faa] font-medium hover:underline"
               >
-                Terms and Conditions
+                Terms of Service
+              </a>{' '}
+              and{' '}
+              <a
+                href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#4a7faa] font-medium hover:underline"
+              >
+                Privacy Policy
               </a>
             </span>
+          </label>
+
+          <label className="flex items-start gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={confirmedAge}
+              onChange={(e) => setConfirmedAge(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-border text-sky-500 focus:ring-sky-300 accent-sky-500"
+              aria-label="Confirm you are 13 years of age or older"
+            />
+            <span className="text-xs text-text-muted">I confirm I am 13 years of age or older</span>
           </label>
 
           {error && (
@@ -187,7 +208,7 @@ export function SignUpCard({ onClose, onSwitchToLogIn }: SignUpCardProps): React
 
           <KeyButton
             onClick={handleSignUp}
-            disabled={loading || !acceptedTerms}
+            disabled={loading || !acceptedTerms || !confirmedAge}
             className="w-full justify-center px-4 py-2.5 sm:py-3.5 text-base sm:text-lg font-medium mt-1 bg-[#4a7faa] text-white shadow-[0_4px_0_0_#3a6488]"
             aria-label="Sign up"
           >

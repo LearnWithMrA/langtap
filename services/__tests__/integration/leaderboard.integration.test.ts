@@ -5,9 +5,15 @@
 // ─────────────────────────────────────────────
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import { type TestContext, setupTestUser, teardownTestUser, skipIfNotRunning } from './setup'
+import {
+  type TestContext,
+  setupTestUser,
+  teardownTestUser,
+  skipIfNotRunning,
+  integrationDescribe,
+} from './setup'
 
-describe('Leaderboard integration', () => {
+integrationDescribe('Leaderboard integration', () => {
   let ctx: TestContext
 
   beforeAll(async () => {

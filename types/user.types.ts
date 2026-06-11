@@ -29,6 +29,9 @@ export type AuthUser = {
 /** Leaderboard visibility options. */
 export type LeaderboardVisibility = 'public' | 'hidden'
 
+/** Membership tiers. Writes are server-side only (guard trigger). */
+export type MembershipTier = 'free' | 'monthly' | 'annual' | 'lifetime'
+
 /** Row shape from the profiles table. */
 export type UserProfile = {
   id: string
@@ -47,6 +50,8 @@ export type UserProfile = {
   distanceUnit: 'metric' | 'imperial'
   leaderboardVisibility: LeaderboardVisibility
   userTz: string
+  membershipTier: MembershipTier
+  membershipExpiresAt: string | null
   usernameChangedAt: string | null
   guestImportedAt: string | null
   guestImportSkippedAt: string | null

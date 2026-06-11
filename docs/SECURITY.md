@@ -375,6 +375,34 @@ If the service role key is bundled into client-side code (e.g. via a
 - GitHub secret scanning is enabled. Supabase auto-revokes leaked keys detected
   in public repositories.
 
+### 6.5 Hardening Fixes Shipped 2026-06-11
+
+Five fixes landed from the 2026-06-11 security review:
+
+- **Sign-out CSRF origin check:** `/api/auth/sign-out` now rejects POSTs whose
+  `Origin` header does not match the request origin, and rejects any
+  `Sec-Fetch-Site` value other than `same-origin`. Previously a cross-site
+  form post could force a logout.
+- **sanitizeNext hardening:** the `?next=` redirect target on the auth
+  callback is sanitized by `services/redirect-sanitizer.ts` (`sanitizeNext`).
+  It rejects protocol-relative URLs, backslashes, encoded slashes, control
+  characters, and full URLs, falling back to `/home`. Extracted to a pure
+  function so it is unit tested.
+- **Bug-report atomic rate gate:** the 60s rate limit moved from a
+  check-then-insert in the route handler into the `submit_bug_report` RPC,
+  which serializes per user with `pg_advisory_xact_lock`. Two concurrent
+  requests can no longer both pass the check. The RPC is service-role-execute
+  only. See BACKEND.md Section 4.10.
+- **Guard trigger NULL-bypass fixes:** `guard_username_change` compared
+  `current_setting(..., true) != '1'`, but `current_setting` returns NULL when
+  unset and `NULL != '1'` is NULL (falsy), so the guard never fired and direct
+  client UPDATEs could bypass the 30-day username cooldown. Fixed with
+  `coalesce(..., '')`. See BACKEND.md Section 5.3.
+- **Membership write guard:** new `guard_membership_change` trigger (with the
+  `coalesce` fix built in) blocks client updates to `membership_tier`,
+  `membership_expires_at`, and `stripe_customer_id`. Membership writes are
+  server-side only.
+
 ---
 
 ## 7. Demo Mode Security
@@ -393,11 +421,14 @@ validated activity.
 
 ### 7.1 Deprecated: Guest Import (Sprint 14)
 
-The guest-to-account import flow (`import_guest_progress`, `import_legacy_progress`
-RPCs) was disconnected in Sprint 14. The RPCs and related database objects
-(guest_usage table, import RPCs, anonymous RLS policies) remain in the database
-but are no longer called from the client. They are flagged for owner cleanup
-via a migration.
+The guest-to-account import flow was disconnected in Sprint 14. The deprecated
+`guest_usage` table and the import RPCs (`import_guest_progress`,
+`import_legacy_progress`, `skip_guest_import`, `skip_legacy_import`), plus the
+related anonymous RLS policies, remain in the schema but are no longer called
+from the client. They are safe to leave in place: each RPC still validates
+`auth.uid()` internally, so their presence does not widen the attack surface.
+They are flagged for a future cleanup migration; per the editing rules, the
+owner performs all destructive database operations.
 
 ---
 
@@ -451,6 +482,64 @@ Run through this checklist before every production deployment.
 - Never return a raw Supabase error message to the UI.
 - Never add a DELETE policy to any table without explicit owner approval.
 - Never deploy without running the pre-deployment security checklist above.
+
+---
+
+## 10. Mutating Surface Inventory
+
+Every surface that can change server-side state, classified by where its
+protection lives. Built from `app/api/` route handlers and the RPC
+definitions in `supabase/migrations/`. Update this table whenever a route
+or RPC is added or changed.
+
+### 10.1 Route-handler gated (CSRF origin check + validation in Next.js route)
+
+| Surface | Protections |
+|---|---|
+| `POST /api/bug-report` | Origin/referer check, server auth (`getUser()`), type/description/MIME/size caps, then `submit_bug_report` RPC as the authoritative rate gate (advisory lock, 60s); orphan screenshot cleanup on rejection |
+| `POST /api/sync` | Origin + `Sec-Fetch-Site` checks, 100KB payload cap, server auth, delegates to checkpoint RPCs (which re-validate everything) |
+| `POST /api/auth/delete-account` (+ `requirements`, `reauth/[provider]/start`) | Origin check, server auth, typed `delete-[username]` confirmation, re-authentication (password or signed HMAC cookie, 5-min TTL), 1KB body cap |
+| `POST /api/auth/sign-out` | Origin + `Sec-Fetch-Site` checks (added 2026-06-11) |
+| `POST /api/stripe/webhook` | Placeholder only; returns `{ received: true }` and writes nothing. Signature verification ships with the Stripe implementation. |
+
+### 10.2 SQL/RPC gated (server-side validation inside the RPC)
+
+All are `security definer` with `set search_path = public, pg_temp` and
+derive the user from `auth.uid()`; client-supplied user ids are never
+trusted. Unless noted, each rejects anonymous users via
+`is_permanent_user()`.
+
+| RPC | Protections |
+|---|---|
+| `checkpoint_mastery`, `checkpoint_word_mastery`, `checkpoint_manual_unlocks`, `checkpoint_word_manual_unlocks` | Anonymous rejected, exact epoch match (stale batch rejected whole), profile row lock (`FOR UPDATE`), catalog ID validation (`kana_character_catalog` / `leaderboard_word_catalog`), batch size cap (200), bounded values |
+| `reset_character_mastery`, `reset_all_mastery`, `reset_word_mastery`, `reset_all_word_mastery` | Anonymous rejected, profile row lock, epoch increment as serialization point |
+| `factory_reset` | Anonymous rejected, profile row lock, atomic multi-table clear, increments both epochs in one UPDATE |
+| `change_username` | Anonymous rejected, format validation, server-enforced 30-day cooldown, guard trigger blocks any non-RPC write path |
+| `increment_daily_distance` | Anonymous rejected, two-int advisory lock per user+date, bounded delta, idempotent via event id |
+| `record_practice_activity` | Anonymous rejected, count bounds (1-1000), idempotent via `practice_activity_events`, server-derived timezone and local date |
+| `start_leaderboard_session` / `finalize_leaderboard_session` | Anonymous rejected, server-issued session with 5-minute expiry, catalog-validated word, server-derived score |
+| `record_leaderboard_completion` | Anonymous rejected, bounded score delta (1-20), idempotent via `leaderboard_score_events` |
+| `submit_bug_report` | Service-role execute only (revoked from anon/authenticated), per-user advisory lock, 60s rate gate, re-validates type and length |
+| `get_or_create_guest_usage`, `increment_guest_usage` | Deprecated, no longer called from the client; still validate `auth.uid()` internally |
+| `import_guest_progress`, `import_legacy_progress`, `skip_guest_import`, `skip_legacy_import` | Deprecated, no longer called from the client; still validate `auth.uid()` internally (see Section 7.1) |
+
+Direct table writes (`mastery`, `word_mastery`, `word_counters`,
+`manual_unlocks`, `word_manual_unlocks`, `profiles` update) are gated by the
+permanent-user-owns-row RLS pattern in Section 3.1, plus the
+`guard_username_change` and `guard_membership_change` triggers on `profiles`.
+
+### 10.3 Supabase Auth controlled
+
+Sign-up, sign-in, password reset, and OAuth flows are handled by Supabase
+Auth (GoTrue), including its built-in rate limiting and token handling.
+LangTap adds client-side validation and consent gating only.
+
+### 10.4 Documented gap
+
+Distributed per-IP rate limiting (Upstash / Vercel KV) is deferred. The
+database-level limits above (advisory locks, cooldowns, epoch checks,
+bounded deltas, idempotency events) are the current authority for abuse
+prevention.
 
 ---
 

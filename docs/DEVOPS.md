@@ -133,7 +133,7 @@ Open http://localhost:3000.
 The Supabase CLI runs a full local Supabase stack in Docker. This gives a
 completely isolated local database with the same schema as production.
 
-> **Vitest environment note:** The default test environment is `happy-dom` (switched from jsdom in Sprint 2 due to jsdom 26.x hanging indefinitely in vitest worker threads under Node.js v24). Engine test files run in happy-dom by default. Component and hook test files should also use happy-dom. The `pool: 'forks'` config option is set to prevent zombie worker processes if a test hangs. Do not switch back to jsdom or threadpool without testing on Node 24 first.
+> **Vitest environment note:** The default test environment is `happy-dom` (switched from jsdom in Sprint 2 due to jsdom 26.x hanging indefinitely in vitest worker threads under Node.js v24). Individual test files that need jsdom-specific behaviour opt in with a per-file `// @vitest-environment jsdom` annotation at the top of the file; this is the current pattern and is used by a number of component and hook tests. Do not change the global default environment or switch away from `pool: 'forks'` (set to prevent zombie worker processes) without testing on Node 24 first.
 
 Useful commands:
 
@@ -216,18 +216,23 @@ database schema and catches type mismatches at compile time.
 
 ### 6.1 vercel.json
 
-A minimal `vercel.json` is kept at the project root for explicit configuration:
+`vercel.json` at the project root contains cache header configuration only
+(no build/framework overrides - Vercel auto-detects Next.js). It sets
+`Cache-Control` headers for static assets:
 
-```json
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "version": 2,
-  "framework": "nextjs",
-  "buildCommand": "npm run build",
-  "installCommand": "npm install",
-  "outputDirectory": ".next"
-}
-```
+| Source pattern | Cache policy |
+|---|---|
+| `/images/cyclist/(.*)` | 1 year, immutable |
+| `/images/(.*).svg` | 1 year, immutable |
+| `/images/mascot/(.*)` | 1 year, immutable |
+| `/sounds/(.*)` | 1 year, immutable |
+| `/audio/words/(.*).mp3` | 1 day, stale-while-revalidate 1 hour |
+| `/audio/(.*)` | 1 year, immutable |
+| `/fonts/(.*)` | 1 year, immutable |
+
+Immutable assets are versioned by filename, so a content change means a new
+URL and the long cache never serves stale data. Word audio uses a shorter
+window because files may be regenerated under the same name.
 
 No region configuration needed. Vercel automatically distributes to the nearest
 edge based on user location.
@@ -242,9 +247,9 @@ Preview deployments should use the same Supabase project as development, not
 production. Set the Preview environment variables in Vercel to point to the
 development Supabase project.
 
-### 6.3 Build script
+### 6.3 npm scripts
 
-Add a pre-deployment check to the build script in `package.json`:
+The scripts in `package.json`:
 
 ```json
 {
@@ -252,18 +257,34 @@ Add a pre-deployment check to the build script in `package.json`:
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "type-check": "tsc --noEmit",
-    "test": "vitest run",
-    "check": "npm run lint && npm run type-check && npm run test",
+    "test": "NODE_ENV=test vitest run",
+    "test:watch": "NODE_ENV=test vitest",
+    "test:integration": "NODE_ENV=test node scripts/run-integration-tests.mjs",
+    "lint": "eslint .",
+    "check": "npm run format:check && npm run lint && npm run type-check && npm run test",
+    "build:budget": "next build 2>&1 | npx tsx scripts/check-bundle-budget.ts",
+    "performance:smoke": "npx playwright test tests/performance/smoke.spec.ts",
+    "performance:trace": "npx playwright test tests/performance/trace.spec.ts",
+    "performance": "npx playwright test tests/performance/",
+    "lighthouse": "lhci autorun",
+    "generate-audio": "npx tsx scripts/generate-audio.ts",
     "prebuild": "npm run check"
   }
 }
 ```
 
-The `prebuild` script runs lint, type-check, and tests before every build.
-If any of these fail, the build fails and the deployment does not proceed.
-This prevents broken code from reaching production.
+- `check`: format check, lint, type-check, and unit tests in sequence.
+- `test:integration`: Supabase integration tests against local Docker (Section 7B).
+- `build:budget`: production build piped into the bundle budget checker.
+- `performance`, `performance:smoke`, `performance:trace`: Playwright performance suites.
+- `lighthouse`: Lighthouse CI runs against the configured URLs.
+- `generate-audio`: regenerates word audio assets.
+- `prebuild`: runs `check` before every build. If any step fails, the build
+  fails and the deployment does not proceed. This prevents broken code from
+  reaching production.
 
 ---
 
@@ -298,14 +319,46 @@ jobs:
 
 ---
 
+## 7B. Supabase Integration Tests
+
+Server-side code (RPCs, RLS policies, migrations, route handlers that call
+Supabase) is verified by integration tests in
+`services/__tests__/integration/`, which run against the local Supabase
+Docker instance. See CLAUDE.md Section 5D for when they are required.
+
+Workflow:
+
+```bash
+npx supabase start          # Docker must be running
+npx supabase db reset       # Apply all migrations before a test run
+npm run test:integration
+```
+
+`npm run test:integration` invokes `scripts/run-integration-tests.mjs`,
+which reads the local anon and service role keys automatically via
+`supabase status` and passes them to vitest as env vars. No manual key
+setup is needed, and the keys are never hardcoded. If local Supabase is
+not running, the script fails fast; if keys are missing, the tests skip
+visibly rather than silently passing.
+
+---
+
 ## 8. Monitoring
 
 Vercel provides basic monitoring out of the box:
 
 - **Function logs:** Vercel dashboard > Deployments > Functions. Shows server
   component and route handler logs.
-- **Core Web Vitals:** Vercel Analytics tracks LCP, CLS, and INP from real users.
-  Enable in the Vercel dashboard under Analytics.
+- **Core Web Vitals:** `@vercel/speed-insights` tracks LCP, CLS, and INP from
+  real users. `<SpeedInsights />` is mounted in `app/layout.tsx`.
+- **Product analytics:** `@vercel/analytics` (`<Analytics />` mounted in
+  `app/layout.tsx` next to SpeedInsights) provides page views plus custom
+  events. Custom events go through `services/analytics.service.ts`, which
+  holds all event names as constants: `sign_up`, `first_practice`,
+  `trial_complete`, `daily_cap_hit`. Keep the event list short: the Vercel
+  free tier allows 2,500 events per month, and the service file is the
+  single place where that budget stays auditable. Components and hooks call
+  `trackEvent`; stores must not import the service.
 - **Error tracking:** Add a basic error boundary at the app level (already in
   `app/error.tsx`). For production error tracking, consider adding Sentry in a
   later sprint.

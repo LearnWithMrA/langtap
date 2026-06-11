@@ -98,6 +98,12 @@ export function LandingFooter(): ReactNode {
           <a href="/terms" className="hover:text-text-primary transition-colors">
             Terms of Service
           </a>
+          <a href="/acceptable-use" className="hover:text-text-primary transition-colors">
+            Acceptable Use
+          </a>
+          <a href="/copyright" className="hover:text-text-primary transition-colors">
+            Copyright
+          </a>
           <a href="/credits" className="hover:text-text-primary transition-colors">
             Credits
           </a>

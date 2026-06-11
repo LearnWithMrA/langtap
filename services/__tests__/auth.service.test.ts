@@ -34,29 +34,23 @@ let mockResetPasswordResult: { error: { code?: string; status?: number; message:
     error: null,
   }
 
-// Controls the sequence of results for profile update attempts.
+// Controls the sequence of results for claim_initial_username RPC attempts.
 let mockUpdateResults: Array<{
-  data: Array<{ id: string }> | null
+  data: { ok?: boolean; error_code?: string } | null
   error: { code?: string; status?: number; message: string } | null
 }> = []
 
-type UpdateMock = {
-  from: ReturnType<typeof vi.fn>
+type RpcMock = {
+  rpc: ReturnType<typeof vi.fn>
 }
 
-function makeUpdateMock(): UpdateMock {
+function makeRpcMock(): RpcMock {
   let callCount = 0
   return {
-    from: vi.fn().mockReturnValue({
-      update: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          select: vi.fn().mockImplementation(() => {
-            const result = mockUpdateResults[callCount] ?? { data: [{ id: 'user-1' }], error: null }
-            callCount++
-            return Promise.resolve(result)
-          }),
-        }),
-      }),
+    rpc: vi.fn().mockImplementation(() => {
+      const result = mockUpdateResults[callCount] ?? { data: { ok: true }, error: null }
+      callCount++
+      return Promise.resolve(result)
     }),
   }
 }
@@ -69,7 +63,7 @@ vi.mock('@/services/supabase-browser', () => ({
       getUser: vi.fn(() => Promise.resolve(mockGetUserResult)),
       resetPasswordForEmail: vi.fn(() => Promise.resolve(mockResetPasswordResult)),
     },
-    ...makeUpdateMock(),
+    ...makeRpcMock(),
   })),
 }))
 
@@ -130,7 +124,7 @@ describe('signUp - input validation', () => {
 describe('signUp - email normalisation', () => {
   beforeEach(() => {
     mockSignUpResult = { data: { user: { id: 'user-1' } }, error: null }
-    mockUpdateResults = [{ data: [{ id: 'user-1' }], error: null }]
+    mockUpdateResults = [{ data: { ok: true }, error: null }]
   })
 
   it('trims and lowercases the email before passing to Supabase', async () => {
@@ -221,18 +215,18 @@ describe('signUp - profile write', () => {
   })
 
   it('returns profileWritten: true when update succeeds immediately', async () => {
-    mockUpdateResults = [{ data: [{ id: 'user-1' }], error: null }]
+    mockUpdateResults = [{ data: { ok: true }, error: null }]
     const result = await signUp('a@b.com', 'password123', 'alice')
     expect(result.ok).toBe(true)
     if (result.ok) expect(result.profileWritten).toBe(true)
   })
 
   it('returns profileWritten: true after a row-not-found retry', async () => {
-    // First attempt: trigger hasn't committed yet (data is empty, no error)
+    // First attempt: trigger hasn't committed yet (profile_missing)
     // Second attempt: row is there
     mockUpdateResults = [
-      { data: [], error: null },
-      { data: [{ id: 'user-1' }], error: null },
+      { data: { ok: false, error_code: 'profile_missing' }, error: null },
+      { data: { ok: true }, error: null },
     ]
     const result = await signUp('a@b.com', 'password123', 'alice')
     expect(result.ok).toBe(true)
@@ -241,9 +235,9 @@ describe('signUp - profile write', () => {
 
   it('returns profileWritten: false after all retries exhausted', async () => {
     mockUpdateResults = [
-      { data: [], error: null },
-      { data: [], error: null },
-      { data: [], error: null },
+      { data: { ok: false, error_code: 'profile_missing' }, error: null },
+      { data: { ok: false, error_code: 'profile_missing' }, error: null },
+      { data: { ok: false, error_code: 'profile_missing' }, error: null },
     ]
     const result = await signUp('a@b.com', 'password123', 'alice')
     expect(result.ok).toBe(true)
@@ -268,7 +262,7 @@ describe('signUp - profile write', () => {
     // An error with no code is treated as transient (network/unknown) and retried.
     mockUpdateResults = [
       { data: null, error: makeAuthError({ message: 'connection error' }) },
-      { data: [{ id: 'user-1' }], error: null },
+      { data: { ok: true }, error: null },
     ]
     const result = await signUp('a@b.com', 'password123', 'alice')
     expect(result.ok).toBe(true)

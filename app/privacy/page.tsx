@@ -1,13 +1,14 @@
 // ─────────────────────────────────────────────
-// File: app/(main)/privacy/page.tsx
-// Purpose: Privacy policy page. Plain language. Covers data storage,
-//          leaderboard visibility, demo mode, email, and cookies.
-// Depends on: components/layout/landing-footer.tsx
+// File: app/privacy/page.tsx
+// Purpose: Privacy Policy page. Full legal text converted from
+//          docs/legal/PRIVACY_POLICY.md. Rendered inside the shared
+//          LegalPageShell official document panel.
+// Depends on: components/layout/legal-page-shell.tsx
 // ─────────────────────────────────────────────
 
 import type { ReactNode } from 'react'
 import type { Metadata } from 'next'
-import { LandingFooter } from '@/components/layout/landing-footer'
+import { LegalPageShell } from '@/components/layout/legal-page-shell'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy - LangTap',
@@ -15,130 +16,753 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage(): ReactNode {
   return (
-    <div className="min-h-svh bg-warm-50 flex flex-col">
-      <main className="max-w-2xl mx-auto px-4 sm:px-8 pt-20 pb-16 flex-1 w-full">
-        <h1 className="text-2xl font-bold text-warm-800 mb-6">Privacy Policy</h1>
-        <p className="text-xs text-warm-400 mb-8">Last updated: 8 May 2026</p>
+    <LegalPageShell
+      title="Privacy Policy"
+      lastUpdated="11 June 2026"
+      intro={<p>Effective date: [To be set on deployment]</p>}
+    >
+      <section className="space-y-2">
+        <h2>1. Who We Are</h2>
+        <p>
+          LangTap is operated by [Legal Entity Name], registered in England and Wales (company
+          number [TBD]), with registered address at [TBD].
+        </p>
+        <p>
+          We are the data controller for the personal data described in this policy. This means we
+          determine how and why your personal data is processed.
+        </p>
+        <p>
+          <strong>Data protection contact:</strong>{' '}
+          <a href="mailto:privacy@langtap.com">privacy@langtap.com</a>
+        </p>
+        <p>
+          We have not appointed a Data Protection Officer (DPO) as our core activities do not
+          involve large-scale processing of special categories of data. If this changes, we will
+          update this policy.
+        </p>
+        <p>
+          <strong>EU Representative (GDPR Art. 27):</strong> As a UK-based controller processing
+          personal data of individuals in the EU, we [have appointed / are in the process of
+          appointing] an EU representative. Details will be provided here once confirmed. In the
+          meantime, EU residents may contact us directly at privacy@langtap.com.
+        </p>
+      </section>
 
-        <div className="space-y-6 text-sm text-warm-700 leading-relaxed">
-          <section>
-            <h2 className="text-lg font-semibold text-warm-800 mb-2">What LangTap is</h2>
-            <p>
-              LangTap is a web-based Japanese typing fluency app. It helps you build speed and
-              comfort typing Japanese characters. It is not a language teaching app.
-            </p>
-          </section>
+      <section className="space-y-2">
+        <h2>2. What LangTap Is</h2>
+        <p>
+          LangTap is a web-based Japanese typing fluency application. It helps you build speed and
+          comfort typing Japanese characters. It is not a language teaching app. Learning is a
+          by-product of repetition.
+        </p>
+      </section>
 
-          <section>
-            <h2 className="text-lg font-semibold text-warm-800 mb-2">What we collect</h2>
-            <p>We store only what is necessary to run the app:</p>
-            <ul className="list-disc pl-5 mt-2 space-y-1">
-              <li>
-                <strong>Username</strong> (chosen by you, not your real name)
-              </li>
-              <li>
-                <strong>Email address</strong> (for sign-in only, stored by our auth provider)
-              </li>
-              <li>
-                <strong>JLPT level and input mode preferences</strong>
-              </li>
-              <li>
-                <strong>Practice scores</strong> (mastery scores, word counters, distance travelled)
-              </li>
-              <li>
-                <strong>Settings</strong> (toggles like audio, hints, distance unit)
-              </li>
-            </ul>
-            <p className="mt-2">
-              We do not collect real names, profile photos, location data, or device fingerprints.
-              We do not sell or share your data with third parties.
-            </p>
-          </section>
+      <section className="space-y-2">
+        <h2>3. What We Collect and Why</h2>
+        <p>
+          We collect only what is necessary to operate the Service. We do not collect real names,
+          profile photos, physical addresses, location data, device fingerprints, or social media
+          profiles.
+        </p>
 
-          <section>
-            <h2 className="text-lg font-semibold text-warm-800 mb-2">Leaderboard</h2>
-            <p>
-              Your username appears on the public leaderboard by default. You can hide yourself from
-              the leaderboard in Settings. Even when hidden, your scores are still tracked for your
-              own progress. Choose a username that is not your real name.
-            </p>
-          </section>
+        <h3>3.1 Data You Provide</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Purpose</th>
+              <th>Lawful Basis (GDPR Art. 6)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Email address</td>
+              <td>Account creation and authentication, account recovery, service notifications</td>
+              <td>Contract performance (Art. 6(1)(b))</td>
+            </tr>
+            <tr>
+              <td>Username</td>
+              <td>Account identification, leaderboard display</td>
+              <td>Contract performance (Art. 6(1)(b))</td>
+            </tr>
+            <tr>
+              <td>Password</td>
+              <td>Account security (hashed, never stored in plaintext)</td>
+              <td>Contract performance (Art. 6(1)(b))</td>
+            </tr>
+            <tr>
+              <td>JLPT level preference</td>
+              <td>Personalising the practice experience</td>
+              <td>Contract performance (Art. 6(1)(b))</td>
+            </tr>
+            <tr>
+              <td>Input mode preference</td>
+              <td>Personalising the practice experience (keyboard, swipe, tap)</td>
+              <td>Contract performance (Art. 6(1)(b))</td>
+            </tr>
+          </tbody>
+        </table>
 
-          <section>
-            <h2 className="text-lg font-semibold text-warm-800 mb-2">Demo mode</h2>
-            <p>
-              You can try LangTap without creating an account using the demo. Demo progress is not
-              saved and no data is sent to our servers. Create an account to save your progress.
-            </p>
-          </section>
+        <h3>3.2 Data Generated by Your Use</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Purpose</th>
+              <th>Lawful Basis</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Practice scores and mastery data</td>
+              <td>Core service functionality (tracking progress)</td>
+              <td>Contract performance (Art. 6(1)(b))</td>
+            </tr>
+            <tr>
+              <td>Word counters and distance travelled</td>
+              <td>Core service functionality (game progression)</td>
+              <td>Contract performance (Art. 6(1)(b))</td>
+            </tr>
+            <tr>
+              <td>Unlock status</td>
+              <td>Core service functionality (progression tracking)</td>
+              <td>Contract performance (Art. 6(1)(b))</td>
+            </tr>
+            <tr>
+              <td>Settings and preferences (audio, hints, units)</td>
+              <td>Core service functionality</td>
+              <td>Contract performance (Art. 6(1)(b))</td>
+            </tr>
+            <tr>
+              <td>Leaderboard scores</td>
+              <td>Core service functionality</td>
+              <td>Contract performance (Art. 6(1)(b))</td>
+            </tr>
+          </tbody>
+        </table>
 
-          <section>
-            <h2 className="text-lg font-semibold text-warm-800 mb-2">Cookies</h2>
-            <p>
-              LangTap uses HTTP-only session cookies to keep you signed in. These are managed by our
-              auth provider (Supabase) and are not used for tracking or advertising.
-            </p>
-          </section>
+        <h3>3.3 Data Collected Automatically</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Purpose</th>
+              <th>Lawful Basis</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Session cookies</td>
+              <td>Keeping you signed in</td>
+              <td>Legitimate interest (Art. 6(1)(f))</td>
+            </tr>
+            <tr>
+              <td>Server access logs (IP address, browser type, timestamps)</td>
+              <td>Security monitoring, abuse prevention</td>
+              <td>Legitimate interest (Art. 6(1)(f))</td>
+            </tr>
+          </tbody>
+        </table>
 
-          <section>
-            <h2 className="text-lg font-semibold text-warm-800 mb-2">Where your data is stored</h2>
-            <p>
-              Account data is stored in a Supabase-hosted PostgreSQL database. Authentication is
-              handled by Supabase Auth. The app is hosted on Vercel. All data is transmitted over
-              HTTPS.
-            </p>
-          </section>
+        <h3>3.4 Payment Data (When Subscriptions Launch)</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Purpose</th>
+              <th>Lawful Basis</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Payment method details</td>
+              <td>Processing subscription payments</td>
+              <td>Contract performance (Art. 6(1)(b))</td>
+            </tr>
+            <tr>
+              <td>Billing history</td>
+              <td>Payment records and refund processing</td>
+              <td>Legal obligation (Art. 6(1)(c))</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Payment data is processed by Stripe, Inc. We do not store your full payment card details
+          on our servers. See Section 8 (Sub-Processors) for details.
+        </p>
+      </section>
 
-          <section>
-            <h2 className="text-lg font-semibold text-warm-800 mb-2">Email</h2>
-            <p>
-              We use your email address for sign-in only. We do not send marketing emails. If we add
-              practice reminders in the future, they will be opt-in with a clear unsubscribe option.
-            </p>
-          </section>
+      <section className="space-y-2">
+        <h2>4. What We Do Not Collect</h2>
+        <p>We want to be explicit about what we do not do:</p>
+        <ul>
+          <li>
+            We do <strong>not</strong> collect real names or require them
+          </li>
+          <li>
+            We do <strong>not</strong> collect location or GPS data
+          </li>
+          <li>
+            We do <strong>not</strong> use device fingerprinting
+          </li>
+          <li>
+            We do <strong>not</strong> use analytics cookies or tracking pixels
+          </li>
+          <li>
+            We do <strong>not</strong> serve advertisements
+          </li>
+          <li>
+            We do <strong>not</strong> sell, rent, or share your personal data with third parties
+            for their marketing purposes
+          </li>
+          <li>
+            We do <strong>not</strong> use your data for behavioural advertising, cross-context
+            tracking, or profiling beyond the in-app practice personalisation described in Section
+            12
+          </li>
+          <li>
+            We do <strong>not</strong> build advertising profiles or share data with data brokers
+          </li>
+        </ul>
+      </section>
 
-          <section>
-            <h2 className="text-lg font-semibold text-warm-800 mb-2">Deleting your account</h2>
-            <p>
-              You can permanently delete your account from the Profile screen. This removes all your
-              data from our servers, including scores, settings, and your email address. This cannot
-              be undone.
-            </p>
-          </section>
+      <section className="space-y-2">
+        <h2>5. Leaderboard</h2>
+        <p>
+          Your username appears on the public leaderboard by default. This is part of the core
+          service (lawful basis: contract performance).
+        </p>
+        <ul>
+          <li>You can opt out of the leaderboard at any time in Settings</li>
+          <li>When you opt out, your username is immediately removed from public display</li>
+          <li>
+            Opting out does not affect your scores or progress, which continue to be tracked
+            privately
+          </li>
+          <li>If you delete your account, your leaderboard entries are permanently removed</li>
+          <li>
+            We strongly recommend choosing a username that is not your real name or any other
+            personal identifier
+          </li>
+        </ul>
+      </section>
 
-          <section>
-            <h2 className="text-lg font-semibold text-warm-800 mb-2">Children</h2>
-            <p>
-              LangTap is not directed at children under 13. We do not knowingly collect data from
-              children under 13. If you believe a child has provided us with data, please contact us
-              and we will delete it.
-            </p>
-          </section>
+      <section className="space-y-2">
+        <h2>6. Guest Mode</h2>
+        <p>You can use LangTap without creating an account via Guest Mode.</p>
+        <ul>
+          <li>
+            Guest practice progress (mastery scores, character data) is stored in your browser's
+            localStorage
+          </li>
+          <li>
+            A minimal server-side record is created to enforce the 30-metre guest usage cap. This
+            record contains only the distance travelled and a randomly generated session identifier.
+            It does not contain your name, email, or any account-level personal data
+          </li>
+          <li>
+            Standard server access logs (IP address, browser type) are generated when any visitor,
+            including guests, loads pages (see Section 3.3)
+          </li>
+          <li>We do not create a user account or profile for guest users</li>
+          <li>
+            If you clear your browser data, switch devices, or use private/incognito mode, guest
+            progress stored in your browser is permanently lost
+          </li>
+          <li>Guest mode has a 30-metre practice cap</li>
+        </ul>
+        <p>
+          The lawful basis for the server-side guest usage record is legitimate interest (Art.
+          6(1)(f)): preventing abuse of the free tier. The guest session identifier is randomly
+          generated and is not linked to any account-level personal data. However, as with all web
+          traffic, your IP address may appear in server access logs alongside the guest session (see
+          Section 3.3).
+        </p>
+      </section>
 
-          <section>
-            <h2 className="text-lg font-semibold text-warm-800 mb-2">Contact</h2>
-            <p>
-              If you have questions about this policy or your data, email{' '}
-              <a
-                href="mailto:privacy@langtap.com"
-                className="text-sage-600 hover:text-sage-700 underline"
-              >
-                privacy@langtap.com
-              </a>
-              .
-            </p>
-          </section>
+      <section className="space-y-2">
+        <h2>7. Cookies and Local Storage</h2>
 
-          <section>
-            <h2 className="text-lg font-semibold text-warm-800 mb-2">Changes</h2>
-            <p>
-              We may update this policy from time to time. The date at the top of this page shows
-              when it was last changed.
-            </p>
-          </section>
-        </div>
-      </main>
-      <LandingFooter />
-    </div>
+        <h3>7.1 Cookies We Use</h3>
+        <p>
+          We use only strictly necessary cookies required for authentication. We do not use
+          analytics cookies, advertising cookies, or any tracking cookies.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Cookie Name</th>
+              <th>Purpose</th>
+              <th>Duration</th>
+              <th>Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>sb-access-token</td>
+              <td>Supabase authentication session</td>
+              <td>Session</td>
+              <td>Strictly necessary</td>
+            </tr>
+            <tr>
+              <td>sb-refresh-token</td>
+              <td>Supabase authentication token refresh</td>
+              <td>Up to 1 year</td>
+              <td>Strictly necessary</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Because we use only strictly necessary cookies, we do not require consent under the
+          Privacy and Electronic Communications Regulations (PECR) 2003.
+        </p>
+
+        <h3>7.2 Local Storage</h3>
+        <p>
+          Guest mode uses browser localStorage to store practice progress. This data never leaves
+          your device. Clearing your browser data removes it permanently.
+        </p>
+
+        <h3>7.3 Analytics and No Third-Party Tracking</h3>
+        <p>
+          We use Vercel Web Analytics and Vercel Speed Insights to understand aggregate usage (page
+          views, visitor counts, performance metrics) and a small number of first-party product
+          events (sign-up, first practice, demo completion, daily cap reached). These tools are
+          cookieless: they do not set cookies, do not use device fingerprinting, and do not track
+          you across other websites. Data is processed by Vercel (see Section 8) in aggregate form.
+        </p>
+        <p>
+          Beyond this, we do not embed third-party tracking scripts, social media widgets, or
+          advertising pixels. No third party sets cookies through LangTap.
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2>8. Sub-Processors</h2>
+        <p>
+          We use the following third-party service providers ("sub-processors") to operate LangTap.
+          We maintain Data Processing Agreements (DPAs) with each active sub-processor as required
+          by GDPR Art. 28.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Sub-Processor</th>
+              <th>Purpose</th>
+              <th>Data Processed</th>
+              <th>Location</th>
+              <th>Legal Mechanism</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Supabase Inc.</td>
+              <td>Authentication, database hosting</td>
+              <td>All account data (email, username, scores, settings)</td>
+              <td>[Database region TBD]</td>
+              <td>Standard Contractual Clauses (SCCs)</td>
+            </tr>
+            <tr>
+              <td>Vercel Inc.</td>
+              <td>Application hosting, CDN, edge functions</td>
+              <td>Server access logs (IP addresses, request metadata)</td>
+              <td>US and edge locations</td>
+              <td>Standard Contractual Clauses (SCCs)</td>
+            </tr>
+            <tr>
+              <td>Stripe Inc. (future)</td>
+              <td>Payment processing</td>
+              <td>Payment details, email address, billing history</td>
+              <td>US</td>
+              <td>Standard Contractual Clauses (SCCs)</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          We will update this table if we add new sub-processors. Material changes to sub-processors
+          will be communicated via this policy.
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2>9. International Data Transfers</h2>
+        <p>
+          Your data may be transferred to and processed in the United States through our service
+          providers (Supabase, Vercel, and in future Stripe).
+        </p>
+        <p>These transfers are protected by:</p>
+        <ul>
+          <li>
+            <strong>Standard Contractual Clauses (SCCs)</strong> approved by the European Commission
+            (Commission Implementing Decision 2021/914)
+          </li>
+          <li>
+            <strong>UK International Data Transfer Agreement (IDTA)</strong> or UK Addendum to the
+            EU SCCs, as applicable
+          </li>
+          <li>Each provider's Data Processing Addendum incorporates these mechanisms</li>
+        </ul>
+        <p>
+          You can request copies of the relevant transfer agreements by contacting
+          privacy@langtap.com.
+        </p>
+        <p>
+          If Supabase hosts our database in an EU or UK region, your account data remains within the
+          EU/UK. Server-side processing and hosting via Vercel may involve US-based edge locations.
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2>10. Data Retention</h2>
+        <p>We retain your data only for as long as necessary for its stated purpose.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Retention Period</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Active account data (email, username, scores, settings)</td>
+              <td>As long as your account exists</td>
+            </tr>
+            <tr>
+              <td>Data after account deletion</td>
+              <td>
+                Permanently removed within 30 days of deletion, except where retention is required
+                by law (see exceptions below)
+              </td>
+            </tr>
+            <tr>
+              <td>Inactive accounts</td>
+              <td>
+                Deleted after 12 months of inactivity, with at least 30 days' prior email notice
+              </td>
+            </tr>
+            <tr>
+              <td>Server access logs (IP addresses)</td>
+              <td>90 days, then automatically deleted</td>
+            </tr>
+            <tr>
+              <td>Payment records (when applicable)</td>
+              <td>
+                7 years after the transaction, as required by UK tax and accounting law (HMRC)
+              </td>
+            </tr>
+            <tr>
+              <td>Anonymised, aggregated statistics</td>
+              <td>Retained indefinitely (cannot be linked to any individual)</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          <strong>Exceptions to deletion:</strong> Even after account deletion, we may retain
+          limited data where required by law or legitimate need:
+        </p>
+        <ul>
+          <li>Payment records for 7 years (UK tax and accounting obligations, HMRC)</li>
+          <li>Fraud or abuse investigation records for up to 12 months after termination</li>
+          <li>Data subject to an active legal claim or dispute, until resolution</li>
+          <li>
+            Automated backup systems may contain deleted data for up to 30 days before overwrite
+          </li>
+        </ul>
+      </section>
+
+      <section className="space-y-2">
+        <h2>11. Your Rights</h2>
+        <p>
+          Under the UK GDPR, EU GDPR, and applicable data protection law, you have the following
+          rights regarding your personal data:
+        </p>
+
+        <h3>11.1 Right of Access (Art. 15)</h3>
+        <p>
+          You can request a copy of all personal data we hold about you. We will respond within one
+          month.
+        </p>
+
+        <h3>11.2 Right to Rectification (Art. 16)</h3>
+        <p>
+          You can correct inaccurate personal data via your account settings (username, JLPT level,
+          input mode, preferences). For data you cannot correct yourself, contact
+          privacy@langtap.com.
+        </p>
+
+        <h3>11.3 Right to Erasure (Art. 17)</h3>
+        <p>
+          You can delete your account and all associated personal data from the Profile screen at
+          any time. Deletion is permanent and cannot be undone. You can also request erasure by
+          contacting privacy@langtap.com.
+        </p>
+
+        <h3>11.4 Right to Restrict Processing (Art. 18)</h3>
+        <p>
+          You can request that we restrict how we process your data in certain circumstances, for
+          example while we verify the accuracy of your data or assess an objection.
+        </p>
+
+        <h3>11.5 Right to Data Portability (Art. 20)</h3>
+        <p>
+          You can request your personal data in a structured, commonly used, machine-readable format
+          (JSON). This includes your profile data, practice scores, mastery data, and settings.
+        </p>
+
+        <h3>11.6 Right to Object (Art. 21)</h3>
+        <p>
+          You can object to processing based on legitimate interests (e.g., server logging). We will
+          stop processing unless we can demonstrate compelling legitimate grounds that override your
+          interests.
+        </p>
+
+        <h3>11.7 Right to Withdraw Consent (Art. 7)</h3>
+        <p>
+          Where processing is based on consent (e.g., future marketing emails), you can withdraw
+          your consent at any time. Withdrawal does not affect the lawfulness of processing before
+          withdrawal.
+        </p>
+
+        <h3>11.8 Right to Lodge a Complaint</h3>
+        <p>
+          You have the right to complain to a supervisory authority if you believe your data
+          protection rights have been violated:
+        </p>
+        <ul>
+          <li>
+            <strong>UK:</strong> Information Commissioner's Office (ICO) at ico.org.uk or 0303 123
+            1113
+          </li>
+          <li>
+            <strong>EU:</strong> Your local data protection supervisory authority
+          </li>
+        </ul>
+
+        <h3>How to Exercise Your Rights</h3>
+        <p>
+          Contact <a href="mailto:privacy@langtap.com">privacy@langtap.com</a> with your request. We
+          will verify your identity before processing the request. We will respond within one month.
+          If your request is complex, we may extend this by a further two months, and we will inform
+          you of the extension and the reasons.
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2>12. Automated Decision-Making</h2>
+        <p>
+          LangTap uses algorithmic character and word selection based on your mastery scores. This
+          is a core function of the typing practice service, designed to present characters you need
+          to practise most.
+        </p>
+        <p>
+          This algorithmic selection constitutes limited personalisation of your practice
+          experience. While it uses your historical performance data to tailor content presentation,
+          it:
+        </p>
+        <ul>
+          <li>Is necessary for the performance of the Service (Art. 22(2)(a))</li>
+          <li>Does not produce legal effects or similarly significant effects on you</li>
+          <li>
+            Does not influence your access to the Service, pricing, eligibility, or any rights
+          </li>
+          <li>
+            Is not used for marketing, advertising, or behavioural profiling outside the practice
+            context
+          </li>
+        </ul>
+        <p>
+          No automated decisions with legal or similarly significant effects (as described in GDPR
+          Art. 22(1)) are made about you. You can contact us at privacy@langtap.com if you have
+          questions about how this personalisation works.
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2>13. Children and Young Users</h2>
+
+        <h3>13.1 Age Restriction</h3>
+        <p>
+          LangTap is not directed at children under 13. We do not knowingly collect personal data
+          from children under 13. An age confirmation is required during account registration.
+        </p>
+        <p>If we discover that an account belongs to a child under 13, we will:</p>
+        <ul>
+          <li>Delete the account and all associated personal data immediately</li>
+          <li>Notify the parent or guardian if contact information is available</li>
+        </ul>
+        <p>
+          If you believe a child under 13 has provided us with personal data, please contact
+          privacy@langtap.com immediately.
+        </p>
+
+        <h3>13.2 Users Aged 13 to 17</h3>
+        <p>
+          Users aged 13 to 17 may use LangTap with parental or guardian consent. We are mindful of
+          the ICO's Age Appropriate Design Code (Children's Code) and design our service with the
+          following considerations for younger users:
+        </p>
+        <ul>
+          <li>We collect only the minimum data necessary to operate the service</li>
+          <li>We do not use nudge techniques, behavioural manipulation, or dark patterns</li>
+          <li>
+            Default settings prioritise privacy (e.g., leaderboard visibility can be turned off)
+          </li>
+          <li>We do not serve advertising or use data for profiling</li>
+          <li>We do not use geolocation data or device fingerprinting</li>
+          <li>Practice data is used solely for the user's own progress tracking</li>
+        </ul>
+
+        <h3>13.3 EU Member State Variations</h3>
+        <p>
+          Some EU member states set the digital age of consent higher than 13 (up to 16) under GDPR
+          Art. 8. If you are in a member state with a higher age of consent, you must meet that age
+          or have parental consent to use LangTap. We will honour the age of consent applicable in
+          your jurisdiction.
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2>14. California Privacy Rights (CCPA/CPRA)</h2>
+        <p>
+          If you are a California resident, you have additional rights under the California Consumer
+          Privacy Act (CCPA) and California Privacy Rights Act (CPRA):
+        </p>
+        <p>
+          <strong>Categories of personal information we collect:</strong> Identifiers (email
+          address, username), Internet or other electronic network activity information (practice
+          scores, usage data), Preferences (JLPT level, input mode, settings).
+        </p>
+        <p>
+          <strong>Your California rights:</strong>
+        </p>
+        <ul>
+          <li>Right to know what personal information we collect, use, and disclose</li>
+          <li>Right to delete your personal information</li>
+          <li>Right to correct inaccurate personal information</li>
+          <li>Right to opt out of the sale or sharing of personal information</li>
+          <li>Right to non-discrimination for exercising your privacy rights</li>
+        </ul>
+        <p>
+          <strong>Important:</strong> We do not sell your personal information. We do not share your
+          personal information for cross-context behavioural advertising. We do not use sensitive
+          personal information for purposes beyond those necessary to provide the Service.
+        </p>
+        <p>
+          To exercise your California rights, contact privacy@langtap.com or use the account
+          deletion feature in your Profile settings.
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2>15. Data Security</h2>
+        <p>
+          We implement appropriate technical and organisational measures to protect your personal
+          data against unauthorised access, alteration, disclosure, or destruction:
+        </p>
+        <ul>
+          <li>All data is transmitted over HTTPS/TLS encryption</li>
+          <li>
+            Passwords are hashed using industry-standard algorithms (never stored in plaintext)
+          </li>
+          <li>Database access is controlled by Row Level Security (RLS) policies</li>
+          <li>
+            Only the Supabase anonymous key is used on the client; the service role key is never
+            exposed
+          </li>
+          <li>Server access logs are retained for 90 days and then deleted</li>
+          <li>We conduct regular reviews of our security practices</li>
+        </ul>
+        <p>
+          No method of transmission over the internet or electronic storage is 100% secure. While we
+          strive to protect your personal data, we cannot guarantee absolute security.
+        </p>
+        <p>
+          If you become aware of a security breach affecting your account, please contact{' '}
+          <a href="mailto:security@langtap.com">security@langtap.com</a> immediately.
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2>16. Email Communications</h2>
+        <p>We use your email address for:</p>
+        <ul>
+          <li>Account authentication (sign-in, password reset)</li>
+          <li>Security alerts (suspicious activity, password changes)</li>
+          <li>
+            Account notifications (approaching limits, inactivity warnings, subscription changes)
+          </li>
+        </ul>
+        <p>
+          These are transactional communications necessary for the Service. We do not send marketing
+          emails.
+        </p>
+        <p>
+          If we introduce optional practice reminders or promotional communications in the future,
+          they will be:
+        </p>
+        <ul>
+          <li>Opt-in only (never enabled by default)</li>
+          <li>Include a clear unsubscribe mechanism in every message</li>
+          <li>Comply with UK PECR, EU ePrivacy Directive, and CAN-SPAM requirements</li>
+        </ul>
+      </section>
+
+      <section className="space-y-2">
+        <h2>17. Changes to This Policy</h2>
+        <p>
+          We may update this Privacy Policy from time to time to reflect changes in our practices,
+          legal requirements, or the Service.
+        </p>
+        <p>We will notify you of material changes by:</p>
+        <ul>
+          <li>Updating the "Last updated" date at the top of this page</li>
+          <li>Sending an email to your registered email address for significant changes</li>
+          <li>Displaying a notice within the application</li>
+        </ul>
+        <p>
+          Your continued use of the Service after changes constitutes acceptance of the updated
+          policy. For changes that materially reduce your rights, we will provide at least 30 days'
+          notice.
+        </p>
+        <p>We encourage you to review this policy periodically.</p>
+      </section>
+
+      <section className="space-y-2">
+        <h2>18. Contact</h2>
+        <p>If you have questions about this Privacy Policy or how we handle your data:</p>
+        <ul>
+          <li>
+            <strong>Data protection enquiries:</strong>{' '}
+            <a href="mailto:privacy@langtap.com">privacy@langtap.com</a>
+          </li>
+          <li>
+            <strong>Account security:</strong>{' '}
+            <a href="mailto:security@langtap.com">security@langtap.com</a>
+          </li>
+          <li>
+            <strong>General enquiries:</strong>{' '}
+            <a href="mailto:hello@langtap.com">hello@langtap.com</a>
+          </li>
+        </ul>
+        <p>Postal address: [To be added]</p>
+      </section>
+
+      <section className="space-y-2">
+        <h2>19. ICO Registration</h2>
+        <p>
+          [Legal Entity Name] is registered with the Information Commissioner's Office (ICO) under
+          registration number [TBD]. You can verify our registration at
+          ico.org.uk/ESDWebPages/Search.
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <p>
+          <strong>DISCLAIMER:</strong> This Privacy Policy is drafted for informational purposes and
+          should be reviewed by a qualified UK solicitor specialising in data protection and privacy
+          law before deployment. It does not constitute legal advice.
+        </p>
+      </section>
+    </LegalPageShell>
   )
 }

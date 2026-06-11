@@ -5,6 +5,7 @@
 //          anonymous Supabase clients. Cleans up on teardown.
 // ─────────────────────────────────────────────
 
+import { describe } from 'vitest'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 // ── Local Supabase config ────────────────────
@@ -16,6 +17,14 @@ const LOCAL_ANON_KEY = process.env['SUPABASE_LOCAL_ANON_KEY'] ?? ''
 const LOCAL_SERVICE_KEY = process.env['SUPABASE_LOCAL_SERVICE_KEY'] ?? ''
 
 const TEST_PASSWORD = 'test-password-123!'
+
+// ── Visible skip gate ────────────────────────
+// When the local Supabase keys are not set, integration tests must show as
+// SKIPPED in the vitest output, never as silently passing. Use this in place
+// of `describe` for every top-level integration describe block.
+export const INTEGRATION_ENV_PRESENT = Boolean(LOCAL_ANON_KEY && LOCAL_SERVICE_KEY)
+
+export const integrationDescribe = describe.skipIf(!INTEGRATION_ENV_PRESENT)
 
 // ── Client factories ─────────────────────────
 

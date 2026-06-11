@@ -10,10 +10,11 @@ import {
   setupTestUser,
   teardownTestUser,
   skipIfNotRunning,
+  integrationDescribe,
   createAnonClient,
 } from './setup'
 
-describe('Kana integration', () => {
+integrationDescribe('Kana integration', () => {
   let ctx: TestContext
 
   beforeAll(async () => {

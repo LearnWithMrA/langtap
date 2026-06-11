@@ -4,16 +4,17 @@
 //          features against local Supabase Docker.
 // ─────────────────────────────────────────────
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { it, expect, beforeAll, afterAll } from 'vitest'
 import {
   type TestContext,
   setupTestUser,
   teardownTestUser,
   skipIfNotRunning,
+  integrationDescribe,
   createAnonClient,
 } from './setup'
 
-describe('Profile integration', () => {
+integrationDescribe('Profile integration', () => {
   let ctx: TestContext
 
   beforeAll(async () => {
@@ -53,6 +54,53 @@ describe('Profile integration', () => {
     expect(data).toBeTruthy()
     const ids = data!.map((r: Record<string, unknown>) => r.id)
     expect(ids.every((id: unknown) => id === ctx.testUserId)).toBe(true)
+  })
+
+  it('claim_initial_username sets the sign-up username without starting the cooldown', async () => {
+    if (skipIfNotRunning(ctx)) return
+    const { data, error } = await ctx.userClient.rpc('claim_initial_username', {
+      p_username: 'fresh_signup_name',
+    })
+    expect(error).toBeNull()
+    expect((data as Record<string, unknown>)['ok']).toBe(true)
+
+    const { data: profile } = await ctx.userClient
+      .from('profiles')
+      .select('username, username_changed_at')
+      .eq('id', ctx.testUserId!)
+      .single()
+    expect(profile?.username).toBe('fresh_signup_name')
+    expect(profile?.username_changed_at).toBeNull()
+  })
+
+  it('claim_initial_username cannot be used twice', async () => {
+    if (skipIfNotRunning(ctx)) return
+    const { data, error } = await ctx.userClient.rpc('claim_initial_username', {
+      p_username: 'second_claim',
+    })
+    expect(error).toBeNull()
+    expect((data as Record<string, unknown>)['ok']).toBe(false)
+    expect((data as Record<string, unknown>)['error_code']).toBe('already_claimed')
+  })
+
+  it('claim_initial_username rejects invalid formats', async () => {
+    if (skipIfNotRunning(ctx)) return
+    const { data, error } = await ctx.userClient.rpc('claim_initial_username', {
+      p_username: 'a!',
+    })
+    expect(error).toBeNull()
+    expect((data as Record<string, unknown>)['ok']).toBe(false)
+    expect((data as Record<string, unknown>)['error_code']).toBe('invalid_format')
+  })
+
+  it('direct username UPDATE is blocked by the guard trigger', async () => {
+    if (skipIfNotRunning(ctx)) return
+    const { error } = await ctx.userClient
+      .from('profiles')
+      .update({ username: 'sneaky_rename' })
+      .eq('id', ctx.testUserId!)
+    expect(error).toBeTruthy()
+    expect(error?.message).toContain('change_username')
   })
 
   it('change_username succeeds with valid username', async () => {

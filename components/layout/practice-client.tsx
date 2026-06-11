@@ -40,6 +40,8 @@ import { useAuth } from '@/hooks/useAuth'
 import { useDailyCap } from '@/hooks/useDailyCap'
 import { useStuckLoadingWarning } from '@/hooks/useStuckLoadingWarning'
 import { usePracticeActivityTracker } from '@/hooks/usePracticeActivityTracker'
+import { useFirstPracticeEvent } from '@/hooks/useFirstPracticeEvent'
+import { useDailyCapAnalytics } from '@/hooks/useDailyCapAnalytics'
 import { useSettingsStore } from '@/stores/settings.store'
 import { useAuthModalStore } from '@/stores/auth-modal.store'
 import { useUserStore } from '@/stores/user.store'
@@ -191,6 +193,8 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
   const { isGuest } = useAuth()
   const openSignUp = useAuthModalStore((s) => s.openSignUp)
   const { trackCompletion } = usePracticeActivityTracker(isGuest)
+  const { recordFirstPractice } = useFirstPracticeEvent(gameType)
+  useDailyCapAnalytics()
 
   useEffect(() => {
     useGameplayStore.getState().setActive(true)
@@ -380,6 +384,7 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
     (characterCount: number = 1): void => {
       incrementCorrect(mode)
       trackCompletion(characterCount)
+      recordFirstPractice()
       if (!isGuest) {
         const promptMetres =
           useSessionStore.getState().distanceMetres - distanceBeforePromptRef.current
@@ -388,7 +393,7 @@ function ActivePracticeClient({ gameType }: { gameType: GameType }): ReactNode {
         }
       }
     },
-    [incrementCorrect, mode, trackCompletion, isGuest, incrementDailyCap],
+    [incrementCorrect, mode, trackCompletion, recordFirstPractice, isGuest, incrementDailyCap],
   )
 
   const sessionMapRef = useRef(new Map<string, PendingSession>())

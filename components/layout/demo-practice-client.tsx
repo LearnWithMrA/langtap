@@ -28,6 +28,7 @@ import { useDemoStore } from '@/stores/demo.store'
 import { useSettingsStore } from '@/stores/settings.store'
 import { useAuthModalStore } from '@/stores/auth-modal.store'
 import { DEMO_ALLOWED_IDS } from '@/data/demo/demo-prompts'
+import { trackEvent, ANALYTICS_EVENTS } from '@/services/analytics.service'
 
 const LazyKotobaGameWindow = dynamic(
   () =>
@@ -136,8 +137,13 @@ function DemoCompletionCard({ gameType }: { gameType: GameType }): ReactNode {
   const openSignUp = useAuthModalStore((s) => s.openSignUp)
 
   useEffect(() => {
+    // Fire trial_complete only on the first completion in this browser;
+    // the localStorage flag doubles as the analytics dedup guard.
+    if (localStorage.getItem(DEMO_COMPLETED_KEY) !== '1') {
+      trackEvent(ANALYTICS_EVENTS.TRIAL_COMPLETE, { game_type: gameType })
+    }
     localStorage.setItem(DEMO_COMPLETED_KEY, '1')
-  }, [])
+  }, [gameType])
   const otherType = gameType === 'kana' ? 'kotoba' : 'kana'
   const otherLabel = gameType === 'kana' ? 'Kotoba' : 'Kana'
   const otherRoute = `/demo/${otherType}`

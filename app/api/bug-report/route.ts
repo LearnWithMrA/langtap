@@ -11,7 +11,7 @@
 
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerSupabaseClient } from '@/services/supabase-server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 // ── Constants ─────────────────────────────────
 
@@ -114,10 +114,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     { auth: { autoRefreshToken: false, persistSession: false } },
   )
 
-  // Rate gate: reject if last report was within 60 seconds.
-  // Known: this check-then-insert has a small race window under concurrent
-  // requests. Acceptable at soft-launch volume; replace with an advisory
-  // lock or atomic RPC when Sprint 17 adds distributed rate limiting.
+  // Cheap pre-check: fast 429 before paying for a screenshot upload.
+  // The authoritative, race-free gate is the submit_bug_report RPC below,
+  // which re-checks under a per-user advisory lock.
   const { data: recentReport } = await adminSupabase
     .from('bug_reports')
     .select('created_at')
@@ -177,18 +176,49 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
   }
 
-  const { error: insertError } = await adminSupabase.from('bug_reports').insert({
-    user_id: user.id,
-    type,
-    description: description.trim(),
-    screenshot_path: screenshotPath,
-    app_state: parsedAppState,
-    user_agent: typeof userAgent === 'string' ? userAgent.slice(0, MAX_USER_AGENT_LENGTH) : null,
+  // Atomic submission: the submit_bug_report RPC re-checks the 60s rate
+  // gate and inserts under a per-user advisory lock, so concurrent
+  // requests cannot race past the earlier read-side check.
+  const { data: submitResult, error: submitError } = await adminSupabase.rpc('submit_bug_report', {
+    p_user_id: user.id,
+    p_type: type,
+    p_description: description.trim(),
+    p_screenshot_path: screenshotPath,
+    p_user_agent: typeof userAgent === 'string' ? userAgent.slice(0, MAX_USER_AGENT_LENGTH) : null,
+    p_app_state: parsedAppState,
   })
 
-  if (insertError) {
+  const result = submitResult as { ok?: boolean; error?: string; retry_after?: number } | null
+
+  if (submitError || !result) {
+    await removeOrphanScreenshot(adminSupabase, screenshotPath)
     return NextResponse.json({ error: 'Failed to submit report' }, { status: 500 })
   }
 
+  if (!result.ok) {
+    await removeOrphanScreenshot(adminSupabase, screenshotPath)
+    if (result.error === 'rate_limited') {
+      return NextResponse.json(
+        { error: 'Please wait before submitting another report' },
+        { status: 429, headers: { 'Retry-After': String(result.retry_after ?? 60) } },
+      )
+    }
+    return NextResponse.json({ error: 'Invalid report' }, { status: 400 })
+  }
+
   return NextResponse.json({ ok: true }, { status: 201 })
+}
+
+// Removes an uploaded screenshot when the report row was never created,
+// so rejected submissions cannot accumulate orphaned files in the bucket.
+async function removeOrphanScreenshot(
+  adminSupabase: SupabaseClient,
+  screenshotPath: string | null,
+): Promise<void> {
+  if (!screenshotPath) return
+  try {
+    await adminSupabase.storage.from('bug-reports').remove([screenshotPath])
+  } catch {
+    // Best-effort cleanup; an orphaned file is not a security issue.
+  }
 }
