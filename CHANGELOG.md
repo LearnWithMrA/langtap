@@ -30,7 +30,7 @@ Format per entry:
 
 ---
 
-## 2026-06-13 - Session 119
+## 2026-06-13 - Session 120
 
 **Sprint:** Off-sprint
 **Task completed:** Remove mascot dialogue overlay from the Dojo screens
@@ -64,6 +64,13 @@ Off-sprint. Return to the active sprint board.
   `data/tutorial/dialogue-scripts.ts` (both the `DialogueScriptTrigger` union and the
   `DIALOGUE_SCRIPTS` record) are now orphaned (no consumers). Left in place rather
   than deleted owner-authored data; flag for cleanup in a future sprint.
+- Investigation (no code change): confirmed the home page has no streak-state-aware
+  banners. The only streak banner is `home-flame-prompt`, a one-time educational
+  banner shown to every logged-in user (`!isGuest && !hasSeenFlamePrompt`), not
+  conditioned on `todayState`. There is no "practice today to save your streak"
+  prompt for the no-streak-yet case or the post-grace-day case. The engine already
+  exposes `todayState` (active/grace/broken), so these could be built as a future
+  feature, but none exists today.
 
 ---
 
