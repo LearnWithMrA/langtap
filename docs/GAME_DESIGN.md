@@ -917,6 +917,13 @@ A mascot character delivers tutorial messages via a themed dialogue card overlay
 The system introduces new players to each game mode and guides them through the
 initial flow. All dialogue is non-blocking: the player can skip at any time.
 
+**Scope rule (strict):** the mascot dialogue overlay must only ever appear on the
+game-playing screens that introduce a mode: `components/layout/practice-client.tsx`,
+`components/layout/demo-practice-client.tsx`, and the home dashboard
+(`components/layout/game-home-client.tsx`). It must never be rendered on the Kana
+Dojo or Kotoba Dojo. The Dojo teaches exclusively through the banner-style HelpCard
+(see Section 16). Do not reintroduce the overlay into any dojo client.
+
 ### 14.2 Mascot
 
 The mascot has three poses:

@@ -30,6 +30,43 @@ Format per entry:
 
 ---
 
+## 2026-06-13 - Session 119
+
+**Sprint:** Off-sprint
+**Task completed:** Remove mascot dialogue overlay from the Dojo screens
+**Status:** Done
+
+### Changes made
+- `components/layout/kotoba-dojo-client.tsx`: Removed the `demo-kotoba-dojo` mascot
+  dialogue overlay block, the `useDialogueSeen` hook call, and the now-unused
+  `DialogueOverlay`, `useDialogueSeen`, and `DIALOGUE_SCRIPTS` imports. The Kotoba
+  Dojo now teaches only through the banner-style HelpCard.
+- `components/layout/kana-dojo-client.tsx`: Same change for the `demo-kana-dojo`
+  overlay. Kana Dojo now teaches only through the HelpCard banner.
+- `components/game/dialogue-overlay.tsx`: Added a strict SCOPE RULE note to the file
+  header stating the overlay may only appear on the game-playing screens
+  (practice-client, demo-practice-client) and the home dashboard, and never on a
+  dojo client.
+- `docs/GAME_DESIGN.md`: Added the matching scope rule to Section 14 (Tutorial
+  Dialogue System).
+
+### Tests
+- Full suite: Pass (1181 passed, 96 skipped). Change is purely subtractive on visual
+  shells; no behaviour under test was affected, no new tests required.
+
+### Next task
+Off-sprint. Return to the active sprint board.
+
+### Notes
+- Decision: the rule applies to both dojos, not just Kotoba, since the same overlay
+  pattern existed in both clients. The owner reported it on Kotoba.
+- Tech debt spotted: the `demo-kana-dojo` and `demo-kotoba-dojo` entries in
+  `data/tutorial/dialogue-scripts.ts` (both the `DialogueScriptTrigger` union and the
+  `DIALOGUE_SCRIPTS` record) are now orphaned (no consumers). Left in place rather
+  than deleted owner-authored data; flag for cleanup in a future sprint.
+
+---
+
 ## 2026-06-11 - Session 118
 
 **Sprint:** Off-sprint (polish following the Session 117 leadership review)

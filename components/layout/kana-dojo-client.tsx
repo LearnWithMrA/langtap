@@ -52,9 +52,6 @@ import type { BulkResetScope } from '@/components/dojo/bulk-reset-prompt'
 import type { GroupActivity } from '@/components/dojo/group-bar'
 import { UnlockButton } from '@/components/dojo/group-bar'
 import { HelpCard, useKanaTips } from '@/components/dojo/help-card'
-import { DialogueOverlay } from '@/components/game/dialogue-overlay'
-import { useDialogueSeen } from '@/hooks/useDialogueSeen'
-import { DIALOGUE_SCRIPTS } from '@/data/tutorial/dialogue-scripts'
 import { MASTERY_THRESHOLD } from '@/engine/mastery'
 import { useMasteryStore } from '@/stores/mastery.store'
 import { useOnboardingStore } from '@/stores/onboarding.store'
@@ -480,25 +477,8 @@ function KanaDojoReadyShell({ demo }: { demo?: boolean }): ReactNode {
   const showHelp = !helpDismissed
   const selectedScore = selected ? (mastery.scores[selected.id] ?? 0) : 0
 
-  const { hasSeen: hasSeenDemoDialogue, markSeen: markDemoDialogueSeen } =
-    useDialogueSeen('demo-kana-dojo')
-  const showDemoDialogue = demo === true && !hasSeenDemoDialogue
-
   return (
     <div className="min-h-svh text-[#3e312e]" style={{ backgroundColor: 'var(--color-dojo-bg)' }}>
-      {showDemoDialogue && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-warm-800/40" />
-          <div className="relative w-full max-w-lg">
-            <DialogueOverlay
-              messages={DIALOGUE_SCRIPTS['demo-kana-dojo'].messages}
-              mascotPose={DIALOGUE_SCRIPTS['demo-kana-dojo'].mascotPose}
-              theme="blue"
-              onDismiss={markDemoDialogueSeen}
-            />
-          </div>
-        </div>
-      )}
       <div className="pt-20 pb-16 px-2 md:px-5">
         <main className="mx-auto max-w-[1080px]">
           <div className="flex items-center gap-3 mb-6 pl-5">

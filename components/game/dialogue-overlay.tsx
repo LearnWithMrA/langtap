@@ -7,6 +7,14 @@
 //          fills remaining space. Supports themed card colours
 //          (blue for kana, green for kotoba, cream default).
 // Depends on: nothing
+//
+// SCOPE RULE: This mascot dialogue overlay must ONLY ever appear on the
+//             game-playing screens that introduce a mode: practice-client.tsx,
+//             demo-practice-client.tsx, and the home dashboard
+//             (game-home-client.tsx). It must NEVER be rendered on the Dojo
+//             (kana or kotoba). The Dojo teaches exclusively through the
+//             banner-style HelpCard (components/dojo/help-card.tsx). Do not
+//             reintroduce this overlay into any dojo client.
 // ─────────────────────────────────────────────
 
 'use client'
