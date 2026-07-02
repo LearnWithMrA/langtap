@@ -30,6 +30,42 @@ Format per entry:
 
 ---
 
+## 2026-07-02 - Session 122
+
+**Sprint:** Sprint board maintenance
+**Task completed:** Sprint 18 and 19 expansion pass (board v2.0); verified production migrations in sync
+**Status:** Done
+
+### Changes made
+- `LangTap_Sprints.md`: Sprint 18 rewritten in depth (4 tasks to 7): transactional
+  vs marketing streams separated (Supabase Auth templates live in the Supabase
+  dashboard, Brevo only relays SMTP), new email-confirmation decision task, opt-in
+  prompt spec'd with a `notification_prompt_seen_at` column + migration +
+  integration tests + in-app settings toggle, new Brevo contact sync task
+  (Supabase Database Webhook, secret-gated route handler), drip sequence rebuilt
+  as a Brevo Automation triggered on list entry, new unsubscribe sync-back task
+  (Brevo webhook flips `notifications_enabled` false, hard-bounce handling).
+  Sprint 19 expanded: new first-gate decision task (lifetime one-time vs
+  subscription checkout modes, currency, VAT stance, price-ID-to-tier server-side
+  map), checkout env var and customer-mapping detail, `stripe_events` idempotency
+  table spec on the webhook task, 5D integration coverage on the tests task.
+  Version history v2.0 entry added; stale header version (1.0) corrected.
+
+### Tests
+- No code changes; no tests affected. prettier passes on the board.
+
+### Next task
+Sprint 18 (Email Deliverability): owner provider/DNS setup can run in parallel
+with the AI code tasks (opt-in prompt first).
+
+### Notes
+- Verified via `supabase migration list --linked`: production already has both
+  Session 117 migrations (`20260611120000`, `20260611120001`). The "supabase db
+  push" owner action from Session 117 is complete; remaining owner actions are
+  lifetime membership assignment, Vercel Analytics enable, bug-report webhook.
+
+---
+
 ## 2026-07-02 - Session 121
 
 **Sprint:** Off-sprint
