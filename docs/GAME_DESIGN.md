@@ -918,11 +918,13 @@ The system introduces new players to each game mode and guides them through the
 initial flow. All dialogue is non-blocking: the player can skip at any time.
 
 **Scope rule (strict):** the mascot dialogue overlay must only ever appear on the
-game-playing screens that introduce a mode: `components/layout/practice-client.tsx`,
-`components/layout/demo-practice-client.tsx`, and the home dashboard
-(`components/layout/game-home-client.tsx`). It must never be rendered on the Kana
-Dojo or Kotoba Dojo. The Dojo teaches exclusively through the banner-style HelpCard
-(see Section 16). Do not reintroduce the overlay into any dojo client.
+kana and kotoba practice screens: `components/layout/practice-client.tsx` and
+`components/layout/demo-practice-client.tsx`. It must never be rendered on the Kana
+Dojo, the Kotoba Dojo, or the home dashboard. The Dojo teaches exclusively through
+the banner-style HelpCard (see Section 16); the home dashboard uses the inline
+`PracticeBanner` (`components/game/practice-banner.tsx`) for its one-time messages
+(guest demo intro, flame prompt). Do not reintroduce the overlay outside the
+practice clients.
 
 ### 14.2 Mascot
 

@@ -30,6 +30,52 @@ Format per entry:
 
 ---
 
+## 2026-07-02 - Session 121
+
+**Sprint:** Off-sprint
+**Task completed:** Remove mascot typewriter dialogue overlay from the home dashboard, replace with inline banner
+**Status:** Done
+
+### Changes made
+- `components/layout/game-home-client.tsx`: The `demo-home` full-screen typewriter
+  DialogueOverlay (shown to guests on the home dashboard) replaced with the inline
+  PracticeBanner (kana/blue variant), same pattern as the flame prompt banner.
+  Still one-time via `useDialogueSeen('demo-home')`. Removed the DialogueOverlay
+  import. Codex layout fix: both home banners (demo intro and flame prompt) moved
+  out of the `md:flex-row` dashboard container into a new wrapper above it, so on
+  tablet/desktop they render full-width above the dashboard instead of being
+  squeezed in as a flex-row item beside the streak calendar.
+- `components/game/dialogue-overlay.tsx`: SCOPE RULE tightened: the overlay may
+  only ever appear on the kana and kotoba practice screens (practice-client,
+  demo-practice-client), never on the dojos or the home dashboard. Home uses
+  PracticeBanner.
+- `docs/GAME_DESIGN.md`: Section 14.1 scope rule updated to match.
+
+### Tests
+- Full suite: Pass (1181 passed, 96 integration skipped without local Supabase).
+  prettier, eslint, tsc all clean. Change swaps one tested component for another
+  inside an untested visual orchestrator (`game-home-client.tsx` has no test file,
+  pre-existing); no behaviour under test changed.
+
+### Codex review
+- One review pass. 1 MEDIUM finding: the banner wrapper sat inside the
+  `flex flex-col md:flex-row` container, so at md+ it became a squeezed flex-row
+  item beside the streak calendar rather than a full-width banner. Fixed by
+  restructuring the container (also fixed the pre-existing flame prompt banner,
+  which had the same flaw from Session 116).
+
+### Next task
+Owner actions from Session 117 (supabase db push, lifetime membership, Vercel
+Analytics, bug-report webhook), then Sprint 18 (Email Deliverability).
+
+### Notes
+- The flame prompt banner placement bug was pre-existing (Session 116) and is
+  fixed as a side effect of the Codex finding.
+- `game-home-client.tsx` still has no test file; flagged as ongoing debt for a
+  future session.
+
+---
+
 ## 2026-06-13 - Session 120
 
 **Sprint:** Off-sprint
